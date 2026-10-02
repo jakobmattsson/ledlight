@@ -1,125 +1,160 @@
 'use strict';
 
+const { Command, InvalidArgumentError, Option } = require('commander');
+
 module.exports = () => {
 
+  function collect(value, previous) {
+    return (previous || []).concat(value);
+  }
+
+  function singleValue(optionName) {
+    return (value, previous) => {
+      if (value.startsWith('--')) {
+        throw new InvalidArgumentError(`${optionName} expects a value`);
+      }
+      if (previous !== undefined) {
+        throw new InvalidArgumentError(`${optionName} may only be specified once`);
+      }
+      return value;
+    };
+  }
+
+  function addDateOption(command, flags, description) {
+    return command.addOption(
+      new Option(flags, description).argParser(singleValue(flags.split(' ')[0])),
+    );
+  }
+
+  function addDateBasisOption(command) {
+    const option = new Option(
+      '--date-basis <basis>',
+      'select posting or transaction dates',
+    ).choices(['posting', 'transaction']);
+    const parseChoice = option.parseArg;
+    const parseSingleValue = singleValue('--date-basis');
+    option.argParser((value, previous) => {
+      const parsedValue = parseSingleValue(value, previous);
+      return parseChoice(parsedValue, previous);
+    });
+    return command.addOption(option);
+  }
+
+  function addAccountOption(command) {
+    return command.option(
+      '--accounts <prefix>',
+      'include an account prefix (repeatable)',
+      collect,
+    );
+  }
+
+  function createProgram() {
+    const program = new Command()
+      .name('ledlight')
+      .description('Query Ledger-compatible accounting data')
+      .helpOption(false)
+      .addHelpCommand(false)
+      .exitOverride()
+      .configureOutput({ writeErr: () => {}, writeOut: () => {} });
+
+    const aggregate = program.command('aggregate').description('aggregate account balances');
+    addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD');
+    addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    addAccountOption(aggregate);
+    addDateBasisOption(aggregate);
+    aggregate
+      .option('--value', 'convert amounts to the valuation commodity')
+      .option('--invert', 'invert the sign of report amounts')
+      .option('--csv', 'write CSV output');
+
+    const balanceHistory = program
+      .command('balance-history')
+      .description('show balances over time');
+    addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD');
+    addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    addAccountOption(balanceHistory);
+    addDateBasisOption(balanceHistory);
+    balanceHistory
+      .option('--invert', 'invert the sign of report amounts')
+      .option('--csv', 'write CSV output');
+
+    const gain = program.command('gain').description('show investment gains');
+    addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    addAccountOption(gain);
+    addDateBasisOption(gain);
+    gain.option('--csv', 'write CSV output');
+
+    const investmentPerformance = program
+      .command('investment-performance')
+      .description('show investment performance');
+    addDateOption(
+      investmentPerformance,
+      '--from <date>',
+      'include entries on or after YYYY-MM-DD',
+    );
+    addDateOption(
+      investmentPerformance,
+      '--to <date>',
+      'include entries on or before YYYY-MM-DD',
+    );
+    addAccountOption(investmentPerformance);
+    investmentPerformance
+      .option('--commodities <name>', 'include a commodity (repeatable)', collect)
+      .option(
+        '--exclude-commodities <name>',
+        'exclude a commodity (repeatable)',
+        collect,
+      )
+      .option('--json', 'write JSON output');
+
+    return program;
+  }
+
   function usage() {
-    return [
-      'Usage:',
-      '  ledlight aggregate [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--value] [--invert] [--csv]',
-      '  ledlight balance-history [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--invert] [--csv]',
-      '  ledlight gain [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--csv]',
-      '  ledlight investment-performance [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--commodities NAME]... [--exclude-commodities NAME]... [--json]',
-    ].join('\n');
+    const program = createProgram();
+    return [program, ...program.commands]
+      .map((command) => command.helpInformation().trimEnd())
+      .join('\n\n');
   }
 
-  function parseInvestmentPerformanceArguments(argumentsWithoutCommand) {
-    const reportOptions = { accounts: [], commodities: [], excludeCommodities: [] };
-    let json = false;
-    for (let index = 0; index < argumentsWithoutCommand.length; index += 1) {
-      const argument = argumentsWithoutCommand[index];
-      if (argument === '--json') {
-        json = true;
-        continue;
-      }
-      const repeatedOption = argument === '--accounts' || argument === '--commodities' ||
-      argument === '--exclude-commodities';
-      if (argument === '--from' || argument === '--to' || repeatedOption) {
-        const value = argumentsWithoutCommand[index + 1];
-        if (value === undefined || value.startsWith('--')) throw new Error(usage());
-        index += 1;
-        if (repeatedOption) {
-          const property = argument === '--exclude-commodities'
-            ? 'excludeCommodities'
-            : argument.slice(2);
-          reportOptions[property].push(value);
-        } else {
-          const property = argument.slice(2);
-          if (reportOptions[property] !== undefined) throw new Error(`${argument} may only be specified once`);
-          reportOptions[property] = value;
-        }
-        continue;
-      }
-      throw new Error(usage());
-    }
-    return { reportOptions, json };
-  }
+  function parsedResult(commandName, options) {
+    const reportOptions = { accounts: options.accounts || [] };
+    if (options.from !== undefined) reportOptions.from = options.from;
+    if (options.to !== undefined) reportOptions.to = options.to;
+    if (options.dateBasis !== undefined) reportOptions.dateBasis = options.dateBasis;
+    if (options.invert) reportOptions.invert = true;
+    if (options.value) reportOptions.inValuationCommodity = true;
 
-  function parseGainArguments(argumentsWithoutCommand) {
-    const reportOptions = { accounts: [] };
-    let csv = false;
-    for (let index = 0; index < argumentsWithoutCommand.length; index += 1) {
-      const argument = argumentsWithoutCommand[index];
-      if (argument === '--csv') {
-        csv = true;
-        continue;
-      }
-      if (argument === '--to' || argument === '--accounts' || argument === '--date-basis') {
-        const value = argumentsWithoutCommand[index + 1];
-        if (value === undefined || value.startsWith('--')) throw new Error(usage());
-        index += 1;
-        if (argument === '--accounts') reportOptions.accounts.push(value);
-        else {
-          const property = argument === '--date-basis' ? 'dateBasis' : 'to';
-          if (reportOptions[property] !== undefined) throw new Error(`${argument} may only be specified once`);
-          if (argument === '--date-basis' && value !== 'posting' && value !== 'transaction') {
-            throw new Error(usage());
-          }
-          reportOptions[property] = value;
-        }
-        continue;
-      }
-      throw new Error(usage());
+    if (commandName === 'investment-performance') {
+      reportOptions.commodities = options.commodities || [];
+      reportOptions.excludeCommodities = options.excludeCommodities || [];
+      return { reportOptions, json: options.json || false };
     }
-    return { reportOptions, csv };
+    return { reportOptions, csv: options.csv || false };
   }
 
   function parseArguments(arguments_) {
-    const [command, ...argumentsWithoutCommand] = arguments_;
-    if (command === 'investment-performance') {
-      return parseInvestmentPerformanceArguments(argumentsWithoutCommand);
-    }
-    if (command === 'gain') return parseGainArguments(argumentsWithoutCommand);
-    if (command !== 'aggregate' && command !== 'balance-history') throw new Error(usage());
-    const reportOptions = { accounts: [] };
-    let csv = false;
-
-    for (let index = 0; index < argumentsWithoutCommand.length; index += 1) {
-      const argument = argumentsWithoutCommand[index];
-      if (argument === '--value') {
-        if (command === 'balance-history') throw new Error(usage());
-        reportOptions.inValuationCommodity = true;
-        continue;
-      }
-      if (argument === '--csv') {
-        csv = true;
-        continue;
-      }
-      if (argument === '--invert') {
-        reportOptions.invert = true;
-        continue;
-      }
-      if (argument === '--from' || argument === '--to' || argument === '--accounts' || argument === '--date-basis') {
-        const value = argumentsWithoutCommand[index + 1];
-        if (value === undefined || value.startsWith('--')) throw new Error(usage());
-        index += 1;
-        if (argument === '--accounts') {
-          reportOptions.accounts.push(value);
-        } else {
-          const property = argument === '--date-basis' ? 'dateBasis' : argument.slice(2);
-          if (reportOptions[property] !== undefined) {
-            throw new Error(`${argument} may only be specified once`);
-          }
-          if (argument === '--date-basis' && value !== 'posting' && value !== 'transaction') {
-            throw new Error(usage());
-          }
-          reportOptions[property] = value;
-        }
-        continue;
-      }
-      throw new Error(usage());
+    const program = createProgram();
+    if (arguments_.length === 0) throw new Error(usage());
+    let selectedCommand;
+    for (const command of program.commands) {
+      command.action((options) => {
+        selectedCommand = { name: command.name(), options };
+      });
     }
 
-    return { reportOptions, csv };
+    try {
+      program.parse(arguments_, { from: 'user' });
+    } catch (error) {
+      if (!error.code?.startsWith('commander.')) throw error;
+      const message = error.message.replace(/^error: /u, '');
+      const command = program.commands.find((candidate) => candidate.name() === arguments_[0]);
+      const help = (command || program).helpInformation().trimEnd();
+      throw new Error(`${message}\n\n${help}`);
+    }
+
+    if (!selectedCommand) throw new Error(usage());
+    return parsedResult(selectedCommand.name, selectedCommand.options);
   }
 
   return {
