@@ -70,15 +70,6 @@ test('applies declared commodity precision and separators only to human-readable
   );
 });
 
-test('formats double-quoted commodity symbols', () => {
-  assert.equal(
-    formatHumanReadable([
-      { account: 'Assets:Fund', quantity: '1234.5', commodity: '"Fund A"' },
-    ], false, [{ commodity: '"Fund A"', format: '1,000.00 "Fund A"' }]),
-    'Assets:Fund  1,234.50 "Fund A"\n',
-  );
-});
-
 test('formats balance history', () => {
   const balanceRows = [
     { date: '2024-01-01', amount: '2.005', commodity: 'USD' },

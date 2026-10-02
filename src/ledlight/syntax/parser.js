@@ -7,16 +7,13 @@ module.exports = ({
 
   const DATE_LENGTH = 10;
   const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format']);
-  const CANONICAL_COMMODITY_FORMAT = /^((?:\d{1,3}(?:,\d{3})+|\d+))(?:\.(\d+))?[ \t]+("[^"\r\n]+"|[^ \t]+)$/u;
+  const CANONICAL_COMMODITY_FORMAT = /^((?:\d{1,3}(?:,\d{3})+|\d+))(?:\.(\d+))?[ \t]+([^ \t]+)$/u;
   const isWhitespace = (code) => code === 32 || code === 9;
   const isCommodityCharacter = (code) => !isWhitespace(code) && code !== 10 && code !== 13 &&
     code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64;
   const sourceLocation = (source, line, column) => ({ source, line, column });
 
   function assertCommoditySymbol(value, source, line, column) {
-    if (value.startsWith('"') && value.endsWith('"') && value.length > 2 && !/["\r\n]/u.test(value.slice(1, -1))) {
-      return value;
-    }
     if (!value || [...value].some((character) => !isCommodityCharacter(character.codePointAt(0)))) {
       throw syntaxError(`Invalid commodity symbol ${JSON.stringify(value)}`, source, line, column);
     }
@@ -51,7 +48,7 @@ module.exports = ({
       const code = input.charCodeAt(index);
       if (quote) {
         if (code === quote) quote = 0;
-      } else if (code === 34) quote = code;
+      } else if (code === 34 || code === 39) quote = code;
       else if (code === 59) return { text: input.slice(0, index).trimEnd(), comment: input.slice(index + 1).trim() };
     }
     return { text: input.trimEnd(), comment: null };
@@ -117,16 +114,8 @@ module.exports = ({
     cursor += DATE_LENGTH;
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const symbolStart = cursor;
-    if (text.charCodeAt(cursor) === 34) {
-      cursor++;
-      while (cursor < text.length && text.charCodeAt(cursor) !== 34) cursor++;
-      if (cursor === text.length) throw syntaxError('Unterminated quoted commodity symbol', source, line, symbolStart + 1);
-      cursor++;
-    } else while (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) cursor++;
+    while (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) cursor++;
     const commodity = assertCommoditySymbol(text.slice(symbolStart, cursor), source, line, symbolStart + 1);
-    if (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) {
-      throw syntaxError('Expected whitespace after price commodity symbol', source, line, cursor + 1);
-    }
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const parts = splitComment(text.slice(cursor));
     const expression = parseAmountExpression(parts.text, sourceLocation(source, line, cursor + 1));

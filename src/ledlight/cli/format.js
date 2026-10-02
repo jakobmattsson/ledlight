@@ -34,7 +34,7 @@ module.exports = ({
   }
 
   function parseCommodityFormat(format) {
-    const match = /^((?:\d{1,3}(?:,\d{3})+|\d+))(?:\.(\d+))?[ \t]+(?:"[^"\r\n]+"|[^ \t]+)$/u.exec(format);
+    const match = /^((?:\d{1,3}(?:,\d{3})+|\d+))(?:\.(\d+))?[ \t]+[^ \t]+$/u.exec(format);
     if (!match) return null;
     return {
       decimalSeparator: match[2] ? '.' : null,

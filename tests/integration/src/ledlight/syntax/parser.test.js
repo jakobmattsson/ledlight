@@ -185,39 +185,14 @@ test('rejects amounts without commodity symbols', () => {
   }
 });
 
-test('parses double-quoted commodity symbols', () => {
-  const document = parseConformant(`commodity "Fund A"
-  format 1,000.00 "Fund A"
-P 2024-01-01 "Fund A" 10 SEK
-2024-01-01 Opening
-  Assets:Fund  2 "Fund A" @ 10 SEK = 2 "Fund A"
-  Equity:Opening
-`, 'fixture.ledger');
-
-  assert.equal(document.entries[0].symbol, '"Fund A"');
-  assert.equal(document.entries[0].properties[0].value, '1,000.00 "Fund A"');
-  assert.equal(document.entries[1].commodity, '"Fund A"');
-  assert.deepEqual(document.entries[2].postings[0], {
-    type: 'posting',
-    account: 'Assets:Fund',
-    amount: { quantity: '2', commodity: '"Fund A"' },
-    cost: { total: false, amount: { quantity: '10', commodity: 'SEK' } },
-    balanceAssignment: null,
-    balanceAssertion: { quantity: '2', commodity: '"Fund A"' },
-    postingDate: null,
-    comment: null,
-    location: { source: 'fixture.ledger', line: 5, column: 3 },
-  });
-});
-
-test('rejects single-quoted and otherwise invalid commodity symbols', () => {
+test('rejects quoted and otherwise invalid commodity symbols', () => {
   const sources = [
+    '2024-01-01 Quoted\n  Assets:Cash  1 "USD"\n  Equity:Opening\n',
     "2024-01-01 Quoted\n  Assets:Cash  1 'USD'\n  Equity:Opening\n",
-    '2024-01-01 Quoted\n  Assets:Cash  1 "USD\n  Equity:Opening\n',
     '2024-01-01 Operator\n  Assets:Cash  1 US@D\n  Equity:Opening\n',
     '2024-01-01 Operator\n  Assets:Cash  1 US=D\n  Equity:Opening\n',
-    "commodity 'USD'\n",
-    "P 2024-01-01 'FUND' 1 USD\n",
+    'commodity "USD"\n',
+    'P 2024-01-01 "FUND" 1 USD\n',
   ];
 
   for (const sourceText of sources) {
