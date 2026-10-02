@@ -38,9 +38,8 @@ Ledlight {
   tagDirective = "tag" horizontal+ directiveValue inlineComment? lineEnd
 
   commodityDirective = "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*
-  commodityBody = commodityProperty
-  commodityProperty = indent "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
-                    | indent "default" commodityPropertyValue? inlineComment? lineEnd                  -- default
+  commodityBody = indent "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
+                | indent "default" commodityPropertyValue? inlineComment? lineEnd                  -- default
   commodityFormat = formatQuantity horizontal+ commoditySymbol
   formatQuantity = groupedFormatInteger ("." digit+)?  -- grouped
                  | digit+ ("." digit+)?                -- ungrouped

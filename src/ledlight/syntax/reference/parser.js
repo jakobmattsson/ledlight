@@ -147,7 +147,7 @@ module.exports = ({
         location: location(this, source),
       };
     },
-    commodityProperty_format(_indent, _keyword, _space, value, comment, _trailingSpace, _lineEnd) {
+    commodityBody_format(_indent, _keyword, _space, value, comment, _trailingSpace, _lineEnd) {
       return {
         name: 'format',
         value: value.sourceString,
@@ -156,7 +156,7 @@ module.exports = ({
         location: indentedLocation(_indent, this.args.source),
       };
     },
-    commodityProperty_default(_indent, _keyword, value, comment, _lineEnd) {
+    commodityBody_default(_indent, _keyword, value, comment, _lineEnd) {
       return {
         name: 'default',
         value: optionalValue(value, this.args.source),
