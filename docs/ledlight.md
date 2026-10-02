@@ -99,17 +99,33 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
+| `parse SOURCE_TEXT --source NAME` | `parse(sourceText, { source })` | Parse source text |
+| `load-journal ENTRY_PATH` | `loadJournal(entryPath)` | Load an include tree |
+| `project-paths` | `loadProjectPaths(startDirectory)` | Discover project paths |
+| `ensure-database` | `ensureProjectDatabaseCurrent(startDirectory)` | Refresh the database |
+| `open-project` | `openProject(startDirectory)` | Open and describe a project snapshot |
+| `account-balances` | `accountBalances(options, startDirectory)` | Exact-account balances |
+| `account-postings` | `accountPostings(options, startDirectory)` | Exact-account postings |
 | `aggregate` | `aggregateReport(options, startDirectory)` | Report selection and calculation |
 | `balance-history` | `balanceHistoryReport(options, startDirectory)` | Report selection and calculation |
 | `gain` | `gainReport(options, startDirectory)` | Unrealized gain or loss by account |
 | `investment-performance` | `investmentPerformance(options, startDirectory)` | Report selection and calculation |
+| `account-transactions` | `openProject().accountTransactions(options)` | Exact-account transactions |
+| `commodity-descriptions` | `openProject().commodityDescriptions()` | Commodity metadata |
+| `ledger-accounts` | `openProject().ledgerAccounts()` | Account metadata |
+| `ledger-transaction` | `openProject().ledgerTransaction(options)` | One transaction |
+| `ledger-transactions` | `openProject().ledgerTransactions(options)` | Paginated transactions |
+| `valuation-rate` | `openProject().ledgerValuationRateResolver()` | Resolve one valuation rate |
+| `--directory PATH` | `startDirectory` | Project discovery start directory |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
 | `--accounts PREFIX` | `options.accounts` | Repeated account-prefix selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
+| `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
-| Human-readable valued aggregate total | `options.includeTotal` | Total row calculated by the report API and requested by the CLI |
+| `--include-total` | `options.includeTotal` | Total row calculated by the report API |
+| `--account-factor ACCOUNT=FACTOR` | `options.accountFactors` | Exact-account balance-history factors |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `--csv` | None | Output formatting only |
@@ -117,9 +133,12 @@ underlying result.
 | `--version` | `version` | Public package metadata |
 | `--help` | None | CLI usage formatting only |
 
-Tests for the CLI command adapter verify that report calls are delegated to
-these public functions and that calculated rows are returned by the API before
-formatting.
+Commands without a specialized human-readable representation emit JSON.
+Report commands accept `--json` when the complete API result is needed; this
+is required to retain fields such as `valuationValue` and `factoredAmount`.
+Tests compare the callable package and project API inventory with the CLI
+command inventory, verify every parameter mapping, and verify that the command
+adapter delegates calculations to the API before formatting.
 
 ## Architecture
 

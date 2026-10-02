@@ -10,6 +10,7 @@ const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
 const cliPath = path.join(ledlightPath, 'src/ledlight/cli/run.js');
+const { apiCommands } = require('../../../../src/ledlight/cli/arguments')();
 
 test('exposes the supported public API without eagerly loading SQLite', () => {
   delete require.cache[sqliteModulePath];
@@ -106,6 +107,17 @@ test('loads SQLite only when a project database operation needs it', (t) => {
   assert.ok(require.cache[sqliteModulePath]);
 
   const project = ledlight.openProject(directory);
+  const packageOperations = Object.entries(ledlight)
+    .filter(([, value]) => typeof value === 'function')
+    .map(([name]) => name);
+  const projectOperations = Object.entries(project)
+    .filter(([, value]) => typeof value === 'function')
+    .map(([name]) => name);
+  assert.deepEqual(
+    [...new Set([...packageOperations, ...projectOperations])].sort(),
+    Object.keys(apiCommands).sort(),
+    'every callable public API operation must have a CLI command',
+  );
   assert.equal(project.projectRoot, directory);
   assert.deepEqual(project.accountBalances({ account: 'Assets:Cash' }), []);
   assert.deepEqual(project.accountPostings({ account: 'Assets:Cash' }), []);

@@ -108,3 +108,70 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'gainReport', options: { accounts: [] } },
   ]);
 });
+
+test('delegates non-report commands to every remaining public API operation', () => {
+  const calls = [];
+  const project = {
+    projectRoot: '/project',
+    rebuilt: false,
+    accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
+    commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
+    ledgerAccounts() { calls.push(['ledgerAccounts']); return ['accounts']; },
+    ledgerTransaction(options) { calls.push(['ledgerTransaction', options]); return { id: 7 }; },
+    ledgerTransactions(options) { calls.push(['ledgerTransactions', options]); return { page: 2 }; },
+    ledgerValuationRateResolver() {
+      calls.push(['ledgerValuationRateResolver']);
+      return (commodity, throughDate) => {
+        calls.push(['resolveRate', commodity, throughDate]);
+        return '10.5';
+      };
+    },
+  };
+  const ledlight = {
+    version: '1.2.3',
+    parse(...arguments_) { calls.push(['parse', ...arguments_]); return { entries: [] }; },
+    loadJournal(...arguments_) { calls.push(['loadJournal', ...arguments_]); return { entries: [] }; },
+    loadProjectPaths(directory) { calls.push(['loadProjectPaths', directory]); return { projectRoot: directory }; },
+    ensureProjectDatabaseCurrent(directory) { calls.push(['ensureProjectDatabaseCurrent', directory]); return { rebuilt: true }; },
+    accountBalances(options, directory) { calls.push(['accountBalances', options, directory]); return ['balances']; },
+    accountPostings(options, directory) { calls.push(['accountPostings', options, directory]); return ['postings']; },
+    openProject(directory) { calls.push(['openProject', directory]); return project; },
+  };
+  const { runReportCommand } = createCommand({ ledlight, cliArguments, cliFormat });
+  const run = (arguments_) => JSON.parse(runReportCommand(arguments_, { startDirectory: '/cwd' }));
+
+  assert.deepEqual(run(['parse', 'account Assets:Cash\n', '--source', 'input']), { entries: [] });
+  assert.deepEqual(run(['load-journal', '/journal']), { entries: [] });
+  assert.deepEqual(run(['project-paths', '--directory', '/other']), { projectRoot: '/other' });
+  assert.deepEqual(run(['ensure-database']), { rebuilt: true });
+  assert.deepEqual(run(['open-project']), { projectRoot: '/project', rebuilt: false });
+  assert.deepEqual(run(['account-balances', '--account', 'Assets:Cash']), ['balances']);
+  assert.deepEqual(run(['account-postings', '--account', 'Assets:Cash']), ['postings']);
+  assert.deepEqual(run(['account-transactions', '--account', 'Assets:Cash']), ['transactions']);
+  assert.deepEqual(run(['commodity-descriptions']), ['commodities']);
+  assert.deepEqual(run(['ledger-accounts']), ['accounts']);
+  assert.deepEqual(run(['ledger-transaction', '--transaction-id', '7']), { id: 7 });
+  assert.deepEqual(run([
+    'ledger-transactions', '--order', 'newest', '--page', '2', '--page-size', '10',
+  ]), { page: 2 });
+  assert.equal(run([
+    'valuation-rate', '--commodity', 'EUR', '--through-date', '2024-12-31',
+  ]), '10.5');
+
+  assert.deepEqual(calls, [
+    ['parse', 'account Assets:Cash\n', { source: 'input' }],
+    ['loadJournal', '/journal'],
+    ['loadProjectPaths', '/other'],
+    ['ensureProjectDatabaseCurrent', '/cwd'],
+    ['openProject', '/cwd'],
+    ['accountBalances', { account: 'Assets:Cash' }, '/cwd'],
+    ['accountPostings', { account: 'Assets:Cash' }, '/cwd'],
+    ['openProject', '/cwd'], ['accountTransactions', { account: 'Assets:Cash' }],
+    ['openProject', '/cwd'], ['commodityDescriptions'],
+    ['openProject', '/cwd'], ['ledgerAccounts'],
+    ['openProject', '/cwd'], ['ledgerTransaction', { transactionId: '7' }],
+    ['openProject', '/cwd'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
+    ['openProject', '/cwd'], ['ledgerValuationRateResolver'],
+    ['resolveRate', 'EUR', '2024-12-31'],
+  ]);
+});

@@ -128,9 +128,18 @@ module.exports = ({
   }
 
   function formatBalanceHistoryCsv(rows) {
-    const lines = ['date,amount'];
-    for (const row of displayBalanceHistory(rows)) lines.push(`${csvField(row.date)},${row.amount}`);
+    const hasFactoredAmount = rows.some((row) => row.factoredAmount !== undefined);
+    const lines = [hasFactoredAmount ? 'date,amount,factoredAmount' : 'date,amount'];
+    for (const row of displayBalanceHistory(rows)) {
+      const fields = [row.date, row.amount];
+      if (hasFactoredAmount) fields.push(row.factoredAmount ?? '');
+      lines.push(fields.map(csvField).join(','));
+    }
     return `${lines.join('\n')}\n`;
+  }
+
+  function formatJson(value) {
+    return `${JSON.stringify(value, null, 2)}\n`;
   }
 
   function formatBalanceHistoryHumanReadable(rows, descriptions) {
@@ -171,6 +180,7 @@ module.exports = ({
     formatHumanReadable,
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
+    formatJson,
     $$private: { parseCommodityFormat },
   };
 };

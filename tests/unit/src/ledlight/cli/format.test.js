@@ -11,6 +11,7 @@ const {
   formatHumanReadable,
   formatInvestmentPerformance,
   formatInvestmentPerformanceJson,
+  formatJson,
 } = resolveRepositoryModule("src/ledlight/cli/format.js");
 
 const rows = [
@@ -84,6 +85,12 @@ test('formats balance history', () => {
     '2024-01-01       2.01 USD\n2024-01-02  10,000.00 USD\n',
   );
   assert.deepEqual(balanceRows.map((row) => row.amount), ['2.005', '10000']);
+  assert.equal(
+    formatBalanceHistoryCsv([{
+      date: '2024-01-01', amount: '10', factoredAmount: '7', commodity: 'USD',
+    }]),
+    'date,amount,factoredAmount\n2024-01-01,10.00,7\n',
+  );
 });
 
 test('uses the valuation commodity format for human-readable valuation reports', () => {
@@ -136,4 +143,8 @@ test('formats investment performance for people and automation', () => {
     'Money-weighted return (total): 20.00 %\n' +
     'Money-weighted return (annualized): n/a\n');
   assert.equal(formatInvestmentPerformanceJson(report), `${JSON.stringify(report, null, 2)}\n`);
+});
+
+test('formats arbitrary API results as readable JSON', () => {
+  assert.equal(formatJson({ value: '10' }), '{\n  "value": "10"\n}\n');
 });
