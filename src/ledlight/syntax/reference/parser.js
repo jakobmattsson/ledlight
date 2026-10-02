@@ -142,11 +142,11 @@ module.exports = ({
         location: location(this, source),
       };
     },
-    commodityBody_format(_indent, _keyword, _space, value, comment, _trailingSpace, _lineEnd) {
+    commodityBody_format(_indent, _keyword, _space, quantity, _symbolSpace, symbol, comment, _trailingSpace, _lineEnd) {
       return {
         name: 'format',
-        value: value.sourceString,
-        formatSymbol: value.ast(this.args.source).symbol,
+        value: `${quantity.sourceString}${_symbolSpace.sourceString}${symbol.sourceString}`,
+        formatSymbol: symbol.ast(this.args.source),
         comment: optionalValue(comment, this.args.source),
         location: indentedLocation(_indent, this.args.source),
       };
@@ -158,9 +158,6 @@ module.exports = ({
         comment: optionalValue(comment, this.args.source),
         location: indentedLocation(_indent, this.args.source),
       };
-    },
-    commodityFormat(_quantity, _space, symbol) {
-      return { symbol: symbol.sourceString };
     },
     topLevel_price(_keyword, _space1, date, _space2, commodity, _space3, price, _space4, comment, _lineEnd) {
       return {

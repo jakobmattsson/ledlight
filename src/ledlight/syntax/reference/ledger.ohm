@@ -28,9 +28,8 @@ Ledlight {
   number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
 
-  commodityBody = horizontal+ "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd   -- format
-                | horizontal+ "default" inlineComment? lineEnd                                          -- default
-  commodityFormat = formatQuantity horizontal+ commoditySymbol
+  commodityBody = horizontal+ "format" horizontal+ formatQuantity horizontal+ commoditySymbol inlineComment? horizontal* lineEnd -- format
+                | horizontal+ "default" inlineComment? lineEnd                                                                   -- default
   formatQuantity = digit "," digit digit digit ("." digit+)?    -- grouped
                  | digit digit digit digit ("." digit+)?        -- ungrouped
 
