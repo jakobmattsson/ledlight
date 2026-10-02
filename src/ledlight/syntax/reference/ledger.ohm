@@ -49,8 +49,7 @@ Ledlight {
 
   indentedComment = indent ";" horizontal* commentText lineEnd
   topLevelComment = ";" horizontal* commentText lineEnd
-  postingComment = ";" horizontal* postingDate? commentText
-  postingDate = "[" date "]" horizontal*
+  postingComment = ";" horizontal* ("[" date "]" horizontal*)? commentText
   inlineComment = horizontal* ";" horizontal* commentText
   commentText = (~newline any)*
   directiveValue = (~forbiddenDirectiveValueCharacter any)+

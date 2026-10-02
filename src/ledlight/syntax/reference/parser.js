@@ -190,13 +190,12 @@ module.exports = ({
       };
     },
     topLevelComment(_semicolon, _space, _text, _lineEnd) { return null; },
-    postingComment(_semicolon, _space, date, _text) {
+    postingComment(_semicolon, _space, _open, date, _close, _dateSpace, _text) {
       return {
         date: optionalValue(date, this.args.source),
         comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
       };
     },
-    postingDate(_open, date, _close, _space) { return date.ast(this.args.source); },
     inlineComment(_space1, _semicolon, _space2, text) { return text.sourceString.trim(); },
     blankLine(_space, _newline) { return null; },
 
