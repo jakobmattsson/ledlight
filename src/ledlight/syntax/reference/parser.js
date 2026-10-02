@@ -71,12 +71,10 @@ module.exports = ({
         description: text,
         payee: pipe < 0 ? null : text.slice(0, pipe).trim(),
         narration: pipe < 0 ? text : text.slice(pipe + 1).trim(),
-        comment: comment.ast(source),
+        comment: optionalValue(comment, source),
         location: location(date, source),
       };
     },
-
-    comment(value) { return optionalValue(value, this.args.source); },
 
     posting(_indent, account, amountPart, _space, comment, _lineEnd) {
       const expression = optionalValue(amountPart, this.args.source) || {
