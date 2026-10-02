@@ -23,6 +23,15 @@ const invalidAmounts = [
     message: /fixture\.ledger:2:3: Posting amount must specify a commodity/u,
   },
   {
+    name: 'lot costs',
+    source: `2024-01-01 Missing commodity
+  Assets:Fund  1 FUND {10 SEK}
+  Equity:Opening
+`,
+    invalidate: (journal) => { journal.entries[0].postings[0].lotCost.amount.commodity = null; },
+    message: /fixture\.ledger:2:3: Lot cost must specify a commodity/u,
+  },
+  {
     name: 'posting costs',
     source: `2024-01-01 Missing commodity
   Assets:Fund  1 FUND @ 10 SEK

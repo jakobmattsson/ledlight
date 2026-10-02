@@ -32,6 +32,10 @@ test('creates the current schema in an empty database', (t) => {
   const reportDate = database.pragma('table_info(postings)')
     .find((column) => column.name === 'report_date');
   assert.equal(reportDate.notnull, 1);
+  const postingColumns = database.pragma('table_info(postings)').map((column) => column.name);
+  assert.ok(postingColumns.includes('lot_cost_quantity'));
+  assert.ok(postingColumns.includes('lot_cost_commodity'));
+  assert.ok(postingColumns.includes('lot_cost_is_total'));
   const transactionColumns = database.pragma('table_info(transactions)').map((column) => column.name);
   assert.ok(!transactionColumns.includes('effective_date'));
 });
@@ -73,6 +77,7 @@ test('adds the posting report date to a legacy schema', (t) => {
 
   const columns = database.pragma('table_info(postings)').map((column) => column.name);
   assert.ok(columns.includes('report_date'));
+  assert.ok(columns.includes('lot_cost_quantity'));
 });
 
 test('renames the posting effective date while preserving version 3 data', (t) => {

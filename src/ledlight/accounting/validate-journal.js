@@ -20,6 +20,7 @@ module.exports = () => {
 
   function validatePosting(posting) {
     if (posting.amount) requireCommodity(posting.amount, 'Posting amount', posting.location);
+    if (posting.lotCost) requireCommodity(posting.lotCost.amount, 'Lot cost', posting.location);
     if (posting.cost) requireCommodity(posting.cost.amount, 'Posting cost', posting.location);
     if (posting.balanceAssertion) {
       requireCommodity(posting.balanceAssertion, 'Balance assertion', posting.location);

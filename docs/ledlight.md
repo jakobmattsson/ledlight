@@ -147,8 +147,9 @@ formatter uses the shared exact-decimal helpers directly.
 
 The parser currently supports account, tag, commodity, price, and include
 directives; commodity properties; transaction status, code, payee/narration,
-and comments; postings with omitted or explicit amounts; unit
-and total costs; balance assignments; and balance assertions.
+and comments; postings with omitted or explicit amounts; unit and total lot
+costs (`{}` and `{{}}`); unit and total transaction costs (`@` and `@@`);
+balance assignments; and balance assertions.
 
 Unsupported Ledger syntax fails with a source location instead of being
 silently ignored. The runtime parser has no I/O or database dependency;
@@ -156,10 +157,14 @@ silently ignored. The runtime parser has no I/O or database dependency;
 and hashing.
 
 Before persistence, semantic validation requires commodities on explicit
-posting amounts, costs, balance assertions, and prices. Implicit postings and
-balance assignments may still infer their commodity. Explicit transactions
-must balance, allowing Ledger-style two-commodity exchanges and the precision
-tolerance associated with calculated unit costs.
+posting amounts, lot costs, transaction costs, balance assertions, and prices.
+Implicit postings and balance assignments may still infer their commodity.
+Explicit transactions must balance, allowing Ledger-style two-commodity
+exchanges and the precision tolerance associated with calculated unit costs.
+When a posting has both a lot cost and a transaction cost, its lot cost
+determines the balancing amount. This requires a realized gain or loss posting
+when disposal proceeds differ from the lot's cost basis, matching Ledger's
+behavior.
 
 `src/ledlight/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building

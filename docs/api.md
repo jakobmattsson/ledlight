@@ -60,8 +60,10 @@ shapes are:
   `comment`, `postings`, `notes`, and `location`.
 
 An amount is `{ quantity, commodity }`. Posting amounts can be `null` before
-semantic resolution. A posting can also contain a cost, balance assignment,
-balance assertion, posting date, and comment. Transaction notes contain `text`,
+semantic resolution. A posting can also contain a `lotCost`, transaction
+`cost`, balance assignment, balance assertion, posting date, and comment. Lot
+costs and transaction costs are `{ total, amount }`; `total` distinguishes
+`{{}}` or `@@` from `{}` or `@`. Transaction notes contain `text`,
 optional `key` and `value`, and a source location.
 
 ### `loadJournal(entryPath)`

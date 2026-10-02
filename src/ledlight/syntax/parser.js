@@ -10,7 +10,8 @@ module.exports = ({
   const CANONICAL_COMMODITY_FORMAT = /^(\d,?\d{3})(?:\.(\d+))?[ \t]+([^ \t]+)$/u;
   const isWhitespace = (code) => code === 32 || code === 9;
   const isCommodityCharacter = (code) => !isWhitespace(code) && code !== 10 && code !== 13 &&
-    code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64;
+    code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64 &&
+    code !== 123 && code !== 125;
   const sourceLocation = (source, line, column) => ({ source, line, column });
 
   function assertCommoditySymbol(value, source, line, column) {
@@ -111,7 +112,7 @@ module.exports = ({
     const tags = parseCommentTags(commentAfterDate);
     return {
       type: 'posting', account,
-      ...(expression || { amount: null, cost: null, balanceAssignment: null, balanceAssertion: null }),
+      ...(expression || { amount: null, lotCost: null, cost: null, balanceAssignment: null, balanceAssertion: null }),
       postingDate: postingDateMatch ? assertDate(postingDateMatch[1], source, line, raw.indexOf('[') + 2) : null,
       comment: parts.comment, ...(tags.length > 0 ? { tags } : {}), location: sourceLocation(source, line, indent + 1),
     };
@@ -130,7 +131,8 @@ module.exports = ({
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const parts = splitComment(text.slice(cursor));
     const expression = parseAmountExpression(parts.text, sourceLocation(source, line, cursor + 1));
-    if (!expression || !expression.amount || expression.cost || expression.balanceAssignment || expression.balanceAssertion) {
+    if (!expression || !expression.amount || expression.lotCost || expression.cost ||
+        expression.balanceAssignment || expression.balanceAssertion) {
       throw syntaxError('Expected a simple amount in price directive', source, line, cursor + 1);
     }
     return { type: 'price', date, commodity, price: expression.amount, comment: parts.comment, location: sourceLocation(source, line, 1) };

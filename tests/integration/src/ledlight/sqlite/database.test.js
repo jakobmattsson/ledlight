@@ -106,6 +106,38 @@ P 2024-01-01 FUND 123.45 SEK
   assert.equal(database.pragma('integrity_check', { simple: true }), 'ok');
 });
 
+test('stores lot costs separately from transaction costs', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity USD
+  default
+2024-01-01 Purchase
+  Assets:Broker  10 AAPL {{1000 USD}} @@ 1200 USD
+  Assets:Bank  -1000 USD
+`);
+
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(
+    database.prepare(`
+      SELECT lot_cost_quantity, lot_cost_commodity, lot_cost_is_total,
+        cost_quantity, cost_commodity, cost_is_total
+      FROM postings
+      WHERE account = 'Assets:Broker'
+    `).get(),
+    {
+      lot_cost_quantity: '1000',
+      lot_cost_commodity: 'USD',
+      lot_cost_is_total: 1,
+      cost_quantity: '1200',
+      cost_commodity: 'USD',
+      cost_is_total: 1,
+    },
+  );
+});
+
 test('loads the Ledger-compatible price history once per project', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');

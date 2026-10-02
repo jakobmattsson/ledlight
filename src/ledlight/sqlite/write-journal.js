@@ -37,10 +37,12 @@ module.exports = ({
       posting: database.prepare(`
       INSERT INTO postings
         (id, transaction_id, position, report_date, line, column, account,
-         amount_quantity, amount_commodity, cost_quantity, cost_commodity, cost_is_total,
+         amount_quantity, amount_commodity,
+         lot_cost_quantity, lot_cost_commodity, lot_cost_is_total,
+         cost_quantity, cost_commodity, cost_is_total,
          balance_assignment_quantity, balance_assignment_commodity,
          balance_assertion_quantity, balance_assertion_commodity, comment)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
       note: database.prepare(`
       INSERT INTO transaction_notes
@@ -82,6 +84,7 @@ module.exports = ({
 
     entry.postings.forEach((posting, position) => {
       const amount = amountFields(posting.amount);
+      const lotCost = amountFields(posting.lotCost && posting.lotCost.amount);
       const cost = amountFields(posting.cost && posting.cost.amount);
       const assignment = amountFields(posting.balanceAssignment);
       const assertion = amountFields(posting.balanceAssertion);
@@ -89,8 +92,9 @@ module.exports = ({
       statements.posting.run(
         postingId, entryId, position, posting.postingDate || entry.date,
         posting.location.line, posting.location.column,
-        posting.account, amount.quantity, amount.commodity, cost.quantity, cost.commodity,
-        posting.cost ? Number(posting.cost.total) : null,
+        posting.account, amount.quantity, amount.commodity,
+        lotCost.quantity, lotCost.commodity, posting.lotCost ? Number(posting.lotCost.total) : null,
+        cost.quantity, cost.commodity, posting.cost ? Number(posting.cost.total) : null,
         assignment.quantity, assignment.commodity, assertion.quantity, assertion.commodity,
         posting.comment,
       );
