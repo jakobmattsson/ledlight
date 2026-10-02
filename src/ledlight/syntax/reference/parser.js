@@ -151,10 +151,10 @@ module.exports = ({
         location: indentedLocation(_indent, this.args.source),
       };
     },
-    commodityBody_default(_indent, _keyword, _space, value, comment, _lineEnd) {
+    commodityBody_default(_indent, _keyword, comment, _lineEnd) {
       return {
         name: 'default',
-        value: value.children.length === 0 ? null : value.sourceString.trimEnd(),
+        value: null,
         comment: optionalValue(comment, this.args.source),
         location: indentedLocation(_indent, this.args.source),
       };

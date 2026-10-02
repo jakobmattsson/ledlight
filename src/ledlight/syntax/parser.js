@@ -194,6 +194,9 @@ module.exports = ({
           }
           const value = separator < 0 ? null : property.text.slice(separator).trim();
           if (name === 'format') assertCommodityFormat(value, commodity.symbol, source, lineNumber, first + 1);
+          if (name === 'default' && value !== null) {
+            throw syntaxError('Default commodity property does not accept a value', source, lineNumber, first + 1);
+          }
           commodity.properties.push({ name, value, comment: property.comment, location: sourceLocation(source, lineNumber, first + 1) });
         } else throw syntaxError('Unexpected indented line', source, lineNumber, first + 1);
         continue;

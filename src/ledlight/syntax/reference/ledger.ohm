@@ -12,9 +12,9 @@ Ledlight {
     | horizontal* newline                                                                                     -- blank
 
   description = (~forbiddenDescriptionSymbolCharacter any)+
-  indentedComment = indent ";" horizontal* commentText lineEnd
+  indentedComment = horizontal+ ";" horizontal* commentText lineEnd
 
-  posting = indent account amountPart? horizontal* postingComment? lineEnd
+  posting = horizontal+ account amountPart? horizontal* postingComment? lineEnd
   account = (~forbiddenAccountSymbolCharacter any)+
   amountPart = fieldSeparator amountExpression?
 
@@ -28,8 +28,8 @@ Ledlight {
   number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
 
-  commodityBody = indent "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
-                | indent "default" (horizontal+ directiveValue)? inlineComment? lineEnd            -- default // Should remove "directiveValue" from default I think
+  commodityBody = horizontal+ "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
+                | horizontal+ "default" inlineComment? lineEnd                                          -- default
   commodityFormat = formatQuantity horizontal+ commoditySymbol
   formatQuantity = groupedFormatInteger ("." digit+)?  -- grouped
                  | digit+ ("." digit+)?                -- ungrouped
@@ -51,7 +51,6 @@ Ledlight {
 
   fieldSeparator = "\t"                -- tab // Are these names needed or can we remove them to make things here look simpler?
                  | "  " horizontal*    -- spaces
-  indent = horizontal+
   lineEnd = newline | end
   horizontal = " " | "\t"
   newline = "\r\n" | "\n"
