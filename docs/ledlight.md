@@ -47,6 +47,9 @@ const document = parse(sourceText, { source: 'example.ledger' });
 const journal = loadJournal('journal.ledger');
 ```
 
+See the [Node.js API reference](api.md) for every exported operation, project
+method, option, result shape, and ordering guarantee.
+
 The package entry point loads the parser and journal reader immediately, but
 loads the native SQLite dependency only when a database or report operation is
 called. Consumers that only parse source text therefore do not initialize the
