@@ -1,0 +1,7 @@
+2024-01-05 * (opening) Bank | Opening balance
+  Assets:Bank  1500.25 EUR
+  Equity:Opening
+
+2024-01-20 ! Groceries
+  Expenses:Food  75.20 EUR
+  Assets:Bank

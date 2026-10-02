@@ -1,0 +1,20 @@
+commodity USD
+  default
+  format 1,000.00 USD
+
+commodity FUND
+commodity NOK
+commodity GBP
+commodity BOND
+
+P 2023-12-31 GBP 1.25 USD
+P 2024-01-01 FUND 10 USD
+P 2024-01-01 BOND 8 GBP
+P 2024-02-01 FUND 2 NOK
+P 2024-02-01 BOND 2 NOK
+
+2024-03-01 Hold fund units
+  Assets:Investments  3 FUND @ 10 USD
+  Assets:Bonds  2 BOND @ 10 USD
+  Equity:Opening  -30 USD
+  Equity:Opening  -20 USD
