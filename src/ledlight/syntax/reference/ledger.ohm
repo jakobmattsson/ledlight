@@ -4,7 +4,6 @@ Ledlight {
   topLevel
     = transaction
     | commodityDirective
-    | defaultCommodityDirective
     | accountDirective
     | tagDirective
     | includeDirective
@@ -52,12 +51,6 @@ Ledlight {
   commodityProperty = indent commodityPropertyName commodityPropertyValue? inlineComment? lineEnd
   commodityPropertyName = "format" | "default" | "nomarket"
   commodityPropertyValue = horizontal+ directiveValue
-
-  defaultCommodityDirective = "D" horizontal+ defaultCommodityAmount horizontal* inlineComment? lineEnd
-  defaultCommodityAmount = groupedNumber horizontal+ commoditySymbol
-  groupedNumber = sign? groupedDecimal
-  groupedDecimal = digit+ ("," digit digit digit)+ ("." digit*)?  -- grouped
-                 | decimal                                      -- plain
 
   priceDirective = "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd
 

@@ -155,25 +155,6 @@ module.exports = ({
     },
     commodityPropertyValue(_space, value) { return value.sourceString.trimEnd(); },
 
-    defaultCommodityDirective(_keyword, _space, amount, _spaceAfter, comment, _lineEnd) {
-      const source = this.args.source;
-      const value = amount.ast(source);
-      const propertyLocation = location(amount, source);
-      return {
-        type: 'commodity',
-        symbol: value.commodity,
-        comment: optionalValue(comment, source),
-        properties: [
-          { name: 'format', value: amount.sourceString, comment: null, location: propertyLocation },
-          { name: 'default', value: null, comment: null, location: propertyLocation },
-        ],
-        location: location(this, source),
-      };
-    },
-    defaultCommodityAmount(_number, _space, commodity) {
-      return { commodity: commodity.ast(this.args.source) };
-    },
-
     priceDirective(_keyword, _space1, date, _space2, commodity, _space3, price, _space4, comment, _lineEnd) {
       return {
         type: 'price',

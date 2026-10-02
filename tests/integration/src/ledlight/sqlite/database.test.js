@@ -110,7 +110,8 @@ test('loads the Ledger-compatible price history once per project', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
-  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
 P 2024-01-01 FUND 10 SEK
 2024-01-01 Opening
   Assets:Fund  1 FUND
@@ -198,7 +199,8 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
   const databasePath = path.join(directory, 'tmp', 'ledger.sqlite');
   const cliPath = path.resolve(__dirname, '../../../../../src/ledlight/cli/run.js');
   fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
-  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
 2024-01-01 Opening
   Assets:Cash,Main  1 SEK
   Equity:Opening
@@ -210,7 +212,8 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
   assert.equal(first, 'Assets:Cash,Main  1 SEK\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
-  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
 2024-01-01 Opening
   Assets:Cash,Main  2.005 SEK
   Assets:LongAccount  10000 SEK

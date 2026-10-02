@@ -75,7 +75,8 @@ test('keeps an internal transfer atomic when a posting has another date', (t) =>
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
 2024-01-02 Internal transfer
   Assets:Destination  10 SEK
   Assets:Source  -10 SEK ; [2024-01-01]
@@ -154,7 +155,8 @@ test('rejects invalid intervals and missing historical prices', (t) => {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const unpricedDatabasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
 2024-01-01 Opening
   Assets:Other  1 OTHER
   Equity:Opening  -1 OTHER

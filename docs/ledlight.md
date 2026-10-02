@@ -186,19 +186,16 @@ builds the database before producing the report.
 
 The valuation report selects the latest price on or before `to`. When `to` is
 omitted, it uses the latest available price. The single valuation commodity is
-the last commodity marked `default` by the journal, either with a commodity
-declaration or Ledger's `D` directive:
+the last commodity marked `default` by a commodity declaration:
 
 ```ledger
 commodity USD
   format 1,000.00 USD
   default
-
-; Equivalent default and format declaration:
-D 1,000.00 USD
 ```
 
-There is no API or command-line option for choosing another target commodity.
+This `commodity` property is the only supported way to declare the valuation
+commodity. There is no API or command-line option for choosing another target.
 Price chains can pass through intermediate commodities. Missing and circular
 price chains are errors. Results remain exact decimal strings and are not
 rounded for display.

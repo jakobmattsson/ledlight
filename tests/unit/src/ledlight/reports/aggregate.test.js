@@ -134,7 +134,9 @@ test('uses the journal default commodity instead of assuming SEK', (t) => {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `D 1,000.00 USD
+  fs.writeFileSync(journalPath, `commodity USD
+  format 1,000.00 USD
+  default
 P 2024-01-01 FUND 12 USD
 2024-01-01 Opening
   Assets:Fund  2 FUND
@@ -194,7 +196,8 @@ test('rejects invalid intervals and missing valuation price chains', (t) => {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const unpricedDatabasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
 2024-01-01 Opening
   Assets:Other  1 OTHER
   Equity:Opening  -1 OTHER
@@ -211,7 +214,8 @@ test('rejects circular valuation price chains', (t) => {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
 P 2024-01-01 FUND 2 NOK
 P 2024-01-01 NOK 0.5 FUND
 2024-01-01 Opening

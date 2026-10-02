@@ -39,7 +39,10 @@ test('loads SQLite only when a project database operation needs it', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-public-api-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
-  fs.writeFileSync(path.join(directory, 'journal.ledger'), 'D 1,000.00 SEK\naccount Assets:Cash\n');
+  fs.writeFileSync(
+    path.join(directory, 'journal.ledger'),
+    'commodity SEK\n  default\naccount Assets:Cash\n',
+  );
 
   const paths = ledlight.loadProjectPaths(directory);
   assert.match(paths.databasePath, /tmp\/ledger\.sqlite$/u);
