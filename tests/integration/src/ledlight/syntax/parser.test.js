@@ -150,6 +150,13 @@ test('rejects quoted and otherwise invalid commodity symbols', () => {
   }
 });
 
+test('allows trailing whitespace on a commodity directive without a comment', () => {
+  const document = parseConformant('commodity USD   \n', 'fixture.ledger');
+
+  assert.equal(document.entries[0].symbol, 'USD');
+  assert.equal(document.entries[0].comment, null);
+});
+
 test('parses declarations, commodity properties, prices, and source notes', () => {
   const document = parseConformant(`account Assets:Cash
 tag Source
