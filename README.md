@@ -3,6 +3,12 @@
 Ledlight is a standalone Ledger-compatible parser, SQLite store, and reporting
 library extracted from the Fonden project.
 
+Install the public package on Node.js 22 LTS:
+
+```console
+npm install ledlight
+```
+
 Install dependencies and run the complete verification suite:
 
 ```console
@@ -31,5 +37,9 @@ A Ledger project is a directory containing a `.ledgerrc` with exactly one
 
 See [the Ledlight documentation](docs/ledlight.md) for the supported syntax,
 reports, and CLI, and the [Node.js API reference](docs/api.md) for the complete
-consumer surface. Proposed follow-up work is tracked in the
-[improvement backlog](docs/improvements.md).
+consumer surface. Supported runtimes, module formats, native platforms, and
+compatibility guarantees are defined in the
+[package support policy](docs/package.md). Proposed follow-up work is tracked
+in the [improvement backlog](docs/improvements.md).
+
+Ledlight is available under the [MIT License](LICENSE).

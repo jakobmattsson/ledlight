@@ -115,33 +115,12 @@ point for ratios and iterative return calculations. If the existing result
 shape is retained, document its precision limits and add tests with values
 beyond JavaScript's safe integer precision and with long fractional quantities.
 
-## Priority 6: prepare the distributable package
-
-The current package is private and unlicensed. Before publication, define:
-
-- package license and repository metadata;
-- an explicit `exports` map;
-- the files included in the published archive;
-- supported Node.js versions;
-- CommonJS and possible ESM support;
-- the supported `better-sqlite3` platforms and Node ABI policy; and
-- the stability and semantic-versioning policy for the Node.js API, CLI, and
-  stored database schema.
-
-Add an automated package smoke test that creates the tarball, installs it in an
-empty temporary project, imports the public module, and invokes the installed
-`ledlight` executable. The test must prove that production use does not depend
-on repository-only files.
-
-The runtime composition root currently scans the source tree and pairs every
-factory file with a manually maintained dependency-injection name. Explicit
-registration, or a generated and verified manifest, would make the packaged
-runtime less dependent on repository layout.
-
 ## Smaller maintainability and product improvements
 
 - Decide whether several `commodity` declarations marked `default` are valid.
   The current behavior silently uses the last declaration.
+- Replace source-tree scanning plus the manually maintained dependency-injection
+  name map with explicit registration or a generated and verified manifest.
 - Keep extending the Ledger differential corpus whenever syntax or aggregate
   behavior is added or corrected.
 
@@ -153,5 +132,5 @@ runtime less dependent on repository layout.
    processes or concurrent callers.
 3. Add benchmarks and precision-boundary tests before changing storage or
    investment-result representations.
-4. Apply commodity-aware presentation and complete package publication work.
+4. Apply commodity-aware presentation.
 5. Address the smaller maintainability items incrementally.

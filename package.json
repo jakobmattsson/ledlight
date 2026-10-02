@@ -2,11 +2,42 @@
   "name": "ledlight",
   "version": "0.1.0",
   "description": "A small, fast Ledger-compatible parser, SQLite store, and reporting library.",
-  "license": "UNLICENSED",
-  "private": true,
+  "license": "MIT",
+  "author": "Jakob Mattsson",
+  "homepage": "https://github.com/jakobmattsson/ledlight#readme",
+  "bugs": {
+    "url": "https://github.com/jakobmattsson/ledlight/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakobmattsson/ledlight.git"
+  },
+  "keywords": [
+    "accounting",
+    "cli",
+    "ledger",
+    "sqlite"
+  ],
+  "type": "commonjs",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "docs/api.md",
+    "docs/ledlight.md",
+    "docs/package.md",
+    "index.js",
+    "src"
+  ],
   "bin": {
     "ledlight": "src/ledlight/cli/run.js"
+  },
+  "engines": {
+    "node": "^22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
@@ -15,18 +46,19 @@
     "lint:fix": "eslint --fix .",
     "test": "worktree-keeper run-tests",
     "test:ledger": "node --test tests/integration/src/ledlight/ledger-cli-compatibility.test.js",
+    "test:package": "node --test tests/package/package.test.js",
     "test:unit": "node --test 'tests/unit/**/*.test.js'",
     "test:integration": "node --test 'tests/integration/**/*.test.js'"
   },
   "dependencies": {
     "awilix": "^13.0.5",
-    "better-sqlite3": "11.7.0"
+    "better-sqlite3": "11.7.0",
+    "ohm-js": "17.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "globals": "^17.12.0",
-    "ohm-js": "17.5.0",
     "worktree-keeper": "0.7.0"
   }
 }
