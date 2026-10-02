@@ -15,12 +15,10 @@ Ledlight {
   transactionBody = indentedComment | posting
 
   transactionHeader = date horizontal+ description inlineComment? lineEnd
-  description = descriptionCharacter+
-  descriptionCharacter = ~forbiddenDescriptionSymbolCharacter any
+  description = (~forbiddenDescriptionSymbolCharacter any)+
 
   posting = indent account amountPart? horizontal* postingComment? lineEnd
-  account = accountCharacter+
-  accountCharacter = ~forbiddenAccountSymbolCharacter any
+  account = (~forbiddenAccountSymbolCharacter any)+
   amountPart = fieldSeparator amountExpression?
 
   amountExpression = balanceAssignment | explicitAmount
