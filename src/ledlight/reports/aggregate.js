@@ -10,7 +10,8 @@ module.exports = ({
     registerDecimalFunctions,
   },
   accountPrefixFilter: { accountPrefixFilter },
-  sekRates: { querySekRates },
+  valuationRates: { queryValuationRates },
+  valuationCommodity: { fromDatabase },
 }) => {
 
   function assertDate(value, optionName) {
@@ -31,8 +32,8 @@ module.exports = ({
       to: options.to,
       accounts: options.accounts ?? [],
       dateBasis: options.dateBasis ?? 'posting',
-      inSek: options.inSek === true,
-      withSekValue: options.withSekValue === true,
+      inValuationCommodity: options.inValuationCommodity === true,
+      withValuationValue: options.withValuationValue === true,
     };
     assertDate(normalized.from, '--from');
     assertDate(normalized.to, '--to');
@@ -45,8 +46,8 @@ module.exports = ({
     if (normalized.dateBasis !== 'posting' && normalized.dateBasis !== 'transaction') {
       throw new Error(`Invalid dateBasis: ${JSON.stringify(normalized.dateBasis)}; expected posting or transaction`);
     }
-    if (normalized.inSek && normalized.withSekValue) {
-      throw new Error('inSek and withSekValue cannot be used together');
+    if (normalized.inValuationCommodity && normalized.withValuationValue) {
+      throw new Error('inValuationCommodity and withValuationValue cannot be used together');
     }
     return normalized;
   }
@@ -91,60 +92,61 @@ module.exports = ({
   `).all(...filter.parameters);
   }
 
-  function querySekTotals(database, options, commodityTotals, sekPriceCache) {
-    const rates = querySekRates(
+  function queryValuationTotals(database, options, commodityTotals, valuationPriceCache) {
+    const rates = queryValuationRates(
       database,
       options.to,
       new Set(commodityTotals.map((row) => row.commodity)),
-      sekPriceCache,
+      valuationPriceCache,
     );
-    database.function('sek_rate', { deterministic: true }, (commodity) => rates.get(commodity));
+    const valuationCommodity = fromDatabase(database);
+    database.function('valuation_rate', { deterministic: true }, (commodity) => rates.get(commodity));
     const filter = reportFilter(options);
     return database.prepare(`
     SELECT
       p.account,
-      'SEK' AS commodity,
-      decimal_sum(decimal_mul(r.quantity, sek_rate(r.commodity))) AS quantity
+      ? AS commodity,
+      decimal_sum(decimal_mul(r.quantity, valuation_rate(r.commodity))) AS quantity
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     JOIN transactions AS t ON t.entry_id = p.transaction_id
     ${filter.sql}
     GROUP BY p.account
     HAVING decimal_cmp(
-      decimal_sum(decimal_mul(r.quantity, sek_rate(r.commodity))),
+      decimal_sum(decimal_mul(r.quantity, valuation_rate(r.commodity))),
       '0'
     ) != 0
     ORDER BY p.account
-  `).all(...filter.parameters);
+  `).all(valuationCommodity, ...filter.parameters);
   }
 
-  function withSekValues(database, options, commodityTotals, sekPriceCache) {
-    const rates = querySekRates(
+  function withValuationValues(database, options, commodityTotals, valuationPriceCache) {
+    const rates = queryValuationRates(
       database,
       options.to,
       new Set(commodityTotals.map((row) => row.commodity)),
-      sekPriceCache,
+      valuationPriceCache,
     );
     return commodityTotals.map((row) => ({
       ...row,
-      sekValue: formatDecimal(multiplyDecimals(
+      valuationValue: formatDecimal(multiplyDecimals(
         parseDecimal(row.quantity),
         parseDecimal(rates.get(row.commodity)),
       )),
     }));
   }
 
-  function queryAggregateReport(databasePath, options, { sekPriceCache }) {
+  function queryAggregateReport(databasePath, options, { valuationPriceCache }) {
     const normalizedOptions = normalizeOptions(options);
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
       registerDecimalFunctions(database);
       const commodityTotals = queryCommodityTotals(database, normalizedOptions);
-      if (normalizedOptions.inSek) {
-        return querySekTotals(database, normalizedOptions, commodityTotals, sekPriceCache);
+      if (normalizedOptions.inValuationCommodity) {
+        return queryValuationTotals(database, normalizedOptions, commodityTotals, valuationPriceCache);
       }
-      return normalizedOptions.withSekValue
-        ? withSekValues(database, normalizedOptions, commodityTotals, sekPriceCache)
+      return normalizedOptions.withValuationValue
+        ? withValuationValues(database, normalizedOptions, commodityTotals, valuationPriceCache)
         : commodityTotals;
     } finally {
       database.close();

@@ -8,6 +8,7 @@ module.exports = ({
     multiplyDecimals,
     parseDecimal,
   },
+  valuationCommodity: { fromDatabase },
 }) => {
 
   function selectLatestPrices(database, throughDate) {
@@ -27,19 +28,19 @@ module.exports = ({
     return prices;
   }
 
-  function resolveSekRates(prices, commodities, throughDate) {
-    const rates = new Map([['SEK', '1']]);
+  function resolveValuationRates(prices, commodities, valuationCommodity, throughDate) {
+    const rates = new Map([[valuationCommodity, '1']]);
     const visiting = new Set();
 
     function resolve(commodity) {
       if (rates.has(commodity)) return rates.get(commodity);
       if (visiting.has(commodity)) {
-        throw new Error(`Circular price chain while converting ${commodity} to SEK`);
+        throw new Error(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
       }
       const price = prices.get(commodity);
       if (!price || !price.price_commodity) {
         const dateContext = throughDate ? ` on or before ${throughDate}` : '';
-        throw new Error(`No price for ${commodity}${dateContext} can convert it to SEK`);
+        throw new Error(`No price for ${commodity}${dateContext} can convert it to ${valuationCommodity}`);
       }
       visiting.add(commodity);
       const quoteRate = resolve(price.price_commodity);
@@ -56,17 +57,17 @@ module.exports = ({
     return rates;
   }
 
-  function selectMaterializedSekRates(database, throughDate, commodities) {
-    const selected = [...commodities].filter((commodity) => commodity !== 'SEK');
-    const rates = new Map([['SEK', '1']]);
+  function selectMaterializedValuationRates(database, throughDate, commodities, valuationCommodity) {
+    const selected = [...commodities].filter((commodity) => commodity !== valuationCommodity);
+    const rates = new Map([[valuationCommodity, '1']]);
     if (selected.length === 0) return rates;
     const placeholders = selected.map(() => '?').join(', ');
     const rows = database.prepare(`
     SELECT rates.commodity, rates.rate
-    FROM sek_prices AS rates
+    FROM valuation_prices AS rates
     JOIN (
       SELECT commodity, MAX(date) AS date
-      FROM sek_prices
+      FROM valuation_prices
       WHERE (? IS NULL OR date <= ?)
         AND commodity IN (${placeholders})
       GROUP BY commodity
@@ -78,8 +79,11 @@ module.exports = ({
     return rates;
   }
 
-  function querySekRates(database, throughDate, commodities, priceCache) {
-    const materializedRates = selectMaterializedSekRates(database, throughDate, commodities);
+  function queryValuationRates(database, throughDate, commodities, priceCache) {
+    const valuationCommodity = fromDatabase(database);
+    const materializedRates = selectMaterializedValuationRates(
+      database, throughDate, commodities, valuationCommodity,
+    );
     if ([...commodities].every((commodity) => materializedRates.has(commodity))) {
       return materializedRates;
     }
@@ -89,9 +93,10 @@ module.exports = ({
       prices = selectLatestPrices(database, throughDate);
       priceCache?.set(cacheKey, prices);
     }
-    return resolveSekRates(
+    return resolveValuationRates(
       prices,
       commodities,
+      valuationCommodity,
       throughDate,
     );
   }
@@ -108,7 +113,7 @@ module.exports = ({
   `).all(...parameters);
   }
 
-  function createLedgerSekRateResolver(priceRows) {
+  function createLedgerValuationRateResolver(priceRows, valuationCommodity) {
     const histories = new Map();
     for (const price of priceRows) {
       const history = histories.get(price.commodity) ?? [];
@@ -117,13 +122,13 @@ module.exports = ({
     }
     const cache = new Map();
     function resolve(commodity, throughDate, visiting) {
-      if (commodity === 'SEK') return '1';
+      if (commodity === valuationCommodity) return '1';
       const key = `${commodity}\0${throughDate}`;
       if (cache.has(key)) return cache.get(key);
-      if (visiting.has(commodity)) throw new Error(`Circular price chain while converting ${commodity} to SEK`);
+      if (visiting.has(commodity)) throw new Error(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
       const eligible = (histories.get(commodity) ?? []).filter((price) => price.date <= throughDate);
-      // Ledger prefers a direct SEK quote even when a newer indirect quote exists.
-      const direct = eligible.findLast((price) => price.price_commodity === 'SEK');
+      // Ledger prefers a direct quote even when a newer indirect quote exists.
+      const direct = eligible.findLast((price) => price.price_commodity === valuationCommodity);
       if (direct) {
         cache.set(key, direct.price_quantity);
         return direct.price_quantity;
@@ -146,27 +151,27 @@ module.exports = ({
         }
       }
       visiting.delete(commodity);
-      throw new Error(`No price for ${commodity} on or before ${throughDate} can convert it to SEK`);
+      throw new Error(`No price for ${commodity} on or before ${throughDate} can convert it to ${valuationCommodity}`);
     }
     return resolve;
   }
 
-  function queryLedgerSekRateResolver(databasePath) {
+  function queryLedgerValuationRateResolver(databasePath) {
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
-      return createLedgerSekRateResolver(selectPriceHistory(database));
+      return createLedgerValuationRateResolver(selectPriceHistory(database), fromDatabase(database));
     } finally {
       database.close();
     }
   }
 
   return {
-    querySekRates,
-    queryLedgerSekRateResolver,
+    queryValuationRates,
+    queryLedgerValuationRateResolver,
     $$private: {
-      resolveSekRates,
+      resolveValuationRates,
       selectLatestPrices,
-      selectMaterializedSekRates,
+      selectMaterializedValuationRates,
     },
   };
 };

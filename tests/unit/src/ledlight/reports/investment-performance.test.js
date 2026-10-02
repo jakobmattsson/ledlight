@@ -18,6 +18,7 @@ function buildFixture(t) {
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity SEK
+  default
 commodity FUND
 commodity HOME
 P 2024-01-01 FUND 10 SEK
@@ -90,6 +91,7 @@ test('uses posting dates for positions, prices, and external flows', (t) => {
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity SEK
+  default
 commodity FUND
 P 2024-02-01 FUND 10 SEK
 

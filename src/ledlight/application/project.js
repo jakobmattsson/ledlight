@@ -13,7 +13,7 @@ module.exports = ({
   aggregateReport: { queryAggregateReport },
   balanceHistoryReport: { queryBalanceHistoryReport },
   investmentPerformanceReport: { queryInvestmentPerformance },
-  sekRates: { queryLedgerSekRateResolver },
+  valuationRates: { queryLedgerValuationRateResolver },
   transactionReport: { queryLedgerTransactions },
   database: { ensureDatabaseCurrent },
 }) => {
@@ -92,8 +92,8 @@ module.exports = ({
 
   function openProject(startDirectory) {
     const current = ensureProjectDatabaseCurrent(startDirectory);
-    const sekPriceCache = new Map();
-    let ledgerSekRateResolver;
+    const valuationPriceCache = new Map();
+    let ledgerValuationRateResolver;
     return {
       ...current,
       accountBalances(options) {
@@ -106,7 +106,7 @@ module.exports = ({
         return queryAccountTransactions(current.databasePath, options);
       },
       aggregateReport(options) {
-        return queryAggregateReport(current.databasePath, options, { sekPriceCache });
+        return queryAggregateReport(current.databasePath, options, { valuationPriceCache });
       },
       balanceHistoryReport(options) {
         return queryBalanceHistoryReport(current.databasePath, options);
@@ -114,9 +114,9 @@ module.exports = ({
       investmentPerformance(options) {
         return queryInvestmentPerformance(current.databasePath, options);
       },
-      ledgerSekRateResolver() {
-        ledgerSekRateResolver ??= queryLedgerSekRateResolver(current.databasePath);
-        return ledgerSekRateResolver;
+      ledgerValuationRateResolver() {
+        ledgerValuationRateResolver ??= queryLedgerValuationRateResolver(current.databasePath);
+        return ledgerValuationRateResolver;
       },
       ledgerAccounts() {
         return queryLedgerAccounts(current.databasePath);

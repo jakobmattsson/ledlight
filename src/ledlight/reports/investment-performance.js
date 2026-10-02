@@ -5,6 +5,7 @@ module.exports = ({
   sqlite: Database,
   decimal: { registerDecimalFunctions },
   accountPrefixFilter: { accountPrefixFilter },
+  valuationCommodity: { fromDatabase },
 }) => {
 
   const DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
@@ -82,7 +83,7 @@ module.exports = ({
     return { sql: clauses.join('\n          AND '), parameters };
   }
 
-  function queryDailyValues(database, options, commodities) {
+  function queryDailyValues(database, options, commodities, valuationCommodity) {
     const filter = selectionFilter(options, commodities, 'r');
     const reportEnd = options.to
       ? `SELECT MIN(date) AS value FROM (
@@ -143,23 +144,23 @@ module.exports = ({
           AND changes.date = date(positions.date, '+1 day')
       )
     SELECT positions.date,
-      decimal_sum(decimal_mul(positions.quantity, sek_prices.rate)) AS value,
-      MIN(CASE WHEN sek_prices.rate IS NULL AND decimal_cmp(positions.quantity, '0') != 0
+      decimal_sum(decimal_mul(positions.quantity, valuation_prices.rate)) AS value,
+      MIN(CASE WHEN valuation_prices.rate IS NULL AND decimal_cmp(positions.quantity, '0') != 0
         THEN positions.commodity END) AS missing_commodity
     FROM positions
-    LEFT JOIN sek_prices
-      ON sek_prices.commodity = positions.commodity AND sek_prices.date = positions.date
+    LEFT JOIN valuation_prices
+      ON valuation_prices.commodity = positions.commodity AND valuation_prices.date = positions.date
     GROUP BY positions.date
     ORDER BY positions.date
   `).all(...parameters).map((row) => {
       if (row.missing_commodity) {
-        throw new Error(`No price for ${row.missing_commodity} on or before ${row.date} can convert it to SEK`);
+        throw new Error(`No price for ${row.missing_commodity} on or before ${row.date} can convert it to ${valuationCommodity}`);
       }
       return { date: row.date, value: Number(row.value) };
     });
   }
 
-  function queryDailyFlows(database, options, commodities) {
+  function queryDailyFlows(database, options, commodities, valuationCommodity) {
     const accountClauses = [];
     const accountParameters = [];
     if (options.accounts.length > 0) {
@@ -173,15 +174,15 @@ module.exports = ({
     WITH transaction_values AS (
       SELECT t.entry_id, p.report_date AS date, p.account,
         decimal_sum(CASE WHEN r.commodity IN (${commodities.map(() => '?').join(', ')})
-          THEN decimal_mul(r.quantity, sek_prices.rate) ELSE '0' END) AS selected_value,
+          THEN decimal_mul(r.quantity, valuation_prices.rate) ELSE '0' END) AS selected_value,
         decimal_sum(CASE WHEN r.commodity NOT IN (${commodities.map(() => '?').join(', ')})
-          THEN decimal_mul(r.quantity, sek_prices.rate) ELSE '0' END) AS unselected_value,
-        MIN(CASE WHEN sek_prices.rate IS NULL AND decimal_cmp(r.quantity, '0') != 0
+          THEN decimal_mul(r.quantity, valuation_prices.rate) ELSE '0' END) AS unselected_value,
+        MIN(CASE WHEN valuation_prices.rate IS NULL AND decimal_cmp(r.quantity, '0') != 0
           THEN r.commodity END) AS missing_commodity
       FROM resolved_posting_amounts AS r
       JOIN postings AS p ON p.id = r.posting_id
       JOIN transactions AS t ON t.entry_id = p.transaction_id
-      LEFT JOIN sek_prices ON sek_prices.commodity = r.commodity AND sek_prices.date = p.report_date
+      LEFT JOIN valuation_prices ON valuation_prices.commodity = r.commodity AND valuation_prices.date = p.report_date
       WHERE 1 = 1 ${accountWhere}
       GROUP BY t.entry_id, p.report_date, p.account
     )
@@ -199,7 +200,7 @@ module.exports = ({
   `).all(...parameters);
     return rows.map((row) => {
       if (row.missing_commodity) {
-        throw new Error(`No price for ${row.missing_commodity} on or before ${row.date} can convert a cash flow to SEK`);
+        throw new Error(`No price for ${row.missing_commodity} on or before ${row.date} can convert a cash flow to ${valuationCommodity}`);
       }
       return { date: row.date, flow: Number(row.flow) };
     });
@@ -254,12 +255,13 @@ module.exports = ({
     return Math.expm1(Math.log1p(annualizedReturn) * years);
   }
 
-  function calculatePerformance(values, flows, options, commodities) {
+  function calculatePerformance(values, flows, options, commodities, valuationCommodity) {
     if (values.length === 0) {
       return {
         from: options.from ?? null,
         to: options.to ?? null,
         commodities,
+        valuationCommodity,
         openingValue: 0,
         endingValue: 0,
         netContributions: 0,
@@ -342,6 +344,7 @@ module.exports = ({
       from: effectiveFrom,
       to: effectiveTo,
       commodities,
+      valuationCommodity,
       openingValue,
       endingValue,
       netContributions,
@@ -358,11 +361,12 @@ module.exports = ({
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
       registerDecimalFunctions(database);
+      const valuationCommodity = fromDatabase(database);
       const commodities = selectedCommodities(database, normalized);
-      if (commodities.length === 0) return calculatePerformance([], [], normalized, []);
-      const values = queryDailyValues(database, { ...normalized, from: undefined }, commodities);
-      const flows = queryDailyFlows(database, normalized, commodities);
-      return calculatePerformance(values, flows, normalized, commodities);
+      if (commodities.length === 0) return calculatePerformance([], [], normalized, [], valuationCommodity);
+      const values = queryDailyValues(database, { ...normalized, from: undefined }, commodities, valuationCommodity);
+      const flows = queryDailyFlows(database, normalized, commodities, valuationCommodity);
+      return calculatePerformance(values, flows, normalized, commodities, valuationCommodity);
     } finally {
       database.close();
     }

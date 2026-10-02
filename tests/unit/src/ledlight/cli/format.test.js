@@ -20,7 +20,7 @@ const rows = [
   { account: 'Assets:LongAccount', quantity: '10000', commodity: 'SEK' },
 ];
 
-test('formats RFC-style CSV and exact SEK rounding', () => {
+test('formats RFC-style CSV and exact valuation rounding', () => {
   assert.equal(
     formatCsv([
       { account: 'Assets:"Cash",Main', quantity: '1.005', commodity: 'SEK' },
@@ -49,8 +49,8 @@ test('inverts exact quantities without mutating input rows', () => {
 
 test('formats and inverts balance history', () => {
   const balanceRows = [
-    { date: '2024-01-01', amount: '2.005' },
-    { date: '2024-01-02', amount: '10000' },
+    { date: '2024-01-01', amount: '2.005', commodity: 'USD' },
+    { date: '2024-01-02', amount: '10000', commodity: 'USD' },
   ];
   assert.equal(
     formatBalanceHistoryCsv(balanceRows),
@@ -58,11 +58,11 @@ test('formats and inverts balance history', () => {
   );
   assert.equal(
     formatBalanceHistoryHumanReadable(balanceRows),
-    '2024-01-01       2.01 SEK\n2024-01-02  10,000.00 SEK\n',
+    '2024-01-01       2.01 USD\n2024-01-02  10,000.00 USD\n',
   );
   assert.deepEqual(invertBalanceHistory(balanceRows), [
-    { date: '2024-01-01', amount: '-2.005' },
-    { date: '2024-01-02', amount: '-10000' },
+    { date: '2024-01-01', amount: '-2.005', commodity: 'USD' },
+    { date: '2024-01-02', amount: '-10000', commodity: 'USD' },
   ]);
   assert.deepEqual(balanceRows.map((row) => row.amount), ['2.005', '10000']);
 });
@@ -72,6 +72,7 @@ test('formats investment performance for people and automation', () => {
     from: '2024-01-01',
     to: '2024-12-31',
     commodities: ['FUND'],
+    valuationCommodity: 'USD',
     openingValue: 1000,
     netContributions: 250.5,
     endingValue: 1400,
@@ -84,10 +85,10 @@ test('formats investment performance for people and automation', () => {
   assert.equal(formatInvestmentPerformance(report),
     'Investment performance from 2024-01-01 to 2024-12-31\n' +
     'Instruments: 1\n' +
-    'Opening value: 1,000.00 SEK\n' +
-    'Net contributions: 250.50 SEK\n' +
-    'Ending value: 1,400.00 SEK\n' +
-    'Profit/loss: 149.50 SEK\n' +
+    'Opening value: 1,000.00 USD\n' +
+    'Net contributions: 250.50 USD\n' +
+    'Ending value: 1,400.00 USD\n' +
+    'Profit/loss: 149.50 USD\n' +
     'Time-weighted return: 12.35 %\n' +
     'Money-weighted return (total): 20.00 %\n' +
     'Money-weighted return (annualized): n/a\n');

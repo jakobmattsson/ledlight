@@ -15,7 +15,7 @@ test('parses aggregate report options and output flags', () => {
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
     '--accounts', 'Liabilities:',
-    '--sek',
+    '--value',
     '--invert',
     '--csv',
   ]), {
@@ -24,7 +24,7 @@ test('parses aggregate report options and output flags', () => {
       to: '2024-12-31',
       accounts: ['Assets:', 'Liabilities:'],
       dateBasis: 'posting',
-      inSek: true,
+      inValuationCommodity: true,
     },
     csv: true,
     invert: true,
@@ -33,7 +33,7 @@ test('parses aggregate report options and output flags', () => {
 
 test('uses aggregate defaults when no options are supplied', () => {
   assert.deepEqual(parseArguments(['aggregate']), {
-    reportOptions: { accounts: [], dateBasis: 'posting', inSek: false },
+    reportOptions: { accounts: [], dateBasis: 'posting', inValuationCommodity: false },
     csv: false,
     invert: false,
   });
@@ -54,12 +54,12 @@ test('parses balance history options', () => {
       to: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction',
-      inSek: false,
+      inValuationCommodity: false,
     },
     csv: true,
     invert: true,
   });
-  assert.throws(() => parseArguments(['balance-history', '--sek']), /Usage:/u);
+  assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
 });
 
 test('parses investment performance selections and JSON output', () => {
@@ -93,7 +93,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     [],
     ['balance'],
     ['aggregate', '--from'],
-    ['aggregate', '--from', '--sek'],
+    ['aggregate', '--from', '--value'],
     ['aggregate', '--to', '2024-01-01', '--to', '2024-02-01'],
     ['aggregate', '--date-basis', 'other'],
     ['aggregate', '--date-basis', 'posting', '--date-basis', 'transaction'],

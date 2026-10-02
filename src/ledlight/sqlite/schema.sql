@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS prices (
   comment TEXT
 );
 
-CREATE TABLE IF NOT EXISTS sek_prices (
+CREATE TABLE IF NOT EXISTS valuation_prices (
   commodity TEXT NOT NULL,
   date TEXT NOT NULL,
   rate TEXT NOT NULL,

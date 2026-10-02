@@ -16,6 +16,7 @@ function createProject(t) {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
   fs.writeFileSync(path.join(directory, 'journal.ledger'), `commodity SEK
+  default
 account Assets:Cash
 account Expenses:Food
 
@@ -29,7 +30,7 @@ account Expenses:Food
 function reconciliationFields(entry) {
   const { filename, sourceLine, row, ...fields } = entry;
   assert.match(filename, /journal\.ledger$/u);
-  assert.equal(sourceLine, 5);
+  assert.equal(sourceLine, 6);
   assert.ok(row > 0);
   return fields;
 }

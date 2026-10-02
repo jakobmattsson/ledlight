@@ -15,10 +15,10 @@ module.exports = ({
     return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
   }
 
-  function displayRows(rows, inSek) {
+  function displayRows(rows, inValuationCommodity) {
     return rows.map((row) => ({
       ...row,
-      quantity: inSek ? formatDecimalFixed(parseDecimal(row.quantity), 2) : row.quantity,
+      quantity: inValuationCommodity ? formatDecimalFixed(parseDecimal(row.quantity), 2) : row.quantity,
     }));
   }
 
@@ -39,7 +39,7 @@ module.exports = ({
       ...rows,
       {
         account: 'Total',
-        commodity: 'SEK',
+        commodity: rows[0].commodity,
         isTotal: true,
         quantity: formatDecimal(total),
       },
@@ -54,16 +54,19 @@ module.exports = ({
     return `${negative ? '-' : ''}${groupedInteger}${fraction === undefined ? '' : `.${fraction}`}`;
   }
 
-  function formatCsv(rows, inSek) {
+  function formatCsv(rows, inValuationCommodity) {
     const lines = ['account,amount,commodity'];
-    for (const row of displayRows(rows, inSek)) {
+    for (const row of displayRows(rows, inValuationCommodity)) {
       lines.push([row.account, row.quantity, row.commodity].map(csvField).join(','));
     }
     return `${lines.join('\n')}\n`;
   }
 
-  function formatHumanReadable(rows, inSek) {
-    const reportRows = displayRows(inSek ? withTotal(rows) : rows, inSek);
+  function formatHumanReadable(rows, inValuationCommodity) {
+    const reportRows = displayRows(
+      inValuationCommodity ? withTotal(rows) : rows,
+      inValuationCommodity,
+    );
     const accountWidth = Math.max(0, ...reportRows.map((row) => row.account.length));
     const amounts = reportRows.map((row) => {
       const [integer, fraction] = groupThousands(row.quantity).split('.');
@@ -110,7 +113,8 @@ module.exports = ({
     const reportRows = displayBalanceHistory(rows);
     const amounts = reportRows.map((row) => groupThousands(row.amount));
     const amountWidth = Math.max(0, ...amounts.map((amount) => amount.length));
-    const lines = reportRows.map((row, index) => `${row.date}  ${amounts[index].padStart(amountWidth)} SEK`);
+    const lines = reportRows.map((row, index) =>
+      `${row.date}  ${amounts[index].padStart(amountWidth)} ${row.commodity}`);
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
   }
 
@@ -122,7 +126,7 @@ module.exports = ({
   }
 
   function formatInvestmentPerformance(report) {
-    const money = (value) => `${groupThousands(value.toFixed(2))} SEK`;
+    const money = (value) => `${groupThousands(value.toFixed(2))} ${report.valuationCommodity}`;
     const percent = (value) => value === null ? 'n/a' : `${(value * 100).toFixed(2)} %`;
     return [
       `Investment performance from ${report.from ?? 'n/a'} to ${report.to ?? 'n/a'}`,

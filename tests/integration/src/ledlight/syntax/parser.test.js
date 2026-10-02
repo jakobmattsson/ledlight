@@ -99,6 +99,31 @@ P 2024-01-01 FUND 123.45 SEK ; closing
   });
 });
 
+test('parses Ledger default commodity directives as commodity defaults', () => {
+  const document = parseConformant('D 1,000.00 USD ; reporting currency\n', 'fixture.ledger');
+
+  assert.deepEqual(document.entries[0], {
+    type: 'commodity',
+    symbol: 'USD',
+    comment: 'reporting currency',
+    properties: [
+      {
+        name: 'format',
+        value: '1,000.00 USD',
+        comment: null,
+        location: { source: 'fixture.ledger', line: 1, column: 3 },
+      },
+      {
+        name: 'default',
+        value: null,
+        comment: null,
+        location: { source: 'fixture.ledger', line: 1, column: 3 },
+      },
+    ],
+    location: { source: 'fixture.ledger', line: 1, column: 1 },
+  });
+});
+
 test('reports precise source locations for invalid input', () => {
   assert.throws(
     () => parse('2024-02-30 Invalid\n  Assets:Cash  1 SEK\n', { source: 'bad.ledger' }),

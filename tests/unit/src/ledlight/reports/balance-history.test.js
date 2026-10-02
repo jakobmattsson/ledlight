@@ -16,6 +16,7 @@ function buildFixture(t) {
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity SEK
+  default
 commodity FUND
 commodity NOK
 P 2024-01-01 FUND 10 NOK
@@ -46,16 +47,16 @@ P 2024-01-06 NOK 1.2 SEK
   return databasePath;
 }
 
-test('returns the exact SEK value for each calendar day', (t) => {
+test('returns the exact valuation value for each calendar day', (t) => {
   const databasePath = buildFixture(t);
 
   assert.deepEqual(queryBalanceHistoryReport(databasePath, { accounts: ['Assets:'] }), [
-    { date: '2024-01-01', amount: '20' },
-    { date: '2024-01-02', amount: '38' },
-    { date: '2024-01-03', amount: '54.6' },
-    { date: '2024-01-04', amount: '54.6' },
-    { date: '2024-01-05', amount: '41.4' },
-    { date: '2024-01-06', amount: '43.8' },
+    { date: '2024-01-01', amount: '20', commodity: 'SEK' },
+    { date: '2024-01-02', amount: '38', commodity: 'SEK' },
+    { date: '2024-01-03', amount: '54.6', commodity: 'SEK' },
+    { date: '2024-01-04', amount: '54.6', commodity: 'SEK' },
+    { date: '2024-01-05', amount: '41.4', commodity: 'SEK' },
+    { date: '2024-01-06', amount: '43.8', commodity: 'SEK' },
   ]);
 });
 
@@ -66,7 +67,7 @@ test('nets internal transfers in the daily balance', (t) => {
     from: '2024-01-03',
     to: '2024-01-03',
     accounts: ['Assets:', 'Liabilities:'],
-  }), [{ date: '2024-01-03', amount: '44.6' }]);
+  }), [{ date: '2024-01-03', amount: '44.6', commodity: 'SEK' }]);
 });
 
 test('keeps an internal transfer atomic when a posting has another date', (t) => {
@@ -74,7 +75,8 @@ test('keeps an internal transfer atomic when a posting has another date', (t) =>
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `2024-01-02 Internal transfer
+  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+2024-01-02 Internal transfer
   Assets:Destination  10 SEK
   Assets:Source  -10 SEK ; [2024-01-01]
 `);
@@ -83,7 +85,7 @@ test('keeps an internal transfer atomic when a posting has another date', (t) =>
   assert.deepEqual(queryBalanceHistoryReport(databasePath, {
     accounts: ['Assets:'],
     dateBasis: 'transaction',
-  }), [{ date: '2024-01-02', amount: '0' }]);
+  }), [{ date: '2024-01-02', amount: '0', commodity: 'SEK' }]);
 });
 
 test('can use transaction dates instead of posting dates', (t) => {
@@ -94,7 +96,7 @@ test('can use transaction dates instead of posting dates', (t) => {
     dateBasis: 'transaction',
     from: '2024-01-04',
     to: '2024-01-04',
-  }), [{ date: '2024-01-04', amount: '26.4' }]);
+  }), [{ date: '2024-01-04', amount: '26.4', commodity: 'SEK' }]);
 });
 
 test('values holdings daily and applies date filters to the output', (t) => {
@@ -104,11 +106,11 @@ test('values holdings daily and applies date filters to the output', (t) => {
     from: '2024-01-02',
     accounts: ['Assets:Fund'],
   }), [
-    { date: '2024-01-02', amount: '33' },
-    { date: '2024-01-03', amount: '39.6' },
-    { date: '2024-01-04', amount: '39.6' },
-    { date: '2024-01-05', amount: '26.4' },
-    { date: '2024-01-06', amount: '28.8' },
+    { date: '2024-01-02', amount: '33', commodity: 'SEK' },
+    { date: '2024-01-03', amount: '39.6', commodity: 'SEK' },
+    { date: '2024-01-04', amount: '39.6', commodity: 'SEK' },
+    { date: '2024-01-05', amount: '26.4', commodity: 'SEK' },
+    { date: '2024-01-06', amount: '28.8', commodity: 'SEK' },
   ]);
 });
 
@@ -123,9 +125,9 @@ test('also returns balances with exact per-account factors when requested', (t) 
       'Liabilities:Card': '0.25',
     },
   }), [
-    { date: '2024-01-01', amount: '20', factoredAmount: '10' },
-    { date: '2024-01-02', amount: '38', factoredAmount: '21.5' },
-    { date: '2024-01-03', amount: '44.6', factoredAmount: '32.3' },
+    { date: '2024-01-01', amount: '20', commodity: 'SEK', factoredAmount: '10' },
+    { date: '2024-01-02', amount: '38', commodity: 'SEK', factoredAmount: '21.5' },
+    { date: '2024-01-03', amount: '44.6', commodity: 'SEK', factoredAmount: '32.3' },
   ]);
 });
 
@@ -152,7 +154,8 @@ test('rejects invalid intervals and missing historical prices', (t) => {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const unpricedDatabasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `2024-01-01 Opening
+  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+2024-01-01 Opening
   Assets:Other  1 OTHER
   Equity:Opening  -1 OTHER
 `);

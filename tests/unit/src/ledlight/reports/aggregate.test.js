@@ -20,6 +20,7 @@ function buildFixture(t) {
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity SEK
+  default
   format 1,000.00 SEK
 commodity FUND
 commodity NOK
@@ -90,72 +91,94 @@ test('combines repeated account prefixes with OR using literal prefix matching',
   assert.deepEqual(aggregateReport(databasePath, { accounts: ['Assets:%'] }), []);
 });
 
-test('values every commodity in SEK using prices at the upper date', (t) => {
+test('values every commodity in the journal default using prices at the upper date', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(aggregateReport(databasePath, { to: '2024-01-01', inSek: true }), [
+  assert.deepEqual(aggregateReport(databasePath, { to: '2024-01-01', inValuationCommodity: true }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '100.000000000000000001' },
     { account: 'Assets:Fund', commodity: 'SEK', quantity: '20' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-120.000000000000000001' },
   ]);
-  assert.deepEqual(aggregateReport(databasePath, { to: '2024-01-02', inSek: true }), [
+  assert.deepEqual(aggregateReport(databasePath, { to: '2024-01-02', inValuationCommodity: true }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '150' },
     { account: 'Assets:Fund', commodity: 'SEK', quantity: '26.4' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-170' },
   ]);
 });
 
-test('uses materialized SEK rates without loading raw price history', (t) => {
+test('uses materialized valuation rates without loading raw price history', (t) => {
   const databasePath = buildFixture(t);
-  const sekPriceCache = new Map();
+  const valuationPriceCache = new Map();
 
   assert.deepEqual(aggregateReport(databasePath, {
     to: '2024-01-02',
     accounts: ['Assets:Fund'],
-    inSek: true,
-  }, { sekPriceCache }), [
+    inValuationCommodity: true,
+  }, { valuationPriceCache }), [
     { account: 'Assets:Fund', commodity: 'SEK', quantity: '26.4' },
   ]);
 
-  assert.equal(sekPriceCache.size, 0);
+  assert.equal(valuationPriceCache.size, 0);
 });
 
 test('uses the latest available price when no upper date is supplied', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(aggregateReport(databasePath, { accounts: ['Assets:Fund'], inSek: true }), [
+  assert.deepEqual(aggregateReport(databasePath, { accounts: ['Assets:Fund'], inValuationCommodity: true }), [
     { account: 'Assets:Fund', commodity: 'SEK', quantity: '26.4' },
   ]);
 });
 
-test('preserves commodity totals while adding exact SEK values for code consumers', (t) => {
+test('uses the journal default commodity instead of assuming SEK', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-usd-valuation-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `D 1,000.00 USD
+P 2024-01-01 FUND 12 USD
+2024-01-01 Opening
+  Assets:Fund  2 FUND
+  Equity:Opening  -24 USD
+`);
+
+  const build = buildDatabase(databasePath, journalPath);
+  assert.equal(build.valuationCommodity, 'USD');
+  assert.deepEqual(aggregateReport(databasePath, {
+    accounts: ['Assets:'],
+    inValuationCommodity: true,
+  }), [
+    { account: 'Assets:Fund', commodity: 'USD', quantity: '24' },
+  ]);
+});
+
+test('preserves commodity totals while adding exact valuation values for code consumers', (t) => {
   const databasePath = buildFixture(t);
 
   assert.deepEqual(aggregateReport(databasePath, {
     to: '2024-01-02',
     accounts: ['Assets:'],
-    withSekValue: true,
+    withValuationValue: true,
   }), [
     {
       account: 'Assets:Cash',
       commodity: 'SEK',
       quantity: '150',
-      sekValue: '150',
+      valuationValue: '150',
     },
     {
       account: 'Assets:Fund',
       commodity: 'FUND',
       quantity: '2',
-      sekValue: '26.4',
+      valuationValue: '26.4',
     },
   ]);
   assert.throws(
-    () => aggregateReport(databasePath, { inSek: true, withSekValue: true }),
+    () => aggregateReport(databasePath, { inValuationCommodity: true, withValuationValue: true }),
     /cannot be used together/u,
   );
 });
 
-test('rejects invalid intervals and missing SEK price chains', (t) => {
+test('rejects invalid intervals and missing valuation price chains', (t) => {
   const databasePath = buildFixture(t);
   assert.throws(() => aggregateReport(databasePath, { from: '2024-02-30' }), /Invalid --from date/);
   assert.throws(
@@ -171,23 +194,25 @@ test('rejects invalid intervals and missing SEK price chains', (t) => {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const unpricedDatabasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `2024-01-01 Opening
+  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+2024-01-01 Opening
   Assets:Other  1 OTHER
   Equity:Opening  -1 OTHER
 `);
   buildDatabase(unpricedDatabasePath, journalPath);
   assert.throws(
-    () => aggregateReport(unpricedDatabasePath, { to: '2024-01-01', inSek: true }),
+    () => aggregateReport(unpricedDatabasePath, { to: '2024-01-01', inValuationCommodity: true }),
     /No price for OTHER/,
   );
 });
 
-test('rejects circular SEK price chains', (t) => {
+test('rejects circular valuation price chains', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-circular-prices-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `P 2024-01-01 FUND 2 NOK
+  fs.writeFileSync(journalPath, `D 1,000.00 SEK
+P 2024-01-01 FUND 2 NOK
 P 2024-01-01 NOK 0.5 FUND
 2024-01-01 Opening
   Assets:Fund  1 FUND
@@ -196,7 +221,7 @@ P 2024-01-01 NOK 0.5 FUND
   buildDatabase(databasePath, journalPath);
 
   assert.throws(
-    () => aggregateReport(databasePath, { to: '2024-01-01', inSek: true }),
+    () => aggregateReport(databasePath, { to: '2024-01-01', inValuationCommodity: true }),
     /Circular price chain while converting FUND to SEK/u,
   );
 });

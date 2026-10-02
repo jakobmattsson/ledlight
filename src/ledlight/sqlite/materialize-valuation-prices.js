@@ -2,7 +2,8 @@
 
 module.exports = () => {
 
-  function materializeSekPrices(database) {
+  function materializeValuationPrices(database, valuationCommodity) {
+    if (!valuationCommodity) return 0;
     return database.prepare(`
     WITH RECURSIVE
       commodity_introductions AS (
@@ -66,15 +67,15 @@ module.exports = () => {
           ORDER BY candidate.date DESC, candidate.entry_id DESC
           LIMIT 1
         )
-        WHERE conversion.current_commodity != 'SEK'
+        WHERE conversion.current_commodity != ?
           AND conversion.depth < (SELECT COUNT(*) FROM introductions)
       )
-    INSERT INTO sek_prices (commodity, date, rate)
+    INSERT INTO valuation_prices (commodity, date, rate)
     SELECT origin_commodity, date, rate
     FROM conversion
-    WHERE current_commodity = 'SEK'
-  `).run().changes;
+    WHERE current_commodity = ?
+  `).run(valuationCommodity, valuationCommodity).changes;
   }
 
-  return { materializeSekPrices };
+  return { materializeValuationPrices };
 };

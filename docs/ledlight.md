@@ -55,7 +55,8 @@ The implementation is organized by responsibility under `src/ledlight`:
 - `accounting` provides exact decimal arithmetic, semantic validation, and
   posting resolution;
 - `sqlite` owns schema migration, freshness checks, and journal persistence;
-- `reports` separates aggregate SQL queries from price selection and exact SEK
+- `reports` separates aggregate SQL queries from price selection and exact
+  valuation-commodity
   rate resolution;
 - `application` composes project paths, database freshness, and reports; and
 - `cli` contains argument parsing, output formatting, and the executable runner.
@@ -110,8 +111,8 @@ hash, and its traversal order. `checkDatabaseSync` rebuilds the current source
 manifest and reports added, removed, and changed files.
 
 The main query tables are `transactions`, `postings`, `transaction_notes`,
-`prices`, `sek_prices`, the three declaration tables, and
-`commodity_properties`. `sek_prices` is derived from `prices` at the end of
+`prices`, `valuation_prices`, the three declaration tables, and
+`commodity_properties`. `valuation_prices` is derived from `prices` at the end of
 each database build and is not an independent journal source.
 `journal_entries` preserves the global source order and source location shared
 by all entry types. Quantities are stored as `TEXT`, exactly as parsed, so SQL
@@ -146,11 +147,11 @@ const balanceSheet = aggregateReport({
   accounts: ['Assets:', 'Liabilities:'],
   dateBasis: 'transaction',
 });
-const incomeStatementInSek = aggregateReport({
+const valuedIncomeStatement = aggregateReport({
   from: '2024-01-01',
   to: '2024-12-31',
   accounts: ['Income:', 'Expenses:'],
-  inSek: true,
+  inValuationCommodity: true,
 });
 ```
 
@@ -160,15 +161,16 @@ The command-line equivalent is:
 node src/ledlight/cli/run.js aggregate --to 2024-12-31
 node src/ledlight/cli/run.js aggregate --to 2024-12-31 --date-basis transaction
 node src/ledlight/cli/run.js aggregate --from 2024-01-01 --to 2024-12-31 \
-  --accounts "Income:" --accounts "Expenses:" --sek --invert
+  --accounts "Income:" --accounts "Expenses:" --value --invert
 node src/ledlight/cli/run.js aggregate --to 2024-12-31 --accounts "Assets:" --csv
 ```
 
 By default, the command prints right-aligned account names followed by amounts
 with comma thousands separators and aligned decimal points, then a left-aligned
-commodity column. With `--sek`, human-readable output ends with an exact total
-in SEK. `--csv` omits the total and instead prints RFC-style escaped CSV with the columns
-`account,amount,commodity`. With `--sek`, amounts in either format are rounded
+commodity column. With `--value`, human-readable output converts every amount to
+the journal's default commodity and ends with an exact total. `--csv` omits the
+total and instead prints RFC-style escaped CSV with the columns
+`account,amount,commodity`. With `--value`, amounts in either format are rounded
 exactly to two decimal places without binary floating-point conversion.
 `--invert` negates every reported amount, including the human-readable total.
 
@@ -182,18 +184,33 @@ This is also the first-build command. If `tmp/ledger.sqlite` does not exist,
 Ledlight creates its directory, reads the journal path from `.ledgerrc`, and
 builds the database before producing the report.
 
-The SEK report selects the latest price on or before `to`. When `to` is omitted,
-it uses the latest available price. It can follow price chains such as fund to
-NOK to SEK. Missing and circular price chains are errors. Results remain exact
-decimal strings and are not rounded for display.
+The valuation report selects the latest price on or before `to`. When `to` is
+omitted, it uses the latest available price. The single valuation commodity is
+the last commodity marked `default` by the journal, either with a commodity
+declaration or Ledger's `D` directive:
+
+```ledger
+commodity USD
+  format 1,000.00 USD
+  default
+
+; Equivalent default and format declaration:
+D 1,000.00 USD
+```
+
+There is no API or command-line option for choosing another target commodity.
+Price chains can pass through intermediate commodities. Missing and circular
+price chains are errors. Results remain exact decimal strings and are not
+rounded for display.
 
 Price chains intentionally work in one direction only. Every price directive
-used for SEK valuation must describe the value of the held commodity in its
-quote commodity and eventually lead to SEK. For example, `P 2024-01-01 USD 10
-SEK` can value a USD holding, while the mathematically equivalent inverse quote
-`P 2024-01-01 SEK 0.1 USD` cannot. Ledlight deliberately does not infer or
-calculate reciprocal prices; requiring one canonical direction keeps price
-selection and chained valuation simple and predictable.
+used for valuation must describe the value of the held commodity in its quote
+commodity and eventually lead to the journal default. If USD is the default,
+for example, `P 2024-01-01 FUND 10 USD` can value a FUND holding, while the
+mathematically equivalent inverse quote `P 2024-01-01 USD 0.1 FUND` cannot.
+Ledlight deliberately does not infer or calculate reciprocal prices; requiring
+one canonical direction keeps price selection and chained valuation simple and
+predictable.
 
 The SQLite connection registers `decimal_sum`, `decimal_mul`, and
 `decimal_cmp`. `decimal_sum` is used by both report variants, so values are
@@ -203,8 +220,9 @@ never converted to binary floating point during aggregation or valuation.
 
 `balanceHistoryReport` returns one row for every calendar day from the first
 selected posting or transaction date, according to `dateBasis`, through the
-report end. Each row contains `date` and the exact total SEK market value of
-the accounts' holdings on that day. Days without changes remain in the result
+report end. Each row contains `date`, `commodity`, and the exact total market
+value of the accounts' holdings in the journal default commodity on that day.
+Days without changes remain in the result
 because their market value can still change. The `dateBasis` option is either
 `posting` (the default) or `transaction`.
 
@@ -247,11 +265,12 @@ node src/ledlight/cli/run.js balance-history --accounts "Assets:" --csv
 
 Human-readable amounts and CSV amounts are rounded exactly to two decimal
 places. CSV output has the columns `date,amount`; the API retains exact decimal
-strings. When the database is built, Ledlight materializes direct SEK rates in
-`sek_prices`. For each commodity, the table contains one row per calendar day
+strings. When the database is built, Ledlight materializes direct valuation
+rates in `valuation_prices`. For each commodity, the table contains one row per calendar day
 from its first posting, transaction, or price appearance through the latest
 posting, transaction, or price date.
-Each day carries forward the latest resolvable SEK rate, including changes
+Each day carries forward the latest resolvable rate to the journal default,
+including changes
 caused by an intermediate commodity in a price chain. A single recursive
 `INSERT` statement generates the calendar, resolves the price chains, and
 writes the complete materialization. The report therefore uses an exact

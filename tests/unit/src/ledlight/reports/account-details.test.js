@@ -14,6 +14,7 @@ function createProject(t) {
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
   fs.writeFileSync(path.join(directory, 'journal.ledger'), `commodity SEK
+  default
 commodity FUND
 account Assets:Closed
 account Assets:Closed:Child

@@ -135,6 +135,31 @@ module.exports = ({
     return { type, name: value.text, comment: value.comment, location: sourceLocation(source, line, 1) };
   }
 
+  function parseDefaultCommodityDirective(text, source, line) {
+    const value = splitComment(text.slice(1).trim());
+    const match = /^([+-]?(?:(?:\d+(?:,\d{3})+)|\d+)(?:\.\d*)?|[+-]?\.\d+)[ \t]+(.+)$/u.exec(value.text);
+    if (!match) {
+      throw new LedgerSyntaxError('Expected an amount in default commodity directive', source, line, 3);
+    }
+    const rawCommodity = match[2].trim();
+    const quoted = rawCommodity.length >= 2 &&
+      ((rawCommodity[0] === '"' && rawCommodity.at(-1) === '"') ||
+       (rawCommodity[0] === "'" && rawCommodity.at(-1) === "'"));
+    const symbol = quoted ? rawCommodity.slice(1, -1) : rawCommodity;
+    const location = sourceLocation(source, line, 1);
+    const propertyLocation = sourceLocation(source, line, 3);
+    return {
+      type: 'commodity',
+      symbol,
+      comment: value.comment,
+      properties: [
+        { name: 'format', value: value.text, comment: null, location: propertyLocation },
+        { name: 'default', value: null, comment: null, location: propertyLocation },
+      ],
+      location,
+    };
+  }
+
   /** Fast runtime parser. Its behavior is checked against ledger.ohm. */
   function parse(sourceText, options) {
     const source = options.source || '<input>';
@@ -208,7 +233,8 @@ module.exports = ({
         delete commodity.name;
         commodity.properties = [];
         entries.push(commodity);
-      } else if (marker === 'P' && isWhitespace(trimmed.charCodeAt(1))) entries.push(parsePrice(trimmed, source, lineNumber));
+      } else if (marker === 'D' && isWhitespace(trimmed.charCodeAt(1))) entries.push(parseDefaultCommodityDirective(trimmed, source, lineNumber));
+      else if (marker === 'P' && isWhitespace(trimmed.charCodeAt(1))) entries.push(parsePrice(trimmed, source, lineNumber));
       else {
         const keyword = trimmed.split(/[ \t]/, 1)[0];
         throw new LedgerSyntaxError(`Unsupported directive or transaction header ${JSON.stringify(keyword)}`, source, lineNumber, 1);

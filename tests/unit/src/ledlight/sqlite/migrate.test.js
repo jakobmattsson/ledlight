@@ -28,7 +28,7 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(tables.includes('metadata'));
   assert.ok(tables.includes('journal_entries'));
   assert.ok(tables.includes('resolved_posting_amounts'));
-  assert.ok(tables.includes('sek_prices'));
+  assert.ok(tables.includes('valuation_prices'));
   const reportDate = database.pragma('table_info(postings)')
     .find((column) => column.name === 'report_date');
   assert.equal(reportDate.notnull, 1);

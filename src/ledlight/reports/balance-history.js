@@ -5,6 +5,7 @@ module.exports = ({
   sqlite: Database,
   decimal: { parseDecimal, registerDecimalFunctions },
   accountPrefixFilter: { accountPrefixFilter },
+  valuationCommodity: { fromDatabase },
 }) => {
 
   function assertDate(value, optionName) {
@@ -62,7 +63,7 @@ module.exports = ({
     return normalized;
   }
 
-  function queryBalanceHistory(database, options) {
+  function queryBalanceHistory(database, options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
     const factorEntries = Object.entries(options.accountFactors ?? {});
     const factorExpression = factorEntries.length > 0
@@ -158,16 +159,16 @@ module.exports = ({
       daily_balances AS (
         SELECT
           positions.date,
-          decimal_sum(decimal_mul(positions.quantity, sek_prices.rate)) AS balance${factorExpression ? ",\n          decimal_sum(decimal_mul(positions.factored_quantity, sek_prices.rate)) AS factored_balance" : ''},
+          decimal_sum(decimal_mul(positions.quantity, valuation_prices.rate)) AS balance${factorExpression ? ",\n          decimal_sum(decimal_mul(positions.factored_quantity, valuation_prices.rate)) AS factored_balance" : ''},
           MIN(CASE
-            WHEN sek_prices.rate IS NULL
+            WHEN valuation_prices.rate IS NULL
               AND decimal_cmp(positions.quantity, '0') != 0
             THEN positions.commodity
           END) AS missing_commodity
         FROM positions
-        LEFT JOIN sek_prices
-          ON sek_prices.commodity = positions.commodity
-          AND sek_prices.date = positions.date
+        LEFT JOIN valuation_prices
+          ON valuation_prices.commodity = positions.commodity
+          AND valuation_prices.date = positions.date
         GROUP BY positions.date
       )
     SELECT date, balance AS amount${factorExpression ? ', factored_balance AS factored_amount' : ''}, missing_commodity
@@ -178,13 +179,14 @@ module.exports = ({
     for (const row of rows) {
       if (row.missing_commodity) {
         throw new Error(
-          `No price for ${row.missing_commodity} on or before ${row.date} can convert it to SEK`,
+          `No price for ${row.missing_commodity} on or before ${row.date} can convert it to ${valuationCommodity}`,
         );
       }
     }
     return rows.map(({ date, amount, factored_amount: factoredAmount }) => ({
       date,
       amount,
+      commodity: valuationCommodity,
       ...(factorExpression ? { factoredAmount } : {}),
     }));
   }
@@ -194,7 +196,7 @@ module.exports = ({
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
       registerDecimalFunctions(database);
-      return queryBalanceHistory(database, normalizedOptions);
+      return queryBalanceHistory(database, normalizedOptions, fromDatabase(database));
     } finally {
       database.close();
     }

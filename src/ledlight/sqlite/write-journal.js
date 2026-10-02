@@ -6,7 +6,8 @@ module.exports = ({
   decimal: { registerDecimalFunctions },
   postingResolver: { PostingResolver },
   journalValidator: { validateJournal },
-  sekPriceMaterializer: { materializeSekPrices },
+  valuationCommodity: { fromJournal },
+  valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },
 }) => {
 
@@ -142,6 +143,7 @@ module.exports = ({
 
   function writeJournalDatabase(databasePath, journal) {
     validateJournal(journal);
+    const valuationCommodity = fromJournal(journal);
     const resolvedDatabasePath = path.resolve(databasePath);
     const database = new Database(resolvedDatabasePath);
     database.pragma('foreign_keys = ON');
@@ -152,7 +154,7 @@ module.exports = ({
       const statements = prepareStatements(database);
       const replaceContents = database.transaction(() => {
         database.exec(`
-        DELETE FROM sek_prices;
+        DELETE FROM valuation_prices;
         DELETE FROM journal_entries;
         DELETE FROM source_files;
         DELETE FROM metadata;
@@ -161,6 +163,7 @@ module.exports = ({
         statements.metadata.run('schema_version', SCHEMA_VERSION);
         statements.metadata.run('root_path', journal.rootPath);
         statements.metadata.run('built_at', new Date().toISOString());
+        if (valuationCommodity) statements.metadata.run('valuation_commodity', valuationCommodity);
 
         const sourceIds = new Map();
         journal.files.forEach((file, index) => {
@@ -183,7 +186,7 @@ module.exports = ({
           insertEntry(statements, entryId, entry, counters, postingResolver);
         });
 
-        counters.sekPrice = materializeSekPrices(database);
+        counters.valuationPrice = materializeValuationPrices(database, valuationCommodity);
 
         return counters;
       });
@@ -198,7 +201,8 @@ module.exports = ({
         postings: counters.posting,
         postingAmounts: counters.resolvedAmount,
         prices: journal.entries.filter((entry) => entry.type === 'price').length,
-        sekPrices: counters.sekPrice,
+        valuationCommodity,
+        valuationPrices: counters.valuationPrice,
       };
     } finally {
       database.close();

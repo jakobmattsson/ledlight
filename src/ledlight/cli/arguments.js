@@ -5,7 +5,7 @@ module.exports = () => {
   function usage() {
     return [
       'Usage:',
-      '  ledlight aggregate [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--sek] [--invert] [--csv]',
+      '  ledlight aggregate [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--value] [--invert] [--csv]',
       '  ledlight balance-history [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--invert] [--csv]',
       '  ledlight investment-performance [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--commodities NAME]... [--exclude-commodities NAME]... [--json]',
     ].join('\n');
@@ -49,15 +49,15 @@ module.exports = () => {
       return parseInvestmentPerformanceArguments(argumentsWithoutCommand);
     }
     if (command !== 'aggregate' && command !== 'balance-history') throw new Error(usage());
-    const reportOptions = { accounts: [], inSek: false };
+    const reportOptions = { accounts: [], inValuationCommodity: false };
     let csv = false;
     let invert = false;
 
     for (let index = 0; index < argumentsWithoutCommand.length; index += 1) {
       const argument = argumentsWithoutCommand[index];
-      if (argument === '--sek') {
+      if (argument === '--value') {
         if (command === 'balance-history') throw new Error(usage());
-        reportOptions.inSek = true;
+        reportOptions.inValuationCommodity = true;
         continue;
       }
       if (argument === '--csv') {

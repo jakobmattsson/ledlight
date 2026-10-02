@@ -37,8 +37,8 @@ module.exports = ({
     const aggregateRows = currentProject.aggregateReport(reportOptions);
     const reportRows = invert ? invertRows(aggregateRows) : aggregateRows;
     return csv
-      ? formatCsv(reportRows, reportOptions.inSek)
-      : formatHumanReadable(reportRows, reportOptions.inSek);
+      ? formatCsv(reportRows, reportOptions.inValuationCommodity)
+      : formatHumanReadable(reportRows, reportOptions.inValuationCommodity);
   }
 
   return { runReportCommand };

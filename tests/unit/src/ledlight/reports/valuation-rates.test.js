@@ -6,10 +6,10 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const Database = require('better-sqlite3');
 const {
-  resolveSekRates,
+  resolveValuationRates,
   selectLatestPrices,
-  selectMaterializedSekRates,
-} = resolveRepositoryModule("src/ledlight/reports/sek-rates.js").$$private;
+  selectMaterializedValuationRates,
+} = resolveRepositoryModule("src/ledlight/reports/valuation-rates.js").$$private;
 
 test('selects the latest price through a date using journal order as a tiebreaker', (t) => {
   const database = new Database(':memory:');
@@ -40,14 +40,14 @@ test('selects the latest price through a date using journal order as a tiebreake
   assert.equal(selectLatestPrices(database).get('FUND').price_quantity, '14');
 });
 
-test('resolves exact chained rates and always treats SEK as one', () => {
+test('resolves exact chained rates and always treats the valuation commodity as one', () => {
   const prices = new Map([
     ['FUND', { price_quantity: '12', price_commodity: 'NOK' }],
     ['NOK', { price_quantity: '1.1', price_commodity: 'SEK' }],
   ]);
 
   assert.deepEqual(
-    [...resolveSekRates(prices, new Set(['FUND', 'SEK'])).entries()],
+    [...resolveValuationRates(prices, new Set(['FUND', 'SEK']), 'SEK').entries()],
     [['SEK', '1'], ['NOK', '1.1'], ['FUND', '13.2']],
   );
 });
@@ -56,23 +56,24 @@ test('selects the latest materialized rate through the requested date', (t) => {
   const database = new Database(':memory:');
   t.after(() => database.close());
   database.exec(`
-    CREATE TABLE sek_prices (
+    CREATE TABLE valuation_prices (
       commodity TEXT NOT NULL,
       date TEXT NOT NULL,
       rate TEXT NOT NULL,
       PRIMARY KEY (commodity, date)
     ) WITHOUT ROWID;
-    INSERT INTO sek_prices (commodity, date, rate) VALUES
+    INSERT INTO valuation_prices (commodity, date, rate) VALUES
       ('FUND', '2024-01-01', '10'),
       ('FUND', '2024-01-02', '11'),
       ('NOK', '2024-01-01', '1.1');
   `);
 
   assert.deepEqual(
-    [...selectMaterializedSekRates(
+    [...selectMaterializedValuationRates(
       database,
       '2024-01-03',
       new Set(['FUND', 'NOK', 'SEK']),
+      'SEK',
     )],
     [['SEK', '1'], ['FUND', '11'], ['NOK', '1.1']],
   );
@@ -80,7 +81,7 @@ test('selects the latest materialized rate through the requested date', (t) => {
 
 test('reports missing and circular price chains with date context', () => {
   assert.throws(
-    () => resolveSekRates(new Map(), new Set(['FUND']), '2024-01-31'),
+    () => resolveValuationRates(new Map(), new Set(['FUND']), 'SEK', '2024-01-31'),
     /No price for FUND on or before 2024-01-31 can convert it to SEK/u,
   );
 
@@ -89,7 +90,7 @@ test('reports missing and circular price chains with date context', () => {
     ['NOK', { price_quantity: '0.5', price_commodity: 'FUND' }],
   ]);
   assert.throws(
-    () => resolveSekRates(circularPrices, new Set(['FUND'])),
+    () => resolveValuationRates(circularPrices, new Set(['FUND']), 'SEK'),
     /Circular price chain while converting FUND to SEK/u,
   );
 });
