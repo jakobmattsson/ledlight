@@ -2,7 +2,7 @@ Ledlight {
   document = topLevel* end
 
   topLevel
-    = date horizontal+ description inlineComment? lineEnd (indentedComment | posting)+                       -- transaction
+    = date horizontal+ description transactionComment? lineEnd (indentedComment | posting)+                  -- transaction
     | "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*              -- commodity
     | "account" horizontal+ directiveValue inlineComment? lineEnd                                            -- account
     | "tag" horizontal+ directiveValue inlineComment? lineEnd                                                -- tag
@@ -12,7 +12,7 @@ Ledlight {
     | horizontal* newline                                                                                    -- blank
 
   description = (~forbiddenDescriptionSymbolCharacter any)+
-  indentedComment = horizontal+ ";" horizontal* commentText lineEnd
+  indentedComment = horizontal+ ";" horizontal* metadataComment lineEnd
 
   posting = horizontal+ account amountPart? horizontal* postingComment? lineEnd
   account = (~forbiddenAccountSymbolCharacter any)+
@@ -35,8 +35,14 @@ Ledlight {
 
   commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
 
-  postingComment = ";" horizontal* ("[" date "]" horizontal*)? commentText
+  postingComment = ";" horizontal* ("[" date "]" horizontal*)? metadataComment
+  transactionComment = horizontal* ";" horizontal* metadataComment
   inlineComment = horizontal* ";" horizontal* commentText
+  metadataComment = binaryTags (horizontal+ commentText)?  -- tags
+                  | tagName ":" horizontal+ commentText    -- value
+                  | commentText                            -- text
+  binaryTags = ":" tagName (":" tagName)* ":"
+  tagName = (~forbiddenTagNameCharacter any)+
   commentText = (~newline any)*
   directiveValue = (~forbiddenDirectiveValueCharacter any)+
 
@@ -46,6 +52,7 @@ Ledlight {
   forbiddenDescriptionSymbolCharacter = ";" | newline
   forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
   forbiddenCommoditySymbolCharacter = horizontal | "@" | "=" | ";" | "\"" | "'" | newline
+  forbiddenTagNameCharacter = horizontal | ":" | ";" | newline
 
   fieldSeparator = "\t"                -- tab
                  | "  " horizontal*    -- spaces

@@ -149,6 +149,44 @@ test('parses posting comments with and without preceding whitespace', () => {
   ]);
 });
 
+test('parses transaction and posting tags without consuming comment text', () => {
+  const document = parseConformant(`2024-01-01 Tagged ; :reviewed:imported: bank statement
+  ; Source: bank export
+  Assets:Cash  1 SEK ; Receipt: 1234
+  Equity:Opening  -1 SEK ; :balanced: complete
+`, 'fixture.ledger');
+
+  const transaction = document.entries[0];
+  assert.equal(transaction.comment, ':reviewed:imported: bank statement');
+  assert.deepEqual(transaction.tags, [
+    { name: 'reviewed', value: null },
+    { name: 'imported', value: null },
+    { name: 'Source', value: 'bank export' },
+  ]);
+  assert.deepEqual(transaction.notes[0], {
+    text: 'Source: bank export',
+    key: 'Source',
+    value: 'bank export',
+    tags: [{ name: 'Source', value: 'bank export' }],
+    location: { source: 'fixture.ledger', line: 2, column: 3 },
+  });
+  assert.deepEqual(transaction.postings.map(({ comment, tags }) => ({ comment, tags })), [
+    { comment: 'Receipt: 1234', tags: [{ name: 'Receipt', value: '1234' }] },
+    { comment: ':balanced: complete', tags: [{ name: 'balanced', value: null }] },
+  ]);
+});
+
+test('does not recognize embedded, whitespace, or typed tags', () => {
+  const document = parseConformant(`2024-01-01 Untagged ; ordinary :embedded:
+  Assets:Cash  1 SEK ; :two words:
+  Equity:Opening  -1 SEK ; Key:: value
+`, 'fixture.ledger');
+
+  assert.equal('tags' in document.entries[0], false);
+  assert.equal('tags' in document.entries[0].postings[0], false);
+  assert.equal('tags' in document.entries[0].postings[1], false);
+});
+
 test('rejects unsupported auxiliary transaction dates', () => {
   const sourceText = '2024-01-01=2024-01-02 Trade\n  Assets:Cash  1 SEK\n  Equity:Opening\n';
   assert.throws(() => parse(sourceText, { source: 'fixture.ledger' }), /Expected whitespace after transaction date/u);
@@ -235,6 +273,7 @@ P 2024-01-01 FUND 123.45 SEK ; closing
     text: 'Source: statement.csv:4',
     key: 'Source',
     value: 'statement.csv:4',
+    tags: [{ name: 'Source', value: 'statement.csv:4' }],
     location: { source: 'fixture.ledger', line: 9, column: 3 },
   });
 });

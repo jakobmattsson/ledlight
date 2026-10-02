@@ -54,6 +54,11 @@ module.exports = ({
       const pipe = text.indexOf('|');
       const items = values(body, source).filter((item) => item !== null);
       const postings = items.filter((item) => item.type === 'posting');
+      const transactionComment = optionalValue(comment, source);
+      const tags = [
+        ...(transactionComment ? transactionComment.tags : []),
+        ...items.filter((item) => item.type === 'note').flatMap((item) => item.tags || []),
+      ];
       const transaction = {
         type: 'transaction',
         date: date.ast(source),
@@ -62,7 +67,7 @@ module.exports = ({
         description: text,
         payee: pipe < 0 ? null : text.slice(0, pipe).trim(),
         narration: pipe < 0 ? text : text.slice(pipe + 1).trim(),
-        comment: optionalValue(comment, source),
+        comment: transactionComment ? transactionComment.comment : null,
         location: location(date, source),
       };
       if (postings.length === 0) {
@@ -70,6 +75,7 @@ module.exports = ({
       }
       return {
         ...transaction,
+        ...(tags.length > 0 ? { tags } : {}),
         postings,
         notes: items.filter((item) => item.type === 'note').map(({ type: _type, ...note }) => note),
       };
@@ -89,6 +95,7 @@ module.exports = ({
         ...expression,
         postingDate: postingComment ? postingComment.date : null,
         comment: postingComment ? postingComment.comment : null,
+        ...(postingComment && postingComment.tags.length > 0 ? { tags: postingComment.tags } : {}),
         location: location(account, this.args.source),
       };
     },
@@ -170,25 +177,42 @@ module.exports = ({
       };
     },
 
-    indentedComment(_indent, marker, _space, text, _lineEnd) {
-      const value = text.sourceString.trim();
-      const colon = value.indexOf(':');
+    indentedComment(_indent, marker, _space, metadata, _lineEnd) {
+      const tags = metadata.ast(this.args.source);
+      const value = metadata.sourceString.trim();
+      const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
       return {
         type: 'note',
         text: value,
-        key: colon < 1 ? null : value.slice(0, colon).trim(),
-        value: colon < 1 ? null : value.slice(colon + 1).trim(),
+        key: valueTag ? valueTag.name : null,
+        value: valueTag ? valueTag.value : null,
+        ...(tags.length > 0 ? { tags } : {}),
         location: location(marker, this.args.source),
       };
     },
     topLevel_comment(_semicolon, _space, _text, _lineEnd) { return null; },
-    postingComment(_semicolon, _space, _open, date, _close, _dateSpace, _text) {
+    postingComment(_semicolon, _space, _open, date, _close, _dateSpace, metadata) {
       return {
         date: optionalValue(date, this.args.source),
         comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
+        tags: metadata.ast(this.args.source),
+      };
+    },
+    transactionComment(_space1, _semicolon, _space2, metadata) {
+      return {
+        comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
+        tags: metadata.ast(this.args.source),
       };
     },
     inlineComment(_space1, _semicolon, _space2, text) { return text.sourceString.trim(); },
+    metadataComment_tags(tags, _space, _text) { return tags.ast(this.args.source); },
+    metadataComment_value(name, _colon, _space, text) {
+      return [{ name: name.sourceString, value: text.sourceString.trim() }];
+    },
+    metadataComment_text(_text) { return []; },
+    binaryTags(_open, _first, _separators, _names, _close) {
+      return this.sourceString.slice(1, -1).split(':').map((name) => ({ name, value: null }));
+    },
     topLevel_blank(_space, _newline) { return null; },
 
     date(_year1, _year2, _year3, _year4, _separator1, _month1, _month2, _separator2, _day1, _day2) {
