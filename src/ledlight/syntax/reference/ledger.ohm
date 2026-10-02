@@ -17,12 +17,10 @@ Ledlight {
   transactionHeader = date horizontal+ description inlineComment? lineEnd
   description = descriptionCharacter+
   descriptionCharacter = ~forbiddenDescriptionSymbolCharacter any
-  forbiddenDescriptionSymbolCharacter = ";" | newline
 
   posting = indent account amountPart? horizontal* postingComment? lineEnd
   account = accountCharacter+
   accountCharacter = ~forbiddenAccountSymbolCharacter any
-  forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
   amountPart = fieldSeparator amountExpression?
 
   amountExpression = balanceAssignment | explicitAmount
@@ -37,7 +35,6 @@ Ledlight {
 
   commoditySymbol = commoditySymbolCharacter+
   commoditySymbolCharacter = ~forbiddenCommoditySymbolCharacter any
-  forbiddenCommoditySymbolCharacter = horizontal | "@" | "=" | ";" | "\"" | "'" | newline
 
   includeDirective = "include" horizontal+ directiveValue inlineComment? lineEnd
   accountDirective = "account" horizontal+ directiveValue inlineComment? lineEnd
@@ -46,7 +43,7 @@ Ledlight {
   commodityDirective = "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*
   commodityBody = blankLine | commodityProperty
   commodityProperty = indent commodityPropertyName commodityPropertyValue? inlineComment? lineEnd
-  commodityPropertyName = "format" | "default" | "nomarket"
+  commodityPropertyName = "format" | "default"
   commodityPropertyValue = horizontal+ directiveValue
 
   priceDirective = "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd
@@ -69,4 +66,8 @@ Ledlight {
   lineEnd = newline  -- newline
           | end      -- end
   newline = "\r\n" | "\n"
+
+  forbiddenDescriptionSymbolCharacter = ";" | newline
+  forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
+  forbiddenCommoditySymbolCharacter = horizontal | "@" | "=" | ";" | "\"" | "'" | newline
 }

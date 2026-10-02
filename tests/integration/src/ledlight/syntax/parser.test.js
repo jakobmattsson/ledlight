@@ -262,8 +262,8 @@ test('rejects the alternative D default commodity directive', () => {
   );
 });
 
-test('rejects unsupported commodity properties consistently', () => {
-  const sourceText = 'commodity SEK\n  arbitrary value\n';
+test('rejects the unsupported nomarket commodity property consistently', () => {
+  const sourceText = 'commodity SEK\n  nomarket\n';
   assert.throws(
     () => parse(sourceText, { source: 'bad.ledger' }),
     (error) => error.code === errorCodes.SYNTAX && /commodity property/u.test(error.message),

@@ -19,7 +19,6 @@ commodity USD ; dollars
   format 1,000.00 USD
   default
 commodity FUND ; updated
-  nomarket
 `);
 
   assert.deepEqual(openProject(directory).commodityDescriptions(), [
