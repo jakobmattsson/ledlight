@@ -40,13 +40,15 @@ module.exports = ({
 
       let cursor = this.offset;
       if (code === 43 || code === 45) cursor++;
-      let digits = 0;
-      while (cursor < length && isDigit(input.charCodeAt(cursor))) { cursor++; digits++; }
+      const integerStart = cursor;
+      while (cursor < length && isDigit(input.charCodeAt(cursor))) cursor++;
+      let validNumber = cursor > integerStart;
       if (input.charCodeAt(cursor) === 46) {
-        cursor++;
-        while (cursor < length && isDigit(input.charCodeAt(cursor))) { cursor++; digits++; }
+        const fractionStart = ++cursor;
+        while (cursor < length && isDigit(input.charCodeAt(cursor))) cursor++;
+        validNumber = validNumber && cursor > fractionStart;
       }
-      if (digits > 0 && (cursor === length || isSpace(input.charCodeAt(cursor)) || input.charCodeAt(cursor) === 61 || input.charCodeAt(cursor) === 64)) {
+      if (validNumber && (cursor === length || isSpace(input.charCodeAt(cursor)) || input.charCodeAt(cursor) === 61 || input.charCodeAt(cursor) === 64)) {
         this.offset = cursor;
         return { type: TOKEN.NUMBER, value: input.slice(start, cursor), start };
       }

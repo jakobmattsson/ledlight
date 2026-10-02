@@ -113,7 +113,7 @@ module.exports = ({
     amount(number, _space, commodity) {
       return { quantity: number.ast(this.args.source), commodity: commodity.ast(this.args.source) };
     },
-    number(_sign, _decimal, _boundary) { return this.sourceString; },
+    number(_sign, _integer, _fraction) { return this.sourceString; },
     commoditySymbol(symbol) { return symbol.ast(this.args.source); },
     quotedSymbol_double(_open, value, _close) { return value.sourceString; },
     quotedSymbol_single(_open, value, _close) { return value.sourceString; },

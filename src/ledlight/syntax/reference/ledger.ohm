@@ -29,11 +29,8 @@ Ledlight {
   balanceAssertion = horizontal* "=" horizontal* amount
   amount = number horizontal+ commoditySymbol
 
-  number = sign? decimal numberBoundary
+  number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
-  decimal = digit+ ("." digit*)?  -- leadingDigits
-          | "." digit+           -- leadingPoint
-  numberBoundary = &(horizontal | "@" | "=" | ";" | newline) | end
 
   commoditySymbol = quotedSymbol | bareCommoditySymbol
   quotedSymbol = "\"" (~"\"" ~newline any)* "\""  -- double

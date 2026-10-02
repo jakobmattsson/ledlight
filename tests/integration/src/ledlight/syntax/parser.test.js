@@ -82,16 +82,14 @@ test('rejects unsupported auxiliary transaction dates', () => {
   );
 });
 
-test('keeps leading-point and trailing-point decimal syntax exact', () => {
-  const document = parseConformant(`2024-01-01 Decimal forms
-  Assets:Cash  .5 SEK
-  Equity:Opening  -1. SEK
-`, 'fixture.ledger');
-
-  assert.deepEqual(document.entries[0].postings.map((posting) => posting.amount), [
-    { quantity: '.5', commodity: 'SEK' },
-    { quantity: '-1.', commodity: 'SEK' },
-  ]);
+test('rejects decimals without digits on both sides of the point', () => {
+  for (const quantity of ['.5', '-1.']) {
+    const sourceText = `2024-01-01 Invalid decimal\n  Assets:Cash  ${quantity} SEK\n  Equity:Opening\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
 });
 
 test('rejects amounts without commodity symbols', () => {
