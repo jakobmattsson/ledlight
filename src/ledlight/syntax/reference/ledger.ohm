@@ -32,16 +32,15 @@ Ledlight {
   number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
 
-  commoditySymbol = quotedSymbol | bareCommoditySymbol
-  quotedSymbol = "\"" (~"\"" ~newline any)* "\""  -- double
-               | "'" (~"'" ~newline any)* "'"       -- single
-  bareCommoditySymbol = (~horizontal ~"@" ~"=" ~";" ~newline any)+
+  commoditySymbol = commoditySymbolCharacter+
+  commoditySymbolCharacter = ~forbiddenCommoditySymbolCharacter any
+  forbiddenCommoditySymbolCharacter = horizontal | "@" | "=" | ";" | "\"" | "'" | newline
 
   includeDirective = "include" horizontal+ directiveValue inlineComment? lineEnd
   accountDirective = "account" horizontal+ directiveValue inlineComment? lineEnd
   tagDirective = "tag" horizontal+ directiveValue inlineComment? lineEnd
 
-  commodityDirective = "commodity" horizontal+ directiveValue inlineComment? lineEnd commodityBody*
+  commodityDirective = "commodity" horizontal+ commoditySymbol horizontal* inlineComment? lineEnd commodityBody*
   commodityBody = blankLine | commodityProperty
   commodityProperty = indent commodityPropertyName commodityPropertyValue? inlineComment? lineEnd
   commodityPropertyName = "format" | "default" | "nomarket"

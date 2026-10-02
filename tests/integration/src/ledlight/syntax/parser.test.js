@@ -109,6 +109,24 @@ test('rejects amounts without commodity symbols', () => {
   }
 });
 
+test('rejects quoted and otherwise invalid commodity symbols', () => {
+  const sources = [
+    '2024-01-01 Quoted\n  Assets:Cash  1 "USD"\n  Equity:Opening\n',
+    "2024-01-01 Quoted\n  Assets:Cash  1 'USD'\n  Equity:Opening\n",
+    '2024-01-01 Operator\n  Assets:Cash  1 US@D\n  Equity:Opening\n',
+    '2024-01-01 Operator\n  Assets:Cash  1 US=D\n  Equity:Opening\n',
+    'commodity "USD"\n',
+    'P 2024-01-01 "FUND" 1 USD\n',
+  ];
+
+  for (const sourceText of sources) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
 test('parses declarations, commodity properties, prices, and source notes', () => {
   const document = parseConformant(`account Assets:Cash
 tag Source

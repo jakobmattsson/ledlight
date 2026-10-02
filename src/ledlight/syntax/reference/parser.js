@@ -114,10 +114,7 @@ module.exports = ({
       return { quantity: number.ast(this.args.source), commodity: commodity.ast(this.args.source) };
     },
     number(_sign, _integer, _fraction) { return this.sourceString; },
-    commoditySymbol(symbol) { return symbol.ast(this.args.source); },
-    quotedSymbol_double(_open, value, _close) { return value.sourceString; },
-    quotedSymbol_single(_open, value, _close) { return value.sourceString; },
-    bareCommoditySymbol(_characters) { return this.sourceString; },
+    commoditySymbol(_characters) { return this.sourceString; },
 
     includeDirective(_keyword, _space, value, comment, _lineEnd) {
       return { type: 'include', path: value.sourceString.trimEnd(), comment: optionalValue(comment, this.args.source), location: location(this, this.args.source) };
@@ -128,7 +125,7 @@ module.exports = ({
     tagDirective(_keyword, _space, value, comment, _lineEnd) {
       return { type: 'tag', name: value.sourceString.trimEnd(), comment: optionalValue(comment, this.args.source), location: location(this, this.args.source) };
     },
-    commodityDirective(_keyword, _space, symbol, comment, _lineEnd, body) {
+    commodityDirective(_keyword, _space, symbol, _trailingSpace, comment, _lineEnd, body) {
       return {
         type: 'commodity',
         symbol: symbol.sourceString.trimEnd(),

@@ -8,7 +8,16 @@ module.exports = ({
   const DATE_LENGTH = 10;
   const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format', 'nomarket']);
   const isWhitespace = (code) => code === 32 || code === 9;
+  const isCommodityCharacter = (code) => !isWhitespace(code) && code !== 10 && code !== 13 &&
+    code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64;
   const sourceLocation = (source, line, column) => ({ source, line, column });
+
+  function assertCommoditySymbol(value, source, line, column) {
+    if (!value || [...value].some((character) => !isCommodityCharacter(character.codePointAt(0)))) {
+      throw syntaxError(`Invalid commodity symbol ${JSON.stringify(value)}`, source, line, column);
+    }
+    return value;
+  }
 
   function isDateAt(input, offset) {
     if (input.length - offset < DATE_LENGTH) return false;
@@ -106,8 +115,7 @@ module.exports = ({
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const symbolStart = cursor;
     while (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) cursor++;
-    const commodity = text.slice(symbolStart, cursor);
-    if (!commodity) throw syntaxError('Expected a commodity in price directive', source, line, symbolStart + 1);
+    const commodity = assertCommoditySymbol(text.slice(symbolStart, cursor), source, line, symbolStart + 1);
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const parts = splitComment(text.slice(cursor));
     const expression = parseAmountExpression(parts.text, sourceLocation(source, line, cursor + 1));
@@ -192,7 +200,7 @@ module.exports = ({
       else if (trimmed.startsWith('tag') && isWhitespace(trimmed.charCodeAt(3))) entries.push(parseNamedDirective(trimmed, 'tag', 'tag', source, lineNumber));
       else if (trimmed.startsWith('commodity') && isWhitespace(trimmed.charCodeAt(9))) {
         commodity = parseNamedDirective(trimmed, 'commodity', 'commodity', source, lineNumber);
-        commodity.symbol = commodity.name;
+        commodity.symbol = assertCommoditySymbol(commodity.name, source, lineNumber, 11);
         delete commodity.name;
         commodity.properties = [];
         entries.push(commodity);

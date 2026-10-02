@@ -8,6 +8,10 @@ module.exports = ({
 
   function isSpace(code) { return code === 32 || code === 9; }
   function isDigit(code) { return code >= 48 && code <= 57; }
+  function isCommodityCharacter(code) {
+    return !isSpace(code) && code !== 10 && code !== 13 && code !== 34 && code !== 39 &&
+      code !== 59 && code !== 61 && code !== 64;
+  }
 
   class AmountLexer {
     constructor(input, source, line, baseColumn) {
@@ -53,18 +57,9 @@ module.exports = ({
         return { type: TOKEN.NUMBER, value: input.slice(start, cursor), start };
       }
 
-      if (code === 34 || code === 39) {
-        const quote = code;
-        cursor = ++this.offset;
-        while (cursor < length && input.charCodeAt(cursor) !== quote) cursor++;
-        if (cursor === length) this.error('Unterminated quoted commodity', start);
-        const value = input.slice(this.offset, cursor);
-        this.offset = cursor + 1;
-        return { type: TOKEN.SYMBOL, value, start };
-      }
-
       cursor = start;
-      while (cursor < length && !isSpace(input.charCodeAt(cursor)) && input.charCodeAt(cursor) !== 61 && input.charCodeAt(cursor) !== 64) cursor++;
+      while (cursor < length && isCommodityCharacter(input.charCodeAt(cursor))) cursor++;
+      if (cursor === start) this.error('Invalid commodity symbol character', start);
       this.offset = cursor;
       return { type: TOKEN.SYMBOL, value: input.slice(start, cursor), start };
     }
