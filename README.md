@@ -27,4 +27,5 @@ A Ledger project is a directory containing a `.ledgerrc` with exactly one
 `tmp/ledger.sqlite` below that directory.
 
 See [the Ledlight documentation](docs/ledlight.md) for the supported syntax,
-API, reports, and CLI.
+API, reports, and CLI. Proposed follow-up work is tracked in the
+[improvement backlog](docs/improvements.md).
