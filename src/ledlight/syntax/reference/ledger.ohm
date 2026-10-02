@@ -11,11 +11,11 @@ Ledlight {
     | ";" spacing* commentText lineEnd                                                                    -- comment
     | spacing* newline                                                                                    -- blank
 
-  description = (~forbiddenDescriptionSymbolCharacter any)+
+  description = (~forbiddenDescriptionCharacter any)+
   indentedComment = spacing+ ";" spacing* metadataComment lineEnd
 
   posting = spacing+ account amountPart? spacing* postingComment? lineEnd
-  account = (~forbiddenAccountSymbolCharacter any)+
+  account = (~forbiddenAccountCharacter any)+
   amountPart = fieldSeparator amountExpression?
 
   amountExpression = balanceAssignment | explicitAmount
@@ -33,7 +33,7 @@ Ledlight {
   formatQuantity = digit "," digit digit digit ("." digit+)?    -- grouped
                  | digit digit digit digit ("." digit+)?        -- ungrouped
 
-  commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
+  commoditySymbol = (~forbiddenCommodityCharacter any)+
 
   postingComment = ";" spacing* ("[" date "]" spacing*)? metadataComment
   transactionComment = spacing* ";" spacing* metadataComment
@@ -41,18 +41,19 @@ Ledlight {
   metadataComment = binaryTags (spacing+ commentText)?     -- tags
                   | tagName ":" spacing+ commentText       -- value
                   | commentText                            -- text
+
   binaryTags = ":" tagName (":" tagName)* ":"
-  tagName = (~forbiddenTagNameCharacter any)+
+  tagName = (~forbiddenTagCharacter any)+
   commentText = (~newline any)*
-  directiveValue = (~forbiddenDirectiveValueCharacter any)+
+  directiveValue = (~forbiddenDirectiveCharacter any)+
 
   date = digit digit digit digit "-" digit digit "-" digit digit
 
-  forbiddenDirectiveValueCharacter = ";" | newline
-  forbiddenDescriptionSymbolCharacter = ";" | newline
-  forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
-  forbiddenCommoditySymbolCharacter = spacing | "@" | "=" | ";" | "\"" | "'" | newline
-  forbiddenTagNameCharacter = spacing | ":" | ";" | newline
+  forbiddenDirectiveCharacter = ";" | newline
+  forbiddenDescriptionCharacter = ";" | newline
+  forbiddenAccountCharacter = fieldSeparator | ";" | newline
+  forbiddenCommodityCharacter = spacing | "@" | "=" | ";" | "\"" | "'" | newline
+  forbiddenTagCharacter = spacing | ":" | ";" | newline
 
   fieldSeparator = "\t"                -- tab
                  | "  " spacing*       -- spaces
