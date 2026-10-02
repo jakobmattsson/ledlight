@@ -129,6 +129,30 @@ test('uses the latest available price when no upper date is supplied', (t) => {
   ]);
 });
 
+test('applies inversion and totals as public report options', (t) => {
+  const databasePath = buildFixture(t);
+
+  assert.deepEqual(aggregateReport(databasePath, {
+    to: '2024-01-02',
+    accounts: ['Assets:Fund'],
+    inValuationCommodity: true,
+    invert: true,
+    includeTotal: true,
+  }), [
+    { account: 'Assets:Fund', commodity: 'SEK', quantity: '-26.4' },
+    {
+      account: 'Total',
+      commodity: 'SEK',
+      isTotal: true,
+      quantity: '-26.4',
+    },
+  ]);
+  assert.throws(
+    () => aggregateReport(databasePath, { includeTotal: true }),
+    /includeTotal requires inValuationCommodity/u,
+  );
+});
+
 test('uses the journal default commodity instead of assuming SEK', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-usd-valuation-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));

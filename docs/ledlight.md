@@ -45,21 +45,37 @@ loads the native SQLite dependency only when a database or report operation is
 called. Consumers that only parse source text therefore do not initialize the
 storage layer.
 
-To get the exact text printed by a CLI report from Node, pass the same arguments
-to `runReportCommand`. Open a project once when running several reports so the
-source freshness check runs once:
+Open a project once when running several reports so the source freshness check
+runs once:
 
 ```js
-const { openProject, runReportCommand } = require('ledlight');
+const { openProject } = require('ledlight');
 
 const project = openProject();
-const balance = runReportCommand(['aggregate', '--to', '2024-12-31'], { project });
-const history = runReportCommand(['balance-history', '--csv'], { project });
+const balance = project.aggregateReport({ to: '2024-12-31' });
+const history = project.balanceHistoryReport({ from: '2024-01-01' });
 ```
 
-The function returns the report as a string and throws on invalid arguments.
-Without `project`, it opens the project from the current directory; use
-`startDirectory` to select another project root.
+## Public API and CLI contract
+
+Ledlight has two supported consumer interfaces: the Node.js module exported by
+the package root and the `ledlight` CLI. The Node.js module is the authoritative
+application interface. It owns journal loading, database freshness, report
+selection, filtering, transformations such as inversion, and calculated rows
+such as totals.
+
+The CLI is a thin adapter over that public module. It may parse command-line
+arguments, map them to public API options, invoke an exported operation, and
+format the returned value as human-readable text, CSV, or JSON. Formatting may
+round values for display, align columns, add separators, and encode an existing
+result, but it must not calculate or otherwise change report semantics.
+
+The CLI command layer must not obtain data or transformations from internal
+report, project, database, or accounting operations. Pure output code may use
+shared exact-decimal helpers to round values for display. Any behavior offered
+by the CLI must first exist through the public Node.js API. This dependency
+direction keeps the two interfaces consistent and makes the CLI an example
+consumer rather than a second implementation.
 
 ## Architecture
 
@@ -76,10 +92,13 @@ The implementation is organized by responsibility under `src/ledlight`:
   valuation-commodity
   rate resolution;
 - `application` composes project paths, database freshness, and reports; and
-- `cli` contains argument parsing, output formatting, and the executable runner.
+- `cli` contains argument parsing, output formatting, and the executable runner
+  over the public Node.js API.
 
 Dependencies point inward: syntax and accounting contain no project or SQLite
-dependency, while application and CLI compose the lower-level modules.
+dependency, and application composes the lower-level modules into the public
+Node.js API. The CLI command layer depends on that public API; only its output
+formatter uses the shared exact-decimal helpers directly.
 
 ## Supported grammar
 
@@ -191,6 +210,13 @@ total and instead prints RFC-style escaped CSV with the columns
 exactly to two decimal places without binary floating-point conversion.
 `--invert` negates every reported amount, including the human-readable total.
 
+The same behavior is available directly through `aggregateReport`: set
+`invert: true` to negate the returned quantities and `includeTotal: true` to
+append the total row. `includeTotal` requires `inValuationCommodity: true`, so
+the quantities have one common commodity. The CLI requests this total for
+human-readable `--value` output and formats the row with a separator; CSV output
+uses the account rows only.
+
 Before every CLI aggregate report, Ledlight compares the current source manifest
 with `source_files`. This scan follows include directives and computes file
 hashes, but does not parse transactions. If the manifest has changed, Ledlight
@@ -290,6 +316,8 @@ caused by an intermediate commodity in a price chain. A single recursive
 writes the complete materialization. The report therefore uses an exact
 `(commodity, date)` join to group, value, and sum postings in one indexed SQL
 query rather than loading price history or running one balance query per date.
+The CLI's `--invert` option maps directly to the public report option
+`invert: true`.
 
 ## Consumer integration
 

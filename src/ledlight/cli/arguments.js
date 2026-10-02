@@ -49,9 +49,8 @@ module.exports = () => {
       return parseInvestmentPerformanceArguments(argumentsWithoutCommand);
     }
     if (command !== 'aggregate' && command !== 'balance-history') throw new Error(usage());
-    const reportOptions = { accounts: [], inValuationCommodity: false };
+    const reportOptions = { accounts: [] };
     let csv = false;
-    let invert = false;
 
     for (let index = 0; index < argumentsWithoutCommand.length; index += 1) {
       const argument = argumentsWithoutCommand[index];
@@ -65,7 +64,7 @@ module.exports = () => {
         continue;
       }
       if (argument === '--invert') {
-        invert = true;
+        reportOptions.invert = true;
         continue;
       }
       if (argument === '--from' || argument === '--to' || argument === '--accounts' || argument === '--date-basis') {
@@ -89,8 +88,7 @@ module.exports = () => {
       throw new Error(usage());
     }
 
-    reportOptions.dateBasis ??= 'posting';
-    return { reportOptions, csv, invert };
+    return { reportOptions, csv };
   }
 
   return {

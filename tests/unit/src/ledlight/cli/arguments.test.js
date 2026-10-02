@@ -23,19 +23,17 @@ test('parses aggregate report options and output flags', () => {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:', 'Liabilities:'],
-      dateBasis: 'posting',
       inValuationCommodity: true,
+      invert: true,
     },
     csv: true,
-    invert: true,
   });
 });
 
 test('uses aggregate defaults when no options are supplied', () => {
   assert.deepEqual(parseArguments(['aggregate']), {
-    reportOptions: { accounts: [], dateBasis: 'posting', inValuationCommodity: false },
+    reportOptions: { accounts: [] },
     csv: false,
-    invert: false,
   });
 });
 
@@ -54,10 +52,9 @@ test('parses balance history options', () => {
       to: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction',
-      inValuationCommodity: false,
+      invert: true,
     },
     csv: true,
-    invert: true,
   });
   assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
 });

@@ -3,7 +3,12 @@
 module.exports = ({
   path,
   sqlite: Database,
-  decimal: { parseDecimal, registerDecimalFunctions },
+  decimal: {
+    formatDecimal,
+    negateDecimal,
+    parseDecimal,
+    registerDecimalFunctions,
+  },
   accountPrefixFilter: { accountPrefixFilter },
   valuationCommodity: { fromDatabase },
 }) => {
@@ -27,6 +32,7 @@ module.exports = ({
       accounts: options.accounts ?? [],
       accountFactors: options.accountFactors,
       dateBasis: options.dateBasis ?? 'posting',
+      invert: options.invert === true,
     };
     assertDate(normalized.from, '--from');
     assertDate(normalized.to, '--to');
@@ -183,12 +189,20 @@ module.exports = ({
         );
       }
     }
-    return rows.map(({ date, amount, factored_amount: factoredAmount }) => ({
-      date,
-      amount,
-      commodity: valuationCommodity,
-      ...(factorExpression ? { factoredAmount } : {}),
-    }));
+    return rows.map(({ date, amount, factored_amount: factoredAmount }) => {
+      const value = options.invert
+        ? formatDecimal(negateDecimal(parseDecimal(amount)))
+        : amount;
+      const factoredValue = options.invert && factoredAmount !== undefined
+        ? formatDecimal(negateDecimal(parseDecimal(factoredAmount)))
+        : factoredAmount;
+      return {
+        date,
+        amount: value,
+        commodity: valuationCommodity,
+        ...(factorExpression ? { factoredAmount: factoredValue } : {}),
+      };
+    });
   }
 
   function queryBalanceHistoryReport(databasePath, options) {

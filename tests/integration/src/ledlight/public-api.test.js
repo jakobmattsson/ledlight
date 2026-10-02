@@ -24,7 +24,6 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
     'loadProjectPaths',
     'openProject',
     'parse',
-    'runReportCommand',
   ]);
   assert.equal(require.cache[sqliteModulePath], undefined);
 
@@ -71,29 +70,4 @@ test('loads SQLite only when a project database operation needs it', (t) => {
     moneyWeightedReturnTotal: null,
     points: [],
   });
-  assert.equal(ledlight.runReportCommand(['aggregate', '--csv'], {
-    project, startDirectory: undefined,
-  }),
-  'account,amount,commodity\n');
-  assert.equal(ledlight.runReportCommand(['balance-history', '--csv'], {
-    project, startDirectory: undefined,
-  }),
-  'date,amount\n');
-  assert.equal(ledlight.runReportCommand([
-    'investment-performance',
-    '--accounts', 'Assets:',
-    '--exclude-commodities', 'SEK',
-  ], { project, startDirectory: undefined }),
-  'Investment performance from n/a to n/a\n' +
-  'Instruments: 0\n' +
-  'Opening value: 0.00 SEK\n' +
-  'Net contributions: 0.00 SEK\n' +
-  'Ending value: 0.00 SEK\n' +
-  'Profit/loss: 0.00 SEK\n' +
-  'Time-weighted return: n/a\n' +
-  'Money-weighted return (total): n/a\n' +
-  'Money-weighted return (annualized): n/a\n');
-  assert.throws(() => ledlight.runReportCommand(['unknown'], {
-    project, startDirectory: undefined,
-  }), /Usage:/u);
 });

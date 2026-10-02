@@ -4,8 +4,10 @@ module.exports = ({
   path,
   sqlite: Database,
   decimal: {
+    addDecimals,
     formatDecimal,
     multiplyDecimals,
+    negateDecimal,
     parseDecimal,
     registerDecimalFunctions,
   },
@@ -33,6 +35,8 @@ module.exports = ({
       accounts: options.accounts ?? [],
       dateBasis: options.dateBasis ?? 'posting',
       inValuationCommodity: options.inValuationCommodity === true,
+      includeTotal: options.includeTotal === true,
+      invert: options.invert === true,
       withValuationValue: options.withValuationValue === true,
     };
     assertDate(normalized.from, '--from');
@@ -48,6 +52,9 @@ module.exports = ({
     }
     if (normalized.inValuationCommodity && normalized.withValuationValue) {
       throw new Error('inValuationCommodity and withValuationValue cannot be used together');
+    }
+    if (normalized.includeTotal && !normalized.inValuationCommodity) {
+      throw new Error('includeTotal requires inValuationCommodity');
     }
     return normalized;
   }
@@ -136,18 +143,44 @@ module.exports = ({
     }));
   }
 
+  function transformRows(rows, options) {
+    const transformed = options.invert
+      ? rows.map((row) => ({
+        ...row,
+        quantity: formatDecimal(negateDecimal(parseDecimal(row.quantity))),
+        ...(row.valuationValue === undefined ? {} : {
+          valuationValue: formatDecimal(negateDecimal(parseDecimal(row.valuationValue))),
+        }),
+      }))
+      : rows;
+    if (!options.includeTotal || transformed.length === 0) return transformed;
+    const total = transformed.reduce(
+      (sum, row) => addDecimals(sum, parseDecimal(row.quantity)),
+      parseDecimal('0'),
+    );
+    return [
+      ...transformed,
+      {
+        account: 'Total',
+        commodity: transformed[0].commodity,
+        isTotal: true,
+        quantity: formatDecimal(total),
+      },
+    ];
+  }
+
   function queryAggregateReport(databasePath, options, { valuationPriceCache }) {
     const normalizedOptions = normalizeOptions(options);
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
       registerDecimalFunctions(database);
       const commodityTotals = queryCommodityTotals(database, normalizedOptions);
-      if (normalizedOptions.inValuationCommodity) {
-        return queryValuationTotals(database, normalizedOptions, commodityTotals, valuationPriceCache);
-      }
-      return normalizedOptions.withValuationValue
-        ? withValuationValues(database, normalizedOptions, commodityTotals, valuationPriceCache)
-        : commodityTotals;
+      const rows = normalizedOptions.inValuationCommodity
+        ? queryValuationTotals(database, normalizedOptions, commodityTotals, valuationPriceCache)
+        : normalizedOptions.withValuationValue
+          ? withValuationValues(database, normalizedOptions, commodityTotals, valuationPriceCache)
+          : commodityTotals;
+      return transformRows(rows, normalizedOptions);
     } finally {
       database.close();
     }

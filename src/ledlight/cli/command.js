@@ -1,7 +1,11 @@
 'use strict';
 
 module.exports = ({
-  project: { openProject },
+  ledlight: {
+    aggregateReport,
+    balanceHistoryReport,
+    investmentPerformance,
+  },
   cliArguments: { parseArguments },
   cliFormat: {
     formatCsv,
@@ -10,32 +14,30 @@ module.exports = ({
     formatHumanReadable,
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
-    invertBalanceHistory,
-    invertRows,
   },
 }) => {
 
-  function runReportCommand(arguments_, { project, startDirectory }) {
+  function runReportCommand(arguments_, { startDirectory }) {
     const [command] = arguments_;
     if (command === 'investment-performance') {
       const { reportOptions, json } = parseArguments(arguments_);
-      const report = (project ?? openProject(startDirectory)).investmentPerformance(reportOptions);
+      const report = investmentPerformance(reportOptions, startDirectory);
       return json
         ? formatInvestmentPerformanceJson(report)
         : formatInvestmentPerformance(report);
     }
 
-    const { reportOptions, csv, invert } = parseArguments(arguments_);
-    const currentProject = project ?? openProject(startDirectory);
+    const { reportOptions, csv } = parseArguments(arguments_);
     if (command === 'balance-history') {
-      const balanceRows = currentProject.balanceHistoryReport(reportOptions);
-      const reportRows = invert ? invertBalanceHistory(balanceRows) : balanceRows;
+      const reportRows = balanceHistoryReport(reportOptions, startDirectory);
       return csv
         ? formatBalanceHistoryCsv(reportRows)
         : formatBalanceHistoryHumanReadable(reportRows);
     }
-    const aggregateRows = currentProject.aggregateReport(reportOptions);
-    const reportRows = invert ? invertRows(aggregateRows) : aggregateRows;
+    const reportRows = aggregateReport({
+      ...reportOptions,
+      includeTotal: !csv && reportOptions.inValuationCommodity,
+    }, startDirectory);
     return csv
       ? formatCsv(reportRows, reportOptions.inValuationCommodity)
       : formatHumanReadable(reportRows, reportOptions.inValuationCommodity);

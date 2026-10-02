@@ -5,7 +5,6 @@ module.exports = ({
   syntaxErrors: { LedgerSyntaxError },
   ledgerParser: { parse },
   project: projectApi,
-  cliCommand: { runReportCommand },
 }) => {
 
   function aggregateReport(options, startDirectory) {
@@ -52,6 +51,5 @@ module.exports = ({
     loadProjectPaths,
     openProject,
     parse,
-    runReportCommand,
   };
 };

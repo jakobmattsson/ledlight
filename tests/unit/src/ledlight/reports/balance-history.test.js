@@ -70,6 +70,17 @@ test('nets internal transfers in the daily balance', (t) => {
   }), [{ date: '2024-01-03', amount: '44.6', commodity: 'SEK' }]);
 });
 
+test('applies inversion as a public report option', (t) => {
+  const databasePath = buildFixture(t);
+
+  assert.deepEqual(queryBalanceHistoryReport(databasePath, {
+    from: '2024-01-01',
+    to: '2024-01-01',
+    accounts: ['Assets:'],
+    invert: true,
+  }), [{ date: '2024-01-01', amount: '-20', commodity: 'SEK' }]);
+});
+
 test('keeps an internal transfer atomic when a posting has another date', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-dated-transfer-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));

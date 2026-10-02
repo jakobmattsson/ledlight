@@ -2,10 +2,7 @@
 
 module.exports = ({
   decimal: {
-    addDecimals,
-    formatDecimal,
     formatDecimalFixed,
-    negateDecimal,
     parseDecimal,
   },
 }) => {
@@ -20,30 +17,6 @@ module.exports = ({
       ...row,
       quantity: inValuationCommodity ? formatDecimalFixed(parseDecimal(row.quantity), 2) : row.quantity,
     }));
-  }
-
-  function invertRows(rows) {
-    return rows.map((row) => ({
-      ...row,
-      quantity: formatDecimal(negateDecimal(parseDecimal(row.quantity))),
-    }));
-  }
-
-  function withTotal(rows) {
-    if (rows.length === 0) return rows;
-    const total = rows.reduce(
-      (sum, row) => addDecimals(sum, parseDecimal(row.quantity)),
-      parseDecimal('0'),
-    );
-    return [
-      ...rows,
-      {
-        account: 'Total',
-        commodity: rows[0].commodity,
-        isTotal: true,
-        quantity: formatDecimal(total),
-      },
-    ];
   }
 
   function groupThousands(quantity) {
@@ -63,10 +36,7 @@ module.exports = ({
   }
 
   function formatHumanReadable(rows, inValuationCommodity) {
-    const reportRows = displayRows(
-      inValuationCommodity ? withTotal(rows) : rows,
-      inValuationCommodity,
-    );
+    const reportRows = displayRows(rows, inValuationCommodity);
     const accountWidth = Math.max(0, ...reportRows.map((row) => row.account.length));
     const amounts = reportRows.map((row) => {
       const [integer, fraction] = groupThousands(row.quantity).split('.');
@@ -118,13 +88,6 @@ module.exports = ({
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
   }
 
-  function invertBalanceHistory(rows) {
-    return rows.map((row) => ({
-      ...row,
-      amount: formatDecimal(negateDecimal(parseDecimal(row.amount))),
-    }));
-  }
-
   function formatInvestmentPerformance(report) {
     const money = (value) => `${groupThousands(value.toFixed(2))} ${report.valuationCommodity}`;
     const percent = (value) => value === null ? 'n/a' : `${(value * 100).toFixed(2)} %`;
@@ -152,7 +115,5 @@ module.exports = ({
     formatHumanReadable,
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
-    invertBalanceHistory,
-    invertRows,
   };
 };
