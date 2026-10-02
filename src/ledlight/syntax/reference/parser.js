@@ -165,7 +165,7 @@ module.exports = ({
         location: location(marker, this.args.source),
       };
     },
-    topLevelComment(_marker, _text, _lineEnd) { return null; },
+    topLevelComment(_semicolon, _space, _text, _lineEnd) { return null; },
     postingComment(_semicolon, _space, date, _text) {
       return {
         date: optionalValue(date, this.args.source),

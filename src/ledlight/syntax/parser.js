@@ -151,7 +151,7 @@ module.exports = ({
       if (!trimmed) continue;
 
       const marker = trimmed[0];
-      if (marker === ';' || marker === '#' || marker === '%') {
+      if (marker === ';') {
         if (transaction && first > 0) {
           const text = trimmed.slice(1).trim();
           const colon = text.indexOf(':');
@@ -162,9 +162,8 @@ module.exports = ({
             location: sourceLocation(source, lineNumber, first + 1),
           });
         }
-        continue;
+        if (first === 0 || transaction) continue;
       }
-      if (first === 0 && marker === ':') continue;
       if (first > 0) {
         if (transaction) transaction.postings.push(parsePosting(raw, source, lineNumber));
         else if (commodity) {

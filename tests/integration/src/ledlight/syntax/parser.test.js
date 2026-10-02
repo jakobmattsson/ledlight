@@ -51,6 +51,35 @@ test('treats former transaction status and code syntax as description text', () 
   }
 });
 
+test('uses semicolons as the only top-level comment marker', () => {
+  const document = parseConformant(`; top-level comment
+2024-01-01 Transaction
+  Assets:Cash  1 SEK
+  Equity:Opening
+`, 'fixture.ledger');
+
+  assert.equal(document.entries.length, 1);
+
+  for (const marker of ['#', '%', ':']) {
+    const sourceText = `${marker} not a comment\n2024-01-01 Transaction\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
+test('does not interpret other indented markers as comments', () => {
+  const document = parseConformant(`2024-01-01 Transaction
+  # not a comment
+  Assets:Cash  1 SEK
+  Equity:Opening
+`, 'fixture.ledger');
+
+  assert.equal(document.entries[0].notes.length, 0);
+  assert.equal(document.entries[0].postings[0].account, '# not a comment');
+});
+
 test('requires a transaction description', () => {
   for (const header of ['2024-01-29 ', '2024-01-29 ; imported']) {
     const sourceText = `${header}\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;

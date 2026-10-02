@@ -48,13 +48,11 @@ Ledlight {
 
   priceDirective = "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd
 
-  indentedComment = indent commentMarker horizontal* commentText lineEnd
-  topLevelComment = topLevelCommentMarker commentText lineEnd
+  indentedComment = indent ";" horizontal* commentText lineEnd
+  topLevelComment = ";" horizontal* commentText lineEnd
   postingComment = ";" horizontal* postingDate? commentText
   postingDate = "[" date "]" horizontal*
   inlineComment = horizontal* ";" horizontal* commentText
-  commentMarker = ";" | "#" | "%"
-  topLevelCommentMarker = commentMarker | ":"
   commentText = (~newline any)*
   directiveValue = (~";" ~newline any)+
 
