@@ -4,7 +4,9 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArguments, usage } = resolveRepositoryModule("src/ledlight/cli/arguments.js");
+const argumentsModule = resolveRepositoryModule("src/ledlight/cli/arguments.js");
+const { parseArguments } = argumentsModule;
+const { usage } = argumentsModule.$$private;
 
 test('parses aggregate report options and output flags', () => {
   assert.deepEqual(parseArguments([

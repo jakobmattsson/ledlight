@@ -160,60 +160,13 @@ module.exports = ({
     }
   }
 
-  function createDatedSekRateResolver(priceRows) {
-    const histories = new Map();
-    for (const row of priceRows) {
-      const history = histories.get(row.commodity) ?? [];
-      history.push(row);
-      histories.set(row.commodity, history);
-    }
-    const cache = new Map();
-
-    function latestPrice(commodity, throughDate) {
-      const history = histories.get(commodity) ?? [];
-      let low = 0;
-      let high = history.length;
-      while (low < high) {
-        const middle = Math.floor((low + high) / 2);
-        if (history[middle].date <= throughDate) low = middle + 1;
-        else high = middle;
-      }
-      return low === 0 ? undefined : history[low - 1];
-    }
-
-    function resolve(commodity, throughDate, visiting) {
-      if (commodity === 'SEK') return '1';
-      const cacheKey = `${throughDate}\0${commodity}`;
-      if (cache.has(cacheKey)) return cache.get(cacheKey);
-      if (visiting.has(commodity)) {
-        throw new Error(`Circular price chain while converting ${commodity} to SEK`);
-      }
-      const price = latestPrice(commodity, throughDate);
-      if (!price || !price.price_commodity) {
-        throw new Error(`No price for ${commodity} on or before ${throughDate} can convert it to SEK`);
-      }
-      visiting.add(commodity);
-      const quoteRate = resolve(price.price_commodity, throughDate, visiting);
-      visiting.delete(commodity);
-      const rate = formatDecimal(multiplyDecimals(
-        parseDecimal(price.price_quantity),
-        parseDecimal(quoteRate),
-      ));
-      cache.set(cacheKey, rate);
-      return rate;
-    }
-
-    return resolve;
-  }
-
   return {
-    createDatedSekRateResolver,
-    createLedgerSekRateResolver,
     querySekRates,
     queryLedgerSekRateResolver,
-    resolveSekRates,
-    selectLatestPrices,
-    selectMaterializedSekRates,
-    selectPriceHistory,
+    $$private: {
+      resolveSekRates,
+      selectLatestPrices,
+      selectMaterializedSekRates,
+    },
   };
 };

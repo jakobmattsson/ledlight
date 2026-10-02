@@ -31,5 +31,8 @@ module.exports = () => {
     return { sql: `(${clauses.join(' OR ')})`, parameters };
   }
 
-  return { accountPrefixFilter, prefixUpperBound };
+  return {
+    accountPrefixFilter,
+    $$private: { prefixUpperBound },
+  };
 };

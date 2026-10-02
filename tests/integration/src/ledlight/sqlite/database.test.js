@@ -11,10 +11,12 @@ const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
 const { openProject } = resolveRepositoryModule("src/ledlight/index.js");
 const {
-  buildDatabase,
-  checkDatabaseSync,
   ensureDatabaseCurrent,
 } = resolveRepositoryModule("src/ledlight/sqlite/database.js");
+const {
+  buildDatabase,
+  checkDatabaseSync,
+} = resolveRepositoryModule("src/ledlight/sqlite/database.js").$$private;
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-'));

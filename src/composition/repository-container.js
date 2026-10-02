@@ -41,7 +41,6 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/syntax/amount-parser.js': 'amountParser',
   'src/ledlight/syntax/errors.js': 'syntaxErrors',
   'src/ledlight/syntax/parser.js': 'ledgerParser',
-  'src/ledlight/syntax/reference/load-journal.js': 'referenceJournal',
   'src/ledlight/syntax/reference/parser.js': 'referenceParser',
 });
 const EXCLUDED_FACTORY_FILES = new Set([
@@ -112,6 +111,5 @@ function createRepositoryContainer() {
 module.exports = {
   createRepositoryContainer,
   registerRepositoryModules,
-  repositoryFactoryFiles,
-  repositoryModuleName,
+  $$private: { repositoryModuleName },
 };

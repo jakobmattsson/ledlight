@@ -8,7 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { queryAggregateReport } = resolveRepositoryModule("src/ledlight/reports/aggregate.js");
-const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js");
+const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js").$$private;
 
 function aggregateReport(databasePath, options) {
   return queryAggregateReport(databasePath, options, {});

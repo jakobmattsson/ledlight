@@ -7,7 +7,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { loadReconciliationEntries } = resolveRepositoryModule("src/ledlight/reports/reconciliation-entries.js");
+const { loadReconciliationEntries } = resolveRepositoryModule(
+  "src/ledlight/reports/reconciliation-entries.js",
+).$$private;
 
 function createProject(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-reconciliation-'));

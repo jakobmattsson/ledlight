@@ -37,5 +37,8 @@ module.exports = () => {
     return journal;
   }
 
-  return { JournalValidationError, validateJournal };
+  return {
+    validateJournal,
+    $$private: { JournalValidationError },
+  };
 };

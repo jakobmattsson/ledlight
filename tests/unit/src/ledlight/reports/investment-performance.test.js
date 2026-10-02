@@ -7,8 +7,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { queryInvestmentPerformance, xirr } = resolveRepositoryModule("src/ledlight/reports/investment-performance.js");
-const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js");
+const investmentPerformance = resolveRepositoryModule("src/ledlight/reports/investment-performance.js");
+const { queryInvestmentPerformance } = investmentPerformance;
+const { xirr } = investmentPerformance.$$private;
+const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js").$$private;
 
 function buildFixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-investment-performance-'));

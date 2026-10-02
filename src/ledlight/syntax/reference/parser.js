@@ -206,5 +206,5 @@ module.exports = ({
     return semantics(result).ast(source);
   }
 
-  return { grammar, parse };
+  return { $$private: { parse } };
 };

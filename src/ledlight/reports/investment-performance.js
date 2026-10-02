@@ -368,5 +368,8 @@ module.exports = ({
     }
   }
 
-  return { calculatePerformance, queryInvestmentPerformance, totalReturnFromXirr, xirr };
+  return {
+    queryInvestmentPerformance,
+    $$private: { xirr },
+  };
 };

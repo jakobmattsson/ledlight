@@ -131,15 +131,12 @@ module.exports = ({
   }
 
   return {
-    DATABASE_RELATIVE_PATH,
     accountBalances,
     accountPostings,
     aggregateReport,
     balanceHistoryReport,
     investmentPerformance,
     ensureProjectDatabaseCurrent,
-    findProjectRoot,
-    journalPathFromLedgerRc,
     loadProjectPaths,
     openProject,
   };

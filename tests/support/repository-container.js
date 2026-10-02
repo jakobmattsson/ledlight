@@ -2,10 +2,9 @@
 
 const path = require('node:path');
 const fs = require('node:fs');
-const { asValue } = require('awilix');
 const {
   createRepositoryContainer,
-  repositoryModuleName,
+  $$private: { repositoryModuleName },
 } = require('../../src/composition/repository-container');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
@@ -21,11 +20,4 @@ function resolveRepositoryModule(fileName) {
   return container.resolve(repositoryModuleName(resolvedFileName));
 }
 
-function buildFactory(fileName, values) {
-  const testContainer = container.createScope();
-  testContainer.register(Object.fromEntries(Object.entries(values ?? {})
-    .map(([name, value]) => [name, asValue(value)])));
-  return testContainer.build(require(fileName));
-}
-
-module.exports = { buildFactory, container, resolveRepositoryModule };
+module.exports = { resolveRepositoryModule };

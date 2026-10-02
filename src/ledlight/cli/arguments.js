@@ -93,5 +93,8 @@ module.exports = () => {
     return { reportOptions, csv, invert };
   }
 
-  return { parseArguments, usage };
+  return {
+    parseArguments,
+    $$private: { usage },
+  };
 };

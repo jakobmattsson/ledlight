@@ -9,7 +9,7 @@ const {
   resolveSekRates,
   selectLatestPrices,
   selectMaterializedSekRates,
-} = resolveRepositoryModule("src/ledlight/reports/sek-rates.js");
+} = resolveRepositoryModule("src/ledlight/reports/sek-rates.js").$$private;
 
 test('selects the latest price through a date using journal order as a tiebreaker', (t) => {
   const database = new Database(':memory:');

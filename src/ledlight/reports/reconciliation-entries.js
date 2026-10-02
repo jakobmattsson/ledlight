@@ -76,5 +76,5 @@ module.exports = ({
     };
   }
 
-  return { loadReconciliationEntries };
+  return { $$private: { loadReconciliationEntries } };
 };

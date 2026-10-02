@@ -6,8 +6,10 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   accountPrefixFilter,
-  prefixUpperBound,
 } = resolveRepositoryModule("src/ledlight/reports/account-prefix-filter.js");
+const { prefixUpperBound } = resolveRepositoryModule(
+  "src/ledlight/reports/account-prefix-filter.js",
+).$$private;
 
 test('calculates exclusive Unicode prefix bounds', () => {
   assert.equal(prefixUpperBound('Assets:'), 'Assets;');

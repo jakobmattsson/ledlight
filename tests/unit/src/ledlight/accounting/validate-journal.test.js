@@ -6,9 +6,11 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { parse } = resolveRepositoryModule("src/ledlight/syntax/parser.js");
 const {
-  JournalValidationError,
   validateJournal,
 } = resolveRepositoryModule("src/ledlight/accounting/validate-journal.js");
+const { JournalValidationError } = resolveRepositoryModule(
+  "src/ledlight/accounting/validate-journal.js",
+).$$private;
 
 const invalidAmounts = [
   {

@@ -8,7 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { queryBalanceHistoryReport } = resolveRepositoryModule("src/ledlight/reports/balance-history.js");
-const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js");
+const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js").$$private;
 
 function buildFixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-balance-history-'));

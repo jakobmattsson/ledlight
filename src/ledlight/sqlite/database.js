@@ -23,9 +23,7 @@ module.exports = ({
   }
 
   return {
-    buildDatabase,
-    checkDatabaseSync,
     ensureDatabaseCurrent,
-    writeJournalDatabase,
+    $$private: { buildDatabase, checkDatabaseSync },
   };
 };

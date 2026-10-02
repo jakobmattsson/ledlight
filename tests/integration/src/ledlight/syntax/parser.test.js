@@ -5,7 +5,7 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { LedgerSyntaxError, parse } = resolveRepositoryModule("src/ledlight/index.js");
-const ohmParser = resolveRepositoryModule("src/ledlight/syntax/reference/parser.js");
+const ohmParser = resolveRepositoryModule("src/ledlight/syntax/reference/parser.js").$$private;
 
 function parseConformant(sourceText, source) {
   const document = parse(sourceText, { source });
