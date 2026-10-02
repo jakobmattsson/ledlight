@@ -66,12 +66,10 @@ module.exports = ({
     }
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
 
-    if (text[cursor] === '*' || text[cursor] === '!' || text[cursor] === '(') {
-      throw syntaxError('Transaction status and code are not supported', source, line, cursor + 1);
-    }
     const parts = splitComment(text.slice(cursor));
     const pipe = parts.text.indexOf('|');
     const description = parts.text.trim();
+    if (!description) throw syntaxError('Expected a transaction description', source, line, cursor + 1);
     return {
       type: 'transaction', date, status: null, code: null, description,
       payee: pipe < 0 ? null : parts.text.slice(0, pipe).trim(),

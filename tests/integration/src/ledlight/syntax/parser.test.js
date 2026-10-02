@@ -41,17 +41,23 @@ test('parses transactions without losing decimal precision', () => {
   assert.equal(transaction.postings[2].amount, null);
 });
 
-test('rejects transaction status and code', () => {
+test('treats former transaction status and code syntax as description text', () => {
   for (const metadata of ['*', '!', '(trade-1)']) {
     const sourceText = `2024-01-29 ${metadata} Investment\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
-    assert.throws(
-      () => parse(sourceText, { source: 'bad.ledger' }),
-      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX,
-    );
-    assert.throws(
-      () => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
-      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX,
-    );
+    const transaction = parseConformant(sourceText, 'fixture.ledger').entries[0];
+    assert.equal(transaction.description, `${metadata} Investment`);
+    assert.equal(transaction.status, null);
+    assert.equal(transaction.code, null);
+  }
+});
+
+test('requires a transaction description', () => {
+  for (const header of ['2024-01-29 ', '2024-01-29 ; imported']) {
+    const sourceText = `${header}\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
   }
 });
 

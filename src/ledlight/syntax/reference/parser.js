@@ -59,28 +59,24 @@ module.exports = ({
       };
     },
 
-    transactionHeader(date, _space, details, _lineEnd) {
+    transactionHeader(date, _space, description, comment, _lineEnd) {
       const source = this.args.source;
+      const text = description.sourceString.trim();
+      const pipe = text.indexOf('|');
       return {
         type: 'transaction',
         date: date.ast(source),
         status: null,
         code: null,
-        ...details.ast(source),
+        description: text,
+        payee: pipe < 0 ? null : text.slice(0, pipe).trim(),
+        narration: pipe < 0 ? text : text.slice(pipe + 1).trim(),
+        comment: comment.ast(source),
         location: location(date, source),
       };
     },
 
-    descriptionAndComment(_value, comment) {
-      const text = this.sourceString.slice(0, this.sourceString.length - comment.sourceString.length).trim();
-      const pipe = text.indexOf('|');
-      return {
-        description: text,
-        payee: pipe < 0 ? null : text.slice(0, pipe).trim(),
-        narration: pipe < 0 ? text : text.slice(pipe + 1).trim(),
-        comment: optionalValue(comment, this.args.source),
-      };
-    },
+    comment(value) { return optionalValue(value, this.args.source); },
 
     posting(_indent, account, amountPart, _space, comment, _lineEnd) {
       const expression = optionalValue(amountPart, this.args.source) || {
