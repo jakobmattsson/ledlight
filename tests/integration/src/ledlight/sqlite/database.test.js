@@ -120,7 +120,7 @@ P 2024-01-01 FUND 10 SEK
 
   const project = openProject(directory);
   const resolver = project.ledgerValuationRateResolver();
-  assert.equal(resolver('FUND', '2024-01-01', new Set()), '10');
+  assert.equal(resolver('FUND', '2024-01-01'), '10');
   assert.equal(project.ledgerValuationRateResolver(), resolver);
 });
 

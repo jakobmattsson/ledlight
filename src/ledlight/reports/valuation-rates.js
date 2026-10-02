@@ -153,7 +153,7 @@ module.exports = ({
       visiting.delete(commodity);
       throw new Error(`No price for ${commodity} on or before ${throughDate} can convert it to ${valuationCommodity}`);
     }
-    return resolve;
+    return (commodity, throughDate) => resolve(commodity, throughDate, new Set());
   }
 
   function queryLedgerValuationRateResolver(databasePath) {
