@@ -73,6 +73,29 @@ test('parses total costs and balance assertions', () => {
   assert.deepEqual(transaction.postings[1].balanceAssertion, { quantity: '2500.00', commodity: 'SEK' });
 });
 
+test('parses canonical integer, signed, and decimal quantities', () => {
+  const document = parseConformant(`2024-01-01 Canonical numbers
+  Assets:Zero  0 SEK
+  Assets:Positive  +1 SEK
+  Assets:Negative  -1.25 SEK
+`, 'fixture.ledger');
+
+  assert.deepEqual(document.entries[0].postings.map((posting) => posting.amount.quantity), [
+    '0', '+1', '-1.25',
+  ]);
+});
+
+test('parses posting comments with and without preceding whitespace', () => {
+  const document = parseConformant(`2024-01-01 Posting comments
+  Assets:Compact  1 SEK;compact
+  Assets:Spaced  -1 SEK ; spaced
+`, 'fixture.ledger');
+
+  assert.deepEqual(document.entries[0].postings.map((posting) => posting.comment), [
+    'compact', 'spaced',
+  ]);
+});
+
 test('rejects unsupported auxiliary transaction dates', () => {
   const sourceText = '2024-01-01=2024-01-02 Trade\n  Assets:Cash  1 SEK\n  Equity:Opening\n';
   assert.throws(() => parse(sourceText, { source: 'fixture.ledger' }), /Expected whitespace after transaction date/u);
@@ -83,7 +106,7 @@ test('rejects unsupported auxiliary transaction dates', () => {
 });
 
 test('rejects decimals without digits on both sides of the point', () => {
-  for (const quantity of ['.5', '-1.']) {
+  for (const quantity of ['.5', '-1.', '+.25', '+10.']) {
     const sourceText = `2024-01-01 Invalid decimal\n  Assets:Cash  ${quantity} SEK\n  Equity:Opening\n`;
     assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
       (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
