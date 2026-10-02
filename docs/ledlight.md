@@ -276,8 +276,8 @@ first uses the latest direct quote to the valuation commodity, even when a
 newer indirect quote exists. Without a direct quote, it tries indirect quotes
 from newest to oldest until one reaches the valuation commodity. Prices must be
 dated on or before `to`; when `to` is omitted, all available prices are
-eligible. The single valuation commodity is the last commodity marked
-`default` by a commodity declaration:
+eligible. The single valuation commodity is marked `default` by one commodity
+declaration:
 
 ```ledger
 commodity USD
@@ -286,7 +286,9 @@ commodity USD
 ```
 
 This `commodity` property is the only supported way to declare the valuation
-commodity. There is no API or command-line option for choosing another target.
+commodity. Marking more than one declaration as `default` is a project
+configuration error, including repeated declarations of the same symbol. There
+is no API or command-line option for choosing another target.
 Price chains can pass through intermediate commodities. Missing and circular
 price chains are errors. Results remain exact decimal strings and are not
 rounded for display.
