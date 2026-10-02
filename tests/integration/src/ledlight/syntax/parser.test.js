@@ -239,6 +239,37 @@ P 2024-01-01 FUND 123.45 SEK ; closing
   });
 });
 
+test('requires canonical commodity formats', () => {
+  const document = parseConformant(`commodity SEK
+  format 1,000.00 SEK
+commodity BTC
+  format 1000.00000000 BTC
+commodity JPY
+  format 1,000 JPY
+`, 'fixture.ledger');
+
+  assert.deepEqual(document.entries.map(({ symbol, properties }) => ({ symbol, format: properties[0].value })), [
+    { symbol: 'SEK', format: '1,000.00 SEK' },
+    { symbol: 'BTC', format: '1000.00000000 BTC' },
+    { symbol: 'JPY', format: '1,000 JPY' },
+  ]);
+
+  for (const format of [
+    'SEK 1,000.00',
+    '1,000.00SEK',
+    '1.000,00 SEK',
+    '12,34.00 SEK',
+    '1,000.00 USD',
+    '1,000.00 SEK trailing',
+  ]) {
+    const sourceText = `commodity SEK\n  format ${format}\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
 test('reports precise source locations for invalid input', () => {
   assert.throws(
     () => parse('2024-02-30 Invalid\n  Assets:Cash  1 SEK\n', { source: 'bad.ledger' }),

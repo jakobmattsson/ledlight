@@ -15,6 +15,11 @@ module.exports = ({
     return { source, line: value.lineNum, column: value.colNum };
   }
 
+  function indentedLocation(indent, source) {
+    const value = location(indent, source);
+    return { ...value, column: value.column + indent.sourceString.length };
+  }
+
   function optionalValue(node, source) {
     return node.children.length === 0 ? null : node.children[0].ast(source);
   }
@@ -125,21 +130,42 @@ module.exports = ({
       return { type: 'tag', name: value.sourceString.trimEnd(), comment: optionalValue(comment, this.args.source), location: location(this, this.args.source) };
     },
     commodityDirective(_keyword, _space, symbol, comment, _trailingSpace, _lineEnd, body) {
+      const source = this.args.source;
+      const commodity = symbol.sourceString.trimEnd();
+      const properties = values(body, source).filter((item) => item !== null);
+      for (const property of properties) {
+        if (property.formatSymbol && property.formatSymbol !== commodity) {
+          const where = property.location;
+          throw syntaxError(`Commodity format symbol ${JSON.stringify(property.formatSymbol)} must match ${JSON.stringify(commodity)}`, source, where.line, where.column);
+        }
+      }
       return {
         type: 'commodity',
-        symbol: symbol.sourceString.trimEnd(),
-        comment: optionalValue(comment, this.args.source),
-        properties: values(body, this.args.source).filter((item) => item !== null),
-        location: location(this, this.args.source),
+        symbol: commodity,
+        comment: optionalValue(comment, source),
+        properties: properties.map(({ formatSymbol: _formatSymbol, ...property }) => property),
+        location: location(this, source),
       };
     },
-    commodityProperty(_indent, name, value, comment, _lineEnd) {
+    commodityProperty_format(_indent, _keyword, _space, value, comment, _trailingSpace, _lineEnd) {
       return {
-        name: name.sourceString,
+        name: 'format',
+        value: value.sourceString,
+        formatSymbol: value.ast(this.args.source).symbol,
+        comment: optionalValue(comment, this.args.source),
+        location: indentedLocation(_indent, this.args.source),
+      };
+    },
+    commodityProperty_default(_indent, _keyword, value, comment, _lineEnd) {
+      return {
+        name: 'default',
         value: optionalValue(value, this.args.source),
         comment: optionalValue(comment, this.args.source),
-        location: location(name, this.args.source),
+        location: indentedLocation(_indent, this.args.source),
       };
+    },
+    commodityFormat(_quantity, _space, symbol) {
+      return { symbol: symbol.sourceString };
     },
     commodityPropertyValue(_space, value) { return value.sourceString.trimEnd(); },
 

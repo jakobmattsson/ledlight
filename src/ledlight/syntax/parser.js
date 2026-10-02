@@ -7,6 +7,7 @@ module.exports = ({
 
   const DATE_LENGTH = 10;
   const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format']);
+  const CANONICAL_COMMODITY_FORMAT = /^((?:\d{1,3}(?:,\d{3})+|\d+))(?:\.(\d+))?[ \t]+([^ \t]+)$/u;
   const isWhitespace = (code) => code === 32 || code === 9;
   const isCommodityCharacter = (code) => !isWhitespace(code) && code !== 10 && code !== 13 &&
     code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64;
@@ -130,6 +131,15 @@ module.exports = ({
     return { type, name: value.text, comment: value.comment, location: sourceLocation(source, line, 1) };
   }
 
+  function assertCommodityFormat(value, commodity, source, line, column) {
+    const match = CANONICAL_COMMODITY_FORMAT.exec(value);
+    if (!match) throw syntaxError('Expected a canonical commodity format', source, line, column);
+    const symbol = assertCommoditySymbol(match[3], source, line, column);
+    if (symbol !== commodity) {
+      throw syntaxError(`Commodity format symbol ${JSON.stringify(symbol)} must match ${JSON.stringify(commodity)}`, source, line, column);
+    }
+  }
+
   /** Fast runtime parser. Its behavior is checked against ledger.ohm. */
   function parse(sourceText, options) {
     const source = options.source || '<input>';
@@ -179,6 +189,7 @@ module.exports = ({
             );
           }
           const value = separator < 0 ? null : property.text.slice(separator).trim();
+          if (name === 'format') assertCommodityFormat(value, commodity.symbol, source, lineNumber, first + 1);
           commodity.properties.push({ name, value, comment: property.comment, location: sourceLocation(source, lineNumber, first + 1) });
         } else throw syntaxError('Unexpected indented line', source, lineNumber, first + 1);
         continue;

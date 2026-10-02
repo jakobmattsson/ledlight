@@ -42,8 +42,12 @@ Ledlight {
 
   commodityDirective = "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*
   commodityBody = blankLine | commodityProperty
-  commodityProperty = indent commodityPropertyName commodityPropertyValue? inlineComment? lineEnd
-  commodityPropertyName = "format" | "default"
+  commodityProperty = indent "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
+                    | indent "default" commodityPropertyValue? inlineComment? lineEnd                  -- default
+  commodityFormat = formatQuantity horizontal+ commoditySymbol
+  formatQuantity = groupedFormatInteger ("." digit+)?  -- grouped
+                 | digit+ ("." digit+)?                -- ungrouped
+  groupedFormatInteger = digit digit? digit? ("," digit digit digit)+
   commodityPropertyValue = horizontal+ directiveValue
 
   priceDirective = "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd
