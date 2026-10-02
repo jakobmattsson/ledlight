@@ -175,8 +175,6 @@ runtime less dependent on repository layout.
   calculations, and result assembly into smaller independently testable units.
 - Expand API documentation from examples into a complete operation and result
   reference.
-- Add a systematic API/CLI parity table so every CLI option is tied to the
-  public function and option that provides its behavior.
 - Keep extending the Ledger differential corpus whenever syntax or aggregate
   behavior is added or corrected.
 

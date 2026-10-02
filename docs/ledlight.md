@@ -84,6 +84,36 @@ by the CLI must first exist through the public Node.js API. This dependency
 direction keeps the two interfaces consistent and makes the CLI an example
 consumer rather than a second implementation.
 
+### CLI to API parity
+
+The following table is the required mapping between CLI behavior and the
+public Node.js API. A semantic CLI option must map to a public operation or
+option. Output-only flags may select a formatter but must not change the
+underlying result.
+
+| CLI command or option | Public API equivalent | Responsibility |
+| --- | --- | --- |
+| `aggregate` | `aggregateReport(options, startDirectory)` | Report selection and calculation |
+| `balance-history` | `balanceHistoryReport(options, startDirectory)` | Report selection and calculation |
+| `investment-performance` | `investmentPerformance(options, startDirectory)` | Report selection and calculation |
+| `--from DATE` | `options.from` | Inclusive report start |
+| `--to DATE` | `options.to` | Inclusive report end |
+| `--accounts PREFIX` | `options.accounts` | Repeated account-prefix selection |
+| `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
+| `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
+| `--invert` | `options.invert` | Exact sign inversion by the report API |
+| Human-readable valued aggregate total | `options.includeTotal` | Total row calculated by the report API and requested by the CLI |
+| `--commodities NAME` | `options.commodities` | Investment instrument selection |
+| `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
+| `--csv` | None | Output formatting only |
+| `--json` | None | Output encoding only |
+| `--version` | `version` | Public package metadata |
+| `--help` | None | CLI usage formatting only |
+
+Tests for the CLI command adapter verify that report calls are delegated to
+these public functions and that calculated rows are returned by the API before
+formatting.
+
 ## Architecture
 
 The implementation is organized by responsibility under `src/ledlight`:
