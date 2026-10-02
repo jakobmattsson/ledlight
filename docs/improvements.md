@@ -58,11 +58,6 @@ should document:
 - snapshot and freshness behavior; and
 - possible errors.
 
-Option validation should be strict enough to catch consumer mistakes. For
-example, a string passed as a boolean and a misspelled option should not be
-silently treated as `false` or ignored. Shared validators can remove the
-currently duplicated date, string-list, interval, and boolean validation.
-
 Exported error classes or stable error codes should distinguish at least syntax
 errors, invalid API input, project configuration errors, missing valuation
 data, and database failures. Consumers should not need to inspect error-message

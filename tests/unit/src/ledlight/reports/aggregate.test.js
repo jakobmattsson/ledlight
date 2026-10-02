@@ -215,6 +215,14 @@ test('rejects invalid intervals and missing valuation price chains', (t) => {
     () => aggregateReport(databasePath, { dateBasis: 'actual' }),
     /Invalid dateBasis/u,
   );
+  assert.throws(
+    () => aggregateReport(databasePath, { invert: 'true' }),
+    /invert must be a boolean/u,
+  );
+  assert.throws(
+    () => aggregateReport(databasePath, { account: 'Assets:' }),
+    /Unknown aggregateReport option: account/u,
+  );
 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-unpriced-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));

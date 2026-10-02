@@ -67,9 +67,9 @@ test('loads SQLite only when a project database operation needs it', (t) => {
   assert.equal(project.projectRoot, directory);
   assert.deepEqual(project.accountBalances({ account: 'Assets:Cash' }), []);
   assert.deepEqual(project.accountPostings({ account: 'Assets:Cash' }), []);
-  assert.deepEqual(project.aggregateReport({}), []);
-  assert.deepEqual(project.balanceHistoryReport({}), []);
-  assert.deepEqual(project.investmentPerformance({}), {
+  assert.deepEqual(project.aggregateReport(), []);
+  assert.deepEqual(project.balanceHistoryReport(), []);
+  assert.deepEqual(project.investmentPerformance(), {
     from: null,
     to: null,
     commodities: [],

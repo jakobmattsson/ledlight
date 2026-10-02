@@ -5,44 +5,32 @@ module.exports = ({
   sqlite: Database,
   decimal: { registerDecimalFunctions },
   accountPrefixFilter: { accountPrefixFilter },
+  reportOptions: {
+    assertDateInterval,
+    knownOptions,
+    stringList,
+  },
   valuationCommodity: { fromDatabase },
 }) => {
 
   const DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
 
-  function assertDate(value, optionName) {
-    if (value === undefined) return;
-    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) {
-      throw new Error(`Invalid ${optionName} date: ${JSON.stringify(value)}; expected YYYY-MM-DD`);
-    }
-    const [year, month, day] = value.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-      throw new Error(`Invalid ${optionName} date: ${JSON.stringify(value)}`);
-    }
-  }
-
-  function stringList(value, optionName) {
-    const result = value ?? [];
-    if (!Array.isArray(result) || result.some((item) => typeof item !== 'string' || item.length === 0)) {
-      throw new Error(`${optionName} must be an array of non-empty strings`);
-    }
-    return [...new Set(result)];
-  }
-
   function normalizeOptions(options) {
+    const input = knownOptions(options, [
+      'accounts',
+      'commodities',
+      'excludeCommodities',
+      'from',
+      'to',
+    ], 'investmentPerformance');
     const normalized = {
-      from: options.from,
-      to: options.to,
-      accounts: stringList(options.accounts, 'accounts'),
-      commodities: stringList(options.commodities, 'commodities'),
-      excludeCommodities: stringList(options.excludeCommodities, 'excludeCommodities'),
+      from: input.from,
+      to: input.to,
+      accounts: stringList(input.accounts, 'accounts', true),
+      commodities: stringList(input.commodities, 'commodities', true),
+      excludeCommodities: stringList(input.excludeCommodities, 'excludeCommodities', true),
     };
-    assertDate(normalized.from, '--from');
-    assertDate(normalized.to, '--to');
-    if (normalized.from && normalized.to && normalized.from > normalized.to) {
-      throw new Error(`--from date ${normalized.from} is after --to date ${normalized.to}`);
-    }
+    assertDateInterval(normalized.from, normalized.to);
     if (normalized.commodities.some((commodity) => normalized.excludeCommodities.includes(commodity))) {
       throw new Error('A commodity cannot be both included and excluded');
     }

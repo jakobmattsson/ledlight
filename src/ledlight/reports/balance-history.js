@@ -10,41 +10,34 @@ module.exports = ({
     registerDecimalFunctions,
   },
   accountPrefixFilter: { accountPrefixFilter },
+  reportOptions: {
+    assertDateInterval,
+    booleanOption,
+    dateBasis,
+    knownOptions,
+    stringList,
+  },
   valuationCommodity: { fromDatabase },
 }) => {
 
-  function assertDate(value, optionName) {
-    if (value === undefined) return;
-    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) {
-      throw new Error(`Invalid ${optionName} date: ${JSON.stringify(value)}; expected YYYY-MM-DD`);
-    }
-    const [year, month, day] = value.split('-').map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-      throw new Error(`Invalid ${optionName} date: ${JSON.stringify(value)}`);
-    }
-  }
-
   function normalizeOptions(options) {
+    const input = knownOptions(options, [
+      'accountFactors',
+      'accounts',
+      'dateBasis',
+      'from',
+      'invert',
+      'to',
+    ], 'balanceHistoryReport');
     const normalized = {
-      from: options.from,
-      to: options.to,
-      accounts: options.accounts ?? [],
-      accountFactors: options.accountFactors,
-      dateBasis: options.dateBasis ?? 'posting',
-      invert: options.invert === true,
+      from: input.from,
+      to: input.to,
+      accounts: stringList(input.accounts, 'accounts', false),
+      accountFactors: input.accountFactors,
+      dateBasis: dateBasis(input.dateBasis),
+      invert: booleanOption(input, 'invert'),
     };
-    assertDate(normalized.from, '--from');
-    assertDate(normalized.to, '--to');
-    if (normalized.from && normalized.to && normalized.from > normalized.to) {
-      throw new Error(`--from date ${normalized.from} is after --to date ${normalized.to}`);
-    }
-    if (!Array.isArray(normalized.accounts) || normalized.accounts.some((prefix) => typeof prefix !== 'string' || prefix.length === 0)) {
-      throw new Error('accounts must be an array of non-empty prefixes');
-    }
-    if (normalized.dateBasis !== 'posting' && normalized.dateBasis !== 'transaction') {
-      throw new Error(`Invalid dateBasis: ${JSON.stringify(normalized.dateBasis)}; expected posting or transaction`);
-    }
+    assertDateInterval(normalized.from, normalized.to);
     if (normalized.accountFactors !== undefined && (
       normalized.accountFactors === null ||
     Array.isArray(normalized.accountFactors) ||

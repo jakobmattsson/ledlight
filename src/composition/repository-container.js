@@ -31,6 +31,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/reports/aggregate.js': 'aggregateReport',
   'src/ledlight/reports/balance-history.js': 'balanceHistoryReport',
   'src/ledlight/reports/investment-performance.js': 'investmentPerformanceReport',
+  'src/ledlight/reports/options.js': 'reportOptions',
   'src/ledlight/reports/reconciliation-entries.js': 'reconciliationEntries',
   'src/ledlight/reports/valuation-rates.js': 'valuationRates',
   'src/ledlight/reports/transactions.js': 'transactionReport',
