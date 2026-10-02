@@ -99,7 +99,10 @@ The database path is `<projectRoot>/tmp/ledger.sqlite`.
 ### `ensureProjectDatabaseCurrent(startDirectory)`
 
 Discovers the project, compares the source manifest with the stored manifest,
-and rebuilds the database when required. The result contains the three project
+and rebuilds the database when required. Rebuilds are serialized across
+Ledlight processes. A process that waited for another rebuild checks freshness
+again and reuses the completed database when possible. Waiting is bounded; a
+timeout fails with `errorCodes.DATABASE`. The result contains the three project
 paths plus:
 
 ```js

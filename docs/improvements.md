@@ -52,15 +52,17 @@ Choose and document one lifecycle model:
 - an explicit `refresh()` operation updates the database and invalidates every
   derived cache.
 
-Rebuild behavior should also be exercised with concurrent Ledlight processes.
-Consider building a complete database at a temporary path, validating it, and
-atomically replacing the previous database. Schema migration currently occurs
-before the transaction that replaces journal contents, so migration and
-content replacement do not form one failure boundary.
+Rebuilds are serialized across Ledlight processes with a bounded lock. A
+process checks freshness again after acquiring the lock so it can reuse work
+completed by another process. Building and validating at a temporary path
+before atomically replacing the previous database remains future work. Schema
+migration currently occurs before the transaction that replaces journal
+contents, so migration and content replacement do not form one failure
+boundary.
 
-Add tests for a source change during freshness checking, two concurrent
-rebuilds, a failed rebuild preserving the previous usable database, and cache
-invalidation after a successful refresh.
+Add tests for a source change during freshness checking, a failed rebuild
+preserving the previous usable database, and cache invalidation after a
+successful refresh.
 
 ## Priority 3: establish performance limits
 

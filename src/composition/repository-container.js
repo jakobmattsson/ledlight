@@ -41,6 +41,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/sqlite/freshness.js': 'databaseFreshness',
   'src/ledlight/sqlite/materialize-valuation-prices.js': 'valuationPriceMaterializer',
   'src/ledlight/sqlite/migrate.js': 'databaseMigration',
+  'src/ledlight/sqlite/rebuild-lock.js': 'databaseRebuildLock',
   'src/ledlight/sqlite/write-journal.js': 'journalWriter',
   'src/ledlight/syntax/amount-parser.js': 'amountParser',
   'src/ledlight/syntax/errors.js': 'syntaxErrors',
@@ -81,6 +82,12 @@ function registerExternalModules(container) {
     fs: asValue(require('node:fs')),
     packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
+    systemClock: asValue({
+      now: () => Date.now(),
+      sleep(milliseconds) {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+      },
+    }),
     ohm: asValue({
       grammar(...arguments_) {
         return require('ohm-js').grammar(...arguments_);

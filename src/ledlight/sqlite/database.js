@@ -4,6 +4,7 @@ module.exports = ({
   path,
   journal: { loadJournal },
   databaseFreshness: { checkDatabaseSync, databaseJournalPath },
+  databaseRebuildLock: { withRebuildLock },
   journalWriter: { writeJournalDatabase },
   publicErrors: { databaseError },
 }) => {
@@ -23,8 +24,12 @@ module.exports = ({
     }
     const status = checkDatabaseSync(databasePath, journalPath);
     if (status.inSync) return { rebuilt: false, status };
-    const summary = buildDatabase(databasePath, journalPath);
-    return { rebuilt: true, status, summary };
+    return withRebuildLock(databasePath, () => {
+      const lockedStatus = checkDatabaseSync(databasePath, journalPath);
+      if (lockedStatus.inSync) return { rebuilt: false, status: lockedStatus };
+      const summary = buildDatabase(databasePath, journalPath);
+      return { rebuilt: true, status: lockedStatus, summary };
+    });
   }
 
   return {
