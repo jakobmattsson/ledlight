@@ -21,8 +21,8 @@ Ledlight {
   amountExpression = balanceAssignment | explicitAmount
   balanceAssignment = "=" spacing* amount
   explicitAmount = amount lotCost? cost? balanceAssertion?
-  lotCost = spacing* "{{" spacing* amount spacing* "}}"                                            -- total
-          | spacing* "{" spacing* amount spacing* "}"                                               -- unit
+  lotCost = spacing* "{{" spacing* amount spacing* "}}"     -- total
+          | spacing* "{" spacing* amount spacing* "}"       -- unit
   cost = spacing* ("@@" | "@") spacing* amount
   balanceAssertion = spacing* "=" spacing* amount
   amount = number spacing+ commoditySymbol
