@@ -9,6 +9,7 @@ const test = require('node:test');
 
 const repositoryRoot = path.resolve(__dirname, '../..');
 const packageMetadata = require('../../package.json');
+const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 function run(command, arguments_, options) {
   return execFileSync(command, arguments_, {
@@ -26,7 +27,7 @@ test('the published archive installs and exposes the module and CLI', () => {
     fs.mkdirSync(archiveDirectory);
     fs.mkdirSync(consumerDirectory);
 
-    const packResult = JSON.parse(run('npm', [
+    const packResult = JSON.parse(run(npmExecutable, [
       'pack',
       '--json',
       '--pack-destination', archiveDirectory,
@@ -56,7 +57,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       private: true,
     }));
     const archivePath = path.join(archiveDirectory, packResult.filename);
-    run('npm', [
+    run(npmExecutable, [
       'install',
       '--no-audit',
       '--no-fund',
