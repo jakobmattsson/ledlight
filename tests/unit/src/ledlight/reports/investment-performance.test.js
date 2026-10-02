@@ -27,21 +27,22 @@ P 2024-01-01 HOME 1000 SEK
 
 2024-01-01 Buy fund
   Assets:Portfolio  -100 SEK
-  Assets:Portfolio  10 FUND
+  Assets:Portfolio  10 FUND {10 SEK}
   Assets:Unrelated cash  500 SEK
   Equity:Opening  -500 SEK
 
 2024-01-01 Buy home
   Assets:Home  -1000 SEK
-  Assets:Home  1 HOME
+  Assets:Home  1 HOME {1000 SEK}
 
 2024-01-02 Buy more fund
   Assets:Portfolio  -55 SEK
-  Assets:Portfolio  5 FUND
+  Assets:Portfolio  5 FUND {11 SEK}
 
 2024-01-03 Sell fund
   Assets:Portfolio  60 SEK
-  Assets:Portfolio  -5 FUND
+  Assets:Portfolio  -5 FUND {11 SEK} @ 12 SEK
+  Income:Capital Gains  -5 SEK
 `);
   buildDatabase(databasePath, journalPath);
   return databasePath;
@@ -95,7 +96,7 @@ commodity FUND
 P 2024-02-01 FUND 10 SEK
 
 2024-01-01 Backdated acquisition
-  Assets:Portfolio  10 FUND @@ 100 SEK ; [2024-02-01]
+  Assets:Portfolio  10 FUND {{100 SEK}} ; [2024-02-01]
   Equity:Opening  -100 SEK
 `);
   buildDatabase(databasePath, journalPath);

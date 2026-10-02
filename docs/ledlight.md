@@ -166,6 +166,13 @@ determines the balancing amount. This requires a realized gain or loss posting
 when disposal proceeds differ from the lot's cost basis, matching Ledger's
 behavior.
 
+Explicit non-zero postings in commodities other than the journal default must
+also describe their trade direction unambiguously. A positive quantity must
+have a lot cost (`{}` or `{{}}`) and no transaction price. A negative quantity
+must have both a lot cost and a transaction price (`@` or `@@`). Unit and total
+annotations may be combined freely. Zero quantities are exempt because they do
+not acquire or dispose of a commodity.
+
 `src/ledlight/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
 semantics in `src/ledlight/syntax/reference/parser.js`. Tests parse representative

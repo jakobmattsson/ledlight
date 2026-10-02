@@ -30,7 +30,7 @@ P 2024-01-02 NOK 1.1 SEK
 
 2024-01-01 Opening
   Assets:Cash  100.000000000000000001 SEK
-  Assets:Fund  2 FUND @ 10 SEK
+  Assets:Fund  2 FUND {10 SEK}
   Equity:Opening
 
 2024-01-02 Adjust cash
@@ -163,7 +163,7 @@ test('uses the journal default commodity instead of assuming SEK', (t) => {
   default
 P 2024-01-01 FUND 12 USD
 2024-01-01 Opening
-  Assets:Fund  2 FUND
+  Assets:Fund  2 FUND {12 USD}
   Equity:Opening  -24 USD
 `);
 
@@ -231,8 +231,8 @@ test('rejects invalid intervals and missing valuation price chains', (t) => {
   fs.writeFileSync(journalPath, `commodity SEK
   default
 2024-01-01 Opening
-  Assets:Other  1 OTHER
-  Equity:Opening  -1 OTHER
+  Assets:Other  1 OTHER {1 SEK}
+  Equity:Opening  -1 SEK
 `);
   buildDatabase(unpricedDatabasePath, journalPath);
   assert.throws(
@@ -251,8 +251,8 @@ test('rejects circular valuation price chains', (t) => {
 P 2024-01-01 FUND 2 NOK
 P 2024-01-01 NOK 0.5 FUND
 2024-01-01 Opening
-  Assets:Fund  1 FUND
-  Equity:Opening  -1 FUND
+  Assets:Fund  1 FUND {1 SEK}
+  Equity:Opening  -1 SEK
 `);
   buildDatabase(databasePath, journalPath);
 

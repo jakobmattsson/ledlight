@@ -112,9 +112,10 @@ test('stores lot costs separately from transaction costs', (t) => {
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity USD
   default
-2024-01-01 Purchase
-  Assets:Broker  10 AAPL {{1000 USD}} @@ 1200 USD
-  Assets:Bank  -1000 USD
+2024-01-01 Sale
+  Assets:Broker  -10 AAPL {{1000 USD}} @@ 1200 USD
+  Assets:Bank  1200 USD
+  Income:Capital Gains  -200 USD
 `);
 
   buildDatabase(databasePath, journalPath);
@@ -146,7 +147,7 @@ test('loads the Ledger-compatible price history once per project', (t) => {
   default
 P 2024-01-01 FUND 10 SEK
 2024-01-01 Opening
-  Assets:Fund  1 FUND
+  Assets:Fund  1 FUND {10 SEK}
   Equity:Opening  -10 SEK
 `);
 
@@ -167,7 +168,7 @@ commodity NOK
 P 2024-01-01 FUND 10 USD
 P 2024-02-01 FUND 2 NOK
 2024-03-01 Holding
-  Assets:Fund  3 FUND @ 10 USD
+  Assets:Fund  3 FUND {10 USD}
   Equity:Opening  -30 USD
 `);
 
@@ -254,6 +255,25 @@ test('rejects commodity-less resolved amounts before database insertion', (t) =>
     () => buildDatabase(databasePath, journalPath),
     (error) => /journal\.ledger:2.*commodity/u.test(error.message) &&
       !/SQLITE_CONSTRAINT/u.test(error.code || ''),
+  );
+  assert.equal(fs.existsSync(databasePath), false);
+});
+
+test('rejects non-default commodity trades without direction-specific annotations', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+2024-01-01 Invalid purchase
+  Assets:Fund  1 FUND @ 10 SEK
+  Assets:Cash  -10 SEK
+`);
+
+  assert.throws(
+    () => buildDatabase(databasePath, journalPath),
+    (error) => error.code === errorCodes.DATABASE &&
+      /journal\.ledger:4:3: Positive FUND posting must use a lot cost .* and no transaction price .* default commodity is SEK/u.test(error.message),
   );
   assert.equal(fs.existsSync(databasePath), false);
 });

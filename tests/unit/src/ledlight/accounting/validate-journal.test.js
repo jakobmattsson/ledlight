@@ -79,3 +79,44 @@ test('allows implicit postings and balance assignments', () => {
 
   assert.equal(validateJournal(journal), journal);
 });
+
+function parseTrade(posting) {
+  return parse(`commodity SEK
+  default
+2024-01-01 Trade
+  Assets:Fund  ${posting}
+  Equity:Opening
+`, { source: 'fixture.ledger' });
+}
+
+test('requires positive non-default commodity postings to use only a lot cost', () => {
+  for (const posting of ['1 FUND', '1 FUND @ 10 SEK', '1 FUND {10 SEK} @ 10 SEK']) {
+    assert.throws(
+      () => validateJournal(parseTrade(posting)),
+      (error) => error instanceof JournalValidationError &&
+        /fixture\.ledger:4:3: Positive FUND posting must use a lot cost .* and no transaction price .* default commodity is SEK/u.test(error.message),
+    );
+  }
+
+  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {10 SEK}')));
+  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {{10 SEK}}')));
+});
+
+test('requires negative non-default commodity postings to use lot cost and transaction price', () => {
+  for (const posting of ['-1 FUND', '-1 FUND {10 SEK}', '-1 FUND @ 12 SEK']) {
+    assert.throws(
+      () => validateJournal(parseTrade(posting)),
+      (error) => error instanceof JournalValidationError &&
+        /fixture\.ledger:4:3: Negative FUND posting must use both a lot cost .* and a transaction price .* default commodity is SEK/u.test(error.message),
+    );
+  }
+
+  assert.doesNotThrow(() => validateJournal(parseTrade('-1 FUND {10 SEK} @ 12 SEK')));
+  assert.doesNotThrow(() => validateJournal(parseTrade('-1 FUND {{10 SEK}} @@ 12 SEK')));
+});
+
+test('does not apply the trade annotation rule to default commodities or zero quantities', () => {
+  assert.doesNotThrow(() => validateJournal(parseTrade('0 FUND')));
+  assert.doesNotThrow(() => validateJournal(parseTrade('1 SEK')));
+  assert.doesNotThrow(() => validateJournal(parseTrade('-1 SEK')));
+});

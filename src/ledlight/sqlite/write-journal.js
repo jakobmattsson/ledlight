@@ -146,8 +146,8 @@ module.exports = ({
   }
 
   function writeJournalDatabase(databasePath, journal) {
-    validateJournal(journal);
     const valuationCommodity = fromJournal(journal);
+    validateJournal(journal, valuationCommodity);
     const resolvedDatabasePath = path.resolve(databasePath);
     const database = new Database(resolvedDatabasePath);
     database.pragma('foreign_keys = ON');

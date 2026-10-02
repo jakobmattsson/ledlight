@@ -14,7 +14,9 @@ P 2024-02-01 FUND 2 NOK
 P 2024-02-01 BOND 2 NOK
 
 2024-03-01 Hold fund units
-  Assets:Investments  3 FUND @ 10 USD
-  Assets:Bonds  2 BOND @ 10 USD
+  Assets:Investments  3 FUND {10 USD}
   Equity:Opening  -30 USD
+
+2024-03-01 Hold bond units
+  Assets:Bonds  2 BOND {10 USD}
   Equity:Opening  -20 USD

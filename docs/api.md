@@ -66,6 +66,11 @@ costs and transaction costs are `{ total, amount }`; `total` distinguishes
 `{{}}` or `@@` from `{}` or `@`. Transaction notes contain `text`,
 optional `key` and `value`, and a source location.
 
+Semantic validation requires positive non-default commodity postings to carry
+a lot cost and no transaction price. Negative non-default commodity postings
+must carry both annotations. This rule runs after parsing and therefore reports
+a journal validation error at the posting location rather than a syntax error.
+
 ### `loadJournal(entryPath)`
 
 Loads and parses a root journal and its complete include tree. Includes are
