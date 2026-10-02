@@ -9,7 +9,6 @@ const test = require('node:test');
 
 const repositoryRoot = path.resolve(__dirname, '../..');
 const packageMetadata = require('../../package.json');
-const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 function run(command, arguments_, options) {
   return execFileSync(command, arguments_, {
@@ -17,6 +16,11 @@ function run(command, arguments_, options) {
     stdio: ['ignore', 'pipe', 'pipe'],
     ...options,
   });
+}
+
+function runNpm(arguments_, options) {
+  assert.ok(process.env.npm_execpath, 'npm_execpath must identify the npm CLI');
+  return run(process.execPath, [process.env.npm_execpath, ...arguments_], options);
 }
 
 test('the published archive installs and exposes the module and CLI', () => {
@@ -27,7 +31,7 @@ test('the published archive installs and exposes the module and CLI', () => {
     fs.mkdirSync(archiveDirectory);
     fs.mkdirSync(consumerDirectory);
 
-    const packResult = JSON.parse(run(npmExecutable, [
+    const packResult = JSON.parse(runNpm([
       'pack',
       '--json',
       '--pack-destination', archiveDirectory,
@@ -57,7 +61,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       private: true,
     }));
     const archivePath = path.join(archiveDirectory, packResult.filename);
-    run(npmExecutable, [
+    runNpm([
       'install',
       '--no-audit',
       '--no-fund',
@@ -97,11 +101,16 @@ test('the published archive installs and exposes the module and CLI', () => {
 
     const executableName = process.platform === 'win32' ? 'ledlight.cmd' : 'ledlight';
     const executablePath = path.join(consumerDirectory, 'node_modules', '.bin', executableName);
-    assert.equal(run(executablePath, ['--version'], {
+    const executableCommand = process.platform === 'win32' ? process.env.ComSpec : executablePath;
+    const executableArguments = process.platform === 'win32'
+      ? ['/d', '/s', '/c', executablePath]
+      : [];
+    assert.ok(executableCommand, 'The platform must provide an executable command');
+    assert.equal(run(executableCommand, [...executableArguments, '--version'], {
       cwd: projectDirectory,
       env: consumerEnvironment,
     }).trim(), packageMetadata.version);
-    assert.equal(run(executablePath, ['aggregate', '--csv'], {
+    assert.equal(run(executableCommand, [...executableArguments, 'aggregate', '--csv'], {
       cwd: projectDirectory,
       env: consumerEnvironment,
     }), 'account,amount,commodity\nAssets:Cash,10,USD\nEquity:Opening,-10,USD\n');
