@@ -31,7 +31,9 @@ Ledlight {
   number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
 
-  commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
+  commoditySymbol = quotedCommoditySymbol | bareCommoditySymbol
+  quotedCommoditySymbol = "\"" (~"\"" ~newline any)+ "\""
+  bareCommoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
 
   includeDirective = "include" horizontal+ directiveValue inlineComment? lineEnd
   accountDirective = "account" horizontal+ directiveValue inlineComment? lineEnd

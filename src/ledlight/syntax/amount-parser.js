@@ -41,6 +41,13 @@ module.exports = ({
         }
         return { type: TOKEN.AT, value: '@', start };
       }
+      if (code === 34) {
+        let cursor = this.offset + 1;
+        while (cursor < length && input.charCodeAt(cursor) !== 34 && input.charCodeAt(cursor) !== 10 && input.charCodeAt(cursor) !== 13) cursor++;
+        if (cursor === length || input.charCodeAt(cursor) !== 34) this.error('Unterminated quoted commodity symbol', start);
+        this.offset = cursor + 1;
+        return { type: TOKEN.SYMBOL, value: input.slice(start, this.offset), start };
+      }
 
       let cursor = this.offset;
       if (code === 43 || code === 45) cursor++;
