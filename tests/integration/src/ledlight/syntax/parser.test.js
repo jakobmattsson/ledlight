@@ -14,7 +14,7 @@ function parseConformant(sourceText, source) {
 }
 
 test('parses transactions without losing decimal precision', () => {
-  const document = parseConformant(`2024-01-29 * (trade-1) Investment ; imported
+  const document = parseConformant(`2024-01-29 Investment ; imported
     Assets:Broker Account  8.000000000000000001 SECURITY @ 7786.140669608098 SEK ; exact cost
     Assets:Cash  = 67683.20 SEK
     Equity:Opening
@@ -30,7 +30,7 @@ test('parses transactions without losing decimal precision', () => {
       description: transaction.description,
       comment: transaction.comment,
     },
-    { date: '2024-01-29', status: '*', code: 'trade-1', description: 'Investment', comment: 'imported' },
+    { date: '2024-01-29', status: null, code: null, description: 'Investment', comment: 'imported' },
   );
   assert.deepEqual(transaction.postings[0].amount, { quantity: '8.000000000000000001', commodity: 'SECURITY' });
   assert.deepEqual(transaction.postings[0].cost, {
@@ -41,8 +41,57 @@ test('parses transactions without losing decimal precision', () => {
   assert.equal(transaction.postings[2].amount, null);
 });
 
+test('treats former transaction status and code syntax as description text', () => {
+  for (const metadata of ['*', '!', '(trade-1)']) {
+    const sourceText = `2024-01-29 ${metadata} Investment\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
+    const transaction = parseConformant(sourceText, 'fixture.ledger').entries[0];
+    assert.equal(transaction.description, `${metadata} Investment`);
+    assert.equal(transaction.status, null);
+    assert.equal(transaction.code, null);
+  }
+});
+
+test('uses semicolons as the only top-level comment marker', () => {
+  const document = parseConformant(`; top-level comment
+2024-01-01 Transaction
+  Assets:Cash  1 SEK
+  Equity:Opening
+`, 'fixture.ledger');
+
+  assert.equal(document.entries.length, 1);
+
+  for (const marker of ['#', '%', ':']) {
+    const sourceText = `${marker} not a comment\n2024-01-01 Transaction\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
+test('does not interpret other indented markers as comments', () => {
+  const document = parseConformant(`2024-01-01 Transaction
+  # not a comment
+  Assets:Cash  1 SEK
+  Equity:Opening
+`, 'fixture.ledger');
+
+  assert.equal(document.entries[0].notes.length, 0);
+  assert.equal(document.entries[0].postings[0].account, '# not a comment');
+});
+
+test('requires a transaction description', () => {
+  for (const header of ['2024-01-29 ', '2024-01-29 ; imported']) {
+    const sourceText = `${header}\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
 test('parses total costs and balance assertions', () => {
-  const document = parseConformant(`2024/01/01 Trade
+  const document = parseConformant(`2024-01-01 Trade
     Assets:Fund  3.5 FUND @@ 1000.25 SEK
     Assets:Cash  -1000.25 SEK = 2500.00 SEK
 `, 'fixture.ledger');
@@ -51,6 +100,91 @@ test('parses total costs and balance assertions', () => {
   assert.equal(transaction.date, '2024-01-01');
   assert.equal(transaction.postings[0].cost.total, true);
   assert.deepEqual(transaction.postings[1].balanceAssertion, { quantity: '2500.00', commodity: 'SEK' });
+});
+
+test('rejects slash date separators', () => {
+  const sources = [
+    '2024/01/01 Trade\n  Assets:Cash  1 SEK\n  Equity:Opening\n',
+    'P 2024/01/01 FUND 1 SEK\n',
+  ];
+
+  for (const sourceText of sources) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
+test('does not interpret a slash-separated comment value as a posting date', () => {
+  const document = parseConformant(`2024-01-01 Trade
+  Assets:Cash  1 SEK ; [2024/01/02] imported
+  Equity:Opening
+`, 'fixture.ledger');
+
+  assert.equal(document.entries[0].postings[0].postingDate, null);
+  assert.equal(document.entries[0].postings[0].comment, '[2024/01/02] imported');
+});
+
+test('parses canonical integer, signed, and decimal quantities', () => {
+  const document = parseConformant(`2024-01-01 Canonical numbers
+  Assets:Zero  0 SEK
+  Assets:Positive  +1 SEK
+  Assets:Negative  -1.25 SEK
+`, 'fixture.ledger');
+
+  assert.deepEqual(document.entries[0].postings.map((posting) => posting.amount.quantity), [
+    '0', '+1', '-1.25',
+  ]);
+});
+
+test('parses posting comments with and without preceding whitespace', () => {
+  const document = parseConformant(`2024-01-01 Posting comments
+  Assets:Compact  1 SEK;compact
+  Assets:Spaced  -1 SEK ; spaced
+`, 'fixture.ledger');
+
+  assert.deepEqual(document.entries[0].postings.map((posting) => posting.comment), [
+    'compact', 'spaced',
+  ]);
+});
+
+test('parses transaction and posting tags without consuming comment text', () => {
+  const document = parseConformant(`2024-01-01 Tagged ; :reviewed:imported: bank statement
+  ; Source: bank export
+  Assets:Cash  1 SEK ; Receipt: 1234
+  Equity:Opening  -1 SEK ; :balanced: complete
+`, 'fixture.ledger');
+
+  const transaction = document.entries[0];
+  assert.equal(transaction.comment, ':reviewed:imported: bank statement');
+  assert.deepEqual(transaction.tags, [
+    { name: 'reviewed', value: null },
+    { name: 'imported', value: null },
+    { name: 'Source', value: 'bank export' },
+  ]);
+  assert.deepEqual(transaction.notes[0], {
+    text: 'Source: bank export',
+    key: 'Source',
+    value: 'bank export',
+    tags: [{ name: 'Source', value: 'bank export' }],
+    location: { source: 'fixture.ledger', line: 2, column: 3 },
+  });
+  assert.deepEqual(transaction.postings.map(({ comment, tags }) => ({ comment, tags })), [
+    { comment: 'Receipt: 1234', tags: [{ name: 'Receipt', value: '1234' }] },
+    { comment: ':balanced: complete', tags: [{ name: 'balanced', value: null }] },
+  ]);
+});
+
+test('does not recognize embedded, whitespace, or typed tags', () => {
+  const document = parseConformant(`2024-01-01 Untagged ; ordinary :embedded:
+  Assets:Cash  1 SEK ; :two words:
+  Equity:Opening  -1 SEK ; Key:: value
+`, 'fixture.ledger');
+
+  assert.equal('tags' in document.entries[0], false);
+  assert.equal('tags' in document.entries[0].postings[0], false);
+  assert.equal('tags' in document.entries[0].postings[1], false);
 });
 
 test('rejects unsupported auxiliary transaction dates', () => {
@@ -62,22 +196,62 @@ test('rejects unsupported auxiliary transaction dates', () => {
   );
 });
 
-test('keeps leading-point and trailing-point decimal syntax exact', () => {
-  const document = parseConformant(`2024-01-01 Decimal forms
-  Assets:Cash  .5 SEK
-  Equity:Opening  -1. SEK
-`, 'fixture.ledger');
+test('rejects decimals without digits on both sides of the point', () => {
+  for (const quantity of ['.5', '-1.', '+.25', '+10.']) {
+    const sourceText = `2024-01-01 Invalid decimal\n  Assets:Cash  ${quantity} SEK\n  Equity:Opening\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
 
-  assert.deepEqual(document.entries[0].postings.map((posting) => posting.amount), [
-    { quantity: '.5', commodity: 'SEK' },
-    { quantity: '-1.', commodity: 'SEK' },
-  ]);
+test('rejects amounts without commodity symbols', () => {
+  const sources = [
+    '2024-01-01 Missing commodity\n  Assets:Cash  1\n  Equity:Opening\n',
+    '2024-01-01 Missing commodity\n  Assets:Fund  1 FUND @ 10\n  Equity:Opening\n',
+    '2024-01-01 Missing commodity\n  Assets:Cash  1 SEK = 1\n  Equity:Opening\n',
+    '2024-01-01 Missing commodity\n  Assets:Cash  = 1\n  Equity:Opening\n',
+    'P 2024-01-01 FUND 10\n',
+  ];
+
+  for (const sourceText of sources) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
+test('rejects quoted and otherwise invalid commodity symbols', () => {
+  const sources = [
+    '2024-01-01 Quoted\n  Assets:Cash  1 "USD"\n  Equity:Opening\n',
+    "2024-01-01 Quoted\n  Assets:Cash  1 'USD'\n  Equity:Opening\n",
+    '2024-01-01 Operator\n  Assets:Cash  1 US@D\n  Equity:Opening\n',
+    '2024-01-01 Operator\n  Assets:Cash  1 US=D\n  Equity:Opening\n',
+    'commodity "USD"\n',
+    'P 2024-01-01 "FUND" 1 USD\n',
+  ];
+
+  for (const sourceText of sources) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
+test('allows trailing whitespace on a commodity directive without a comment', () => {
+  const document = parseConformant('commodity USD   \n', 'fixture.ledger');
+
+  assert.equal(document.entries[0].symbol, 'USD');
+  assert.equal(document.entries[0].comment, null);
 });
 
 test('parses declarations, commodity properties, prices, and source notes', () => {
   const document = parseConformant(`account Assets:Cash
 tag Source
-commodity SEK
+commodity SEK ; Swedish krona
   format 1,000.00 SEK
   default
 P 2024-01-01 FUND 123.45 SEK ; closing
@@ -93,13 +267,70 @@ P 2024-01-01 FUND 123.45 SEK ; closing
     { name: 'format', value: '1,000.00 SEK' },
     { name: 'default', value: null },
   ]);
+  assert.equal(document.entries[2].comment, 'Swedish krona');
   assert.deepEqual(document.entries[3].price, { quantity: '123.45', commodity: 'SEK' });
   assert.deepEqual(document.entries[4].notes[0], {
     text: 'Source: statement.csv:4',
     key: 'Source',
     value: 'statement.csv:4',
+    tags: [{ name: 'Source', value: 'statement.csv:4' }],
     location: { source: 'fixture.ledger', line: 9, column: 3 },
   });
+});
+
+test('requires canonical commodity formats', () => {
+  const document = parseConformant(`commodity SEK
+  format 1,000.00 SEK
+commodity BTC
+  format 1000.00000000 BTC
+commodity JPY
+  format 1,000 JPY
+`, 'fixture.ledger');
+
+  assert.deepEqual(document.entries.map(({ symbol, properties }) => ({ symbol, format: properties[0].value })), [
+    { symbol: 'SEK', format: '1,000.00 SEK' },
+    { symbol: 'BTC', format: '1000.00000000 BTC' },
+    { symbol: 'JPY', format: '1,000 JPY' },
+  ]);
+
+  for (const format of [
+    'SEK 1,000.00',
+    '1,000.00SEK',
+    '1.000,00 SEK',
+    '12,34.00 SEK',
+    '999.00 SEK',
+    '10,000.00 SEK',
+    '10000.00 SEK',
+    '1,000,000.00 SEK',
+    '1,000.00 USD',
+    '1,000.00 SEK trailing',
+  ]) {
+    const sourceText = `commodity SEK\n  format ${format}\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
+test('allows top-level blank lines but rejects them within transaction and commodity bodies', () => {
+  parseConformant(`2024-01-01 Opening
+  Assets:Cash  1 SEK
+
+commodity SEK
+`, 'fixture.ledger');
+
+  for (const sourceText of [
+    '2024-01-01 Opening\n\n  Assets:Cash  1 SEK\n',
+    '2024-01-01 Opening\n  Assets:Cash  1 SEK\n\n  Equity:Opening\n',
+    'commodity SEK\n\n  format 1,000.00 SEK\n',
+    'commodity SEK\n  format 1,000.00 SEK\n\n  default\n',
+  ]) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
 });
 
 test('reports precise source locations for invalid input', () => {
@@ -125,8 +356,20 @@ test('rejects the alternative D default commodity directive', () => {
   );
 });
 
-test('rejects unsupported commodity properties consistently', () => {
-  const sourceText = 'commodity SEK\n  arbitrary value\n';
+test('rejects values on default commodity properties', () => {
+  const sourceText = 'commodity SEK\n  default SEK\n';
+  assert.throws(
+    () => parse(sourceText, { source: 'bad.ledger' }),
+    (error) => error.code === errorCodes.SYNTAX && /does not accept a value/u.test(error.message),
+  );
+  assert.throws(
+    () => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+    (error) => error.code === errorCodes.SYNTAX,
+  );
+});
+
+test('rejects the unsupported nomarket commodity property consistently', () => {
+  const sourceText = 'commodity SEK\n  nomarket\n';
   assert.throws(
     () => parse(sourceText, { source: 'bad.ledger' }),
     (error) => error.code === errorCodes.SYNTAX && /commodity property/u.test(error.message),

@@ -51,7 +51,7 @@ test('aligns human-readable output and uses an English total label', () => {
 test('applies declared commodity precision and separators only to human-readable output', () => {
   const descriptions = [
     { commodity: 'BTC', format: '1000.00000000 BTC' },
-    { commodity: 'EUR', format: '1.000,00 EUR' },
+    { commodity: 'EUR', format: '1,000.00 EUR' },
     { commodity: 'JPY', format: '1,000 JPY' },
   ];
   assert.equal(
@@ -61,7 +61,7 @@ test('applies declared commodity precision and separators only to human-readable
       { account: 'Assets:Yen', quantity: '1234.5', commodity: 'JPY' },
     ], false, descriptions),
     'Assets:Bitcoin   1234.50000000 BTC\n' +
-    '  Assets:Euros  1.234,50       EUR\n' +
+    '  Assets:Euros  1,234.50       EUR\n' +
     '    Assets:Yen  1,235          JPY\n',
   );
   assert.equal(
@@ -87,12 +87,12 @@ test('formats balance history', () => {
 });
 
 test('uses the valuation commodity format for human-readable valuation reports', () => {
-  const descriptions = [{ commodity: 'EUR', format: '1.000,000 EUR' }];
+  const descriptions = [{ commodity: 'EUR', format: '1,000.000 EUR' }];
   assert.equal(
     formatBalanceHistoryHumanReadable([
       { date: '2024-01-01', amount: '1234.5678', commodity: 'EUR' },
     ], descriptions),
-    '2024-01-01  1.234,568 EUR\n',
+    '2024-01-01  1,234.568 EUR\n',
   );
   const report = {
     from: '2024-01-01',
@@ -107,7 +107,7 @@ test('uses the valuation commodity format for human-readable valuation reports',
     moneyWeightedReturn: null,
     moneyWeightedReturnTotal: null,
   };
-  assert.match(formatInvestmentPerformance(report, descriptions), /Opening value: 1\.234,568 EUR/u);
+  assert.match(formatInvestmentPerformance(report, descriptions), /Opening value: 1,234\.568 EUR/u);
 });
 
 test('formats investment performance for people and automation', () => {

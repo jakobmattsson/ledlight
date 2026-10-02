@@ -34,30 +34,12 @@ module.exports = ({
   }
 
   function parseCommodityFormat(format) {
-    const sample = /\d[\d.,]*/u.exec(format)?.[0];
-    if (!sample) return null;
-    const commaCount = [...sample].filter((character) => character === ',').length;
-    const dotCount = [...sample].filter((character) => character === '.').length;
-    let decimalSeparator = null;
-    let groupingSeparator = null;
-    if (commaCount > 0 && dotCount > 0) {
-      decimalSeparator = sample.lastIndexOf(',') > sample.lastIndexOf('.') ? ',' : '.';
-      groupingSeparator = decimalSeparator === ',' ? '.' : ',';
-    } else {
-      const separator = commaCount > 0 ? ',' : dotCount > 0 ? '.' : null;
-      const count = commaCount + dotCount;
-      if (separator) {
-        const segments = sample.split(separator);
-        const groupingOnly = count > 1 && segments.slice(1).every((segment) => segment.length === 3) ||
-          separator === ',' && count === 1 && segments[0].length <= 3 && segments[1].length === 3;
-        if (groupingOnly) groupingSeparator = separator;
-        else decimalSeparator = separator;
-      }
-    }
+    const match = /^((?:\d{1,3}(?:,\d{3})+|\d+))(?:\.(\d+))?[ \t]+[^ \t]+$/u.exec(format);
+    if (!match) return null;
     return {
-      decimalSeparator,
-      groupingSeparator,
-      scale: decimalSeparator === null ? 0 : sample.length - sample.lastIndexOf(decimalSeparator) - 1,
+      decimalSeparator: match[2] ? '.' : null,
+      groupingSeparator: match[1].includes(',') ? ',' : null,
+      scale: match[2]?.length ?? 0,
     };
   }
 

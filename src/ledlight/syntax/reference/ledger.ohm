@@ -2,79 +2,63 @@ Ledlight {
   document = topLevel* end
 
   topLevel
-    = transaction
-    | commodityDirective
-    | accountDirective
-    | tagDirective
-    | includeDirective
-    | priceDirective
-    | topLevelComment
-    | blankLine
+    = date spacing+ description transactionComment? lineEnd (indentedComment | posting)+                  -- transaction
+    | "commodity" spacing+ commoditySymbol inlineComment? spacing* lineEnd commodityBody*                 -- commodity
+    | "account" spacing+ directiveValue inlineComment? lineEnd                                            -- account
+    | "tag" spacing+ directiveValue inlineComment? lineEnd                                                -- tag
+    | "include" spacing+ directiveValue inlineComment? lineEnd                                            -- include
+    | "P" spacing+ date spacing+ commoditySymbol spacing+ amount spacing* inlineComment? lineEnd          -- price
+    | ";" spacing* commentText lineEnd                                                                    -- comment
+    | spacing* newline                                                                                    -- blank
 
-  transaction = transactionHeader transactionBody+
-  transactionBody = blankLine | indentedComment | posting
+  description = (~forbiddenDescriptionCharacter any)+
+  indentedComment = spacing+ ";" spacing* metadataComment lineEnd
 
-  transactionHeader = date horizontal+ transactionStatus? transactionCode? descriptionAndComment lineEnd
-  transactionStatus = ("*" | "!") horizontal*
-  transactionCode = "(" (~")" ~newline any)* ")" horizontal*
-  descriptionAndComment = (~";" ~newline any)* inlineComment?
-
-  posting = indent account amountPart? horizontal* postingComment? lineEnd
-  account = accountCharacter+
-  accountCharacter = ~fieldSeparator ~";" ~newline any
-  amountPart = fieldSeparator amountExpression?
+  posting = spacing+ account amountPart? spacing* postingComment? lineEnd
+  account = (~forbiddenAccountCharacter any)+
+  amountPart = postingAmountSeparator amountExpression?
 
   amountExpression = balanceAssignment | explicitAmount
-  balanceAssignment = "=" horizontal* amount
+  balanceAssignment = "=" spacing* amount
   explicitAmount = amount cost? balanceAssertion?
-  cost = horizontal* ("@@" | "@") horizontal* amount
-  balanceAssertion = horizontal* "=" horizontal* amount
-  amount = number (horizontal+ commoditySymbol)?
+  cost = spacing* ("@@" | "@") spacing* amount
+  balanceAssertion = spacing* "=" spacing* amount
+  amount = number spacing+ commoditySymbol
 
-  number = sign? decimal numberBoundary
+  number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
-  decimal = digit+ ("." digit*)?  -- leadingDigits
-          | "." digit+           -- leadingPoint
-  numberBoundary = &(horizontal | "@" | "=" | ";" | newline) | end
 
-  commoditySymbol = quotedSymbol | bareCommoditySymbol
-  quotedSymbol = "\"" (~"\"" ~newline any)* "\""  -- double
-               | "'" (~"'" ~newline any)* "'"       -- single
-  bareCommoditySymbol = (~horizontal ~"@" ~"=" ~";" ~newline any)+
+  commodityBody = spacing+ "format" spacing+ formatQuantity spacing+ commoditySymbol inlineComment? spacing* lineEnd      -- format
+                | spacing+ "default" inlineComment? lineEnd                                                               -- default
+  formatQuantity = digit "," digit digit digit ("." digit+)?    -- grouped
+                 | digit digit digit digit ("." digit+)?        -- ungrouped
 
-  includeDirective = "include" horizontal+ directiveValue inlineComment? lineEnd
-  accountDirective = "account" horizontal+ directiveValue inlineComment? lineEnd
-  tagDirective = "tag" horizontal+ directiveValue inlineComment? lineEnd
+  commoditySymbol = (~forbiddenCommodityCharacter any)+
 
-  commodityDirective = "commodity" horizontal+ directiveValue inlineComment? lineEnd commodityBody*
-  commodityBody = blankLine | commodityProperty
-  commodityProperty = indent commodityPropertyName commodityPropertyValue? inlineComment? lineEnd
-  commodityPropertyName = "format" | "default" | "nomarket"
-  commodityPropertyValue = horizontal+ directiveValue
+  postingComment = ";" spacing* ("[" date "]" spacing*)? metadataComment
+  transactionComment = spacing* ";" spacing* metadataComment
+  inlineComment = spacing* ";" spacing* commentText
+  metadataComment = binaryTags (spacing+ commentText)?     -- tags
+                  | tagName ":" spacing+ commentText       -- value
+                  | commentText                            -- text
 
-  priceDirective = "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd
-
-  indentedComment = indent commentMarker horizontal* commentText lineEnd
-  topLevelComment = topLevelCommentMarker commentText lineEnd
-  postingComment = horizontal* ";" horizontal* postingDate? commentText
-  postingDate = "[" date "]" horizontal*
-  inlineComment = horizontal* ";" horizontal* commentText
-  commentMarker = ";" | "#" | "%"
-  topLevelCommentMarker = commentMarker | ":"
+  binaryTags = ":" tagName (":" tagName)* ":"
+  tagName = (~forbiddenTagCharacter any)+
   commentText = (~newline any)*
-  directiveValue = (~";" ~newline any)+
+  directiveValue = (~forbiddenDirectiveCharacter any)+
 
-  date = year dateSeparator twoDigits dateSeparator twoDigits
-  year = digit digit digit digit
-  twoDigits = digit digit
-  dateSeparator = "-" | "/"
+  date = digit digit digit digit "-" digit digit "-" digit digit
 
-  fieldSeparator = "\t"                -- tab
-                 | "  " horizontal*    -- spaces
-  indent = horizontal+
-  horizontal = " " | "\t"
-  blankLine = horizontal* newline
-  lineEnd = newline  -- newline
-          | end      -- end
+  forbiddenDirectiveCharacter = ";" | newline
+  forbiddenDescriptionCharacter = ";" | newline
+  forbiddenAccountCharacter = postingAmountSeparator | ";" | newline
+  forbiddenCommodityCharacter = spacing | "@" | "=" | ";" | "\"" | "'" | newline
+  forbiddenTagCharacter = spacing | ":" | ";" | newline
+
+  postingAmountSeparator = "\t"                -- tab
+                         | "  " spacing*       -- spaces
+
+  lineEnd = newline | end
+  spacing = " " | "\t"
   newline = "\r\n" | "\n"
 }

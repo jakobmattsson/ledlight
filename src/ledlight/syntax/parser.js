@@ -6,31 +6,40 @@ module.exports = ({
 }) => {
 
   const DATE_LENGTH = 10;
-  const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format', 'nomarket']);
+  const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format']);
+  const CANONICAL_COMMODITY_FORMAT = /^(\d,?\d{3})(?:\.(\d+))?[ \t]+([^ \t]+)$/u;
   const isWhitespace = (code) => code === 32 || code === 9;
+  const isCommodityCharacter = (code) => !isWhitespace(code) && code !== 10 && code !== 13 &&
+    code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64;
   const sourceLocation = (source, line, column) => ({ source, line, column });
+
+  function assertCommoditySymbol(value, source, line, column) {
+    if (!value || [...value].some((character) => !isCommodityCharacter(character.codePointAt(0)))) {
+      throw syntaxError(`Invalid commodity symbol ${JSON.stringify(value)}`, source, line, column);
+    }
+    return value;
+  }
 
   function isDateAt(input, offset) {
     if (input.length - offset < DATE_LENGTH) return false;
     for (let index = 0; index < DATE_LENGTH; index++) {
       const code = input.charCodeAt(offset + index);
       if (index === 4 || index === 7) {
-        if (code !== 45 && code !== 47) return false;
+        if (code !== 45) return false;
       } else if (code < 48 || code > 57) return false;
     }
     return true;
   }
 
   function assertDate(value, source, line, column) {
-    const normalized = value.replaceAll('/', '-');
-    const year = Number(normalized.slice(0, 4));
-    const month = Number(normalized.slice(5, 7));
-    const day = Number(normalized.slice(8, 10));
+    const year = Number(value.slice(0, 4));
+    const month = Number(value.slice(5, 7));
+    const day = Number(value.slice(8, 10));
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
       throw syntaxError(`Invalid date ${JSON.stringify(value)}`, source, line, column);
     }
-    return normalized;
+    return value;
   }
 
   function splitComment(input) {
@@ -43,6 +52,14 @@ module.exports = ({
       else if (code === 59) return { text: input.slice(0, index).trimEnd(), comment: input.slice(index + 1).trim() };
     }
     return { text: input.trimEnd(), comment: null };
+  }
+
+  function parseCommentTags(comment) {
+    if (comment === null) return [];
+    const binary = /^:([^\s:;]+(?::[^\s:;]+)*:)(?:[ \t]+.*)?$/u.exec(comment);
+    if (binary) return binary[1].slice(0, -1).split(':').map((name) => ({ name, value: null }));
+    const value = /^([^\s:;]+):[ \t]+(.*)$/u.exec(comment);
+    return value ? [{ name: value[1], value: value[2].trim() }] : [];
   }
 
   function findFieldSeparator(input) {
@@ -66,27 +83,16 @@ module.exports = ({
     }
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
 
-    let status = null;
-    if (text[cursor] === '*' || text[cursor] === '!') {
-      status = text[cursor++];
-      while (isWhitespace(text.charCodeAt(cursor))) cursor++;
-    }
-    let code = null;
-    if (text[cursor] === '(') {
-      const end = text.indexOf(')', cursor + 1);
-      if (end < 0) throw syntaxError('Unterminated transaction code', source, line, cursor + 1);
-      code = text.slice(cursor + 1, end);
-      cursor = end + 1;
-      while (isWhitespace(text.charCodeAt(cursor))) cursor++;
-    }
     const parts = splitComment(text.slice(cursor));
     const pipe = parts.text.indexOf('|');
     const description = parts.text.trim();
+    if (!description) throw syntaxError('Expected a transaction description', source, line, cursor + 1);
+    const tags = parseCommentTags(parts.comment);
     return {
-      type: 'transaction', date, status, code, description,
+      type: 'transaction', date, status: null, code: null, description,
       payee: pipe < 0 ? null : parts.text.slice(0, pipe).trim(),
       narration: pipe < 0 ? description : parts.text.slice(pipe + 1).trim(),
-      comment: parts.comment, postings: [], notes: [], location: sourceLocation(source, line, 1),
+      comment: parts.comment, ...(tags.length > 0 ? { tags } : {}), postings: [], notes: [], location: sourceLocation(source, line, 1),
     };
   }
 
@@ -100,12 +106,14 @@ module.exports = ({
     const expressionText = separator ? parts.text.slice(separator.end).trim() : '';
     const expressionColumn = separator ? indent + separator.end + 1 : raw.length + 1;
     const expression = parseAmountExpression(expressionText, sourceLocation(source, line, expressionColumn));
-    const postingDateMatch = parts.comment && /^\[(\d{4}[-/]\d{2}[-/]\d{2})\](?:\s|$)/u.exec(parts.comment);
+    const postingDateMatch = parts.comment && /^\[(\d{4}-\d{2}-\d{2})\](?:\s|$)/u.exec(parts.comment);
+    const commentAfterDate = postingDateMatch ? parts.comment.slice(postingDateMatch[0].length).trimStart() : parts.comment;
+    const tags = parseCommentTags(commentAfterDate);
     return {
       type: 'posting', account,
       ...(expression || { amount: null, cost: null, balanceAssignment: null, balanceAssertion: null }),
       postingDate: postingDateMatch ? assertDate(postingDateMatch[1], source, line, raw.indexOf('[') + 2) : null,
-      comment: parts.comment, location: sourceLocation(source, line, indent + 1),
+      comment: parts.comment, ...(tags.length > 0 ? { tags } : {}), location: sourceLocation(source, line, indent + 1),
     };
   }
 
@@ -118,8 +126,7 @@ module.exports = ({
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const symbolStart = cursor;
     while (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) cursor++;
-    const commodity = text.slice(symbolStart, cursor);
-    if (!commodity) throw syntaxError('Expected a commodity in price directive', source, line, symbolStart + 1);
+    const commodity = assertCommoditySymbol(text.slice(symbolStart, cursor), source, line, symbolStart + 1);
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const parts = splitComment(text.slice(cursor));
     const expression = parseAmountExpression(parts.text, sourceLocation(source, line, cursor + 1));
@@ -133,6 +140,15 @@ module.exports = ({
     const value = splitComment(text.slice(keyword.length).trimStart());
     if (!value.text) throw syntaxError(`Expected a value after ${keyword}`, source, line, keyword.length + 1);
     return { type, name: value.text, comment: value.comment, location: sourceLocation(source, line, 1) };
+  }
+
+  function assertCommodityFormat(value, commodity, source, line, column) {
+    const match = CANONICAL_COMMODITY_FORMAT.exec(value);
+    if (!match) throw syntaxError('Expected a canonical commodity format', source, line, column);
+    const symbol = assertCommoditySymbol(match[3], source, line, column);
+    if (symbol !== commodity) {
+      throw syntaxError(`Commodity format symbol ${JSON.stringify(symbol)} must match ${JSON.stringify(commodity)}`, source, line, column);
+    }
   }
 
   /** Fast runtime parser. Its behavior is checked against ledger.ohm. */
@@ -153,23 +169,29 @@ module.exports = ({
       let first = 0;
       while (isWhitespace(raw.charCodeAt(first))) first++;
       const trimmed = raw.slice(first);
-      if (!trimmed) continue;
-
-      const marker = trimmed[0];
-      if (marker === ';' || marker === '#' || marker === '%') {
-        if (transaction && first > 0) {
-          const text = trimmed.slice(1).trim();
-          const colon = text.indexOf(':');
-          transaction.notes.push({
-            text,
-            key: colon < 1 ? null : text.slice(0, colon).trim(),
-            value: colon < 1 ? null : text.slice(colon + 1).trim(),
-            location: sourceLocation(source, lineNumber, first + 1),
-          });
-        }
+      if (!trimmed) {
+        transaction = null;
+        commodity = null;
         continue;
       }
-      if (first === 0 && marker === ':') continue;
+
+      const marker = trimmed[0];
+      if (marker === ';') {
+        if (transaction && first > 0) {
+          const text = trimmed.slice(1).trim();
+          const tags = parseCommentTags(text);
+          const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
+          transaction.notes.push({
+            text,
+            key: valueTag ? valueTag.name : null,
+            value: valueTag ? valueTag.value : null,
+            ...(tags.length > 0 ? { tags } : {}),
+            location: sourceLocation(source, lineNumber, first + 1),
+          });
+          if (tags.length > 0) transaction.tags = [...(transaction.tags || []), ...tags];
+        }
+        if (first === 0 || transaction) continue;
+      }
       if (first > 0) {
         if (transaction) transaction.postings.push(parsePosting(raw, source, lineNumber));
         else if (commodity) {
@@ -185,6 +207,10 @@ module.exports = ({
             );
           }
           const value = separator < 0 ? null : property.text.slice(separator).trim();
+          if (name === 'format') assertCommodityFormat(value, commodity.symbol, source, lineNumber, first + 1);
+          if (name === 'default' && value !== null) {
+            throw syntaxError('Default commodity property does not accept a value', source, lineNumber, first + 1);
+          }
           commodity.properties.push({ name, value, comment: property.comment, location: sourceLocation(source, lineNumber, first + 1) });
         } else throw syntaxError('Unexpected indented line', source, lineNumber, first + 1);
         continue;
@@ -204,7 +230,7 @@ module.exports = ({
       else if (trimmed.startsWith('tag') && isWhitespace(trimmed.charCodeAt(3))) entries.push(parseNamedDirective(trimmed, 'tag', 'tag', source, lineNumber));
       else if (trimmed.startsWith('commodity') && isWhitespace(trimmed.charCodeAt(9))) {
         commodity = parseNamedDirective(trimmed, 'commodity', 'commodity', source, lineNumber);
-        commodity.symbol = commodity.name;
+        commodity.symbol = assertCommoditySymbol(commodity.name, source, lineNumber, 11);
         delete commodity.name;
         commodity.properties = [];
         entries.push(commodity);

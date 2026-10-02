@@ -36,7 +36,7 @@ commodity SEK
 include transactions.ledger
 P 2024-01-01 FUND 123.45 SEK
 `);
-  fs.writeFileSync(transactionsPath, `2024-01-02 * (opening) Bank | Deposit
+  fs.writeFileSync(transactionsPath, `2024-01-02 Bank | Deposit
   ; Source: statement.csv:4
   Assets:Cash  8.000000000000000001 SEK
   Equity:Opening
@@ -67,7 +67,7 @@ P 2024-01-01 FUND 123.45 SEK
     [
       {
         date: '2024-01-02',
-        code: 'opening',
+        code: null,
         position: 0,
         report_date: '2024-01-02',
         account: 'Assets:Cash',
@@ -76,7 +76,7 @@ P 2024-01-01 FUND 123.45 SEK
       },
       {
         date: '2024-01-02',
-        code: 'opening',
+        code: null,
         position: 1,
         report_date: '2024-01-02',
         account: 'Equity:Opening',

@@ -13,10 +13,10 @@ module.exports = () => {
 
   function parseDecimal(value) {
     if (typeof value !== 'string') throw new TypeError('Decimal value must be a string');
-    const match = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))$/u.exec(value);
+    const match = /^([+-]?)(\d+)(?:\.(\d+))?$/u.exec(value);
     if (!match) throw new Error(`Invalid decimal value: ${JSON.stringify(value)}`);
-    const integer = match[2] || '0';
-    const fraction = match[2] === undefined ? match[4] : match[3] || '';
+    const integer = match[2];
+    const fraction = match[3] || '';
     const sign = match[1] === '-' ? -1n : 1n;
     return normalizeDecimal({ coefficient: sign * BigInt(integer + fraction), scale: fraction.length });
   }
