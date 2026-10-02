@@ -94,6 +94,23 @@ test('keeps leading-point and trailing-point decimal syntax exact', () => {
   ]);
 });
 
+test('rejects amounts without commodity symbols', () => {
+  const sources = [
+    '2024-01-01 Missing commodity\n  Assets:Cash  1\n  Equity:Opening\n',
+    '2024-01-01 Missing commodity\n  Assets:Fund  1 FUND @ 10\n  Equity:Opening\n',
+    '2024-01-01 Missing commodity\n  Assets:Cash  1 SEK = 1\n  Equity:Opening\n',
+    '2024-01-01 Missing commodity\n  Assets:Cash  = 1\n  Equity:Opening\n',
+    'P 2024-01-01 FUND 10\n',
+  ];
+
+  for (const sourceText of sources) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
 test('parses declarations, commodity properties, prices, and source notes', () => {
   const document = parseConformant(`account Assets:Cash
 tag Source

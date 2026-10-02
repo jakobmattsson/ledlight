@@ -27,7 +27,7 @@ Ledlight {
   explicitAmount = amount cost? balanceAssertion?
   cost = horizontal* ("@@" | "@") horizontal* amount
   balanceAssertion = horizontal* "=" horizontal* amount
-  amount = number (horizontal+ commoditySymbol)?
+  amount = number horizontal+ commoditySymbol
 
   number = sign? decimal numberBoundary
   sign = "+" | "-"

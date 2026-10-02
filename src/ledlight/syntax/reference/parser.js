@@ -111,7 +111,7 @@ module.exports = ({
     },
     balanceAssertion(_spaceBefore, _equals, _spaceAfter, amount) { return amount.ast(this.args.source); },
     amount(number, _space, commodity) {
-      return { quantity: number.ast(this.args.source), commodity: optionalValue(commodity, this.args.source) };
+      return { quantity: number.ast(this.args.source), commodity: commodity.ast(this.args.source) };
     },
     number(_sign, _decimal, _boundary) { return this.sourceString; },
     commoditySymbol(symbol) { return symbol.ast(this.args.source); },

@@ -81,7 +81,10 @@ module.exports = ({
     parseAmount(label) {
       if (this.current.type !== TOKEN.NUMBER) this.lexer.error(`Expected a number for ${label}`, this.current.start);
       const quantity = this.advance().value;
-      const commodity = this.current.type === TOKEN.SYMBOL ? this.advance().value : null;
+      if (this.current.type !== TOKEN.SYMBOL) {
+        this.lexer.error(`Expected a commodity symbol for ${label}`, this.current.start);
+      }
+      const commodity = this.advance().value;
       return { quantity, commodity };
     }
     parse() {
