@@ -158,7 +158,11 @@ module.exports = ({
       let first = 0;
       while (isWhitespace(raw.charCodeAt(first))) first++;
       const trimmed = raw.slice(first);
-      if (!trimmed) continue;
+      if (!trimmed) {
+        transaction = null;
+        commodity = null;
+        continue;
+      }
 
       const marker = trimmed[0];
       if (marker === ';') {

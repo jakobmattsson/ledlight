@@ -270,6 +270,26 @@ commodity JPY
   }
 });
 
+test('allows top-level blank lines but rejects them within transaction and commodity bodies', () => {
+  parseConformant(`2024-01-01 Opening
+  Assets:Cash  1 SEK
+
+commodity SEK
+`, 'fixture.ledger');
+
+  for (const sourceText of [
+    '2024-01-01 Opening\n\n  Assets:Cash  1 SEK\n',
+    '2024-01-01 Opening\n  Assets:Cash  1 SEK\n\n  Equity:Opening\n',
+    'commodity SEK\n\n  format 1,000.00 SEK\n',
+    'commodity SEK\n  format 1,000.00 SEK\n\n  default\n',
+  ]) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
 test('reports precise source locations for invalid input', () => {
   assert.throws(
     () => parse('2024-02-30 Invalid\n  Assets:Cash  1 SEK\n', { source: 'bad.ledger' }),

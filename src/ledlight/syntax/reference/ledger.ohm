@@ -12,7 +12,7 @@ Ledlight {
     | blankLine
 
   transaction = transactionHeader transactionBody+
-  transactionBody = blankLine | indentedComment | posting
+  transactionBody = indentedComment | posting
 
   transactionHeader = date horizontal+ description inlineComment? lineEnd
   description = descriptionCharacter+
@@ -41,7 +41,7 @@ Ledlight {
   tagDirective = "tag" horizontal+ directiveValue inlineComment? lineEnd
 
   commodityDirective = "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*
-  commodityBody = blankLine | commodityProperty
+  commodityBody = commodityProperty
   commodityProperty = indent "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
                     | indent "default" commodityPropertyValue? inlineComment? lineEnd                  -- default
   commodityFormat = formatQuantity horizontal+ commoditySymbol
