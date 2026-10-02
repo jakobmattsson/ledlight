@@ -2,14 +2,14 @@ Ledlight {
   document = topLevel* end
 
   topLevel
-    = date horizontal+ description inlineComment? lineEnd (indentedComment | posting)+                         -- transaction
-    | "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*             -- commodity
+    = date horizontal+ description inlineComment? lineEnd (indentedComment | posting)+                       -- transaction
+    | "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*              -- commodity
     | "account" horizontal+ directiveValue inlineComment? lineEnd                                            -- account
     | "tag" horizontal+ directiveValue inlineComment? lineEnd                                                -- tag
     | "include" horizontal+ directiveValue inlineComment? lineEnd                                            -- include
     | "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd -- price
     | ";" horizontal* commentText lineEnd                                                                    -- comment
-    | horizontal* newline                                                                                     -- blank
+    | horizontal* newline                                                                                    -- blank
 
   description = (~forbiddenDescriptionSymbolCharacter any)+
   indentedComment = horizontal+ ";" horizontal* commentText lineEnd
@@ -28,12 +28,11 @@ Ledlight {
   number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
 
-  commodityBody = horizontal+ "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
+  commodityBody = horizontal+ "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd   -- format
                 | horizontal+ "default" inlineComment? lineEnd                                          -- default
   commodityFormat = formatQuantity horizontal+ commoditySymbol
-  formatQuantity = groupedFormatInteger ("." digit+)?  -- grouped
-                 | digit+ ("." digit+)?                -- ungrouped
-  groupedFormatInteger = digit digit? digit? ("," digit digit digit)+      // The format of this must be more flexible
+  formatQuantity = digit "," digit digit digit ("." digit+)?    -- grouped
+                 | digit digit digit digit ("." digit+)?        -- ungrouped
 
   commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
 
