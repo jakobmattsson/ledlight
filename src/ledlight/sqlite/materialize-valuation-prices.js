@@ -19,12 +19,11 @@ module.exports = ({
         JOIN transactions AS t ON t.entry_id = p.transaction_id
         GROUP BY r.commodity
         UNION ALL
-        SELECT commodity, MIN(date) FROM prices GROUP BY commodity
+        SELECT base_commodity, MIN(date) FROM prices GROUP BY base_commodity
         UNION ALL
-        SELECT price_commodity, MIN(date)
+        SELECT quote_commodity, MIN(date)
         FROM prices
-        WHERE price_commodity IS NOT NULL
-        GROUP BY price_commodity
+        GROUP BY quote_commodity
       )
       SELECT commodity, MIN(date) AS start_date
       FROM commodity_introductions
@@ -42,10 +41,10 @@ module.exports = ({
     `).pluck().get();
     if (!latestDate) return 0;
     const priceRows = database.prepare(`
-      SELECT p.date, p.commodity, p.price_quantity, p.price_commodity
+      SELECT p.date, p.base_commodity, p.quote_quantity, p.quote_commodity
       FROM prices AS p
       JOIN journal_entries AS e ON e.id = p.entry_id
-      ORDER BY p.commodity, p.date, e.sequence
+      ORDER BY p.base_commodity, p.date, e.sequence
     `).all();
     const resolve = createLedgerValuationRateResolver(priceRows, valuationCommodity);
     const insert = database.prepare(

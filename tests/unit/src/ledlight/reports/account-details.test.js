@@ -94,8 +94,6 @@ test('returns newest-first transactions and groups amounts by posting', (t) => {
   assert.deepEqual(transactions[0], {
     transactionId: 10,
     transactionDate: '2023-01-02',
-    status: null,
-    code: null,
     description: 'Deferred posting',
     payee: null,
     narration: 'Deferred posting',
@@ -123,8 +121,6 @@ test('returns every posting in one transaction', (t) => {
   assert.deepEqual(project.ledgerTransaction({ transactionId: 7 }), {
     transactionId: 7,
     transactionDate: '2023-01-01',
-    status: null,
-    code: null,
     description: 'Open account',
     payee: null,
     narration: 'Open account',

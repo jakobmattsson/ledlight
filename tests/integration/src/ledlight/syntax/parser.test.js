@@ -25,12 +25,10 @@ test('parses transactions without losing decimal precision', () => {
   assert.deepEqual(
     {
       date: transaction.date,
-      status: transaction.status,
-      code: transaction.code,
       description: transaction.description,
       comment: transaction.comment,
     },
-    { date: '2024-01-29', status: null, code: null, description: 'Investment', comment: 'imported' },
+    { date: '2024-01-29', description: 'Investment', comment: 'imported' },
   );
   assert.deepEqual(transaction.postings[0].amount, { quantity: '8.000000000000000001', commodity: 'SECURITY' });
   assert.deepEqual(transaction.postings[0].cost, {
@@ -46,8 +44,8 @@ test('treats former transaction status and code syntax as description text', () 
     const sourceText = `2024-01-29 ${metadata} Investment\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
     const transaction = parseConformant(sourceText, 'fixture.ledger').entries[0];
     assert.equal(transaction.description, `${metadata} Investment`);
-    assert.equal(transaction.status, null);
-    assert.equal(transaction.code, null);
+    assert.equal('status' in transaction, false);
+    assert.equal('code' in transaction, false);
   }
 });
 

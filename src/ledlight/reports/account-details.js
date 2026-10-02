@@ -117,8 +117,6 @@ module.exports = ({
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
-        transactions.status,
-        transactions.code,
         transactions.description,
         transactions.payee,
         transactions.narration,
@@ -151,8 +149,6 @@ module.exports = ({
           transaction = {
             transactionId: row.transactionId,
             transactionDate: row.transactionDate,
-            status: row.status,
-            code: row.code,
             description: row.description,
             payee: row.payee,
             narration: row.narration,
@@ -180,8 +176,6 @@ module.exports = ({
         .map((transaction) => ({
           transactionId: transaction.transactionId,
           transactionDate: transaction.transactionDate,
-          status: transaction.status,
-          code: transaction.code,
           description: transaction.description,
           payee: transaction.payee,
           narration: transaction.narration,
@@ -209,8 +203,6 @@ module.exports = ({
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
-        transactions.status,
-        transactions.code,
         transactions.description,
         transactions.payee,
         transactions.narration,
@@ -233,8 +225,6 @@ module.exports = ({
       const transaction = {
         transactionId: first.transactionId,
         transactionDate: first.transactionDate,
-        status: first.status,
-        code: first.code,
         description: first.description,
         payee: first.payee,
         narration: first.narration,

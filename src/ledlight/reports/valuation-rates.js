@@ -21,14 +21,14 @@ module.exports = ({
     const dateFilter = throughDate ? 'WHERE p.date <= ?' : '';
     const parameters = throughDate ? [throughDate] : [];
     const rows = database.prepare(`
-    SELECT p.commodity, p.price_quantity, p.price_commodity
+    SELECT p.base_commodity, p.quote_quantity, p.quote_commodity
     FROM prices AS p
     JOIN journal_entries AS e ON e.id = p.entry_id
     ${dateFilter}
-    ORDER BY p.commodity, p.date DESC, e.sequence DESC
+    ORDER BY p.base_commodity, p.date DESC, e.sequence DESC
   `).all(...parameters);
     for (const row of rows) {
-      if (!prices.has(row.commodity)) prices.set(row.commodity, row);
+      if (!prices.has(row.base_commodity)) prices.set(row.base_commodity, row);
     }
     return prices;
   }
@@ -43,14 +43,14 @@ module.exports = ({
         throw missingValuation(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
       }
       const price = prices.get(commodity);
-      if (!price || !price.price_commodity) {
+      if (!price || !price.quote_commodity) {
         const dateContext = throughDate ? ` on or before ${throughDate}` : '';
         throw missingValuation(`No price for ${commodity}${dateContext} can convert it to ${valuationCommodity}`);
       }
       visiting.add(commodity);
-      const quoteRate = resolve(price.price_commodity);
+      const quoteRate = resolve(price.quote_commodity);
       const rate = formatDecimal(multiplyDecimals(
-        parseDecimal(price.price_quantity),
+        parseDecimal(price.quote_quantity),
         parseDecimal(quoteRate),
       ));
       visiting.delete(commodity);
@@ -111,20 +111,20 @@ module.exports = ({
     const dateFilter = throughDate ? 'WHERE p.date <= ?' : '';
     const parameters = throughDate ? [throughDate] : [];
     return database.prepare(`
-    SELECT p.date, p.commodity, p.price_quantity, p.price_commodity
+    SELECT p.date, p.base_commodity, p.quote_quantity, p.quote_commodity
     FROM prices AS p
     JOIN journal_entries AS e ON e.id = p.entry_id
     ${dateFilter}
-    ORDER BY p.commodity, p.date, e.sequence
+    ORDER BY p.base_commodity, p.date, e.sequence
   `).all(...parameters);
   }
 
   function createLedgerValuationRateResolver(priceRows, valuationCommodity) {
     const histories = new Map();
     for (const price of priceRows) {
-      const history = histories.get(price.commodity) ?? [];
+      const history = histories.get(price.base_commodity) ?? [];
       history.push(price);
-      histories.set(price.commodity, history);
+      histories.set(price.base_commodity, history);
     }
     const cache = new Map();
     function resolve(commodity, throughDate, visiting) {
@@ -134,19 +134,18 @@ module.exports = ({
       if (visiting.has(commodity)) throw missingValuation(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
       const eligible = (histories.get(commodity) ?? []).filter((price) => price.date <= throughDate);
       // Ledger prefers a direct quote even when a newer indirect quote exists.
-      const direct = eligible.findLast((price) => price.price_commodity === valuationCommodity);
+      const direct = eligible.findLast((price) => price.quote_commodity === valuationCommodity);
       if (direct) {
-        cache.set(key, direct.price_quantity);
-        return direct.price_quantity;
+        cache.set(key, direct.quote_quantity);
+        return direct.quote_quantity;
       }
       visiting.add(commodity);
       for (let index = eligible.length - 1; index >= 0; index -= 1) {
         const price = eligible[index];
-        if (!price.price_commodity) continue;
         try {
-          const quoteRate = resolve(price.price_commodity, throughDate, visiting);
+          const quoteRate = resolve(price.quote_commodity, throughDate, visiting);
           const rate = formatDecimal(multiplyDecimals(
-            parseDecimal(price.price_quantity),
+            parseDecimal(price.quote_quantity),
             parseDecimal(quoteRate),
           ));
           cache.set(key, rate);

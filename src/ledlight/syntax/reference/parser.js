@@ -62,8 +62,6 @@ module.exports = ({
       const transaction = {
         type: 'transaction',
         date: date.ast(source),
-        status: null,
-        code: null,
         description: text,
         payee: pipe < 0 ? null : text.slice(0, pipe).trim(),
         narration: pipe < 0 ? text : text.slice(pipe + 1).trim(),

@@ -20,7 +20,7 @@ module.exports = ({
 
   function prepareStatements(database) {
     return {
-      metadata: database.prepare('INSERT INTO metadata (key, value) VALUES (?, ?)'),
+      databaseMetadata: database.prepare('INSERT INTO database_metadata (key, value) VALUES (?, ?)'),
       sourceFile: database.prepare(`
       INSERT INTO source_files (id, traversal_index, path, sha256, size)
       VALUES (?, ?, ?, ?, ?)
@@ -31,8 +31,8 @@ module.exports = ({
     `),
       transaction: database.prepare(`
       INSERT INTO transactions
-        (entry_id, date, status, code, description, payee, narration, comment)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (entry_id, date, description, payee, narration, comment)
+      VALUES (?, ?, ?, ?, ?, ?)
     `),
       posting: database.prepare(`
       INSERT INTO postings
@@ -53,9 +53,18 @@ module.exports = ({
       INSERT INTO resolved_posting_amounts (id, posting_id, position, quantity, commodity)
       VALUES (?, ?, ?, ?, ?)
     `),
+      transactionTag: database.prepare(`
+      INSERT INTO transaction_tags
+        (id, transaction_id, note_id, position, name, value)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `),
+      postingTag: database.prepare(`
+      INSERT INTO posting_tags (id, posting_id, position, name, value)
+      VALUES (?, ?, ?, ?, ?)
+    `),
       price: database.prepare(`
       INSERT INTO prices
-        (entry_id, date, commodity, price_quantity, price_commodity, comment)
+        (entry_id, date, base_commodity, quote_quantity, quote_commodity, comment)
       VALUES (?, ?, ?, ?, ?, ?)
     `),
       account: database.prepare(`
@@ -78,8 +87,7 @@ module.exports = ({
   function insertTransaction(statements, entryId, entry, counters, postingResolver) {
     const resolvedPostings = postingResolver.resolve(entry);
     statements.transaction.run(
-      entryId, entry.date, entry.status, entry.code,
-      entry.description, entry.payee, entry.narration, entry.comment,
+      entryId, entry.date, entry.description, entry.payee, entry.narration, entry.comment,
     );
 
     entry.postings.forEach((posting, position) => {
@@ -104,13 +112,32 @@ module.exports = ({
           resolvedAmount.quantity, resolvedAmount.commodity,
         );
       });
+      (posting.tags || []).forEach((tag, tagPosition) => {
+        statements.postingTag.run(
+          ++counters.postingTag, postingId, tagPosition, tag.name, tag.value,
+        );
+      });
     });
 
+    let tagPosition = 0;
+    const noteTagCount = entry.notes.reduce((count, note) => count + (note.tags || []).length, 0);
+    const headerTags = (entry.tags || []).slice(0, (entry.tags || []).length - noteTagCount);
+    headerTags.forEach((tag) => {
+      statements.transactionTag.run(
+        ++counters.transactionTag, entryId, null, tagPosition++, tag.name, tag.value,
+      );
+    });
     entry.notes.forEach((note, position) => {
+      const noteId = ++counters.note;
       statements.note.run(
-        ++counters.note, entryId, position, note.location.line, note.location.column,
+        noteId, entryId, position, note.location.line, note.location.column,
         note.text, note.key, note.value,
       );
+      (note.tags || []).forEach((tag) => {
+        statements.transactionTag.run(
+          ++counters.transactionTag, entryId, noteId, tagPosition++, tag.name, tag.value,
+        );
+      });
     });
   }
 
@@ -161,13 +188,15 @@ module.exports = ({
         DELETE FROM valuation_prices;
         DELETE FROM journal_entries;
         DELETE FROM source_files;
-        DELETE FROM metadata;
+        DELETE FROM database_metadata;
       `);
 
-        statements.metadata.run('schema_version', SCHEMA_VERSION);
-        statements.metadata.run('root_path', journal.rootPath);
-        statements.metadata.run('built_at', new Date().toISOString());
-        if (valuationCommodity) statements.metadata.run('valuation_commodity', valuationCommodity);
+        statements.databaseMetadata.run('schema_version', SCHEMA_VERSION);
+        statements.databaseMetadata.run('root_path', journal.rootPath);
+        statements.databaseMetadata.run('built_at', new Date().toISOString());
+        if (valuationCommodity) {
+          statements.databaseMetadata.run('valuation_commodity', valuationCommodity);
+        }
 
         const sourceIds = new Map();
         journal.files.forEach((file, index) => {
@@ -176,7 +205,14 @@ module.exports = ({
           sourceIds.set(file.path, fileId);
         });
 
-        const counters = { posting: 0, resolvedAmount: 0, note: 0, property: 0 };
+        const counters = {
+          posting: 0,
+          resolvedAmount: 0,
+          note: 0,
+          property: 0,
+          transactionTag: 0,
+          postingTag: 0,
+        };
         const postingResolver = new PostingResolver();
         journal.entries.forEach((entry, sequence) => {
           const sourceFileId = sourceIds.get(entry.location.source);
