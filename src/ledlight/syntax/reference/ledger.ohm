@@ -15,7 +15,7 @@ Ledlight {
   transactionBody = blankLine | indentedComment | posting
 
   transactionHeader = date horizontal+ description inlineComment? lineEnd
-  description = ~horizontal ~";" ~newline any (~";" ~newline any)*
+  description = ~horizontal (~";" ~newline any)+
 
   posting = indent account amountPart? horizontal* postingComment? lineEnd
   account = accountCharacter+
