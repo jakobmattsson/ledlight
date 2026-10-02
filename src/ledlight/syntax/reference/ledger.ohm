@@ -15,7 +15,7 @@ Ledlight {
   transactionBody = blankLine | indentedComment | posting
 
   transactionHeader = date horizontal+ description inlineComment? lineEnd
-  description = ~horizontal descriptionCharacter+  // Prevent horizontal+ from leaving whitespace as the description.
+  description = descriptionCharacter+
   descriptionCharacter = ~forbiddenDescriptionSymbolCharacter any
   forbiddenDescriptionSymbolCharacter = ";" | newline
 
