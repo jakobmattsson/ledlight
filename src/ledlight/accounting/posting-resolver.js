@@ -12,8 +12,6 @@ module.exports = ({
   },
 }) => {
 
-
-
   const ZERO = parseDecimal('0');
 
   function balanceKey(account, commodity) {

@@ -15,11 +15,6 @@ module.exports = ({
   },
 }) => {
 
-
-
-
-
-
   function runReportCommand(arguments_, { project, startDirectory }) {
     const [command] = arguments_;
     if (command === 'investment-performance') {

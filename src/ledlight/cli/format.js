@@ -10,8 +10,6 @@ module.exports = ({
   },
 }) => {
 
-
-
   function csvField(value) {
     const text = String(value);
     return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;

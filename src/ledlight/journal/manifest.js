@@ -4,8 +4,6 @@ module.exports = ({
   srcLedlightJournalTraverse: { traverseJournal },
 }) => {
 
-
-
   function includePaths(sourceText) {
     const includes = [];
     for (const rawLine of sourceText.split(/\r?\n/u)) {

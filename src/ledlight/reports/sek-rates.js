@@ -10,10 +10,6 @@ module.exports = ({
   },
 }) => {
 
-
-
-
-
   function selectLatestPrices(database, throughDate) {
     const prices = new Map();
     const dateFilter = throughDate ? 'WHERE p.date <= ?' : '';

@@ -7,10 +7,6 @@ module.exports = ({
   srcLedlightJournalIncludePattern: { expandIncludePattern },
 }) => {
 
-
-
-
-
   function traverseJournal(entryPath, processFile) {
     const rootPath = path.resolve(entryPath);
     const filesByPath = new Map();

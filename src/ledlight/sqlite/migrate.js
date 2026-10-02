@@ -5,8 +5,6 @@ module.exports = ({
   nodePath: path,
 }) => {
 
-
-
   const SCHEMA_VERSION = '9';
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 

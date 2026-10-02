@@ -8,10 +8,6 @@ module.exports = ({
   srcLedlightCliCommand: { runReportCommand },
 }) => {
 
-
-
-
-
   function aggregateReport(options, startDirectory) {
     return projectApi.aggregateReport(options, startDirectory);
   }

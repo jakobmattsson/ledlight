@@ -7,11 +7,6 @@ module.exports = ({
   srcLedlightReportsAccountPrefixFilter: { accountPrefixFilter },
 }) => {
 
-
-
-
-
-
   function assertDate(value, optionName) {
     if (value === undefined) return;
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) {

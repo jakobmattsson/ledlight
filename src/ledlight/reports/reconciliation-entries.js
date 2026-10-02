@@ -6,10 +6,6 @@ module.exports = ({
   srcLedlightApplicationProject: { ensureProjectDatabaseCurrent },
 }) => {
 
-
-
-
-
   function toEntry(row, account, related, rowNumber) {
     return {
       date: row.date,

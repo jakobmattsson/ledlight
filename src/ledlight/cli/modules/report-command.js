@@ -1,7 +1,5 @@
 'use strict';
 
-
-
 module.exports = ({
   srcLedlightCliCommand: { runReportCommand },
   environment: { currentDirectory },

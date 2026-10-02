@@ -5,9 +5,6 @@ module.exports = ({
   betterSqlite3: Database,
 }) => {
 
-
-
-
   function positiveInteger(value, name) {
     const number = Number(value);
     if (!Number.isSafeInteger(number) || number < 1 || String(number) !== String(value)) {

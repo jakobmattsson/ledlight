@@ -18,8 +18,6 @@ module.exports = ({
   srcLedlightSqliteDatabase: { ensureDatabaseCurrent },
 }) => {
 
-
-
   const DATABASE_RELATIVE_PATH = path.join('tmp', 'ledger.sqlite');
 
   function findProjectRoot(startDirectory) {

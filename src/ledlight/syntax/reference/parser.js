@@ -7,10 +7,6 @@ module.exports = ({
   srcLedlightSyntaxErrors: { LedgerSyntaxError },
 }) => {
 
-
-
-
-
   const grammarSource = fs.readFileSync(path.join(__dirname, 'ledger.ohm'), 'utf8');
   const grammar = ohm.grammar(grammarSource);
 

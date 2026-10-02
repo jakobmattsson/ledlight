@@ -5,9 +5,6 @@ module.exports = ({
   srcLedlightSyntaxReferenceParser: { parse },
 }) => {
 
-
-
-
   const loadJournal = createJournalLoader(parse);
 
   return { loadJournal };

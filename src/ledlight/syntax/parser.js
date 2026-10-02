@@ -5,9 +5,6 @@ module.exports = ({
   srcLedlightSyntaxErrors: { LedgerSyntaxError },
 }) => {
 
-
-
-
   const DATE_LENGTH = 10;
   const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format', 'nomarket']);
   const isWhitespace = (code) => code === 32 || code === 9;

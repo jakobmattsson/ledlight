@@ -11,10 +11,6 @@ module.exports = ({
   },
 }) => {
 
-
-
-
-
   function assertAccount(account) {
     if (typeof account !== 'string' || account.length === 0) {
       throw new Error('account must be a non-empty string');

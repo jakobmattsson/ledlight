@@ -10,14 +10,6 @@ module.exports = ({
   srcLedlightSqliteMigrate: { SCHEMA_VERSION, migrateDatabase },
 }) => {
 
-
-
-
-
-
-
-
-
   function amountFields(amount) {
     return {
       quantity: amount ? amount.quantity : null,

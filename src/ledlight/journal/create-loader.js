@@ -4,8 +4,6 @@ module.exports = ({
   srcLedlightJournalTraverse: { traverseJournal },
 }) => {
 
-
-
   function createJournalLoader(parseSource) {
     return function loadJournal(entryPath) {
       const entries = [];

@@ -7,11 +7,6 @@ module.exports = ({
   srcLedlightSqliteWriteJournal: { writeJournalDatabase },
 }) => {
 
-
-
-
-
-
   function buildDatabase(databasePath, entryPath) {
     return writeJournalDatabase(databasePath, loadJournal(entryPath));
   }

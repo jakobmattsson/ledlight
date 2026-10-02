@@ -8,11 +8,6 @@ module.exports = ({
   srcLedlightSqliteMigrate: { SCHEMA_VERSION },
 }) => {
 
-
-
-
-
-
   function databaseWithoutSchema(databasePath, entryPath, reason) {
     return {
       databasePath: path.resolve(databasePath),

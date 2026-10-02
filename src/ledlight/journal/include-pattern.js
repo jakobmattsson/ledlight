@@ -5,8 +5,6 @@ module.exports = ({
   nodePath: path,
 }) => {
 
-
-
   function hasMagic(value) {
     return value.includes('*') || value.includes('?');
   }
