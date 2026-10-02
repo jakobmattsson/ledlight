@@ -36,19 +36,20 @@ Ledlight {
   commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
 
   postingComment = ";" horizontal* ("[" date "]" horizontal*)? commentText
-  inlineComment = horizontal* ";" horizontal* commentText       // What about tags in comments? should they be parsed out correctly?
+  inlineComment = horizontal* ";" horizontal* commentText
   commentText = (~newline any)*
   directiveValue = (~forbiddenDirectiveValueCharacter any)+
 
   date = digit digit digit digit "-" digit digit "-" digit digit
 
+  forbiddenDirectiveValueCharacter = ";" | newline
   forbiddenDescriptionSymbolCharacter = ";" | newline
   forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
   forbiddenCommoditySymbolCharacter = horizontal | "@" | "=" | ";" | "\"" | "'" | newline
-  forbiddenDirectiveValueCharacter = ";" | newline
 
-  fieldSeparator = "\t"                -- tab // Are these names needed or can we remove them to make things here look simpler?
+  fieldSeparator = "\t"                -- tab
                  | "  " horizontal*    -- spaces
+
   lineEnd = newline | end
   horizontal = " " | "\t"
   newline = "\r\n" | "\n"
