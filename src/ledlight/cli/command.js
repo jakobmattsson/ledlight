@@ -5,8 +5,9 @@ module.exports = ({
     aggregateReport,
     balanceHistoryReport,
     investmentPerformance,
+    version,
   },
-  cliArguments: { parseArguments },
+  cliArguments: { parseArguments, usage },
   cliFormat: {
     formatCsv,
     formatBalanceHistoryCsv,
@@ -18,6 +19,10 @@ module.exports = ({
 }) => {
 
   function runReportCommand(arguments_, { startDirectory }) {
+    if (arguments_.length === 1 && (arguments_[0] === '--help' || arguments_[0] === '-h')) {
+      return `${usage()}\n`;
+    }
+    if (arguments_.length === 1 && arguments_[0] === '--version') return `${version}\n`;
     const [command] = arguments_;
     if (command === 'investment-performance') {
       const { reportOptions, json } = parseArguments(arguments_);

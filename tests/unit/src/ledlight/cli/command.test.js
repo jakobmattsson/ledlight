@@ -11,6 +11,7 @@ const cliFormat = resolveRepositoryModule('src/ledlight/cli/format.js');
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
   const ledlight = {
+    version: '1.2.3',
     aggregateReport(options, startDirectory) {
       calls.push({ operation: 'aggregateReport', options, startDirectory });
       return [
@@ -40,6 +41,9 @@ test('delegates report behavior to the public Node API and only formats results'
     },
   };
   const { runReportCommand } = createCommand({ ledlight, cliArguments, cliFormat });
+
+  assert.match(runReportCommand(['--help'], { startDirectory: '/project' }), /^Usage:/u);
+  assert.equal(runReportCommand(['--version'], { startDirectory: '/project' }), '1.2.3\n');
 
   assert.match(
     runReportCommand(['aggregate', '--accounts', 'Assets:', '--value', '--invert'], {

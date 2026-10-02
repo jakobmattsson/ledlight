@@ -76,6 +76,7 @@ function registerExternalModules(container) {
   container.register({
     crypto: asValue(require('node:crypto')),
     fs: asValue(require('node:fs')),
+    packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
     ohm: asValue({
       grammar(...arguments_) {

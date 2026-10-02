@@ -2,6 +2,7 @@
 
 module.exports = ({
   journal: { loadJournal },
+  packageMetadata: { version },
   syntaxErrors: { LedgerSyntaxError },
   ledgerParser: { parse },
   project: projectApi,
@@ -51,5 +52,6 @@ module.exports = ({
     loadProjectPaths,
     openProject,
     parse,
+    version,
   };
 };

@@ -13,6 +13,9 @@ npm test
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.
 
+Run `ledlight --help` for CLI usage or `ledlight --version` for the package
+version.
+
 Use the JavaScript API from the package root:
 
 ```js

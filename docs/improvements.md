@@ -178,8 +178,6 @@ runtime less dependent on repository layout.
   The current behavior silently uses the last declaration.
 - Split investment-performance data access, cash-flow classification, return
   calculations, and result assembly into smaller independently testable units.
-- Add `--help` and `--version` and document examples using the installed
-  executable rather than the source-tree entry point.
 - Expand API documentation from examples into a complete operation and result
   reference.
 - Add a systematic API/CLI parity table so every CLI option is tied to the

@@ -201,11 +201,11 @@ const valuedIncomeStatement = aggregateReport({
 The command-line equivalent is:
 
 ```console
-node src/ledlight/cli/run.js aggregate --to 2024-12-31
-node src/ledlight/cli/run.js aggregate --to 2024-12-31 --date-basis transaction
-node src/ledlight/cli/run.js aggregate --from 2024-01-01 --to 2024-12-31 \
+ledlight aggregate --to 2024-12-31
+ledlight aggregate --to 2024-12-31 --date-basis transaction
+ledlight aggregate --from 2024-01-01 --to 2024-12-31 \
   --accounts "Income:" --accounts "Expenses:" --value --invert
-node src/ledlight/cli/run.js aggregate --to 2024-12-31 --accounts "Assets:" --csv
+ledlight aggregate --to 2024-12-31 --accounts "Assets:" --csv
 ```
 
 By default, the command prints right-aligned account names followed by amounts
@@ -303,11 +303,11 @@ The command prints the complete history by default. `--from`, `--to`,
 `--accounts`, `--invert`, and `--csv` work as for the aggregate report:
 
 ```console
-node src/ledlight/cli/run.js balance-history \
+ledlight balance-history \
   --accounts "Assets:" --accounts "Liabilities:"
-node src/ledlight/cli/run.js balance-history --date-basis transaction \
+ledlight balance-history --date-basis transaction \
   --accounts "Assets:" --accounts "Liabilities:"
-node src/ledlight/cli/run.js balance-history --accounts "Assets:" --csv
+ledlight balance-history --accounts "Assets:" --csv
 ```
 
 Human-readable amounts and CSV amounts are rounded exactly to two decimal
