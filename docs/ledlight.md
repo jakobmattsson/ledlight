@@ -4,6 +4,23 @@ Ledlight is a small, fast subset of Ledger that reads Ledger-compatible
 accounting data into a database-friendly syntax tree and a queryable SQLite
 database.
 
+## Ledger compatibility contract
+
+Ledlight's journal language is intentionally a strict subset of Ledger's
+language. Every journal accepted by Ledlight must also be valid input to the
+Ledger CLI. The inverse is deliberately not required: Ledlight may reject
+Ledger features or alternative forms that it has not chosen to support.
+
+Ledlight must not introduce directives, properties, or other journal syntax
+that only Ledlight understands. When Ledger offers several ways to express the
+same setting, Ledlight may select one canonical form and reject the others. For
+example, the valuation commodity is declared only with a `default` property in
+a `commodity` block; Ledger's alternative `D` directive is not supported.
+
+This compatibility direction is a design constraint for all future grammar
+changes. New syntax must first be valid Ledger syntax and must then be added to
+both the normative grammar and the optimized runtime parser.
+
 The current implementation provides:
 
 - a readable Ohm grammar for the supported Ledger constructs;
@@ -71,10 +88,10 @@ directives; commodity properties; transaction status, code, payee/narration,
 and comments; postings with omitted or explicit amounts; unit
 and total costs; balance assignments; and balance assertions.
 
-This intentionally remains a subset of Ledger. Unsupported syntax fails with a
-source location instead of being silently ignored. The runtime parser has no I/O
-or database dependency; `loadJournal` is the thin layer responsible for file
-I/O, include expansion, and hashing.
+Unsupported Ledger syntax fails with a source location instead of being
+silently ignored. The runtime parser has no I/O or database dependency;
+`loadJournal` is the thin layer responsible for file I/O, include expansion,
+and hashing.
 
 Before persistence, semantic validation requires commodities on explicit
 posting amounts, costs, balance assertions, and prices. Implicit postings and
