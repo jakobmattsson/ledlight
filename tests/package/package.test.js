@@ -41,12 +41,14 @@ test('the published archive installs and exposes the module and CLI', () => {
       'index.js',
       'package.json',
       'src/ledlight/cli/run.js',
-      'src/ledlight/syntax/reference/ledger.ohm',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);
     }
     for (const packagedPath of packagedPaths) {
-      assert.doesNotMatch(packagedPath, /^(?:\.codex|tests|docs\/improvements\.md|AGENTS\.md|eslint\.config\.js)/u);
+      assert.doesNotMatch(
+        packagedPath,
+        /^(?:\.codex|tests|docs\/improvements\.md|src\/ledlight\/syntax\/reference|AGENTS\.md|eslint\.config\.js)/u,
+      );
     }
 
     fs.writeFileSync(path.join(consumerDirectory, 'package.json'), JSON.stringify({

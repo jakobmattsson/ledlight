@@ -28,7 +28,8 @@
     "docs/ledlight.md",
     "docs/package.md",
     "index.js",
-    "src"
+    "src",
+    "!src/ledlight/syntax/reference"
   ],
   "bin": {
     "ledlight": "src/ledlight/cli/run.js"
@@ -52,13 +53,13 @@
   },
   "dependencies": {
     "awilix": "^13.0.5",
-    "better-sqlite3": "11.7.0",
-    "ohm-js": "17.5.0"
+    "better-sqlite3": "11.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "globals": "^17.12.0",
+    "ohm-js": "17.5.0",
     "worktree-keeper": "0.7.0"
   }
 }
