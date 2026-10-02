@@ -237,6 +237,23 @@ Activity qualifies when either its transaction date or posting date is after
 These methods are currently available on the object returned by `openProject`
 but do not have top-level equivalents.
 
+### `commodityDescriptions()`
+
+Returns one row per declared commodity, sorted by commodity symbol:
+
+```js
+{
+  commodity,
+  comment,
+  format,
+  isDefault,
+}
+```
+
+`comment` and `format` are strings or `null`; `isDefault` is a boolean. When a
+commodity has several declarations, later comments and format properties take
+precedence. Other commodity properties are not currently exposed.
+
 ### `accountTransactions({ account })`
 
 Returns newest-first transactions containing postings to one exact account.

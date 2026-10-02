@@ -31,6 +31,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/reports/account-prefix-filter.js': 'accountPrefixFilter',
   'src/ledlight/reports/aggregate.js': 'aggregateReport',
   'src/ledlight/reports/balance-history.js': 'balanceHistoryReport',
+  'src/ledlight/reports/commodity-descriptions.js': 'commodityDescriptions',
   'src/ledlight/reports/investment-performance.js': 'investmentPerformanceReport',
   'src/ledlight/reports/investment-returns.js': 'investmentReturns',
   'src/ledlight/reports/options.js': 'reportOptions',

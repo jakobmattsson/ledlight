@@ -12,6 +12,7 @@ module.exports = ({
   },
   aggregateReport: { queryAggregateReport },
   balanceHistoryReport: { queryBalanceHistoryReport },
+  commodityDescriptions: { queryCommodityDescriptions },
   investmentPerformanceReport: { queryInvestmentPerformance },
   valuationRates: { queryLedgerValuationRateResolver },
   transactionReport: { queryLedgerTransactions },
@@ -121,6 +122,9 @@ module.exports = ({
       },
       balanceHistoryReport(options) {
         return queryDatabase(() => queryBalanceHistoryReport(current.databasePath, options));
+      },
+      commodityDescriptions() {
+        return queryDatabase(() => queryCommodityDescriptions(current.databasePath));
       },
       investmentPerformance(options) {
         return queryDatabase(() => queryInvestmentPerformance(current.databasePath, options));

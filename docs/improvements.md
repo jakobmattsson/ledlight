@@ -95,10 +95,9 @@ That is unsuitable for commodities whose declared precision or separators are
 different.
 
 Formatting remains a CLI responsibility, but the CLI must not query internal
-database modules. The public API should therefore expose the format metadata
-needed to render its result, either as report metadata or through a public
-commodity-description operation. The CLI can then apply the declared format
-without acquiring accounting logic of its own.
+database modules. The project API exposes the metadata through
+`commodityDescriptions()`, allowing the CLI to apply declared formats without
+acquiring accounting logic of its own.
 
 Tests should cover zero-, two-, and multi-decimal commodities as well as a
 format without digit grouping. A missing `format` declaration needs one
