@@ -14,7 +14,7 @@ function parseConformant(sourceText, source) {
 }
 
 test('parses transactions without losing decimal precision', () => {
-  const document = parseConformant(`2024-01-29 * (trade-1) Investment ; imported
+  const document = parseConformant(`2024-01-29 Investment ; imported
     Assets:Broker Account  8.000000000000000001 SECURITY @ 7786.140669608098 SEK ; exact cost
     Assets:Cash  = 67683.20 SEK
     Equity:Opening
@@ -30,7 +30,7 @@ test('parses transactions without losing decimal precision', () => {
       description: transaction.description,
       comment: transaction.comment,
     },
-    { date: '2024-01-29', status: '*', code: 'trade-1', description: 'Investment', comment: 'imported' },
+    { date: '2024-01-29', status: null, code: null, description: 'Investment', comment: 'imported' },
   );
   assert.deepEqual(transaction.postings[0].amount, { quantity: '8.000000000000000001', commodity: 'SECURITY' });
   assert.deepEqual(transaction.postings[0].cost, {
@@ -39,6 +39,20 @@ test('parses transactions without losing decimal precision', () => {
   });
   assert.deepEqual(transaction.postings[1].balanceAssignment, { quantity: '67683.20', commodity: 'SEK' });
   assert.equal(transaction.postings[2].amount, null);
+});
+
+test('rejects transaction status and code', () => {
+  for (const metadata of ['*', '!', '(trade-1)']) {
+    const sourceText = `2024-01-29 ${metadata} Investment\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
+    assert.throws(
+      () => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX,
+    );
+    assert.throws(
+      () => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX,
+    );
+  }
 });
 
 test('parses total costs and balance assertions', () => {

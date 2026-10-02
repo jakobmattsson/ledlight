@@ -59,20 +59,18 @@ module.exports = ({
       };
     },
 
-    transactionHeader(date, _space, status, code, details, _lineEnd) {
+    transactionHeader(date, _space, details, _lineEnd) {
       const source = this.args.source;
       return {
         type: 'transaction',
         date: date.ast(source),
-        status: optionalValue(status, source),
-        code: optionalValue(code, source),
+        status: null,
+        code: null,
         ...details.ast(source),
         location: location(date, source),
       };
     },
 
-    transactionStatus(_status, _space) { return this.sourceString.trim(); },
-    transactionCode(_open, _value, _close, _space) { return this.sourceString.slice(1, this.sourceString.lastIndexOf(')')); },
     descriptionAndComment(_value, comment) {
       const text = this.sourceString.slice(0, this.sourceString.length - comment.sourceString.length).trim();
       const pipe = text.indexOf('|');

@@ -26,7 +26,7 @@ account Equity:Opening
   Assets:Cash  20 SEK
   Equity:Opening  -20 SEK
 
-2024-01-03 * (third) Shop | Third  ; imported
+2024-01-03 Shop | Third  ; imported
   Assets:Cash  -5 SEK  ; card
   Equity:Opening  5 SEK
 `);
