@@ -28,14 +28,14 @@ Ledlight {
   number = sign? digit+ ("." digit+)?
   sign = "+" | "-"
 
-  commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
-
   commodityBody = indent "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
                 | indent "default" (horizontal+ directiveValue)? inlineComment? lineEnd            -- default // Should remove "directiveValue" from default I think
   commodityFormat = formatQuantity horizontal+ commoditySymbol
   formatQuantity = groupedFormatInteger ("." digit+)?  -- grouped
                  | digit+ ("." digit+)?                -- ungrouped
   groupedFormatInteger = digit digit? digit? ("," digit digit digit)+      // The format of this must be more flexible
+
+  commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
 
   postingComment = ";" horizontal* ("[" date "]" horizontal*)? commentText
   inlineComment = horizontal* ";" horizontal* commentText       // What about tags in comments? should they be parsed out correctly?
@@ -44,16 +44,15 @@ Ledlight {
 
   date = digit digit digit digit "-" digit digit "-" digit digit
 
-  fieldSeparator = "\t"                -- tab // Are these names needed or can we remove them to make things here look simpler?
-                 | "  " horizontal*    -- spaces
-  indent = horizontal+
-  horizontal = " " | "\t"
-  lineEnd = newline  -- newline
-          | end      -- end
-  newline = "\r\n" | "\n"
-
   forbiddenDescriptionSymbolCharacter = ";" | newline
   forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
   forbiddenCommoditySymbolCharacter = horizontal | "@" | "=" | ";" | "\"" | "'" | newline
   forbiddenDirectiveValueCharacter = ";" | newline
+
+  fieldSeparator = "\t"                -- tab // Are these names needed or can we remove them to make things here look simpler?
+                 | "  " horizontal*    -- spaces
+  indent = horizontal+
+  lineEnd = newline | end
+  horizontal = " " | "\t"
+  newline = "\r\n" | "\n"
 }
