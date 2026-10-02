@@ -156,10 +156,10 @@ module.exports = ({
         location: indentedLocation(_indent, this.args.source),
       };
     },
-    commodityBody_default(_indent, _keyword, value, comment, _lineEnd) {
+    commodityBody_default(_indent, _keyword, _space, value, comment, _lineEnd) {
       return {
         name: 'default',
-        value: optionalValue(value, this.args.source),
+        value: value.children.length === 0 ? null : value.sourceString.trimEnd(),
         comment: optionalValue(comment, this.args.source),
         location: indentedLocation(_indent, this.args.source),
       };
@@ -167,8 +167,6 @@ module.exports = ({
     commodityFormat(_quantity, _space, symbol) {
       return { symbol: symbol.sourceString };
     },
-    commodityPropertyValue(_space, value) { return value.sourceString.trimEnd(); },
-
     priceDirective(_keyword, _space1, date, _space2, commodity, _space3, price, _space4, comment, _lineEnd) {
       return {
         type: 'price',
