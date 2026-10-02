@@ -54,7 +54,7 @@ Ledlight {
 
   indentedComment = indent commentMarker horizontal* commentText lineEnd
   topLevelComment = topLevelCommentMarker commentText lineEnd
-  postingComment = horizontal* ";" horizontal* postingDate? commentText
+  postingComment = ";" horizontal* postingDate? commentText
   postingDate = "[" date "]" horizontal*
   inlineComment = horizontal* ";" horizontal* commentText
   commentMarker = ";" | "#" | "%"

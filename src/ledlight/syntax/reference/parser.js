@@ -170,7 +170,7 @@ module.exports = ({
       };
     },
     topLevelComment(_marker, _text, _lineEnd) { return null; },
-    postingComment(_space1, _semicolon, _space2, date, _text) {
+    postingComment(_semicolon, _space, date, _text) {
       return {
         date: optionalValue(date, this.args.source),
         comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
