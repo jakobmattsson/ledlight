@@ -21,6 +21,13 @@ This compatibility direction is a design constraint for all future grammar
 changes. New syntax must first be valid Ledger syntax and must then be added to
 both the normative grammar and the optimized runtime parser.
 
+The integration suite also runs Ledlight and Ledger CLI against the same set of
+test journals. It compares normalized aggregate rows for implicit postings,
+includes, date and account filters, inversion, and valuation in the journal
+default commodity. This checks behavioral compatibility in addition to parser
+agreement. Run it separately with `npm run test:ledger`; set `LEDGER_BIN` when
+the Ledger 3 executable is not named `ledger`.
+
 The current implementation provides:
 
 - a readable Ohm grammar for the supported Ledger constructs;

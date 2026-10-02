@@ -10,6 +10,9 @@ npm install
 npm test
 ```
 
+The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
+`LEDGER_BIN` to another executable path when needed.
+
 Use the JavaScript API from the package root:
 
 ```js
