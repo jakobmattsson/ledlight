@@ -267,9 +267,13 @@ This is also the first-build command. If `tmp/ledger.sqlite` does not exist,
 Ledlight creates its directory, reads the journal path from `.ledgerrc`, and
 builds the database before producing the report.
 
-The valuation report selects the latest price on or before `to`. When `to` is
-omitted, it uses the latest available price. The single valuation commodity is
-the last commodity marked `default` by a commodity declaration:
+Valuation follows Ledger's price-path preference. For each commodity, Ledlight
+first uses the latest direct quote to the valuation commodity, even when a
+newer indirect quote exists. Without a direct quote, it tries indirect quotes
+from newest to oldest until one reaches the valuation commodity. Prices must be
+dated on or before `to`; when `to` is omitted, all available prices are
+eligible. The single valuation commodity is the last commodity marked
+`default` by a commodity declaration:
 
 ```ledger
 commodity USD

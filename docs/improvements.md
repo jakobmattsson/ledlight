@@ -9,36 +9,7 @@ The Ledger CLI differential test corpus is not listed here because it has
 already been implemented. It should continue to grow alongside supported
 syntax and reporting behavior.
 
-## Priority 1: unify valuation semantics
-
-Ledlight currently has more than one price-resolution path:
-
-- `sqlite/materialize-valuation-prices.js` follows the latest quote for a
-  commodity on each date;
-- the aggregate-report fallback in `reports/valuation-rates.js` also starts
-  from one latest quote per commodity; and
-- `createLedgerValuationRateResolver` prefers a direct quote to the valuation
-  commodity and can try older resolvable quotes when a newer chain fails.
-
-These paths can disagree. For example, an older direct quote may remain usable
-when a newer indirect quote leads to a commodity without a price. One API can
-then resolve a value while another report rejects the same journal or derives a
-different value.
-
-Choose one documented price-selection algorithm and use it for materialized
-rates, aggregate reports, balance history, investment performance, and the
-public Ledger-compatible resolver. Add regression cases for:
-
-- an older direct quote and a newer indirect quote;
-- a newer chain that cannot reach the valuation commodity;
-- several quotes on the same date;
-- circular chains; and
-- an intermediate commodity whose price changes independently.
-
-Completion means that every public operation resolves the same commodity at
-the same date to the same exact rate or the same classified error.
-
-## Priority 2: define and validate the public API
+## Priority 1: define the public API
 
 The package root and the object returned by `openProject()` do not currently
 present the same set of operations. The project object additionally exposes
@@ -67,7 +38,7 @@ TypeScript declarations, or comprehensive JSDoc types generated into package
 documentation, would make this contract easier to consume and review without
 requiring the implementation itself to be converted to TypeScript.
 
-## Priority 3: make database freshness and rebuilds robust
+## Priority 2: make database freshness and rebuilds robust
 
 The freshness scan and a later report are separate filesystem operations. A
 source file can change after the database has been declared current. An object
@@ -91,7 +62,7 @@ Add tests for a source change during freshness checking, two concurrent
 rebuilds, a failed rebuild preserving the previous usable database, and cache
 invalidation after a successful refresh.
 
-## Priority 4: establish performance limits
+## Priority 3: establish performance limits
 
 `valuation_prices` currently stores one row per commodity and calendar day from
 the commodity's first appearance through the latest relevant date. Balance
@@ -114,7 +85,7 @@ Optimize only after measuring. If daily materialization becomes the limiting
 factor, evaluate sparse rate intervals or change-point storage while preserving
 the exact public report semantics.
 
-## Priority 5: use commodity format metadata
+## Priority 4: use commodity format metadata
 
 Ledlight stores the journal's commodity `format` property, but CLI monetary
 output currently assumes two fractional digits and comma thousands separators.
@@ -131,7 +102,7 @@ Tests should cover zero-, two-, and multi-decimal commodities as well as a
 format without digit grouping. A missing `format` declaration needs one
 documented fallback policy.
 
-## Priority 6: make numeric precision boundaries explicit
+## Priority 5: make numeric precision boundaries explicit
 
 Accounting quantities and valuation rates use exact decimal strings through
 parsing, storage, aggregation, and valuation. Investment performance converts
@@ -144,7 +115,7 @@ point for ratios and iterative return calculations. If the existing result
 shape is retained, document its precision limits and add tests with values
 beyond JavaScript's safe integer precision and with long fractional quantities.
 
-## Priority 7: prepare the distributable package
+## Priority 6: prepare the distributable package
 
 The current package is private and unlicensed. Before publication, define:
 
@@ -178,13 +149,11 @@ runtime less dependent on repository layout.
 
 ## Suggested implementation order
 
-1. Unify valuation semantics because inconsistent answers are a correctness
-   risk.
-2. Stabilize and validate the public API before additional consumers depend on
+1. Stabilize the public API before additional consumers depend on
    accidental behavior.
-3. Define project snapshot and rebuild behavior before introducing long-lived
+2. Define project snapshot and rebuild behavior before introducing long-lived
    processes or concurrent callers.
-4. Add benchmarks and precision-boundary tests before changing storage or
+3. Add benchmarks and precision-boundary tests before changing storage or
    investment-result representations.
-5. Apply commodity-aware presentation and complete package publication work.
-6. Address the smaller maintainability items incrementally.
+4. Apply commodity-aware presentation and complete package publication work.
+5. Address the smaller maintainability items incrementally.

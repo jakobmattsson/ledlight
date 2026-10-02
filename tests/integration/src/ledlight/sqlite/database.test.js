@@ -124,6 +124,39 @@ P 2024-01-01 FUND 10 SEK
   assert.equal(project.ledgerValuationRateResolver(), resolver);
 });
 
+test('materializes the same resolvable price choice used by the public resolver', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity USD
+  default
+commodity FUND
+commodity NOK
+P 2024-01-01 FUND 10 USD
+P 2024-02-01 FUND 2 NOK
+2024-03-01 Holding
+  Assets:Fund  3 FUND @ 10 USD
+  Equity:Opening  -30 USD
+`);
+
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(
+    database.prepare(`
+      SELECT commodity, date, rate
+      FROM valuation_prices
+      WHERE commodity = 'FUND' AND date IN ('2024-01-31', '2024-02-01', '2024-03-01')
+      ORDER BY date
+    `).all(),
+    [
+      { commodity: 'FUND', date: '2024-01-31', rate: '10' },
+      { commodity: 'FUND', date: '2024-02-01', rate: '10' },
+      { commodity: 'FUND', date: '2024-03-01', rate: '10' },
+    ],
+  );
+});
+
 test('detects when source files and database contents differ', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'all.ledger');

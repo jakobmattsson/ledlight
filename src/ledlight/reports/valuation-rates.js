@@ -11,6 +11,8 @@ module.exports = ({
   valuationCommodity: { fromDatabase },
 }) => {
 
+  const LEDGER_RESOLVER_CACHE_KEY = Symbol('ledger valuation rate resolver');
+
   function selectLatestPrices(database, throughDate) {
     const prices = new Map();
     const dateFilter = throughDate ? 'WHERE p.date <= ?' : '';
@@ -63,18 +65,16 @@ module.exports = ({
     if (selected.length === 0) return rates;
     const placeholders = selected.map(() => '?').join(', ');
     const rows = database.prepare(`
-    SELECT rates.commodity, rates.rate
-    FROM valuation_prices AS rates
-    JOIN (
-      SELECT commodity, MAX(date) AS date
+      SELECT commodity, rate
       FROM valuation_prices
-      WHERE (? IS NULL OR date <= ?)
+      WHERE date = (
+        SELECT MAX(date)
+        FROM valuation_prices
+        WHERE (? IS NULL OR date <= ?)
+      )
         AND commodity IN (${placeholders})
-      GROUP BY commodity
-    ) AS latest
-      ON latest.commodity = rates.commodity AND latest.date = rates.date
-    ORDER BY rates.commodity
-  `).all(throughDate ?? null, throughDate ?? null, ...selected);
+      ORDER BY commodity
+    `).all(throughDate ?? null, throughDate ?? null, ...selected);
     for (const row of rows) rates.set(row.commodity, row.rate);
     return rates;
   }
@@ -87,18 +87,21 @@ module.exports = ({
     if ([...commodities].every((commodity) => materializedRates.has(commodity))) {
       return materializedRates;
     }
-    const cacheKey = throughDate ?? null;
-    let prices = priceCache?.get(cacheKey);
-    if (!prices) {
-      prices = selectLatestPrices(database, throughDate);
-      priceCache?.set(cacheKey, prices);
+    let resolve = priceCache?.get(LEDGER_RESOLVER_CACHE_KEY);
+    if (!resolve) {
+      resolve = createLedgerValuationRateResolver(
+        selectPriceHistory(database),
+        valuationCommodity,
+      );
+      priceCache?.set(LEDGER_RESOLVER_CACHE_KEY, resolve);
     }
-    return resolveValuationRates(
-      prices,
-      commodities,
-      valuationCommodity,
-      throughDate,
-    );
+    const rates = new Map([[valuationCommodity, '1']]);
+    for (const commodity of commodities) {
+      if (commodity !== valuationCommodity) {
+        rates.set(commodity, resolve(commodity, throughDate ?? '9999-12-31'));
+      }
+    }
+    return rates;
   }
 
   function selectPriceHistory(database, throughDate) {
@@ -166,6 +169,7 @@ module.exports = ({
   }
 
   return {
+    createLedgerValuationRateResolver,
     queryValuationRates,
     queryLedgerValuationRateResolver,
     $$private: {

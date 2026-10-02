@@ -101,7 +101,7 @@ test('values every commodity in the journal default using prices at the upper da
   ]);
   assert.deepEqual(aggregateReport(databasePath, { to: '2024-01-02', inValuationCommodity: true }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '150' },
-    { account: 'Assets:Fund', commodity: 'SEK', quantity: '26.4' },
+    { account: 'Assets:Fund', commodity: 'SEK', quantity: '20' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-170' },
   ]);
 });
@@ -115,7 +115,7 @@ test('uses materialized valuation rates without loading raw price history', (t) 
     accounts: ['Assets:Fund'],
     inValuationCommodity: true,
   }, { valuationPriceCache }), [
-    { account: 'Assets:Fund', commodity: 'SEK', quantity: '26.4' },
+    { account: 'Assets:Fund', commodity: 'SEK', quantity: '20' },
   ]);
 
   assert.equal(valuationPriceCache.size, 0);
@@ -125,7 +125,7 @@ test('uses the latest available price when no upper date is supplied', (t) => {
   const databasePath = buildFixture(t);
 
   assert.deepEqual(aggregateReport(databasePath, { accounts: ['Assets:Fund'], inValuationCommodity: true }), [
-    { account: 'Assets:Fund', commodity: 'SEK', quantity: '26.4' },
+    { account: 'Assets:Fund', commodity: 'SEK', quantity: '20' },
   ]);
 });
 
@@ -139,12 +139,12 @@ test('applies inversion and totals as public report options', (t) => {
     invert: true,
     includeTotal: true,
   }), [
-    { account: 'Assets:Fund', commodity: 'SEK', quantity: '-26.4' },
+    { account: 'Assets:Fund', commodity: 'SEK', quantity: '-20' },
     {
       account: 'Total',
       commodity: 'SEK',
       isTotal: true,
-      quantity: '-26.4',
+      quantity: '-20',
     },
   ]);
   assert.throws(
@@ -195,7 +195,7 @@ test('preserves commodity totals while adding exact valuation values for code co
       account: 'Assets:Fund',
       commodity: 'FUND',
       quantity: '2',
-      valuationValue: '26.4',
+      valuationValue: '20',
     },
   ]);
   assert.throws(

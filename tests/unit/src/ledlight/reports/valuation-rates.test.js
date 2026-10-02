@@ -5,11 +5,13 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const Database = require('better-sqlite3');
+const valuationRates = resolveRepositoryModule("src/ledlight/reports/valuation-rates.js");
+const { createLedgerValuationRateResolver } = valuationRates;
 const {
   resolveValuationRates,
   selectLatestPrices,
   selectMaterializedValuationRates,
-} = resolveRepositoryModule("src/ledlight/reports/valuation-rates.js").$$private;
+} = valuationRates.$$private;
 
 test('selects the latest price through a date using journal order as a tiebreaker', (t) => {
   const database = new Database(':memory:');
@@ -52,7 +54,16 @@ test('resolves exact chained rates and always treats the valuation commodity as 
   );
 });
 
-test('selects the latest materialized rate through the requested date', (t) => {
+test('prefers an older direct quote and falls back from an unusable newer quote', () => {
+  const resolve = createLedgerValuationRateResolver([
+    { date: '2024-01-01', commodity: 'FUND', price_quantity: '10', price_commodity: 'SEK' },
+    { date: '2024-02-01', commodity: 'FUND', price_quantity: '2', price_commodity: 'NOK' },
+  ], 'SEK');
+
+  assert.equal(resolve('FUND', '2024-02-01'), '10');
+});
+
+test('selects materialized rates from one common latest date', (t) => {
   const database = new Database(':memory:');
   t.after(() => database.close());
   database.exec(`
@@ -75,7 +86,7 @@ test('selects the latest materialized rate through the requested date', (t) => {
       new Set(['FUND', 'NOK', 'SEK']),
       'SEK',
     )],
-    [['SEK', '1'], ['FUND', '11'], ['NOK', '1.1']],
+    [['SEK', '1'], ['FUND', '11']],
   );
 });
 

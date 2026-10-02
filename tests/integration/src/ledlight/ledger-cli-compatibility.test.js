@@ -134,6 +134,15 @@ const scenarios = [
       queries: ['^Assets:Investments'],
     },
   },
+  {
+    name: 'older resolvable prices when newer indirect quotes are unusable',
+    fixture: 'valuation-selection',
+    ledlightArguments: ['aggregate', '--accounts', 'Assets:', '--value', '--csv'],
+    ledgerArguments: {
+      options: ['--exchange', 'USD'],
+      queries: ['^Assets:'],
+    },
+  },
 ];
 
 test('the configured Ledger CLI is available', () => {
