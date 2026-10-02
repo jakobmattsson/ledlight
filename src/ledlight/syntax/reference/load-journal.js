@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightJournalCreateLoader: { createJournalLoader },
-  srcLedlightSyntaxReferenceParser: { parse },
+  journalLoaderFactory: { createJournalLoader },
+  referenceParser: { parse },
 }) => {
 
   const loadJournal = createJournalLoader(parse);

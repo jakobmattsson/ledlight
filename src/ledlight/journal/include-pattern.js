@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = ({
-  nodeFs: fs,
-  nodePath: path,
+  fs,
+  path,
 }) => {
 
   function hasMagic(value) {

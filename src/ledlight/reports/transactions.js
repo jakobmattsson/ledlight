@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = ({
-  nodePath: path,
-  betterSqlite3: Database,
+  path,
+  sqlite: Database,
 }) => {
 
   function positiveInteger(value, name) {

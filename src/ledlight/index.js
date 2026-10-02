@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightJournalLoad: { loadJournal },
-  srcLedlightSyntaxErrors: { LedgerSyntaxError },
-  srcLedlightSyntaxParser: { parse },
-  srcLedlightApplicationProject: projectApi,
-  srcLedlightCliCommand: { runReportCommand },
+  journal: { loadJournal },
+  syntaxErrors: { LedgerSyntaxError },
+  ledgerParser: { parse },
+  project: projectApi,
+  cliCommand: { runReportCommand },
 }) => {
 
   function aggregateReport(options, startDirectory) {

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightJournalTraverse: { traverseJournal },
+  journalTraversal: { traverseJournal },
 }) => {
 
   function includePaths(sourceText) {

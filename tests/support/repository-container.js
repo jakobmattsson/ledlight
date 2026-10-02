@@ -4,8 +4,8 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { asValue } = require('awilix');
 const {
-  camelCasePath,
   createRepositoryContainer,
+  repositoryModuleName,
 } = require('../../src/composition/repository-container');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
@@ -18,8 +18,7 @@ function resolveRepositoryModule(fileName) {
   const resolvedFileName = fs.statSync(repositoryFileName).isDirectory()
     ? path.join(repositoryFileName, 'index.js')
     : repositoryFileName;
-  const relativeName = path.relative(REPOSITORY_ROOT, resolvedFileName);
-  return container.resolve(camelCasePath(relativeName));
+  return container.resolve(repositoryModuleName(resolvedFileName));
 }
 
 function buildFactory(fileName, values) {

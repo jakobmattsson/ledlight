@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = ({
-  nodeCrypto: crypto,
-  nodeFs: fs,
-  nodePath: path,
-  srcLedlightJournalIncludePattern: { expandIncludePattern },
+  crypto,
+  fs,
+  path,
+  includePattern: { expandIncludePattern },
 }) => {
 
   function traverseJournal(entryPath, processFile) {

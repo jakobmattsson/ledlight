@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = ({
-  nodePath: path,
-  srcLedlightJournalLoad: { loadJournal },
-  srcLedlightSqliteFreshness: { checkDatabaseSync, databaseJournalPath },
-  srcLedlightSqliteWriteJournal: { writeJournalDatabase },
+  path,
+  journal: { loadJournal },
+  databaseFreshness: { checkDatabaseSync, databaseJournalPath },
+  journalWriter: { writeJournalDatabase },
 }) => {
 
   function buildDatabase(databasePath, entryPath) {

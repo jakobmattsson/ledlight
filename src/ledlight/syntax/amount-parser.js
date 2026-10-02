@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightSyntaxErrors: { LedgerSyntaxError },
+  syntaxErrors: { LedgerSyntaxError },
 }) => {
 
   const TOKEN = Object.freeze({ NUMBER: 1, SYMBOL: 2, AT: 3, TOTAL_AT: 4, EQUALS: 5, EOF: 6 });

@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = ({
-  nodePath: path,
-  betterSqlite3: Database,
-  srcLedlightAccountingDecimal: { parseDecimal, registerDecimalFunctions },
-  srcLedlightReportsAccountPrefixFilter: { accountPrefixFilter },
+  path,
+  sqlite: Database,
+  decimal: { parseDecimal, registerDecimalFunctions },
+  accountPrefixFilter: { accountPrefixFilter },
 }) => {
 
   function assertDate(value, optionName) {

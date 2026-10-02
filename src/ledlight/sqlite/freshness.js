@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports = ({
-  nodeFs: fs,
-  nodePath: path,
-  betterSqlite3: Database,
-  srcLedlightJournalManifest: { loadJournalManifest },
-  srcLedlightSqliteMigrate: { SCHEMA_VERSION },
+  fs,
+  path,
+  sqlite: Database,
+  journalManifest: { loadJournalManifest },
+  databaseMigration: { SCHEMA_VERSION },
 }) => {
 
   function databaseWithoutSchema(databasePath, entryPath, reason) {

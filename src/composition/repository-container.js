@@ -11,31 +11,43 @@ const {
 } = require('awilix');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
-const FACTORY_DIRECTORIES = [
-  'src/ledlight/accounting',
-  'src/ledlight/application',
-  'src/ledlight/cli',
-  'src/ledlight/journal',
-  'src/ledlight/reports',
-  'src/ledlight/sqlite',
-  'src/ledlight/syntax',
-];
-const EXTRA_FACTORY_FILES = ['src/ledlight/index.js'];
+const MODULE_NAMES = Object.freeze({
+  'src/ledlight/accounting/decimal.js': 'decimal',
+  'src/ledlight/accounting/posting-resolver.js': 'postingResolver',
+  'src/ledlight/accounting/validate-journal.js': 'journalValidator',
+  'src/ledlight/application/project.js': 'project',
+  'src/ledlight/cli/arguments.js': 'cliArguments',
+  'src/ledlight/cli/command.js': 'cliCommand',
+  'src/ledlight/cli/format.js': 'cliFormat',
+  'src/ledlight/index.js': 'ledlight',
+  'src/ledlight/journal/create-loader.js': 'journalLoaderFactory',
+  'src/ledlight/journal/include-pattern.js': 'includePattern',
+  'src/ledlight/journal/load.js': 'journal',
+  'src/ledlight/journal/manifest.js': 'journalManifest',
+  'src/ledlight/journal/traverse.js': 'journalTraversal',
+  'src/ledlight/reports/account-details.js': 'accountDetails',
+  'src/ledlight/reports/account-prefix-filter.js': 'accountPrefixFilter',
+  'src/ledlight/reports/aggregate.js': 'aggregateReport',
+  'src/ledlight/reports/balance-history.js': 'balanceHistoryReport',
+  'src/ledlight/reports/investment-performance.js': 'investmentPerformanceReport',
+  'src/ledlight/reports/reconciliation-entries.js': 'reconciliationEntries',
+  'src/ledlight/reports/sek-rates.js': 'sekRates',
+  'src/ledlight/reports/transactions.js': 'transactionReport',
+  'src/ledlight/sqlite/database.js': 'database',
+  'src/ledlight/sqlite/freshness.js': 'databaseFreshness',
+  'src/ledlight/sqlite/materialize-sek-prices.js': 'sekPriceMaterializer',
+  'src/ledlight/sqlite/migrate.js': 'databaseMigration',
+  'src/ledlight/sqlite/write-journal.js': 'journalWriter',
+  'src/ledlight/syntax/amount-parser.js': 'amountParser',
+  'src/ledlight/syntax/errors.js': 'syntaxErrors',
+  'src/ledlight/syntax/parser.js': 'ledgerParser',
+  'src/ledlight/syntax/reference/load-journal.js': 'referenceJournal',
+  'src/ledlight/syntax/reference/parser.js': 'referenceParser',
+});
 const EXCLUDED_FACTORY_FILES = new Set([
   'src/ledlight/cli/cli-modules.js',
   'src/ledlight/cli/run.js',
 ]);
-
-function camelCasePath(fileName) {
-  const words = fileName
-    .replace(/\\/gu, '/')
-    .replace(/\.(?:js|json)$/u, '')
-    .split(/[^A-Za-z0-9]+/u)
-    .filter(Boolean);
-  return words.map((word, index) => index === 0
-    ? word[0].toLowerCase() + word.slice(1)
-    : word[0].toUpperCase() + word.slice(1)).join('');
-}
 
 function filesBelow(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -45,10 +57,7 @@ function filesBelow(directory) {
 }
 
 function repositoryFactoryFiles() {
-  const directoryFiles = FACTORY_DIRECTORIES.flatMap((relativeDirectory) =>
-    filesBelow(path.join(REPOSITORY_ROOT, relativeDirectory)));
-  return [...directoryFiles, ...EXTRA_FACTORY_FILES.map((fileName) =>
-    path.join(REPOSITORY_ROOT, fileName))]
+  return filesBelow(path.join(REPOSITORY_ROOT, 'src/ledlight'))
     .filter((fileName) => fileName.endsWith('.js'))
     .filter((fileName) => !fileName.includes(`${path.sep}modules${path.sep}`))
     .filter((fileName) => !EXCLUDED_FACTORY_FILES.has(
@@ -56,17 +65,24 @@ function repositoryFactoryFiles() {
     ));
 }
 
+function repositoryModuleName(fileName) {
+  const relativeName = path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
+  const name = MODULE_NAMES[relativeName];
+  if (!name) throw new Error(`No dependency-injection name is defined for ${relativeName}`);
+  return name;
+}
+
 function registerExternalModules(container) {
   container.register({
-    nodeCrypto: asValue(require('node:crypto')),
-    nodeFs: asValue(require('node:fs')),
-    nodePath: asValue(require('node:path')),
-    ohmJs: asValue({
+    crypto: asValue(require('node:crypto')),
+    fs: asValue(require('node:fs')),
+    path: asValue(require('node:path')),
+    ohm: asValue({
       grammar(...arguments_) {
         return require('ohm-js').grammar(...arguments_);
       },
     }),
-    betterSqlite3: asValue(function LazyDatabase(...arguments_) {
+    sqlite: asValue(function LazyDatabase(...arguments_) {
       const Database = require('better-sqlite3');
       return new Database(...arguments_);
     }),
@@ -82,7 +98,7 @@ function registerRepositoryModules(container) {
       throw new TypeError(`${relativeName} must export an Awilix factory.`);
     }
     container.register(
-      camelCasePath(relativeName),
+      repositoryModuleName(fileName),
       asFunction(factory, { lifetime: Lifetime.SINGLETON }),
     );
   }
@@ -94,8 +110,8 @@ function createRepositoryContainer() {
 }
 
 module.exports = {
-  camelCasePath,
   createRepositoryContainer,
   registerRepositoryModules,
   repositoryFactoryFiles,
+  repositoryModuleName,
 };

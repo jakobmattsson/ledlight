@@ -1,13 +1,13 @@
 'use strict';
 
 module.exports = ({
-  nodePath: path,
-  betterSqlite3: Database,
-  srcLedlightAccountingDecimal: { registerDecimalFunctions },
-  srcLedlightAccountingPostingResolver: { PostingResolver },
-  srcLedlightAccountingValidateJournal: { validateJournal },
-  srcLedlightSqliteMaterializeSekPrices: { materializeSekPrices },
-  srcLedlightSqliteMigrate: { SCHEMA_VERSION, migrateDatabase },
+  path,
+  sqlite: Database,
+  decimal: { registerDecimalFunctions },
+  postingResolver: { PostingResolver },
+  journalValidator: { validateJournal },
+  sekPriceMaterializer: { materializeSekPrices },
+  databaseMigration: { SCHEMA_VERSION, migrateDatabase },
 }) => {
 
   function amountFields(amount) {

@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = ({
-  nodeFs: fs,
-  nodePath: path,
-  ohmJs: ohm,
-  srcLedlightSyntaxErrors: { LedgerSyntaxError },
+  fs,
+  path,
+  ohm,
+  syntaxErrors: { LedgerSyntaxError },
 }) => {
 
   const grammarSource = fs.readFileSync(path.join(__dirname, 'ledger.ohm'), 'utf8');

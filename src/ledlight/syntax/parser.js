@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightSyntaxAmountParser: { parseAmountExpression },
-  srcLedlightSyntaxErrors: { LedgerSyntaxError },
+  amountParser: { parseAmountExpression },
+  syntaxErrors: { LedgerSyntaxError },
 }) => {
 
   const DATE_LENGTH = 10;

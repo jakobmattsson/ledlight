@@ -1,9 +1,9 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightApplicationProject: { openProject },
-  srcLedlightCliArguments: { parseArguments },
-  srcLedlightCliFormat: {
+  project: { openProject },
+  cliArguments: { parseArguments },
+  cliFormat: {
     formatCsv,
     formatBalanceHistoryCsv,
     formatBalanceHistoryHumanReadable,

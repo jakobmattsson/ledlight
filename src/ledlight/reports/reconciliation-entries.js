@@ -1,9 +1,9 @@
 'use strict';
 
 module.exports = ({
-  nodePath: path,
-  betterSqlite3: Database,
-  srcLedlightApplicationProject: { ensureProjectDatabaseCurrent },
+  path,
+  sqlite: Database,
+  project: { ensureProjectDatabaseCurrent },
 }) => {
 
   function toEntry(row, account, related, rowNumber) {

@@ -1,21 +1,21 @@
 'use strict';
 
 module.exports = ({
-  nodeFs: fs,
-  nodePath: path,
-  srcLedlightReportsAccountDetails: {
+  fs,
+  path,
+  accountDetails: {
     queryAccountBalances,
     queryAccountPostings,
     queryAccountTransactions,
     queryLedgerAccounts,
     queryLedgerTransaction,
   },
-  srcLedlightReportsAggregate: { queryAggregateReport },
-  srcLedlightReportsBalanceHistory: { queryBalanceHistoryReport },
-  srcLedlightReportsInvestmentPerformance: { queryInvestmentPerformance },
-  srcLedlightReportsSekRates: { queryLedgerSekRateResolver },
-  srcLedlightReportsTransactions: { queryLedgerTransactions },
-  srcLedlightSqliteDatabase: { ensureDatabaseCurrent },
+  aggregateReport: { queryAggregateReport },
+  balanceHistoryReport: { queryBalanceHistoryReport },
+  investmentPerformanceReport: { queryInvestmentPerformance },
+  sekRates: { queryLedgerSekRateResolver },
+  transactionReport: { queryLedgerTransactions },
+  database: { ensureDatabaseCurrent },
 }) => {
 
   const DATABASE_RELATIVE_PATH = path.join('tmp', 'ledger.sqlite');

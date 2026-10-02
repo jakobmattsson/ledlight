@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightAccountingDecimal: {
+  decimal: {
     addDecimals,
     compareDecimals,
     formatDecimal,

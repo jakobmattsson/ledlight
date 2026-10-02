@@ -1,10 +1,10 @@
 'use strict';
 
 module.exports = ({
-  nodePath: path,
-  betterSqlite3: Database,
-  srcLedlightAccountingDecimal: { registerDecimalFunctions },
-  srcLedlightReportsAccountPrefixFilter: { accountPrefixFilter },
+  path,
+  sqlite: Database,
+  decimal: { registerDecimalFunctions },
+  accountPrefixFilter: { accountPrefixFilter },
 }) => {
 
   const DAY_MILLISECONDS = 24 * 60 * 60 * 1000;

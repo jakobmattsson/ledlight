@@ -1,9 +1,9 @@
 'use strict';
 
 module.exports = ({
-  nodePath: path,
-  betterSqlite3: Database,
-  srcLedlightAccountingDecimal: {
+  path,
+  sqlite: Database,
+  decimal: {
     formatDecimal,
     multiplyDecimals,
     parseDecimal,

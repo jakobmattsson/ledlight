@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = ({
-  srcLedlightJournalCreateLoader: { createJournalLoader },
-  srcLedlightSyntaxParser: { parse },
+  journalLoaderFactory: { createJournalLoader },
+  ledgerParser: { parse },
 }) => {
 
   /**
