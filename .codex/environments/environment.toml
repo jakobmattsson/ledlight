@@ -1,0 +1,10 @@
+version = 1
+name = "ledlight"
+
+[setup]
+script = "npm install"
+
+[[actions]]
+name = "Run tests"
+icon = "run"
+command = "npm test"
