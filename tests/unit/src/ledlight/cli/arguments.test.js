@@ -1,10 +1,10 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../../support/repository-container");
+const { resolveRepositoryModule } = require('../../../../support/repository-container');
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const argumentsModule = resolveRepositoryModule("src/ledlight/cli/arguments.js");
+const argumentsModule = resolveRepositoryModule('src/ledlight/cli/arguments.js');
 const { parseArguments, usage } = argumentsModule;
 
 test('parses aggregate report options and output flags', () => {
@@ -124,8 +124,10 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   for (const arguments_ of invalidArguments) {
     assert.throws(() => parseArguments(arguments_), /Usage:|may only be specified once/u);
   }
-  assert.match(usage(), /^Usage:\n {2}ledlight aggregate/u);
-  assert.match(usage(), /\n {2}ledlight balance-history/u);
-  assert.match(usage(), /\n {2}ledlight gain/u);
-  assert.match(usage(), /\n {2}ledlight investment-performance/u);
+  assert.match(usage(), /^Usage: ledlight/u);
+  assert.match(usage(), /Usage: ledlight aggregate/u);
+  assert.match(usage(), /Usage: ledlight balance-history/u);
+  assert.match(usage(), /Usage: ledlight gain/u);
+  assert.match(usage(), /Usage: ledlight investment-performance/u);
+  assert.match(usage(), /--accounts <prefix>.*repeatable/u);
 });
