@@ -1,0 +1,16 @@
+{
+  "git": {
+    "remote": "origin",
+    "defaultBranch": "main",
+    "branchPrefix": "codex/"
+  },
+  "tests": {
+    "commands": [
+      "npm run lint",
+      "node --test"
+    ],
+    "receiptMaxAgeMinutes": 60,
+    "npmTestUsesRunner": true
+  },
+  "loggingDirectory": "tmp/logs"
+}
