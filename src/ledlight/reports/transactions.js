@@ -3,12 +3,15 @@
 module.exports = ({
   path,
   sqlite: Database,
+  publicErrors: { createError, errorCodes },
 }) => {
+
+  const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
 
   function positiveInteger(value, name) {
     const number = Number(value);
     if (!Number.isSafeInteger(number) || number < 1 || String(number) !== String(value)) {
-      throw new Error(`${name} must be a positive integer`);
+      throw invalidInput(`${name} must be a positive integer`);
     }
     return number;
   }
@@ -19,11 +22,11 @@ module.exports = ({
     pageSize,
   }) {
     if (!['newest', 'oldest'].includes(order)) {
-      throw new Error('order must be newest or oldest');
+      throw invalidInput('order must be newest or oldest');
     }
     const requestedPage = positiveInteger(page, 'page');
     const normalizedPageSize = positiveInteger(pageSize, 'pageSize');
-    if (normalizedPageSize > 100) throw new Error('pageSize must not exceed 100');
+    if (normalizedPageSize > 100) throw invalidInput('pageSize must not exceed 100');
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
       const totalTransactions = database.prepare('SELECT COUNT(*) AS count FROM transactions').get().count;

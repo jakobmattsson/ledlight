@@ -29,10 +29,10 @@ should document:
 - snapshot and freshness behavior; and
 - possible errors.
 
-Exported error classes or stable error codes should distinguish at least syntax
-errors, invalid API input, project configuration errors, missing valuation
-data, and database failures. Consumers should not need to inspect error-message
-text.
+Stable error codes distinguish syntax errors, invalid API input, project
+configuration errors, missing valuation data, and database failures. Public
+error classes are intentionally not part of the compatibility contract, and
+consumers do not need to inspect error-message text.
 
 The Markdown API reference remains the source of truth for parameter and result
 types. TypeScript declarations are intentionally deferred; the package does not

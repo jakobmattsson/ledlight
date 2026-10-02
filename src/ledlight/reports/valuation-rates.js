@@ -8,8 +8,11 @@ module.exports = ({
     multiplyDecimals,
     parseDecimal,
   },
+  publicErrors: { createError, errorCodes },
   valuationCommodity: { fromDatabase },
 }) => {
+
+  const missingValuation = (message) => createError(errorCodes.MISSING_VALUATION_DATA, message);
 
   const LEDGER_RESOLVER_CACHE_KEY = Symbol('ledger valuation rate resolver');
 
@@ -37,12 +40,12 @@ module.exports = ({
     function resolve(commodity) {
       if (rates.has(commodity)) return rates.get(commodity);
       if (visiting.has(commodity)) {
-        throw new Error(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
+        throw missingValuation(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
       }
       const price = prices.get(commodity);
       if (!price || !price.price_commodity) {
         const dateContext = throughDate ? ` on or before ${throughDate}` : '';
-        throw new Error(`No price for ${commodity}${dateContext} can convert it to ${valuationCommodity}`);
+        throw missingValuation(`No price for ${commodity}${dateContext} can convert it to ${valuationCommodity}`);
       }
       visiting.add(commodity);
       const quoteRate = resolve(price.price_commodity);
@@ -128,7 +131,7 @@ module.exports = ({
       if (commodity === valuationCommodity) return '1';
       const key = `${commodity}\0${throughDate}`;
       if (cache.has(key)) return cache.get(key);
-      if (visiting.has(commodity)) throw new Error(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
+      if (visiting.has(commodity)) throw missingValuation(`Circular price chain while converting ${commodity} to ${valuationCommodity}`);
       const eligible = (histories.get(commodity) ?? []).filter((price) => price.date <= throughDate);
       // Ledger prefers a direct quote even when a newer indirect quote exists.
       const direct = eligible.findLast((price) => price.price_commodity === valuationCommodity);
@@ -150,11 +153,11 @@ module.exports = ({
           visiting.delete(commodity);
           return rate;
         } catch (error) {
-          if (!error.message.startsWith('No price for ')) throw error;
+          if (error.code !== errorCodes.MISSING_VALUATION_DATA || !error.message.startsWith('No price for ')) throw error;
         }
       }
       visiting.delete(commodity);
-      throw new Error(`No price for ${commodity} on or before ${throughDate} can convert it to ${valuationCommodity}`);
+      throw missingValuation(`No price for ${commodity} on or before ${throughDate} can convert it to ${valuationCommodity}`);
     }
     return (commodity, throughDate) => resolve(commodity, throughDate, new Set());
   }

@@ -9,23 +9,26 @@ module.exports = ({
     parseDecimal,
     registerDecimalFunctions,
   },
+  publicErrors: { createError, errorCodes },
 }) => {
+
+  const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
 
   function assertAccount(account) {
     if (typeof account !== 'string' || account.length === 0) {
-      throw new Error('account must be a non-empty string');
+      throw invalidInput('account must be a non-empty string');
     }
   }
 
   function assertDate(date, optionName) {
     if (date === undefined) return;
     if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(date)) {
-      throw new Error(`Invalid ${optionName} date: ${JSON.stringify(date)}; expected YYYY-MM-DD`);
+      throw invalidInput(`Invalid ${optionName} date: ${JSON.stringify(date)}; expected YYYY-MM-DD`);
     }
     const [year, month, day] = date.split('-').map(Number);
     const parsed = new Date(Date.UTC(year, month - 1, day));
     if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
-      throw new Error(`Invalid ${optionName} date: ${JSON.stringify(date)}`);
+      throw invalidInput(`Invalid ${optionName} date: ${JSON.stringify(date)}`);
     }
   }
 
@@ -198,7 +201,7 @@ module.exports = ({
   function queryLedgerTransaction(databasePath, { transactionId }) {
     const id = Number(transactionId);
     if (!Number.isSafeInteger(id) || id <= 0 || String(id) !== String(transactionId)) {
-      throw new Error('transactionId must be a positive integer');
+      throw invalidInput('transactionId must be a positive integer');
     }
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {

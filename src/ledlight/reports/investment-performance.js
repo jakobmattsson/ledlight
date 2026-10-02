@@ -5,6 +5,7 @@ module.exports = ({
   sqlite: Database,
   decimal: { registerDecimalFunctions },
   accountPrefixFilter: { accountPrefixFilter },
+  publicErrors: { createError, errorCodes },
   reportOptions: {
     assertDateInterval,
     knownOptions,
@@ -31,7 +32,7 @@ module.exports = ({
     };
     assertDateInterval(normalized.from, normalized.to);
     if (normalized.commodities.some((commodity) => normalized.excludeCommodities.includes(commodity))) {
-      throw new Error('A commodity cannot be both included and excluded');
+      throw createError(errorCodes.INVALID_API_INPUT, 'A commodity cannot be both included and excluded', TypeError);
     }
     return normalized;
   }
@@ -141,7 +142,7 @@ module.exports = ({
     ORDER BY positions.date
   `).all(...parameters).map((row) => {
       if (row.missing_commodity) {
-        throw new Error(`No price for ${row.missing_commodity} on or before ${row.date} can convert it to ${valuationCommodity}`);
+        throw createError(errorCodes.MISSING_VALUATION_DATA, `No price for ${row.missing_commodity} on or before ${row.date} can convert it to ${valuationCommodity}`);
       }
       return { date: row.date, value: Number(row.value) };
     });
@@ -187,7 +188,7 @@ module.exports = ({
   `).all(...parameters);
     return rows.map((row) => {
       if (row.missing_commodity) {
-        throw new Error(`No price for ${row.missing_commodity} on or before ${row.date} can convert a cash flow to ${valuationCommodity}`);
+        throw createError(errorCodes.MISSING_VALUATION_DATA, `No price for ${row.missing_commodity} on or before ${row.date} can convert a cash flow to ${valuationCommodity}`);
       }
       return { date: row.date, flow: Number(row.flow) };
     });

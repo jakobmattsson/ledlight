@@ -4,7 +4,7 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { LedgerSyntaxError, parse } = resolveRepositoryModule("src/ledlight/index.js");
+const { errorCodes, parse } = resolveRepositoryModule("src/ledlight/index.js");
 const ohmParser = resolveRepositoryModule("src/ledlight/syntax/reference/parser.js").$$private;
 
 function parseConformant(sourceText, source) {
@@ -56,7 +56,10 @@ test('parses total costs and balance assertions', () => {
 test('rejects unsupported auxiliary transaction dates', () => {
   const sourceText = '2024-01-01=2024-01-02 Trade\n  Assets:Cash  1 SEK\n  Equity:Opening\n';
   assert.throws(() => parse(sourceText, { source: 'fixture.ledger' }), /Expected whitespace after transaction date/u);
-  assert.throws(() => ohmParser.parse(sourceText, { source: 'fixture.ledger' }), LedgerSyntaxError);
+  assert.throws(
+    () => ohmParser.parse(sourceText, { source: 'fixture.ledger' }),
+    (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX,
+  );
 });
 
 test('keeps leading-point and trailing-point decimal syntax exact', () => {
@@ -102,7 +105,8 @@ P 2024-01-01 FUND 123.45 SEK ; closing
 test('reports precise source locations for invalid input', () => {
   assert.throws(
     () => parse('2024-02-30 Invalid\n  Assets:Cash  1 SEK\n', { source: 'bad.ledger' }),
-    (error) => error instanceof LedgerSyntaxError && error.message === 'bad.ledger:1:1: Invalid date "2024-02-30"',
+    (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX &&
+      error.message === 'bad.ledger:1:1: Invalid date "2024-02-30"',
   );
   assert.throws(
     () => parse('2024-01-01 Invalid\n  Assets:Cash  one SEK\n', { source: 'bad.ledger' }),
@@ -113,7 +117,7 @@ test('reports precise source locations for invalid input', () => {
 test('rejects the alternative D default commodity directive', () => {
   assert.throws(
     () => parse('D 1,000.00 USD\n', { source: 'bad.ledger' }),
-    (error) => error instanceof LedgerSyntaxError &&
+    (error) => error.code === errorCodes.SYNTAX &&
       error.message === 'bad.ledger:1:1: Unsupported directive or transaction header "D"',
   );
   assert.throws(
@@ -125,10 +129,10 @@ test('rejects unsupported commodity properties consistently', () => {
   const sourceText = 'commodity SEK\n  arbitrary value\n';
   assert.throws(
     () => parse(sourceText, { source: 'bad.ledger' }),
-    (error) => error instanceof LedgerSyntaxError && /commodity property/u.test(error.message),
+    (error) => error.code === errorCodes.SYNTAX && /commodity property/u.test(error.message),
   );
   assert.throws(
     () => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
-    (error) => error instanceof LedgerSyntaxError,
+    (error) => error.code === errorCodes.SYNTAX,
   );
 });

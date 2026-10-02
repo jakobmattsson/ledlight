@@ -20,6 +20,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/cli/arguments.js': 'cliArguments',
   'src/ledlight/cli/command.js': 'cliCommand',
   'src/ledlight/cli/format.js': 'cliFormat',
+  'src/ledlight/errors.js': 'publicErrors',
   'src/ledlight/index.js': 'ledlight',
   'src/ledlight/journal/create-loader.js': 'journalLoaderFactory',
   'src/ledlight/journal/include-pattern.js': 'includePattern',

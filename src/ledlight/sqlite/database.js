@@ -5,16 +5,21 @@ module.exports = ({
   journal: { loadJournal },
   databaseFreshness: { checkDatabaseSync, databaseJournalPath },
   journalWriter: { writeJournalDatabase },
+  publicErrors: { databaseError },
 }) => {
 
   function buildDatabase(databasePath, entryPath) {
-    return writeJournalDatabase(databasePath, loadJournal(entryPath));
+    try {
+      return writeJournalDatabase(databasePath, loadJournal(entryPath));
+    } catch (error) {
+      throw databaseError(error);
+    }
   }
 
   function ensureDatabaseCurrent(databasePath, entryPath) {
     const journalPath = entryPath ? path.resolve(entryPath) : databaseJournalPath(databasePath);
     if (!journalPath) {
-      throw new Error('Cannot update the database without a journal path');
+      throw databaseError(new Error('Cannot update the database without a journal path'));
     }
     const status = checkDatabaseSync(databasePath, journalPath);
     if (status.inSync) return { rebuilt: false, status };

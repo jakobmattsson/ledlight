@@ -10,6 +10,7 @@ module.exports = ({
     registerDecimalFunctions,
   },
   accountPrefixFilter: { accountPrefixFilter },
+  publicErrors: { createError, errorCodes },
   reportOptions: {
     assertDateInterval,
     booleanOption,
@@ -43,17 +44,17 @@ module.exports = ({
     Array.isArray(normalized.accountFactors) ||
     typeof normalized.accountFactors !== 'object'
     )) {
-      throw new Error('accountFactors must be an object');
+      throw createError(errorCodes.INVALID_API_INPUT, 'accountFactors must be an object', TypeError);
     }
     if (normalized.accountFactors) {
       normalized.accountFactors = Object.fromEntries(
         Object.entries(normalized.accountFactors).map(([account, factor]) => {
-          if (!account) throw new Error('accountFactors keys must be non-empty accounts');
+          if (!account) throw createError(errorCodes.INVALID_API_INPUT, 'accountFactors keys must be non-empty accounts', TypeError);
           const decimalFactor = String(factor);
           try {
             parseDecimal(decimalFactor);
           } catch {
-            throw new Error(`Invalid account factor for ${account}: ${JSON.stringify(factor)}`);
+            throw createError(errorCodes.INVALID_API_INPUT, `Invalid account factor for ${account}: ${JSON.stringify(factor)}`, TypeError);
           }
           return [account, decimalFactor];
         }),
@@ -177,7 +178,8 @@ module.exports = ({
   `).all(...parameters);
     for (const row of rows) {
       if (row.missing_commodity) {
-        throw new Error(
+        throw createError(
+          errorCodes.MISSING_VALUATION_DATA,
           `No price for ${row.missing_commodity} on or before ${row.date} can convert it to ${valuationCommodity}`,
         );
       }

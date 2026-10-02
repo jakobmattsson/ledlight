@@ -16,12 +16,12 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
 
   const ledlight = require(ledlightPath);
   assert.deepEqual(Object.keys(ledlight).sort(), [
-    'LedgerSyntaxError',
     'accountBalances',
     'accountPostings',
     'aggregateReport',
     'balanceHistoryReport',
     'ensureProjectDatabaseCurrent',
+    'errorCodes',
     'investmentPerformance',
     'loadJournal',
     'loadProjectPaths',
@@ -35,6 +35,47 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
   const document = ledlight.parse('account Assets:Cash\n', { source: '<input>' });
   assert.equal(document.entries[0].name, 'Assets:Cash');
   assert.equal(require.cache[sqliteModulePath], undefined);
+});
+
+test('exposes stable error codes instead of public error classes', (t) => {
+  const ledlight = require(ledlightPath);
+  assert.deepEqual(ledlight.errorCodes, {
+    SYNTAX: 'LEDLIGHT_SYNTAX',
+    INVALID_API_INPUT: 'LEDLIGHT_INVALID_API_INPUT',
+    PROJECT_CONFIGURATION: 'LEDLIGHT_PROJECT_CONFIGURATION',
+    MISSING_VALUATION_DATA: 'LEDLIGHT_MISSING_VALUATION_DATA',
+    DATABASE: 'LEDLIGHT_DATABASE',
+  });
+  assert.throws(
+    () => ledlight.parse('not supported\n', { source: '<input>' }),
+    (error) => error.code === ledlight.errorCodes.SYNTAX,
+  );
+
+  const missingProject = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-missing-project-'));
+  t.after(() => fs.rmSync(missingProject, { recursive: true, force: true }));
+  assert.throws(
+    () => ledlight.loadProjectPaths(missingProject),
+    (error) => error.code === ledlight.errorCodes.PROJECT_CONFIGURATION,
+  );
+
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-error-codes-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
+  fs.writeFileSync(path.join(directory, 'journal.ledger'), 'account Assets:Cash\n');
+  const project = ledlight.openProject(directory);
+  assert.throws(
+    () => project.aggregateReport({ unknown: true }),
+    (error) => error.code === ledlight.errorCodes.INVALID_API_INPUT,
+  );
+  assert.throws(
+    () => project.aggregateReport({ inValuationCommodity: true }),
+    (error) => error.code === ledlight.errorCodes.MISSING_VALUATION_DATA,
+  );
+  fs.rmSync(project.databasePath);
+  assert.throws(
+    () => project.ledgerAccounts(),
+    (error) => error.code === ledlight.errorCodes.DATABASE,
+  );
 });
 
 test('prints CLI help and the public package version without opening a project', () => {

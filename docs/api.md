@@ -17,13 +17,22 @@ Report option objects reject unknown properties and values of the wrong type.
 
 The package version string from `package.json`.
 
-### `LedgerSyntaxError`
+### `errorCodes`
 
-A `SyntaxError` subclass thrown for unsupported or malformed journal syntax.
-It exposes `source`, `line`, and `column` properties. Its message begins with
-the same source location.
+A frozen object containing stable codes for public failures:
 
-Other error categories do not yet have stable public classes or codes.
+| Name | Value | Meaning |
+| --- | --- | --- |
+| `SYNTAX` | `LEDLIGHT_SYNTAX` | Unsupported or malformed journal syntax |
+| `INVALID_API_INPUT` | `LEDLIGHT_INVALID_API_INPUT` | Invalid options or arguments supplied by the caller |
+| `PROJECT_CONFIGURATION` | `LEDLIGHT_PROJECT_CONFIGURATION` | Invalid project discovery, configuration, or journal structure |
+| `MISSING_VALUATION_DATA` | `LEDLIGHT_MISSING_VALUATION_DATA` | A required default commodity or conversion price is unavailable |
+| `DATABASE` | `LEDLIGHT_DATABASE` | A database could not be opened, read, or updated |
+
+Public errors expose one of these values through `error.code`. Consumers should
+not depend on a Ledlight-specific error class or inspect message text. Syntax
+errors additionally expose `source`, `line`, and `column`; an underlying SQLite
+code is preserved as `sqliteCode` when available.
 
 ## Parsing and journal loading
 

@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = () => {
+module.exports = ({ publicErrors: { createError, errorCodes } }) => {
 
   function fromJournal(journal) {
     let valuationCommodity = null;
@@ -17,7 +17,10 @@ module.exports = () => {
       "SELECT value FROM metadata WHERE key = 'valuation_commodity'",
     ).pluck().get();
     if (!valuationCommodity) {
-      throw new Error('The journal does not declare a default commodity for valuation');
+      throw createError(
+        errorCodes.MISSING_VALUATION_DATA,
+        'The journal does not declare a default commodity for valuation',
+      );
     }
     return valuationCommodity;
   }

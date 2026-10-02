@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  syntaxErrors: { LedgerSyntaxError },
+  syntaxErrors: { syntaxError },
 }) => {
 
   const TOKEN = Object.freeze({ NUMBER: 1, SYMBOL: 2, AT: 3, TOTAL_AT: 4, EQUALS: 5, EOF: 6 });
@@ -68,7 +68,7 @@ module.exports = ({
     }
 
     error(message, offset) {
-      throw new LedgerSyntaxError(message, this.source, this.line, this.baseColumn + offset);
+      throw syntaxError(message, this.source, this.line, this.baseColumn + offset);
     }
   }
 

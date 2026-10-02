@@ -1,11 +1,13 @@
 'use strict';
 
-module.exports = () => {
+module.exports = ({ publicErrors: { createError, errorCodes } }) => {
+
+  const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
 
   function inputObject(value, operationName) {
     const input = value ?? {};
     if (typeof input !== 'object' || input === null || Array.isArray(input)) {
-      throw new Error(`${operationName} options must be an object`);
+      throw invalidInput(`${operationName} options must be an object`);
     }
     return input;
   }
@@ -15,7 +17,7 @@ module.exports = () => {
     const allowed = new Set(allowedNames);
     const unknown = Object.keys(input).filter((name) => !allowed.has(name));
     if (unknown.length > 0) {
-      throw new Error(`Unknown ${operationName} option${unknown.length === 1 ? '' : 's'}: ${unknown.join(', ')}`);
+      throw invalidInput(`Unknown ${operationName} option${unknown.length === 1 ? '' : 's'}: ${unknown.join(', ')}`);
     }
     return input;
   }
@@ -23,14 +25,14 @@ module.exports = () => {
   function booleanOption(input, name) {
     const value = input[name];
     if (value === undefined) return false;
-    if (typeof value !== 'boolean') throw new Error(`${name} must be a boolean`);
+    if (typeof value !== 'boolean') throw invalidInput(`${name} must be a boolean`);
     return value;
   }
 
   function stringList(value, name, deduplicate) {
     const result = value ?? [];
     if (!Array.isArray(result) || result.some((item) => typeof item !== 'string' || item.length === 0)) {
-      throw new Error(`${name} must be an array of non-empty strings`);
+      throw invalidInput(`${name} must be an array of non-empty strings`);
     }
     return deduplicate ? [...new Set(result)] : [...result];
   }
@@ -38,25 +40,25 @@ module.exports = () => {
   function assertDate(value, name) {
     if (value === undefined) return;
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) {
-      throw new Error(`Invalid ${name} date: ${JSON.stringify(value)}; expected YYYY-MM-DD`);
+      throw invalidInput(`Invalid ${name} date: ${JSON.stringify(value)}; expected YYYY-MM-DD`);
     }
     const [year, month, day] = value.split('-').map(Number);
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-      throw new Error(`Invalid ${name} date: ${JSON.stringify(value)}`);
+      throw invalidInput(`Invalid ${name} date: ${JSON.stringify(value)}`);
     }
   }
 
   function assertDateInterval(from, to) {
     assertDate(from, '--from');
     assertDate(to, '--to');
-    if (from && to && from > to) throw new Error(`--from date ${from} is after --to date ${to}`);
+    if (from && to && from > to) throw invalidInput(`--from date ${from} is after --to date ${to}`);
   }
 
   function dateBasis(value) {
     const normalized = value ?? 'posting';
     if (normalized !== 'posting' && normalized !== 'transaction') {
-      throw new Error(`Invalid dateBasis: ${JSON.stringify(normalized)}; expected posting or transaction`);
+      throw invalidInput(`Invalid dateBasis: ${JSON.stringify(normalized)}; expected posting or transaction`);
     }
     return normalized;
   }
