@@ -16,7 +16,7 @@ Ledlight {
 
   posting = spacing+ account amountPart? spacing* postingComment? lineEnd
   account = (~forbiddenAccountCharacter any)+
-  amountPart = fieldSeparator amountExpression?
+  amountPart = postingAmountSeparator amountExpression?
 
   amountExpression = balanceAssignment | explicitAmount
   balanceAssignment = "=" spacing* amount
@@ -51,12 +51,12 @@ Ledlight {
 
   forbiddenDirectiveCharacter = ";" | newline
   forbiddenDescriptionCharacter = ";" | newline
-  forbiddenAccountCharacter = fieldSeparator | ";" | newline
+  forbiddenAccountCharacter = postingAmountSeparator | ";" | newline
   forbiddenCommodityCharacter = spacing | "@" | "=" | ";" | "\"" | "'" | newline
   forbiddenTagCharacter = spacing | ":" | ";" | newline
 
-  fieldSeparator = "\t"                -- tab
-                 | "  " spacing*       -- spaces
+  postingAmountSeparator = "\t"                -- tab
+                         | "  " spacing*       -- spaces
 
   lineEnd = newline | end
   spacing = " " | "\t"
