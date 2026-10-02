@@ -125,7 +125,7 @@ module.exports = ({
     tagDirective(_keyword, _space, value, comment, _lineEnd) {
       return { type: 'tag', name: value.sourceString.trimEnd(), comment: optionalValue(comment, this.args.source), location: location(this, this.args.source) };
     },
-    commodityDirective(_keyword, _space, symbol, _trailingSpace, comment, _lineEnd, body) {
+    commodityDirective(_keyword, _space, symbol, comment, _lineEnd, body) {
       return {
         type: 'commodity',
         symbol: symbol.sourceString.trimEnd(),

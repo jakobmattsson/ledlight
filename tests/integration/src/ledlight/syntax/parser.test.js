@@ -153,7 +153,7 @@ test('rejects quoted and otherwise invalid commodity symbols', () => {
 test('parses declarations, commodity properties, prices, and source notes', () => {
   const document = parseConformant(`account Assets:Cash
 tag Source
-commodity SEK
+commodity SEK ; Swedish krona
   format 1,000.00 SEK
   default
 P 2024-01-01 FUND 123.45 SEK ; closing
@@ -169,6 +169,7 @@ P 2024-01-01 FUND 123.45 SEK ; closing
     { name: 'format', value: '1,000.00 SEK' },
     { name: 'default', value: null },
   ]);
+  assert.equal(document.entries[2].comment, 'Swedish krona');
   assert.deepEqual(document.entries[3].price, { quantity: '123.45', commodity: 'SEK' });
   assert.deepEqual(document.entries[4].notes[0], {
     text: 'Source: statement.csv:4',
