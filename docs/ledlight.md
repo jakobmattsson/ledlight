@@ -101,6 +101,7 @@ underlying result.
 | --- | --- | --- |
 | `aggregate` | `aggregateReport(options, startDirectory)` | Report selection and calculation |
 | `balance-history` | `balanceHistoryReport(options, startDirectory)` | Report selection and calculation |
+| `gain` | `gainReport(options, startDirectory)` | Unrealized gain or loss by account |
 | `investment-performance` | `investmentPerformance(options, startDirectory)` | Report selection and calculation |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
@@ -317,6 +318,24 @@ predictable.
 The SQLite connection registers `decimal_sum`, `decimal_mul`, and
 `decimal_cmp`. `decimal_sum` is used by both report variants, so values are
 never converted to binary floating point during aggregation or valuation.
+
+## Unrealized gain
+
+`gainReport` and the `gain` CLI command calculate the market value of each
+open non-default commodity position minus its remaining lot cost. Results are
+grouped by account, expressed in the journal default commodity, and omit zero
+gains. Losses are returned as negative quantities.
+
+```console
+ledlight gain
+ledlight gain --to 2024-12-31 --accounts "Assets:Broker"
+ledlight gain --csv
+```
+
+The report accepts `to`, repeated `accounts`, and `date-basis`. It uses the
+latest valuation price on or before `to`, or the latest available price when
+`to` is omitted. Realized quantities and their lot costs cancel when a lot is
+sold, leaving only unrealized gains or losses on the remaining position.
 
 ## Balance history
 

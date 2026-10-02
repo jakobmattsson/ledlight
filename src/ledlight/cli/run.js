@@ -6,6 +6,7 @@
 // node src/ledlight/cli/run.js aggregate --to 2024-12-31 --accounts "Assets:" --accounts "Liabilities:" --value
 // node src/ledlight/cli/run.js aggregate --to 2024-12-31 --accounts "Assets:" --accounts "Liabilities:"
 // node src/ledlight/cli/run.js balance-history --accounts "Assets:" --accounts "Liabilities:" --csv
+// node src/ledlight/cli/run.js gain --accounts "Assets:"
 
 const { loadCliModules } = require('./cli-modules');
 

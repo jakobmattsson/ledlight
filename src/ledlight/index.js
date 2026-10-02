@@ -28,6 +28,10 @@ module.exports = ({
     return projectApi.investmentPerformance(options, startDirectory);
   }
 
+  function gainReport(options, startDirectory) {
+    return projectApi.gainReport(options, startDirectory);
+  }
+
   function ensureProjectDatabaseCurrent(startDirectory) {
     return projectApi.ensureProjectDatabaseCurrent(startDirectory);
   }
@@ -45,6 +49,7 @@ module.exports = ({
     accountPostings,
     aggregateReport,
     balanceHistoryReport,
+    gainReport,
     investmentPerformance,
     ensureProjectDatabaseCurrent,
     errorCodes,

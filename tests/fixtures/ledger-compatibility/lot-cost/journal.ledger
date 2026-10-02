@@ -1,6 +1,8 @@
 commodity USD
   default
 
+P 2024-02-01 AAPL 120 USD
+
 2024-01-01 Purchase
   Assets:Broker  10 AAPL {{1000 USD}}
   Assets:Bank  -1000 USD

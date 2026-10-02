@@ -5,7 +5,7 @@ module.exports = ({
   path,
 }) => {
 
-  const SCHEMA_VERSION = '11';
+  const SCHEMA_VERSION = '12';
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 
   function migrateDatabase(database) {
@@ -13,7 +13,9 @@ module.exports = ({
     const existingVersion = database.prepare(
       "SELECT value FROM metadata WHERE key = 'schema_version'",
     ).pluck().get();
-    if (existingVersion !== undefined && !['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', SCHEMA_VERSION].includes(existingVersion)) {
+    if (existingVersion !== undefined && ![
+      '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', SCHEMA_VERSION,
+    ].includes(existingVersion)) {
       throw new Error(`Unsupported Ledlight database schema version: ${existingVersion}`);
     }
     const transactionColumns = database.pragma('table_info(transactions)').map((column) => column.name);

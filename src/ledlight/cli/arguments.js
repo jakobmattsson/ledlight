@@ -7,6 +7,7 @@ module.exports = () => {
       'Usage:',
       '  ledlight aggregate [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--value] [--invert] [--csv]',
       '  ledlight balance-history [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--invert] [--csv]',
+      '  ledlight gain [--to YYYY-MM-DD] [--accounts PREFIX]... [--date-basis posting|transaction] [--csv]',
       '  ledlight investment-performance [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--accounts PREFIX]... [--commodities NAME]... [--exclude-commodities NAME]... [--json]',
     ].join('\n');
   }
@@ -43,11 +44,41 @@ module.exports = () => {
     return { reportOptions, json };
   }
 
+  function parseGainArguments(argumentsWithoutCommand) {
+    const reportOptions = { accounts: [] };
+    let csv = false;
+    for (let index = 0; index < argumentsWithoutCommand.length; index += 1) {
+      const argument = argumentsWithoutCommand[index];
+      if (argument === '--csv') {
+        csv = true;
+        continue;
+      }
+      if (argument === '--to' || argument === '--accounts' || argument === '--date-basis') {
+        const value = argumentsWithoutCommand[index + 1];
+        if (value === undefined || value.startsWith('--')) throw new Error(usage());
+        index += 1;
+        if (argument === '--accounts') reportOptions.accounts.push(value);
+        else {
+          const property = argument === '--date-basis' ? 'dateBasis' : 'to';
+          if (reportOptions[property] !== undefined) throw new Error(`${argument} may only be specified once`);
+          if (argument === '--date-basis' && value !== 'posting' && value !== 'transaction') {
+            throw new Error(usage());
+          }
+          reportOptions[property] = value;
+        }
+        continue;
+      }
+      throw new Error(usage());
+    }
+    return { reportOptions, csv };
+  }
+
   function parseArguments(arguments_) {
     const [command, ...argumentsWithoutCommand] = arguments_;
     if (command === 'investment-performance') {
       return parseInvestmentPerformanceArguments(argumentsWithoutCommand);
     }
+    if (command === 'gain') return parseGainArguments(argumentsWithoutCommand);
     if (command !== 'aggregate' && command !== 'balance-history') throw new Error(usage());
     const reportOptions = { accounts: [] };
     let csv = false;

@@ -33,6 +33,12 @@ module.exports = ({
 
     const { reportOptions, csv } = parseArguments(arguments_);
     const project = openProject(startDirectory);
+    if (command === 'gain') {
+      const reportRows = project.gainReport(reportOptions);
+      return csv
+        ? formatCsv(reportRows, true)
+        : formatHumanReadable(reportRows, true, project.commodityDescriptions());
+    }
     if (command === 'balance-history') {
       const reportRows = project.balanceHistoryReport(reportOptions);
       return csv
