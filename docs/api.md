@@ -56,15 +56,19 @@ shapes are:
 - commodity properties: `name`, `value`, `comment`, and `location`;
 - prices: `date`, `commodity`, `price`, `comment`, and `location`;
 - includes: `path`, `comment`, and `location`; and
-- transactions: `date`, `status`, `code`, `description`, `payee`, `narration`,
-  `comment`, `postings`, `notes`, and `location`.
+- transactions: `date`, `description`, `payee`, `narration`, `comment`, `tags`,
+  `postings`, `notes`, and `location`.
 
 An amount is `{ quantity, commodity }`. Posting amounts can be `null` before
 semantic resolution. A posting can also contain a `lotCost`, transaction
 `cost`, balance assignment, balance assertion, posting date, and comment. Lot
 costs and transaction costs are `{ total, amount }`; `total` distinguishes
-`{{}}` or `@@` from `{}` or `@`. Transaction notes contain `text`,
-optional `key` and `value`, and a source location.
+`{{}}` or `@@` from `{}` or `@`. A tag is `{ name, value }`, where `value` is
+`null` for a binary tag. Transaction `tags` combine tags from the transaction
+header and its indented notes. Each note also retains its own `tags` so callers
+can identify the source note. Posting `tags` contain metadata parsed from that
+posting's comment. Transaction notes also contain `text`, optional `key` and
+`value`, and a source location.
 
 Semantic validation requires positive non-default commodity postings to carry
 a lot cost and no transaction price. Negative non-default commodity postings
@@ -295,8 +299,8 @@ Returns declared and used accounts sorted by name:
 ### `ledgerTransaction({ transactionId })`
 
 Returns one transaction or `null`. The transaction contains
-`transactionId`, `transactionDate`, status, code, description, payee,
-narration, comment, and postings. Each posting contains its date, account,
+`transactionId`, `transactionDate`, description, payee, narration, comment,
+and postings. Each posting contains its date, account,
 comment, and exact `{ quantity, commodity }` amounts.
 
 ### `ledgerTransactions({ order, page, pageSize })`

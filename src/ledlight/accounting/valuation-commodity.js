@@ -25,7 +25,7 @@ module.exports = ({ publicErrors: { createError, errorCodes } }) => {
 
   function fromDatabase(database) {
     const valuationCommodity = database.prepare(
-      "SELECT value FROM metadata WHERE key = 'valuation_commodity'",
+      "SELECT value FROM database_metadata WHERE key = 'valuation_commodity'",
     ).pluck().get();
     if (!valuationCommodity) {
       throw createError(

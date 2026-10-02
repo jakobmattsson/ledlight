@@ -21,13 +21,13 @@ test('selects the latest price through a date using journal order as a tiebreake
     CREATE TABLE prices (
       entry_id INTEGER PRIMARY KEY,
       date TEXT NOT NULL,
-      commodity TEXT NOT NULL,
-      price_quantity TEXT NOT NULL,
-      price_commodity TEXT
+      base_commodity TEXT NOT NULL,
+      quote_quantity TEXT NOT NULL,
+      quote_commodity TEXT NOT NULL
     );
     INSERT INTO journal_entries (id, sequence) VALUES (1, 1), (2, 2), (3, 3);
     INSERT INTO prices
-      (entry_id, date, commodity, price_quantity, price_commodity)
+      (entry_id, date, base_commodity, quote_quantity, quote_commodity)
     VALUES
       (1, '2024-01-02', 'FUND', '12', 'NOK'),
       (2, '2024-01-02', 'FUND', '13', 'NOK'),
@@ -35,17 +35,17 @@ test('selects the latest price through a date using journal order as a tiebreake
   `);
 
   assert.deepEqual(selectLatestPrices(database, '2024-01-02').get('FUND'), {
-    commodity: 'FUND',
-    price_quantity: '13',
-    price_commodity: 'NOK',
+    base_commodity: 'FUND',
+    quote_quantity: '13',
+    quote_commodity: 'NOK',
   });
-  assert.equal(selectLatestPrices(database).get('FUND').price_quantity, '14');
+  assert.equal(selectLatestPrices(database).get('FUND').quote_quantity, '14');
 });
 
 test('resolves exact chained rates and always treats the valuation commodity as one', () => {
   const prices = new Map([
-    ['FUND', { price_quantity: '12', price_commodity: 'NOK' }],
-    ['NOK', { price_quantity: '1.1', price_commodity: 'SEK' }],
+    ['FUND', { quote_quantity: '12', quote_commodity: 'NOK' }],
+    ['NOK', { quote_quantity: '1.1', quote_commodity: 'SEK' }],
   ]);
 
   assert.deepEqual(
@@ -56,8 +56,8 @@ test('resolves exact chained rates and always treats the valuation commodity as 
 
 test('prefers an older direct quote and falls back from an unusable newer quote', () => {
   const resolve = createLedgerValuationRateResolver([
-    { date: '2024-01-01', commodity: 'FUND', price_quantity: '10', price_commodity: 'SEK' },
-    { date: '2024-02-01', commodity: 'FUND', price_quantity: '2', price_commodity: 'NOK' },
+    { date: '2024-01-01', base_commodity: 'FUND', quote_quantity: '10', quote_commodity: 'SEK' },
+    { date: '2024-02-01', base_commodity: 'FUND', quote_quantity: '2', quote_commodity: 'NOK' },
   ], 'SEK');
 
   assert.equal(resolve('FUND', '2024-02-01'), '10');
@@ -97,8 +97,8 @@ test('reports missing and circular price chains with date context', () => {
   );
 
   const circularPrices = new Map([
-    ['FUND', { price_quantity: '2', price_commodity: 'NOK' }],
-    ['NOK', { price_quantity: '0.5', price_commodity: 'FUND' }],
+    ['FUND', { quote_quantity: '2', quote_commodity: 'NOK' }],
+    ['NOK', { quote_quantity: '0.5', quote_commodity: 'FUND' }],
   ]);
   assert.throws(
     () => resolveValuationRates(circularPrices, new Set(['FUND']), 'SEK'),
