@@ -19,7 +19,8 @@ Ledlight {
 
   posting = indent account amountPart? horizontal* postingComment? lineEnd
   account = accountCharacter+
-  accountCharacter = ~fieldSeparator ~";" ~newline any
+  accountCharacter = ~forbiddenAccountSymbolCharacter any
+  forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
   amountPart = fieldSeparator amountExpression?
 
   amountExpression = balanceAssignment | explicitAmount
