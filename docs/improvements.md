@@ -34,9 +34,9 @@ errors, invalid API input, project configuration errors, missing valuation
 data, and database failures. Consumers should not need to inspect error-message
 text.
 
-TypeScript declarations, or comprehensive JSDoc types generated into package
-documentation, would make this contract easier to consume and review without
-requiring the implementation itself to be converted to TypeScript.
+The Markdown API reference remains the source of truth for parameter and result
+types. TypeScript declarations are intentionally deferred; the package does not
+currently promise a statically typed consumer surface.
 
 ## Priority 2: make database freshness and rebuilds robust
 

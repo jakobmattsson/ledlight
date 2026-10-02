@@ -24,6 +24,9 @@ There is no separate native ESM build. The package root is the only exported
 package path; source files and package metadata are implementation details and
 cannot be imported through package subpaths.
 
+The package does not currently publish TypeScript declarations. Parameter and
+result types are defined by the Node.js API reference.
+
 ## Node.js and native platform support
 
 Ledlight 0.1 supports Node.js 22 LTS. The package uses `better-sqlite3` 11.7.0,
