@@ -58,10 +58,7 @@ Ledlight {
   commentText = (~newline any)*
   directiveValue = (~";" ~newline any)+
 
-  date = year dateSeparator twoDigits dateSeparator twoDigits
-  year = digit digit digit digit
-  twoDigits = digit digit
-  dateSeparator = "-" | "/"
+  date = digit digit digit digit "-" digit digit "-" digit digit
 
   fieldSeparator = "\t"                -- tab
                  | "  " horizontal*    -- spaces

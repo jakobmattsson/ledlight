@@ -62,7 +62,7 @@ test('requires a transaction description', () => {
 });
 
 test('parses total costs and balance assertions', () => {
-  const document = parseConformant(`2024/01/01 Trade
+  const document = parseConformant(`2024-01-01 Trade
     Assets:Fund  3.5 FUND @@ 1000.25 SEK
     Assets:Cash  -1000.25 SEK = 2500.00 SEK
 `, 'fixture.ledger');
@@ -71,6 +71,30 @@ test('parses total costs and balance assertions', () => {
   assert.equal(transaction.date, '2024-01-01');
   assert.equal(transaction.postings[0].cost.total, true);
   assert.deepEqual(transaction.postings[1].balanceAssertion, { quantity: '2500.00', commodity: 'SEK' });
+});
+
+test('rejects slash date separators', () => {
+  const sources = [
+    '2024/01/01 Trade\n  Assets:Cash  1 SEK\n  Equity:Opening\n',
+    'P 2024/01/01 FUND 1 SEK\n',
+  ];
+
+  for (const sourceText of sources) {
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
+});
+
+test('does not interpret a slash-separated comment value as a posting date', () => {
+  const document = parseConformant(`2024-01-01 Trade
+  Assets:Cash  1 SEK ; [2024/01/02] imported
+  Equity:Opening
+`, 'fixture.ledger');
+
+  assert.equal(document.entries[0].postings[0].postingDate, null);
+  assert.equal(document.entries[0].postings[0].comment, '[2024/01/02] imported');
 });
 
 test('parses canonical integer, signed, and decimal quantities', () => {

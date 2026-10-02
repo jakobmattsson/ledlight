@@ -24,16 +24,15 @@ module.exports = ({
   }
 
   function parseDate(value, node, source) {
-    const normalized = value.replaceAll('/', '-');
-    const year = Number(normalized.slice(0, 4));
-    const month = Number(normalized.slice(5, 7));
-    const day = Number(normalized.slice(8, 10));
+    const year = Number(value.slice(0, 4));
+    const month = Number(value.slice(5, 7));
+    const day = Number(value.slice(8, 10));
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
       const where = location(node, source);
       throw syntaxError(`Invalid date ${JSON.stringify(value)}`, source, where.line, where.column);
     }
-    return normalized;
+    return value;
   }
 
   const semantics = grammar.createSemantics().addOperation('ast(source)', {
@@ -177,7 +176,7 @@ module.exports = ({
     inlineComment(_space1, _semicolon, _space2, text) { return text.sourceString.trim(); },
     blankLine(_space, _newline) { return null; },
 
-    date(_year, _separator1, _month, _separator2, _day) {
+    date(_year1, _year2, _year3, _year4, _separator1, _month1, _month2, _separator2, _day1, _day2) {
       return parseDate(this.sourceString, this, this.args.source);
     },
 

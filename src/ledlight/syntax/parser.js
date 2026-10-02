@@ -24,22 +24,21 @@ module.exports = ({
     for (let index = 0; index < DATE_LENGTH; index++) {
       const code = input.charCodeAt(offset + index);
       if (index === 4 || index === 7) {
-        if (code !== 45 && code !== 47) return false;
+        if (code !== 45) return false;
       } else if (code < 48 || code > 57) return false;
     }
     return true;
   }
 
   function assertDate(value, source, line, column) {
-    const normalized = value.replaceAll('/', '-');
-    const year = Number(normalized.slice(0, 4));
-    const month = Number(normalized.slice(5, 7));
-    const day = Number(normalized.slice(8, 10));
+    const year = Number(value.slice(0, 4));
+    const month = Number(value.slice(5, 7));
+    const day = Number(value.slice(8, 10));
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
       throw syntaxError(`Invalid date ${JSON.stringify(value)}`, source, line, column);
     }
-    return normalized;
+    return value;
   }
 
   function splitComment(input) {
@@ -97,7 +96,7 @@ module.exports = ({
     const expressionText = separator ? parts.text.slice(separator.end).trim() : '';
     const expressionColumn = separator ? indent + separator.end + 1 : raw.length + 1;
     const expression = parseAmountExpression(expressionText, sourceLocation(source, line, expressionColumn));
-    const postingDateMatch = parts.comment && /^\[(\d{4}[-/]\d{2}[-/]\d{2})\](?:\s|$)/u.exec(parts.comment);
+    const postingDateMatch = parts.comment && /^\[(\d{4}-\d{2}-\d{2})\](?:\s|$)/u.exec(parts.comment);
     return {
       type: 'posting', account,
       ...(expression || { amount: null, cost: null, balanceAssignment: null, balanceAssertion: null }),
