@@ -48,6 +48,28 @@ test('aligns human-readable output and uses an English total label', () => {
   assert.equal(formatHumanReadable([], true), '');
 });
 
+test('applies declared commodity precision and separators only to human-readable output', () => {
+  const descriptions = [
+    { commodity: 'BTC', format: '1000.00000000 BTC' },
+    { commodity: 'EUR', format: '1.000,00 EUR' },
+    { commodity: 'JPY', format: '1,000 JPY' },
+  ];
+  assert.equal(
+    formatHumanReadable([
+      { account: 'Assets:Bitcoin', quantity: '1234.5', commodity: 'BTC' },
+      { account: 'Assets:Euros', quantity: '1234.5', commodity: 'EUR' },
+      { account: 'Assets:Yen', quantity: '1234.5', commodity: 'JPY' },
+    ], false, descriptions),
+    'Assets:Bitcoin   1234.50000000 BTC\n' +
+    '  Assets:Euros  1.234,50       EUR\n' +
+    '    Assets:Yen  1,235          JPY\n',
+  );
+  assert.equal(
+    formatCsv([{ account: 'Assets:Euros', quantity: '1234.5', commodity: 'EUR' }], false),
+    'account,amount,commodity\nAssets:Euros,1234.5,EUR\n',
+  );
+});
+
 test('formats balance history', () => {
   const balanceRows = [
     { date: '2024-01-01', amount: '2.005', commodity: 'USD' },
@@ -62,6 +84,30 @@ test('formats balance history', () => {
     '2024-01-01       2.01 USD\n2024-01-02  10,000.00 USD\n',
   );
   assert.deepEqual(balanceRows.map((row) => row.amount), ['2.005', '10000']);
+});
+
+test('uses the valuation commodity format for human-readable valuation reports', () => {
+  const descriptions = [{ commodity: 'EUR', format: '1.000,000 EUR' }];
+  assert.equal(
+    formatBalanceHistoryHumanReadable([
+      { date: '2024-01-01', amount: '1234.5678', commodity: 'EUR' },
+    ], descriptions),
+    '2024-01-01  1.234,568 EUR\n',
+  );
+  const report = {
+    from: '2024-01-01',
+    to: '2024-01-01',
+    commodities: [],
+    valuationCommodity: 'EUR',
+    openingValue: 1234.5678,
+    netContributions: 0,
+    endingValue: 1234.5678,
+    profitLoss: 0,
+    timeWeightedReturn: null,
+    moneyWeightedReturn: null,
+    moneyWeightedReturnTotal: null,
+  };
+  assert.match(formatInvestmentPerformance(report, descriptions), /Opening value: 1\.234,568 EUR/u);
 });
 
 test('formats investment performance for people and automation', () => {

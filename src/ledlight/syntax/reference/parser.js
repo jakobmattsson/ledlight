@@ -4,7 +4,7 @@ module.exports = ({
   fs,
   path,
   ohm,
-  syntaxErrors: { LedgerSyntaxError },
+  syntaxErrors: { syntaxError },
 }) => {
 
   const grammarSource = fs.readFileSync(path.join(__dirname, 'ledger.ohm'), 'utf8');
@@ -31,7 +31,7 @@ module.exports = ({
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
       const where = location(node, source);
-      throw new LedgerSyntaxError(`Invalid date ${JSON.stringify(value)}`, source, where.line, where.column);
+      throw syntaxError(`Invalid date ${JSON.stringify(value)}`, source, where.line, where.column);
     }
     return normalized;
   }
@@ -50,7 +50,7 @@ module.exports = ({
       const items = values(body, source).filter((item) => item !== null);
       const postings = items.filter((item) => item.type === 'posting');
       if (postings.length === 0) {
-        throw new LedgerSyntaxError('Transaction has no postings', source, value.location.line, value.location.column);
+        throw syntaxError('Transaction has no postings', source, value.location.line, value.location.column);
       }
       return {
         ...value,
@@ -201,7 +201,7 @@ module.exports = ({
     const result = grammar.match(sourceText, 'document');
     if (result.failed()) {
       const value = result.getInterval().getLineAndColumn();
-      throw new LedgerSyntaxError(result.shortMessage, source, value.lineNum, value.colNum);
+      throw syntaxError(result.shortMessage, source, value.lineNum, value.colNum);
     }
     return semantics(result).ast(source);
   }

@@ -17,13 +17,22 @@ Report option objects reject unknown properties and values of the wrong type.
 
 The package version string from `package.json`.
 
-### `LedgerSyntaxError`
+### `errorCodes`
 
-A `SyntaxError` subclass thrown for unsupported or malformed journal syntax.
-It exposes `source`, `line`, and `column` properties. Its message begins with
-the same source location.
+A frozen object containing stable codes for public failures:
 
-Other error categories do not yet have stable public classes or codes.
+| Name | Value | Meaning |
+| --- | --- | --- |
+| `SYNTAX` | `LEDLIGHT_SYNTAX` | Unsupported or malformed journal syntax |
+| `INVALID_API_INPUT` | `LEDLIGHT_INVALID_API_INPUT` | Invalid options or arguments supplied by the caller |
+| `PROJECT_CONFIGURATION` | `LEDLIGHT_PROJECT_CONFIGURATION` | Invalid project discovery, configuration, or journal structure |
+| `MISSING_VALUATION_DATA` | `LEDLIGHT_MISSING_VALUATION_DATA` | A required default commodity or conversion price is unavailable |
+| `DATABASE` | `LEDLIGHT_DATABASE` | A database could not be opened, read, or updated |
+
+Public errors expose one of these values through `error.code`. Consumers should
+not depend on a Ledlight-specific error class or inspect message text. Syntax
+errors additionally expose `source`, `line`, and `column`; an underlying SQLite
+code is preserved as `sqliteCode` when available.
 
 ## Parsing and journal loading
 
@@ -90,7 +99,10 @@ The database path is `<projectRoot>/tmp/ledger.sqlite`.
 ### `ensureProjectDatabaseCurrent(startDirectory)`
 
 Discovers the project, compares the source manifest with the stored manifest,
-and rebuilds the database when required. The result contains the three project
+and rebuilds the database when required. Rebuilds are serialized across
+Ledlight processes. A process that waited for another rebuild checks freshness
+again and reuses the completed database when possible. Waiting is bounded; a
+timeout fails with `errorCodes.DATABASE`. The result contains the three project
 paths plus:
 
 ```js
@@ -224,6 +236,23 @@ Activity qualifies when either its transaction date or posting date is after
 
 These methods are currently available on the object returned by `openProject`
 but do not have top-level equivalents.
+
+### `commodityDescriptions()`
+
+Returns one row per declared commodity, sorted by commodity symbol:
+
+```js
+{
+  commodity,
+  comment,
+  format,
+  isDefault,
+}
+```
+
+`comment` and `format` are strings or `null`; `isDefault` is a boolean. When a
+commodity has several declarations, later comments and format properties take
+precedence. Other commodity properties are not currently exposed.
 
 ### `accountTransactions({ account })`
 

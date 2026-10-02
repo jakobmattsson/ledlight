@@ -3,7 +3,7 @@
 module.exports = ({
   journal: { loadJournal },
   packageMetadata: { version },
-  syntaxErrors: { LedgerSyntaxError },
+  publicErrors: { errorCodes },
   ledgerParser: { parse },
   project: projectApi,
 }) => {
@@ -41,13 +41,13 @@ module.exports = ({
   }
 
   return {
-    LedgerSyntaxError,
     accountBalances,
     accountPostings,
     aggregateReport,
     balanceHistoryReport,
     investmentPerformance,
     ensureProjectDatabaseCurrent,
+    errorCodes,
     loadJournal,
     loadProjectPaths,
     openProject,

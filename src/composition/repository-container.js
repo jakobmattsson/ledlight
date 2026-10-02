@@ -20,6 +20,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/cli/arguments.js': 'cliArguments',
   'src/ledlight/cli/command.js': 'cliCommand',
   'src/ledlight/cli/format.js': 'cliFormat',
+  'src/ledlight/errors.js': 'publicErrors',
   'src/ledlight/index.js': 'ledlight',
   'src/ledlight/journal/create-loader.js': 'journalLoaderFactory',
   'src/ledlight/journal/include-pattern.js': 'includePattern',
@@ -30,6 +31,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/reports/account-prefix-filter.js': 'accountPrefixFilter',
   'src/ledlight/reports/aggregate.js': 'aggregateReport',
   'src/ledlight/reports/balance-history.js': 'balanceHistoryReport',
+  'src/ledlight/reports/commodity-descriptions.js': 'commodityDescriptions',
   'src/ledlight/reports/investment-performance.js': 'investmentPerformanceReport',
   'src/ledlight/reports/investment-returns.js': 'investmentReturns',
   'src/ledlight/reports/options.js': 'reportOptions',
@@ -40,6 +42,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ledlight/sqlite/freshness.js': 'databaseFreshness',
   'src/ledlight/sqlite/materialize-valuation-prices.js': 'valuationPriceMaterializer',
   'src/ledlight/sqlite/migrate.js': 'databaseMigration',
+  'src/ledlight/sqlite/rebuild-lock.js': 'databaseRebuildLock',
   'src/ledlight/sqlite/write-journal.js': 'journalWriter',
   'src/ledlight/syntax/amount-parser.js': 'amountParser',
   'src/ledlight/syntax/errors.js': 'syntaxErrors',
@@ -80,6 +83,12 @@ function registerExternalModules(container) {
     fs: asValue(require('node:fs')),
     packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
+    systemClock: asValue({
+      now: () => Date.now(),
+      sleep(milliseconds) {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+      },
+    }),
     ohm: asValue({
       grammar(...arguments_) {
         return require('ohm-js').grammar(...arguments_);

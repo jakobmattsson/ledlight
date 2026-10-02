@@ -12,6 +12,7 @@ module.exports = ({
     registerDecimalFunctions,
   },
   accountPrefixFilter: { accountPrefixFilter },
+  publicErrors: { createError, errorCodes },
   reportOptions: {
     assertDateInterval,
     booleanOption,
@@ -46,10 +47,10 @@ module.exports = ({
     };
     assertDateInterval(normalized.from, normalized.to);
     if (normalized.inValuationCommodity && normalized.withValuationValue) {
-      throw new Error('inValuationCommodity and withValuationValue cannot be used together');
+      throw createError(errorCodes.INVALID_API_INPUT, 'inValuationCommodity and withValuationValue cannot be used together', TypeError);
     }
     if (normalized.includeTotal && !normalized.inValuationCommodity) {
-      throw new Error('includeTotal requires inValuationCommodity');
+      throw createError(errorCodes.INVALID_API_INPUT, 'includeTotal requires inValuationCommodity', TypeError);
     }
     return normalized;
   }

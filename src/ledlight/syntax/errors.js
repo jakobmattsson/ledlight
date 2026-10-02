@@ -1,16 +1,17 @@
 'use strict';
 
-module.exports = () => {
+module.exports = ({ publicErrors: { errorCodes, withCode } }) => {
 
-  class LedgerSyntaxError extends SyntaxError {
-    constructor(message, source, line, column) {
-      super(`${source}:${line}:${column}: ${message}`);
-      this.name = 'LedgerSyntaxError';
-      this.source = source;
-      this.line = line;
-      this.column = column;
-    }
+  function syntaxError(message, source, line, column) {
+    const error = withCode(
+      new SyntaxError(`${source}:${line}:${column}: ${message}`),
+      errorCodes.SYNTAX,
+    );
+    error.source = source;
+    error.line = line;
+    error.column = column;
+    return error;
   }
 
-  return { LedgerSyntaxError };
+  return { syntaxError };
 };

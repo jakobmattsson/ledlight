@@ -29,14 +29,14 @@ should document:
 - snapshot and freshness behavior; and
 - possible errors.
 
-Exported error classes or stable error codes should distinguish at least syntax
-errors, invalid API input, project configuration errors, missing valuation
-data, and database failures. Consumers should not need to inspect error-message
-text.
+Stable error codes distinguish syntax errors, invalid API input, project
+configuration errors, missing valuation data, and database failures. Public
+error classes are intentionally not part of the compatibility contract, and
+consumers do not need to inspect error-message text.
 
-TypeScript declarations, or comprehensive JSDoc types generated into package
-documentation, would make this contract easier to consume and review without
-requiring the implementation itself to be converted to TypeScript.
+The Markdown API reference remains the source of truth for parameter and result
+types. TypeScript declarations are intentionally deferred; the package does not
+currently promise a statically typed consumer surface.
 
 ## Priority 2: make database freshness and rebuilds robust
 
@@ -52,15 +52,17 @@ Choose and document one lifecycle model:
 - an explicit `refresh()` operation updates the database and invalidates every
   derived cache.
 
-Rebuild behavior should also be exercised with concurrent Ledlight processes.
-Consider building a complete database at a temporary path, validating it, and
-atomically replacing the previous database. Schema migration currently occurs
-before the transaction that replaces journal contents, so migration and
-content replacement do not form one failure boundary.
+Rebuilds are serialized across Ledlight processes with a bounded lock. A
+process checks freshness again after acquiring the lock so it can reuse work
+completed by another process. Building and validating at a temporary path
+before atomically replacing the previous database remains future work. Schema
+migration currently occurs before the transaction that replaces journal
+contents, so migration and content replacement do not form one failure
+boundary.
 
-Add tests for a source change during freshness checking, two concurrent
-rebuilds, a failed rebuild preserving the previous usable database, and cache
-invalidation after a successful refresh.
+Add tests for a source change during freshness checking, a failed rebuild
+preserving the previous usable database, and cache invalidation after a
+successful refresh.
 
 ## Priority 3: establish performance limits
 
@@ -93,14 +95,14 @@ That is unsuitable for commodities whose declared precision or separators are
 different.
 
 Formatting remains a CLI responsibility, but the CLI must not query internal
-database modules. The public API should therefore expose the format metadata
-needed to render its result, either as report metadata or through a public
-commodity-description operation. The CLI can then apply the declared format
-without acquiring accounting logic of its own.
+database modules. The project API exposes the metadata through
+`commodityDescriptions()`, allowing the CLI to apply declared formats without
+acquiring accounting logic of its own.
 
 Tests should cover zero-, two-, and multi-decimal commodities as well as a
-format without digit grouping. A missing `format` declaration needs one
-documented fallback policy.
+format without digit grouping. Declared formats apply only to human-readable
+CLI output; CSV and JSON retain canonical, ungrouped decimal values. A missing
+`format` declaration still needs one documented fallback policy.
 
 ## Priority 5: make numeric precision boundaries explicit
 
@@ -117,8 +119,8 @@ beyond JavaScript's safe integer precision and with long fractional quantities.
 
 ## Smaller maintainability and product improvements
 
-- Decide whether several `commodity` declarations marked `default` are valid.
-  The current behavior silently uses the last declaration.
+- Several `commodity` declarations marked `default` are rejected as a project
+  configuration error, including repeated declarations of the same symbol.
 - Replace source-tree scanning plus the manually maintained dependency-injection
   name map with explicit registration or a generated and verified manifest.
 - Keep extending the Ledger differential corpus whenever syntax or aggregate

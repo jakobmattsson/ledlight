@@ -2,7 +2,7 @@
 
 module.exports = ({
   amountParser: { parseAmountExpression },
-  syntaxErrors: { LedgerSyntaxError },
+  syntaxErrors: { syntaxError },
 }) => {
 
   const DATE_LENGTH = 10;
@@ -28,7 +28,7 @@ module.exports = ({
     const day = Number(normalized.slice(8, 10));
     const date = new Date(Date.UTC(year, month - 1, day));
     if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
-      throw new LedgerSyntaxError(`Invalid date ${JSON.stringify(value)}`, source, line, column);
+      throw syntaxError(`Invalid date ${JSON.stringify(value)}`, source, line, column);
     }
     return normalized;
   }
@@ -62,7 +62,7 @@ module.exports = ({
     let cursor = DATE_LENGTH;
     const date = assertDate(text.slice(0, cursor), source, line, 1);
     if (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) {
-      throw new LedgerSyntaxError('Expected whitespace after transaction date', source, line, cursor + 1);
+      throw syntaxError('Expected whitespace after transaction date', source, line, cursor + 1);
     }
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
 
@@ -74,7 +74,7 @@ module.exports = ({
     let code = null;
     if (text[cursor] === '(') {
       const end = text.indexOf(')', cursor + 1);
-      if (end < 0) throw new LedgerSyntaxError('Unterminated transaction code', source, line, cursor + 1);
+      if (end < 0) throw syntaxError('Unterminated transaction code', source, line, cursor + 1);
       code = text.slice(cursor + 1, end);
       cursor = end + 1;
       while (isWhitespace(text.charCodeAt(cursor))) cursor++;
@@ -96,7 +96,7 @@ module.exports = ({
     const parts = splitComment(raw.slice(indent));
     const separator = findFieldSeparator(parts.text);
     const account = (separator ? parts.text.slice(0, separator.start) : parts.text).trim();
-    if (!account) throw new LedgerSyntaxError('Posting account cannot be empty', source, line, indent + 1);
+    if (!account) throw syntaxError('Posting account cannot be empty', source, line, indent + 1);
     const expressionText = separator ? parts.text.slice(separator.end).trim() : '';
     const expressionColumn = separator ? indent + separator.end + 1 : raw.length + 1;
     const expression = parseAmountExpression(expressionText, sourceLocation(source, line, expressionColumn));
@@ -112,26 +112,26 @@ module.exports = ({
   function parsePrice(text, source, line) {
     let cursor = 1;
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
-    if (!isDateAt(text, cursor)) throw new LedgerSyntaxError('Expected a date after P', source, line, cursor + 1);
+    if (!isDateAt(text, cursor)) throw syntaxError('Expected a date after P', source, line, cursor + 1);
     const date = assertDate(text.slice(cursor, cursor + DATE_LENGTH), source, line, cursor + 1);
     cursor += DATE_LENGTH;
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const symbolStart = cursor;
     while (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) cursor++;
     const commodity = text.slice(symbolStart, cursor);
-    if (!commodity) throw new LedgerSyntaxError('Expected a commodity in price directive', source, line, symbolStart + 1);
+    if (!commodity) throw syntaxError('Expected a commodity in price directive', source, line, symbolStart + 1);
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     const parts = splitComment(text.slice(cursor));
     const expression = parseAmountExpression(parts.text, sourceLocation(source, line, cursor + 1));
     if (!expression || !expression.amount || expression.cost || expression.balanceAssignment || expression.balanceAssertion) {
-      throw new LedgerSyntaxError('Expected a simple amount in price directive', source, line, cursor + 1);
+      throw syntaxError('Expected a simple amount in price directive', source, line, cursor + 1);
     }
     return { type: 'price', date, commodity, price: expression.amount, comment: parts.comment, location: sourceLocation(source, line, 1) };
   }
 
   function parseNamedDirective(text, keyword, type, source, line) {
     const value = splitComment(text.slice(keyword.length).trimStart());
-    if (!value.text) throw new LedgerSyntaxError(`Expected a value after ${keyword}`, source, line, keyword.length + 1);
+    if (!value.text) throw syntaxError(`Expected a value after ${keyword}`, source, line, keyword.length + 1);
     return { type, name: value.text, comment: value.comment, location: sourceLocation(source, line, 1) };
   }
 
@@ -177,7 +177,7 @@ module.exports = ({
           const separator = property.text.search(/[ \t]/);
           const name = separator < 0 ? property.text : property.text.slice(0, separator);
           if (!COMMODITY_PROPERTY_NAMES.has(name)) {
-            throw new LedgerSyntaxError(
+            throw syntaxError(
               `Unsupported commodity property ${JSON.stringify(name)}`,
               source,
               lineNumber,
@@ -186,7 +186,7 @@ module.exports = ({
           }
           const value = separator < 0 ? null : property.text.slice(separator).trim();
           commodity.properties.push({ name, value, comment: property.comment, location: sourceLocation(source, lineNumber, first + 1) });
-        } else throw new LedgerSyntaxError('Unexpected indented line', source, lineNumber, first + 1);
+        } else throw syntaxError('Unexpected indented line', source, lineNumber, first + 1);
         continue;
       }
 
@@ -211,13 +211,13 @@ module.exports = ({
       } else if (marker === 'P' && isWhitespace(trimmed.charCodeAt(1))) entries.push(parsePrice(trimmed, source, lineNumber));
       else {
         const keyword = trimmed.split(/[ \t]/, 1)[0];
-        throw new LedgerSyntaxError(`Unsupported directive or transaction header ${JSON.stringify(keyword)}`, source, lineNumber, 1);
+        throw syntaxError(`Unsupported directive or transaction header ${JSON.stringify(keyword)}`, source, lineNumber, 1);
       }
     }
 
     for (const entry of entries) {
       if (entry.type === 'transaction' && entry.postings.length === 0) {
-        throw new LedgerSyntaxError('Transaction has no postings', source, entry.location.line, 1);
+        throw syntaxError('Transaction has no postings', source, entry.location.line, 1);
       }
     }
     return { source, entries };

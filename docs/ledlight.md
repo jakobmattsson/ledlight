@@ -244,13 +244,14 @@ ledlight aggregate --from 2024-01-01 --to 2024-12-31 \
 ledlight aggregate --to 2024-12-31 --accounts "Assets:" --csv
 ```
 
-By default, the command prints right-aligned account names followed by amounts
-with comma thousands separators and aligned decimal points, then a left-aligned
-commodity column. With `--value`, human-readable output converts every amount to
-the journal's default commodity and ends with an exact total. `--csv` omits the
-total and instead prints RFC-style escaped CSV with the columns
-`account,amount,commodity`. With `--value`, amounts in either format are rounded
-exactly to two decimal places without binary floating-point conversion.
+By default, the command prints right-aligned account names followed by aligned
+amounts and a left-aligned commodity column. Human-readable output uses each
+commodity's declared `format` precision and separators. With `--value`, it
+converts every amount to the journal's default commodity and ends with an exact
+total. `--csv` omits the total and instead prints RFC-style escaped CSV with the
+columns `account,amount,commodity`. CSV uses canonical, ungrouped decimal values
+and does not apply commodity display separators. With `--value`, CSV amounts
+retain the existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the human-readable total.
 
 The same behavior is available directly through `aggregateReport`: set
@@ -275,8 +276,8 @@ first uses the latest direct quote to the valuation commodity, even when a
 newer indirect quote exists. Without a direct quote, it tries indirect quotes
 from newest to oldest until one reaches the valuation commodity. Prices must be
 dated on or before `to`; when `to` is omitted, all available prices are
-eligible. The single valuation commodity is the last commodity marked
-`default` by a commodity declaration:
+eligible. The single valuation commodity is marked `default` by one commodity
+declaration:
 
 ```ledger
 commodity USD
@@ -285,7 +286,9 @@ commodity USD
 ```
 
 This `commodity` property is the only supported way to declare the valuation
-commodity. There is no API or command-line option for choosing another target.
+commodity. Marking more than one declaration as `default` is a project
+configuration error, including repeated declarations of the same symbol. There
+is no API or command-line option for choosing another target.
 Price chains can pass through intermediate commodities. Missing and circular
 price chains are errors. Results remain exact decimal strings and are not
 rounded for display.
@@ -350,9 +353,10 @@ ledlight balance-history --date-basis transaction \
 ledlight balance-history --accounts "Assets:" --csv
 ```
 
-Human-readable amounts and CSV amounts are rounded exactly to two decimal
-places. CSV output has the columns `date,amount`; the API retains exact decimal
-strings. When the database is built, Ledlight materializes direct valuation
+Human-readable amounts use the default commodity's declared format. CSV
+amounts retain the existing exact two-decimal rounding and use the columns
+`date,amount`; the API retains exact decimal strings. When the database is
+built, Ledlight materializes direct valuation
 rates in `valuation_prices`. For each commodity, the table contains one row per calendar day
 from its first posting, transaction, or price appearance through the latest
 posting, transaction, or price date.

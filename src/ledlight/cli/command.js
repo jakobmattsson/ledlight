@@ -2,9 +2,7 @@
 
 module.exports = ({
   ledlight: {
-    aggregateReport,
-    balanceHistoryReport,
-    investmentPerformance,
+    openProject,
     version,
   },
   cliArguments: { parseArguments, usage },
@@ -26,26 +24,32 @@ module.exports = ({
     const [command] = arguments_;
     if (command === 'investment-performance') {
       const { reportOptions, json } = parseArguments(arguments_);
-      const report = investmentPerformance(reportOptions, startDirectory);
+      const project = openProject(startDirectory);
+      const report = project.investmentPerformance(reportOptions);
       return json
         ? formatInvestmentPerformanceJson(report)
-        : formatInvestmentPerformance(report);
+        : formatInvestmentPerformance(report, project.commodityDescriptions());
     }
 
     const { reportOptions, csv } = parseArguments(arguments_);
+    const project = openProject(startDirectory);
     if (command === 'balance-history') {
-      const reportRows = balanceHistoryReport(reportOptions, startDirectory);
+      const reportRows = project.balanceHistoryReport(reportOptions);
       return csv
         ? formatBalanceHistoryCsv(reportRows)
-        : formatBalanceHistoryHumanReadable(reportRows);
+        : formatBalanceHistoryHumanReadable(reportRows, project.commodityDescriptions());
     }
-    const reportRows = aggregateReport({
+    const reportRows = project.aggregateReport({
       ...reportOptions,
       includeTotal: !csv && reportOptions.inValuationCommodity,
-    }, startDirectory);
+    });
     return csv
       ? formatCsv(reportRows, reportOptions.inValuationCommodity)
-      : formatHumanReadable(reportRows, reportOptions.inValuationCommodity);
+      : formatHumanReadable(
+        reportRows,
+        reportOptions.inValuationCommodity,
+        project.commodityDescriptions(),
+      );
   }
 
   return { runReportCommand };

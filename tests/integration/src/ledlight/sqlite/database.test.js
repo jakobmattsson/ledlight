@@ -9,7 +9,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
-const { openProject } = resolveRepositoryModule("src/ledlight/index.js");
+const { errorCodes, openProject } = resolveRepositoryModule("src/ledlight/index.js");
 const {
   ensureDatabaseCurrent,
 } = resolveRepositoryModule("src/ledlight/sqlite/database.js");
@@ -222,6 +222,25 @@ test('rejects commodity-less resolved amounts before database insertion', (t) =>
     () => buildDatabase(databasePath, journalPath),
     (error) => /journal\.ledger:2.*commodity/u.test(error.message) &&
       !/SQLITE_CONSTRAINT/u.test(error.code || ''),
+  );
+  assert.equal(fs.existsSync(databasePath), false);
+});
+
+test('rejects every second default commodity declaration', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity USD
+  default
+commodity USD
+  default
+`);
+
+  assert.throws(
+    () => buildDatabase(databasePath, journalPath),
+    (error) => error.code === errorCodes.PROJECT_CONFIGURATION &&
+      /journal\.ledger:4:3: Multiple commodity declarations are marked default/u.test(error.message) &&
+      /first is at .*journal\.ledger:2:3/u.test(error.message),
   );
   assert.equal(fs.existsSync(databasePath), false);
 });

@@ -12,29 +12,41 @@ module.exports = ({
   },
   aggregateReport: { queryAggregateReport },
   balanceHistoryReport: { queryBalanceHistoryReport },
+  commodityDescriptions: { queryCommodityDescriptions },
   investmentPerformanceReport: { queryInvestmentPerformance },
   valuationRates: { queryLedgerValuationRateResolver },
   transactionReport: { queryLedgerTransactions },
   database: { ensureDatabaseCurrent },
+  publicErrors: { createError, databaseError, errorCodes },
 }) => {
 
   const DATABASE_RELATIVE_PATH = path.join('tmp', 'ledger.sqlite');
+  const projectConfigurationError = (message) =>
+    createError(errorCodes.PROJECT_CONFIGURATION, message);
+
+  function queryDatabase(operation) {
+    try {
+      return operation();
+    } catch (error) {
+      throw databaseError(error);
+    }
+  }
 
   function findProjectRoot(startDirectory) {
     let directory = path.resolve(startDirectory ?? process.cwd());
     while (true) {
       if (fs.existsSync(path.join(directory, '.ledgerrc'))) return directory;
       const parent = path.dirname(directory);
-      if (parent === directory) throw new Error('Could not find .ledgerrc in this directory or any parent');
+      if (parent === directory) throw projectConfigurationError('Could not find .ledgerrc in this directory or any parent');
       directory = parent;
     }
   }
 
   function optionValue(rawValue, ledgerRcPath) {
     const value = rawValue.trim();
-    if (!value) throw new Error(`Missing --file value in ${ledgerRcPath}`);
+    if (!value) throw projectConfigurationError(`Missing --file value in ${ledgerRcPath}`);
     if (value[0] === '"' || value[0] === "'") {
-      if (value.at(-1) !== value[0]) throw new Error(`Unterminated quoted --file value in ${ledgerRcPath}`);
+      if (value.at(-1) !== value[0]) throw projectConfigurationError(`Unterminated quoted --file value in ${ledgerRcPath}`);
       return value.slice(1, -1);
     }
     return value;
@@ -50,8 +62,8 @@ module.exports = ({
       const match = /^--file(?:\s+|=)(.*)$/u.exec(line);
       if (match) values.push(optionValue(match[1], ledgerRcPath));
     }
-    if (values.length === 0) throw new Error(`No --file option found in ${ledgerRcPath}`);
-    if (values.length > 1) throw new Error(`Multiple --file options found in ${ledgerRcPath}`);
+    if (values.length === 0) throw projectConfigurationError(`No --file option found in ${ledgerRcPath}`);
+    if (values.length > 1) throw projectConfigurationError(`Multiple --file options found in ${ledgerRcPath}`);
     return path.resolve(projectRoot, values[0]);
   }
 
@@ -97,35 +109,38 @@ module.exports = ({
     return {
       ...current,
       accountBalances(options) {
-        return queryAccountBalances(current.databasePath, options);
+        return queryDatabase(() => queryAccountBalances(current.databasePath, options));
       },
       accountPostings(options) {
-        return queryAccountPostings(current.databasePath, options);
+        return queryDatabase(() => queryAccountPostings(current.databasePath, options));
       },
       accountTransactions(options) {
-        return queryAccountTransactions(current.databasePath, options);
+        return queryDatabase(() => queryAccountTransactions(current.databasePath, options));
       },
       aggregateReport(options) {
-        return queryAggregateReport(current.databasePath, options, { valuationPriceCache });
+        return queryDatabase(() => queryAggregateReport(current.databasePath, options, { valuationPriceCache }));
       },
       balanceHistoryReport(options) {
-        return queryBalanceHistoryReport(current.databasePath, options);
+        return queryDatabase(() => queryBalanceHistoryReport(current.databasePath, options));
+      },
+      commodityDescriptions() {
+        return queryDatabase(() => queryCommodityDescriptions(current.databasePath));
       },
       investmentPerformance(options) {
-        return queryInvestmentPerformance(current.databasePath, options);
+        return queryDatabase(() => queryInvestmentPerformance(current.databasePath, options));
       },
       ledgerValuationRateResolver() {
-        ledgerValuationRateResolver ??= queryLedgerValuationRateResolver(current.databasePath);
+        ledgerValuationRateResolver ??= queryDatabase(() => queryLedgerValuationRateResolver(current.databasePath));
         return ledgerValuationRateResolver;
       },
       ledgerAccounts() {
-        return queryLedgerAccounts(current.databasePath);
+        return queryDatabase(() => queryLedgerAccounts(current.databasePath));
       },
       ledgerTransaction(options) {
-        return queryLedgerTransaction(current.databasePath, options);
+        return queryDatabase(() => queryLedgerTransaction(current.databasePath, options));
       },
       ledgerTransactions(options) {
-        return queryLedgerTransactions(current.databasePath, options);
+        return queryDatabase(() => queryLedgerTransactions(current.databasePath, options));
       },
     };
   }
