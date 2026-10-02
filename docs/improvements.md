@@ -142,8 +142,6 @@ runtime less dependent on repository layout.
 
 - Decide whether several `commodity` declarations marked `default` are valid.
   The current behavior silently uses the last declaration.
-- Split investment-performance data access, cash-flow classification, return
-  calculations, and result assembly into smaller independently testable units.
 - Keep extending the Ledger differential corpus whenever syntax or aggregate
   behavior is added or corrected.
 
