@@ -26,12 +26,12 @@ P 2024-01-03 FUND 12 NOK
 P 2024-01-06 NOK 1.2 SEK
 
 2024-01-01 Buy fund
-  Assets:Fund  2 FUND
-  Equity:Opening  -2 FUND
+  Assets:Fund  2 FUND {10 SEK}
+  Equity:Opening  -20 SEK
 
 2024-01-02 Add assets
-  Assets:Fund  1 FUND
-  Equity:Opening  -1 FUND
+  Assets:Fund  1 FUND {11 SEK}
+  Equity:Opening  -11 SEK
   Assets:Cash  5 SEK
   Equity:Opening  -5 SEK
 
@@ -40,8 +40,8 @@ P 2024-01-06 NOK 1.2 SEK
   Liabilities:Card  -10 SEK
 
 2024-01-04 Delayed fund sale
-  Assets:Fund  -1 FUND ; [2024-01-05]
-  Equity:Opening  1 FUND
+  Assets:Fund  -1 FUND {10 SEK} @ 13.2 SEK ; [2024-01-05]
+  Equity:Opening  10 SEK
 `);
   buildDatabase(databasePath, journalPath);
   return databasePath;
@@ -169,8 +169,8 @@ test('rejects invalid intervals and missing historical prices', (t) => {
   fs.writeFileSync(journalPath, `commodity SEK
   default
 2024-01-01 Opening
-  Assets:Other  1 OTHER
-  Equity:Opening  -1 OTHER
+  Assets:Other  1 OTHER {1 SEK}
+  Equity:Opening  -1 SEK
 `);
   buildDatabase(unpricedDatabasePath, journalPath);
   assert.throws(

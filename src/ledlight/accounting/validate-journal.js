@@ -1,6 +1,11 @@
 'use strict';
 
-module.exports = () => {
+module.exports = ({
+  decimal: { compareDecimals, parseDecimal },
+  valuationCommodity: { fromJournal },
+}) => {
+
+  const ZERO = parseDecimal('0');
 
   class JournalValidationError extends Error {
     constructor(message, location) {
@@ -18,18 +23,42 @@ module.exports = () => {
     }
   }
 
-  function validatePosting(posting) {
+  function validateCommodityTrade(posting, defaultCommodity) {
+    if (!posting.amount || !defaultCommodity || posting.amount.commodity === defaultCommodity) return;
+    const sign = compareDecimals(parseDecimal(posting.amount.quantity), ZERO);
+    if (sign > 0 && (!posting.lotCost || posting.cost)) {
+      throw new JournalValidationError(
+        `Positive ${posting.amount.commodity} posting must use a lot cost ({...} or {{...}}) ` +
+        `and no transaction price (@ or @@); the default commodity is ${defaultCommodity}`,
+        posting.location,
+      );
+    }
+    if (sign < 0 && (!posting.lotCost || !posting.cost)) {
+      throw new JournalValidationError(
+        `Negative ${posting.amount.commodity} posting must use both a lot cost ({...} or {{...}}) ` +
+        `and a transaction price (@ or @@); the default commodity is ${defaultCommodity}`,
+        posting.location,
+      );
+    }
+  }
+
+  function validatePosting(posting, defaultCommodity) {
     if (posting.amount) requireCommodity(posting.amount, 'Posting amount', posting.location);
+    if (posting.lotCost) requireCommodity(posting.lotCost.amount, 'Lot cost', posting.location);
     if (posting.cost) requireCommodity(posting.cost.amount, 'Posting cost', posting.location);
     if (posting.balanceAssertion) {
       requireCommodity(posting.balanceAssertion, 'Balance assertion', posting.location);
     }
+    validateCommodityTrade(posting, defaultCommodity);
   }
 
-  function validateJournal(journal) {
+  function validateJournal(journal, defaultCommodity) {
+    const effectiveDefaultCommodity = defaultCommodity === undefined
+      ? fromJournal(journal)
+      : defaultCommodity;
     for (const entry of journal.entries) {
       if (entry.type === 'transaction') {
-        entry.postings.forEach(validatePosting);
+        entry.postings.forEach((posting) => validatePosting(posting, effectiveDefaultCommodity));
       } else if (entry.type === 'price') {
         requireCommodity(entry.price, 'Price', entry.location);
       }

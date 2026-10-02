@@ -60,9 +60,16 @@ shapes are:
   `comment`, `postings`, `notes`, and `location`.
 
 An amount is `{ quantity, commodity }`. Posting amounts can be `null` before
-semantic resolution. A posting can also contain a cost, balance assignment,
-balance assertion, posting date, and comment. Transaction notes contain `text`,
+semantic resolution. A posting can also contain a `lotCost`, transaction
+`cost`, balance assignment, balance assertion, posting date, and comment. Lot
+costs and transaction costs are `{ total, amount }`; `total` distinguishes
+`{{}}` or `@@` from `{}` or `@`. Transaction notes contain `text`,
 optional `key` and `value`, and a source location.
+
+Semantic validation requires positive non-default commodity postings to carry
+a lot cost and no transaction price. Negative non-default commodity postings
+must carry both annotations. This rule runs after parsing and therefore reports
+a journal validation error at the posting location rather than a syntax error.
 
 ### `loadJournal(entryPath)`
 
@@ -176,6 +183,18 @@ Returns daily rows sorted by date:
 ```
 
 Amounts are exact decimal strings in the journal default commodity.
+
+### `gainReport(options, startDirectory)`
+
+Returns unrealized gains and losses for open non-default commodity positions,
+grouped by account and expressed as exact decimal strings in the journal
+default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
+accounts are omitted and losses are negative. Rows are sorted by account.
+
+Options are `to`, `accounts`, and `dateBasis`. `to` is the inclusive position
+and valuation date, `accounts` contains literal account prefixes, and
+`dateBasis` is `posting` (the default) or `transaction`. When `to` is omitted,
+the latest available journal price is used.
 
 ### `investmentPerformance(options, startDirectory)`
 

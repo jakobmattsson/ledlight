@@ -81,6 +81,34 @@ test('accepts correctly balanced costed transactions', () => {
   assert.doesNotThrow(() => new PostingResolver().resolve(transaction));
 });
 
+test('balances a sale at unit lot cost and requires the realized gain posting', () => {
+  const balanced = parseTransaction(`2024-01-01 Sale
+  Assets:Fund  -10 FUND {100 SEK} @ 120 SEK
+  Assets:Cash  1200 SEK
+  Income:Capital Gains  -200 SEK
+`);
+  assert.doesNotThrow(() => new PostingResolver().resolve(balanced));
+
+  const missingGain = parseTransaction(`2024-01-01 Sale
+  Assets:Fund  -10 FUND {100 SEK} @ 120 SEK
+  Assets:Cash  1200 SEK
+`);
+  assert.throws(
+    () => new PostingResolver().resolve(missingGain),
+    /fixture\.ledger:1.*does not balance.*200 SEK/u,
+  );
+});
+
+test('balances a sale at total lot cost', () => {
+  const transaction = parseTransaction(`2024-01-01 Sale
+  Assets:Fund  -10 FUND {{1000 SEK}} @@ 1200 SEK
+  Assets:Cash  1200 SEK
+  Income:Capital Gains  -200 SEK
+`);
+
+  assert.doesNotThrow(() => new PostingResolver().resolve(transaction));
+});
+
 test('allows calculated unit-cost residuals within explicit amount precision', () => {
   const transaction = parseTransaction(`2024-01-01 Rounded cost
   Assets:Fund  1.234 FUND @ 2.00 SEK

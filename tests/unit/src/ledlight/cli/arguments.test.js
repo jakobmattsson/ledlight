@@ -58,6 +58,28 @@ test('parses balance history options', () => {
   assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
 });
 
+test('parses gain report options and output flags', () => {
+  assert.deepEqual(parseArguments([
+    'gain',
+    '--to', '2024-12-31',
+    '--accounts', 'Assets:',
+    '--date-basis', 'transaction',
+    '--csv',
+  ]), {
+    reportOptions: {
+      to: '2024-12-31',
+      accounts: ['Assets:'],
+      dateBasis: 'transaction',
+    },
+    csv: true,
+  });
+  assert.deepEqual(parseArguments(['gain']), {
+    reportOptions: { accounts: [] },
+    csv: false,
+  });
+  assert.throws(() => parseArguments(['gain', '--from', '2024-01-01']), /Usage:/u);
+});
+
 test('parses investment performance selections and JSON output', () => {
   assert.deepEqual(parseArguments([
     'investment-performance',
@@ -97,11 +119,13 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['investment-performance', '--commodities'],
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
+    ['gain', '--value'],
   ];
   for (const arguments_ of invalidArguments) {
     assert.throws(() => parseArguments(arguments_), /Usage:|may only be specified once/u);
   }
   assert.match(usage(), /^Usage:\n {2}ledlight aggregate/u);
   assert.match(usage(), /\n {2}ledlight balance-history/u);
+  assert.match(usage(), /\n {2}ledlight gain/u);
   assert.match(usage(), /\n {2}ledlight investment-performance/u);
 });

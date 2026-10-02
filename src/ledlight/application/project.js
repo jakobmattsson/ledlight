@@ -13,6 +13,7 @@ module.exports = ({
   aggregateReport: { queryAggregateReport },
   balanceHistoryReport: { queryBalanceHistoryReport },
   commodityDescriptions: { queryCommodityDescriptions },
+  gainReport: { queryGainReport },
   investmentPerformanceReport: { queryInvestmentPerformance },
   valuationRates: { queryLedgerValuationRateResolver },
   transactionReport: { queryLedgerTransactions },
@@ -94,6 +95,10 @@ module.exports = ({
     return openProject(startDirectory).investmentPerformance(options);
   }
 
+  function gainReport(options, startDirectory) {
+    return openProject(startDirectory).gainReport(options);
+  }
+
   function accountBalances(options, startDirectory) {
     return openProject(startDirectory).accountBalances(options);
   }
@@ -126,6 +131,9 @@ module.exports = ({
       commodityDescriptions() {
         return queryDatabase(() => queryCommodityDescriptions(current.databasePath));
       },
+      gainReport(options) {
+        return queryDatabase(() => queryGainReport(current.databasePath, options, { valuationPriceCache }));
+      },
       investmentPerformance(options) {
         return queryDatabase(() => queryInvestmentPerformance(current.databasePath, options));
       },
@@ -150,6 +158,7 @@ module.exports = ({
     accountPostings,
     aggregateReport,
     balanceHistoryReport,
+    gainReport,
     investmentPerformance,
     ensureProjectDatabaseCurrent,
     loadProjectPaths,

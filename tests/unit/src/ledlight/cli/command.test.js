@@ -22,6 +22,10 @@ test('delegates report behavior to the public Node API and only formats results'
       calls.push({ operation: 'balanceHistoryReport', options });
       return [{ date: '2024-01-01', amount: '-10', commodity: 'USD' }];
     },
+    gainReport(options) {
+      calls.push({ operation: 'gainReport', options });
+      return [{ account: 'Assets:Broker', quantity: '12.5', commodity: 'USD' }];
+    },
     investmentPerformance(options) {
       calls.push({ operation: 'investmentPerformance', options });
       return {
@@ -69,6 +73,10 @@ test('delegates report behavior to the public Node API and only formats results'
     runReportCommand(['investment-performance'], { startDirectory: '/project' }),
     /Opening value: 0\.00 USD/u,
   );
+  assert.equal(
+    runReportCommand(['gain', '--csv'], { startDirectory: '/project' }),
+    'account,amount,commodity\nAssets:Broker,12.50,USD\n',
+  );
 
   assert.deepEqual(calls, [
     { operation: 'openProject', startDirectory: '/project' },
@@ -96,5 +104,7 @@ test('delegates report behavior to the public Node API and only formats results'
       options: { accounts: [], commodities: [], excludeCommodities: [] },
     },
     { operation: 'commodityDescriptions' },
+    { operation: 'openProject', startDirectory: '/project' },
+    { operation: 'gainReport', options: { accounts: [] } },
   ]);
 });

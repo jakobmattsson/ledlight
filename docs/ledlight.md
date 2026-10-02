@@ -101,6 +101,7 @@ underlying result.
 | --- | --- | --- |
 | `aggregate` | `aggregateReport(options, startDirectory)` | Report selection and calculation |
 | `balance-history` | `balanceHistoryReport(options, startDirectory)` | Report selection and calculation |
+| `gain` | `gainReport(options, startDirectory)` | Unrealized gain or loss by account |
 | `investment-performance` | `investmentPerformance(options, startDirectory)` | Report selection and calculation |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
@@ -147,8 +148,9 @@ formatter uses the shared exact-decimal helpers directly.
 
 The parser currently supports account, tag, commodity, price, and include
 directives; commodity properties; transaction status, code, payee/narration,
-and comments; postings with omitted or explicit amounts; unit
-and total costs; balance assignments; and balance assertions.
+and comments; postings with omitted or explicit amounts; unit and total lot
+costs (`{}` and `{{}}`); unit and total transaction costs (`@` and `@@`);
+balance assignments; and balance assertions.
 
 Unsupported Ledger syntax fails with a source location instead of being
 silently ignored. The runtime parser has no I/O or database dependency;
@@ -156,10 +158,21 @@ silently ignored. The runtime parser has no I/O or database dependency;
 and hashing.
 
 Before persistence, semantic validation requires commodities on explicit
-posting amounts, costs, balance assertions, and prices. Implicit postings and
-balance assignments may still infer their commodity. Explicit transactions
-must balance, allowing Ledger-style two-commodity exchanges and the precision
-tolerance associated with calculated unit costs.
+posting amounts, lot costs, transaction costs, balance assertions, and prices.
+Implicit postings and balance assignments may still infer their commodity.
+Explicit transactions must balance, allowing Ledger-style two-commodity
+exchanges and the precision tolerance associated with calculated unit costs.
+When a posting has both a lot cost and a transaction cost, its lot cost
+determines the balancing amount. This requires a realized gain or loss posting
+when disposal proceeds differ from the lot's cost basis, matching Ledger's
+behavior.
+
+Explicit non-zero postings in commodities other than the journal default must
+also describe their trade direction unambiguously. A positive quantity must
+have a lot cost (`{}` or `{{}}`) and no transaction price. A negative quantity
+must have both a lot cost and a transaction price (`@` or `@@`). Unit and total
+annotations may be combined freely. Zero quantities are exempt because they do
+not acquire or dispose of a commodity.
 
 `src/ledlight/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
@@ -305,6 +318,24 @@ predictable.
 The SQLite connection registers `decimal_sum`, `decimal_mul`, and
 `decimal_cmp`. `decimal_sum` is used by both report variants, so values are
 never converted to binary floating point during aggregation or valuation.
+
+## Unrealized gain
+
+`gainReport` and the `gain` CLI command calculate the market value of each
+open non-default commodity position minus its remaining lot cost. Results are
+grouped by account, expressed in the journal default commodity, and omit zero
+gains. Losses are returned as negative quantities.
+
+```console
+ledlight gain
+ledlight gain --to 2024-12-31 --accounts "Assets:Broker"
+ledlight gain --csv
+```
+
+The report accepts `to`, repeated `accounts`, and `date-basis`. It uses the
+latest valuation price on or before `to`, or the latest available price when
+`to` is omitted. Realized quantities and their lot costs cancel when a lot is
+sold, leaving only unrealized gains or losses on the remaining position.
 
 ## Balance history
 

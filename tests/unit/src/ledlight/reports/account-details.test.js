@@ -24,14 +24,14 @@ account Equity:Opening
 2023-01-01 Open account
   Assets:Closed  10 SEK
   Equity:Opening  -10 SEK
-  Assets:Closed  2 FUND
-  Equity:Opening  -2 FUND
+  Assets:Closed  2 FUND {1 SEK}
+  Equity:Opening  -2 SEK
 
 2023-01-02 Close account
   Assets:Closed  -10 SEK
   Equity:Opening  10 SEK
-  Assets:Closed  -2 FUND
-  Equity:Opening  2 FUND
+  Assets:Closed  -2 FUND {1 SEK} @ 1 SEK
+  Equity:Opening  2 SEK
 
 2023-01-03 Child account activity
   Assets:Closed:Child  1 SEK
@@ -148,7 +148,7 @@ test('returns every posting in one transaction', (t) => {
       postingDate: '2023-01-01',
       account: 'Equity:Opening',
       comment: null,
-      amounts: [{ quantity: '-2', commodity: 'FUND' }],
+      amounts: [{ quantity: '-2', commodity: 'SEK' }],
     }],
   });
   assert.equal(project.ledgerTransaction({ transactionId: 999 }), null);

@@ -45,17 +45,22 @@ module.exports = ({
     (residuals[0][1].coefficient < 0n) !== (residuals[1][1].coefficient < 0n);
   }
 
+  function balancingCost(posting) {
+    return posting.lotCost || posting.cost;
+  }
+
   function balancingAmount(posting, amount) {
-    if (!posting.cost) return amount;
-    const cost = parseDecimal(posting.cost.amount.quantity);
+    const annotation = balancingCost(posting);
+    if (!annotation) return amount;
+    const cost = parseDecimal(annotation.amount.quantity);
     let quantity;
-    if (posting.cost.total) {
+    if (annotation.total) {
       const amountSign = compareDecimals(parseDecimal(amount.quantity), ZERO);
       quantity = amountSign < 0 && compareDecimals(cost, ZERO) > 0 ? negateDecimal(cost) : cost;
     } else {
       quantity = multiplyDecimals(parseDecimal(amount.quantity), cost);
     }
-    return { quantity: formatDecimal(quantity), commodity: posting.cost.amount.commodity };
+    return { quantity: formatDecimal(quantity), commodity: annotation.amount.commodity };
   }
 
   class PostingResolver {
@@ -95,7 +100,8 @@ module.exports = ({
       let hasCost = false;
 
       transaction.postings.forEach((posting, position) => {
-        if (posting.cost) hasCost = true;
+        const annotation = balancingCost(posting);
+        if (annotation) hasCost = true;
         let amount = posting.amount;
         if (posting.balanceAssignment) {
           const commodity = this.assignmentCommodity(posting);
@@ -117,11 +123,11 @@ module.exports = ({
         this.apply(posting.account, amount);
         const balancing = balancingAmount(posting, amount);
         addToMap(transactionBalance, balancing.commodity, parseDecimal(balancing.quantity));
-        if (posting.cost && !posting.cost.total) {
+        if (annotation && !annotation.total) {
           calculatedCostCommodities.add(balancing.commodity);
         } else {
-          const quantity = posting.cost
-            ? posting.cost.amount.quantity
+          const quantity = annotation
+            ? annotation.amount.quantity
             : posting.balanceAssignment?.quantity || amount.quantity;
           recordTolerance(transactionTolerances, balancing.commodity, quantity);
         }

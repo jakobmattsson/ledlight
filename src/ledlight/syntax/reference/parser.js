@@ -84,6 +84,7 @@ module.exports = ({
     posting(_indent, account, amountPart, _space, comment, _lineEnd) {
       const expression = optionalValue(amountPart, this.args.source) || {
         amount: null,
+        lotCost: null,
         cost: null,
         balanceAssignment: null,
         balanceAssertion: null,
@@ -102,15 +103,22 @@ module.exports = ({
     amountPart(_separator, expression) { return optionalValue(expression, this.args.source); },
 
     balanceAssignment(_equals, _space, amount) {
-      return { amount: null, cost: null, balanceAssignment: amount.ast(this.args.source), balanceAssertion: null };
+      return { amount: null, lotCost: null, cost: null, balanceAssignment: amount.ast(this.args.source), balanceAssertion: null };
     },
-    explicitAmount(amount, cost, assertion) {
+    explicitAmount(amount, lotCost, cost, assertion) {
       return {
         amount: amount.ast(this.args.source),
+        lotCost: optionalValue(lotCost, this.args.source),
         cost: optionalValue(cost, this.args.source),
         balanceAssignment: null,
         balanceAssertion: optionalValue(assertion, this.args.source),
       };
+    },
+    lotCost_total(_spaceBefore, _open, _spaceAfter, amount, _spaceBeforeClose, _close) {
+      return { total: true, amount: amount.ast(this.args.source) };
+    },
+    lotCost_unit(_spaceBefore, _open, _spaceAfter, amount, _spaceBeforeClose, _close) {
+      return { total: false, amount: amount.ast(this.args.source) };
     },
     cost(_spaceBefore, operator, _spaceAfter, amount) {
       return { total: operator.sourceString === '@@', amount: amount.ast(this.args.source) };

@@ -90,16 +90,36 @@ test('requires a transaction description', () => {
   }
 });
 
-test('parses total costs and balance assertions', () => {
+test('parses unit and total lot costs, transaction costs, and balance assertions', () => {
   const document = parseConformant(`2024-01-01 Trade
-    Assets:Fund  3.5 FUND @@ 1000.25 SEK
+    Assets:Unit Lot  2 FUND {250 SEK} @ 300 SEK
+    Assets:Total Lot  3.5 FUND {{875 SEK}} @@ 1000.25 SEK
     Assets:Cash  -1000.25 SEK = 2500.00 SEK
 `, 'fixture.ledger');
 
   const transaction = document.entries[0];
   assert.equal(transaction.date, '2024-01-01');
-  assert.equal(transaction.postings[0].cost.total, true);
-  assert.deepEqual(transaction.postings[1].balanceAssertion, { quantity: '2500.00', commodity: 'SEK' });
+  assert.deepEqual(transaction.postings[0].lotCost, {
+    total: false,
+    amount: { quantity: '250', commodity: 'SEK' },
+  });
+  assert.equal(transaction.postings[0].cost.total, false);
+  assert.deepEqual(transaction.postings[1].lotCost, {
+    total: true,
+    amount: { quantity: '875', commodity: 'SEK' },
+  });
+  assert.equal(transaction.postings[1].cost.total, true);
+  assert.deepEqual(transaction.postings[2].balanceAssertion, { quantity: '2500.00', commodity: 'SEK' });
+});
+
+test('rejects mismatched lot cost braces', () => {
+  for (const annotation of ['{100 SEK}}', '{{100 SEK}']) {
+    const sourceText = `2024-01-01 Trade\n  Assets:Fund  1 FUND ${annotation}\n  Equity:Opening\n`;
+    assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+    assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
+      (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
+  }
 });
 
 test('rejects slash date separators', () => {

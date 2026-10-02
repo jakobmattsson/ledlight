@@ -104,6 +104,18 @@ const scenarios = [
     ledgerArguments: { options: [], queries: [] },
   },
   {
+    name: 'balances with unit and total lot costs',
+    fixture: 'lot-cost',
+    ledlightArguments: ['aggregate', '--csv'],
+    ledgerArguments: { options: [], queries: [] },
+  },
+  {
+    name: 'unrealized gains on open lots',
+    fixture: 'lot-cost',
+    ledlightArguments: ['gain', '--csv'],
+    ledgerArguments: { options: ['--gain'], queries: [] },
+  },
+  {
     name: 'inverted account-prefix selection',
     fixture: 'basic',
     ledlightArguments: ['aggregate', '--accounts', 'Expenses:', '--invert', '--csv'],

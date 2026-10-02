@@ -20,7 +20,9 @@ Ledlight {
 
   amountExpression = balanceAssignment | explicitAmount
   balanceAssignment = "=" spacing* amount
-  explicitAmount = amount cost? balanceAssertion?
+  explicitAmount = amount lotCost? cost? balanceAssertion?
+  lotCost = spacing* "{{" spacing* amount spacing* "}}"                                            -- total
+          | spacing* "{" spacing* amount spacing* "}"                                               -- unit
   cost = spacing* ("@@" | "@") spacing* amount
   balanceAssertion = spacing* "=" spacing* amount
   amount = number spacing+ commoditySymbol
@@ -52,7 +54,7 @@ Ledlight {
   forbiddenDirectiveCharacter = ";" | newline
   forbiddenDescriptionCharacter = ";" | newline
   forbiddenAccountCharacter = postingAmountSeparator | ";" | newline
-  forbiddenCommodityCharacter = spacing | "@" | "=" | ";" | "\"" | "'" | newline
+  forbiddenCommodityCharacter = spacing | "@" | "=" | "{" | "}" | ";" | "\"" | "'" | newline
   forbiddenTagCharacter = spacing | ":" | ";" | newline
 
   postingAmountSeparator = "\t"                -- tab

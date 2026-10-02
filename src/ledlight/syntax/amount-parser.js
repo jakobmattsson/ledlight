@@ -4,13 +4,24 @@ module.exports = ({
   syntaxErrors: { syntaxError },
 }) => {
 
-  const TOKEN = Object.freeze({ NUMBER: 1, SYMBOL: 2, AT: 3, TOTAL_AT: 4, EQUALS: 5, EOF: 6 });
+  const TOKEN = Object.freeze({
+    NUMBER: 1,
+    SYMBOL: 2,
+    AT: 3,
+    TOTAL_AT: 4,
+    EQUALS: 5,
+    LEFT_BRACE: 6,
+    TOTAL_LEFT_BRACE: 7,
+    RIGHT_BRACE: 8,
+    TOTAL_RIGHT_BRACE: 9,
+    EOF: 10,
+  });
 
   function isSpace(code) { return code === 32 || code === 9; }
   function isDigit(code) { return code >= 48 && code <= 57; }
   function isCommodityCharacter(code) {
     return !isSpace(code) && code !== 10 && code !== 13 && code !== 34 && code !== 39 &&
-      code !== 59 && code !== 61 && code !== 64;
+      code !== 59 && code !== 61 && code !== 64 && code !== 123 && code !== 125;
   }
 
   class AmountLexer {
@@ -41,6 +52,18 @@ module.exports = ({
         }
         return { type: TOKEN.AT, value: '@', start };
       }
+      if (code === 123 || code === 125) {
+        this.offset++;
+        const doubled = input.charCodeAt(this.offset) === code;
+        if (doubled) this.offset++;
+        return {
+          type: code === 123
+            ? (doubled ? TOKEN.TOTAL_LEFT_BRACE : TOKEN.LEFT_BRACE)
+            : (doubled ? TOKEN.TOTAL_RIGHT_BRACE : TOKEN.RIGHT_BRACE),
+          value: input.slice(start, this.offset),
+          start,
+        };
+      }
       let cursor = this.offset;
       if (code === 43 || code === 45) cursor++;
       const integerStart = cursor;
@@ -51,7 +74,9 @@ module.exports = ({
         while (cursor < length && isDigit(input.charCodeAt(cursor))) cursor++;
         validNumber = validNumber && cursor > fractionStart;
       }
-      if (validNumber && (cursor === length || isSpace(input.charCodeAt(cursor)) || input.charCodeAt(cursor) === 61 || input.charCodeAt(cursor) === 64)) {
+      if (validNumber && (cursor === length || isSpace(input.charCodeAt(cursor)) ||
+        input.charCodeAt(cursor) === 61 || input.charCodeAt(cursor) === 64 ||
+        input.charCodeAt(cursor) === 123 || input.charCodeAt(cursor) === 125)) {
         this.offset = cursor;
         return { type: TOKEN.NUMBER, value: input.slice(start, cursor), start };
       }
@@ -89,11 +114,21 @@ module.exports = ({
         this.advance();
         const balanceAssignment = this.parseAmount('balance assignment');
         this.expectEnd();
-        return { amount: null, cost: null, balanceAssignment, balanceAssertion: null };
+        return { amount: null, lotCost: null, cost: null, balanceAssignment, balanceAssertion: null };
       }
       const amount = this.parseAmount('posting amount');
+      let lotCost = null;
       let cost = null;
       let balanceAssertion = null;
+      if (this.current.type === TOKEN.LEFT_BRACE || this.current.type === TOKEN.TOTAL_LEFT_BRACE) {
+        const total = this.advance().type === TOKEN.TOTAL_LEFT_BRACE;
+        lotCost = { total, amount: this.parseAmount('lot cost') };
+        const closing = total ? TOKEN.TOTAL_RIGHT_BRACE : TOKEN.RIGHT_BRACE;
+        if (this.current.type !== closing) {
+          this.lexer.error(`Expected ${JSON.stringify(total ? '}}' : '}')} after lot cost`, this.current.start);
+        }
+        this.advance();
+      }
       if (this.current.type === TOKEN.AT || this.current.type === TOKEN.TOTAL_AT) {
         const total = this.advance().type === TOKEN.TOTAL_AT;
         cost = { total, amount: this.parseAmount('cost') };
@@ -103,7 +138,7 @@ module.exports = ({
         balanceAssertion = this.parseAmount('balance assertion');
       }
       this.expectEnd();
-      return { amount, cost, balanceAssignment: null, balanceAssertion };
+      return { amount, lotCost, cost, balanceAssignment: null, balanceAssertion };
     }
     expectEnd() {
       if (this.current.type !== TOKEN.EOF) this.lexer.error(`Unexpected token ${JSON.stringify(this.current.value)}`, this.current.start);

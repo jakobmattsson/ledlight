@@ -22,6 +22,7 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
     'balanceHistoryReport',
     'ensureProjectDatabaseCurrent',
     'errorCodes',
+    'gainReport',
     'investmentPerformance',
     'loadJournal',
     'loadProjectPaths',
@@ -110,6 +111,7 @@ test('loads SQLite only when a project database operation needs it', (t) => {
   assert.deepEqual(project.accountPostings({ account: 'Assets:Cash' }), []);
   assert.deepEqual(project.aggregateReport(), []);
   assert.deepEqual(project.balanceHistoryReport(), []);
+  assert.deepEqual(project.gainReport(), []);
   assert.deepEqual(project.commodityDescriptions(), [{
     commodity: 'SEK',
     comment: null,
