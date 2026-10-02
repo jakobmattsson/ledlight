@@ -54,7 +54,7 @@ Ledlight {
   postingDate = "[" date "]" horizontal*
   inlineComment = horizontal* ";" horizontal* commentText
   commentText = (~newline any)*
-  directiveValue = (~";" ~newline any)+
+  directiveValue = (~forbiddenDirectiveValueCharacter any)+
 
   date = digit digit digit digit "-" digit digit "-" digit digit
 
@@ -70,4 +70,5 @@ Ledlight {
   forbiddenDescriptionSymbolCharacter = ";" | newline
   forbiddenAccountSymbolCharacter = fieldSeparator | ";" | newline
   forbiddenCommoditySymbolCharacter = horizontal | "@" | "=" | ";" | "\"" | "'" | newline
+  forbiddenDirectiveValueCharacter = ";" | newline
 }
