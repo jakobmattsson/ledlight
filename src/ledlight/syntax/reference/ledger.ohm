@@ -2,20 +2,17 @@ Ledlight {
   document = topLevel* end
 
   topLevel
-    = transaction
-    | commodityDirective
-    | accountDirective
-    | tagDirective
-    | includeDirective
-    | priceDirective
-    | topLevelComment
-    | blankLine
+    = date horizontal+ description inlineComment? lineEnd (indentedComment | posting)+                         -- transaction
+    | "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*             -- commodity
+    | "account" horizontal+ directiveValue inlineComment? lineEnd                                            -- account
+    | "tag" horizontal+ directiveValue inlineComment? lineEnd                                                -- tag
+    | "include" horizontal+ directiveValue inlineComment? lineEnd                                            -- include
+    | "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd -- price
+    | ";" horizontal* commentText lineEnd                                                                    -- comment
+    | horizontal* newline                                                                                     -- blank
 
-  transaction = transactionHeader transactionBody+
-  transactionBody = indentedComment | posting
-
-  transactionHeader = date horizontal+ description inlineComment? lineEnd
   description = (~forbiddenDescriptionSymbolCharacter any)+
+  indentedComment = indent ";" horizontal* commentText lineEnd
 
   posting = indent account amountPart? horizontal* postingComment? lineEnd
   account = (~forbiddenAccountSymbolCharacter any)+
@@ -33,34 +30,24 @@ Ledlight {
 
   commoditySymbol = (~forbiddenCommoditySymbolCharacter any)+
 
-  includeDirective = "include" horizontal+ directiveValue inlineComment? lineEnd
-  accountDirective = "account" horizontal+ directiveValue inlineComment? lineEnd
-  tagDirective = "tag" horizontal+ directiveValue inlineComment? lineEnd
-
-  commodityDirective = "commodity" horizontal+ commoditySymbol inlineComment? horizontal* lineEnd commodityBody*
   commodityBody = indent "format" horizontal+ commodityFormat inlineComment? horizontal* lineEnd  -- format
-                | indent "default" (horizontal+ directiveValue)? inlineComment? lineEnd            -- default
+                | indent "default" (horizontal+ directiveValue)? inlineComment? lineEnd            -- default // Should remove "directiveValue" from default I think
   commodityFormat = formatQuantity horizontal+ commoditySymbol
   formatQuantity = groupedFormatInteger ("." digit+)?  -- grouped
                  | digit+ ("." digit+)?                -- ungrouped
-  groupedFormatInteger = digit digit? digit? ("," digit digit digit)+
+  groupedFormatInteger = digit digit? digit? ("," digit digit digit)+      // The format of this must be more flexible
 
-  priceDirective = "P" horizontal+ date horizontal+ commoditySymbol horizontal+ amount horizontal* inlineComment? lineEnd
-
-  indentedComment = indent ";" horizontal* commentText lineEnd
-  topLevelComment = ";" horizontal* commentText lineEnd
   postingComment = ";" horizontal* ("[" date "]" horizontal*)? commentText
-  inlineComment = horizontal* ";" horizontal* commentText
+  inlineComment = horizontal* ";" horizontal* commentText       // What about tags in comments? should they be parsed out correctly?
   commentText = (~newline any)*
   directiveValue = (~forbiddenDirectiveValueCharacter any)+
 
   date = digit digit digit digit "-" digit digit "-" digit digit
 
-  fieldSeparator = "\t"                -- tab
+  fieldSeparator = "\t"                -- tab // Are these names needed or can we remove them to make things here look simpler?
                  | "  " horizontal*    -- spaces
   indent = horizontal+
   horizontal = " " | "\t"
-  blankLine = horizontal* newline
   lineEnd = newline  -- newline
           | end      -- end
   newline = "\r\n" | "\n"
