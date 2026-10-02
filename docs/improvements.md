@@ -100,8 +100,9 @@ database modules. The project API exposes the metadata through
 acquiring accounting logic of its own.
 
 Tests should cover zero-, two-, and multi-decimal commodities as well as a
-format without digit grouping. A missing `format` declaration needs one
-documented fallback policy.
+format without digit grouping. Declared formats apply only to human-readable
+CLI output; CSV and JSON retain canonical, ungrouped decimal values. A missing
+`format` declaration still needs one documented fallback policy.
 
 ## Priority 5: make numeric precision boundaries explicit
 

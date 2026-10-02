@@ -10,21 +10,20 @@ const cliFormat = resolveRepositoryModule('src/ledlight/cli/format.js');
 
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
-  const ledlight = {
-    version: '1.2.3',
-    aggregateReport(options, startDirectory) {
-      calls.push({ operation: 'aggregateReport', options, startDirectory });
+  const project = {
+    aggregateReport(options) {
+      calls.push({ operation: 'aggregateReport', options });
       return [
         { account: 'Assets:Cash', quantity: '-10', commodity: 'USD' },
         { account: 'Total', quantity: '-10', commodity: 'USD', isTotal: true },
       ];
     },
-    balanceHistoryReport(options, startDirectory) {
-      calls.push({ operation: 'balanceHistoryReport', options, startDirectory });
+    balanceHistoryReport(options) {
+      calls.push({ operation: 'balanceHistoryReport', options });
       return [{ date: '2024-01-01', amount: '-10', commodity: 'USD' }];
     },
-    investmentPerformance(options, startDirectory) {
-      calls.push({ operation: 'investmentPerformance', options, startDirectory });
+    investmentPerformance(options) {
+      calls.push({ operation: 'investmentPerformance', options });
       return {
         from: null,
         to: null,
@@ -38,6 +37,17 @@ test('delegates report behavior to the public Node API and only formats results'
         moneyWeightedReturnTotal: null,
         moneyWeightedReturn: null,
       };
+    },
+    commodityDescriptions() {
+      calls.push({ operation: 'commodityDescriptions' });
+      return [{ commodity: 'USD', comment: null, format: '1,000.00 USD', isDefault: true }];
+    },
+  };
+  const ledlight = {
+    version: '1.2.3',
+    openProject(startDirectory) {
+      calls.push({ operation: 'openProject', startDirectory });
+      return project;
     },
   };
   const { runReportCommand } = createCommand({ ledlight, cliArguments, cliFormat });
@@ -61,6 +71,7 @@ test('delegates report behavior to the public Node API and only formats results'
   );
 
   assert.deepEqual(calls, [
+    { operation: 'openProject', startDirectory: '/project' },
     {
       operation: 'aggregateReport',
       options: {
@@ -69,20 +80,21 @@ test('delegates report behavior to the public Node API and only formats results'
         invert: true,
         includeTotal: true,
       },
-      startDirectory: '/project',
     },
+    { operation: 'commodityDescriptions' },
+    { operation: 'openProject', startDirectory: '/project' },
     {
       operation: 'balanceHistoryReport',
       options: {
         accounts: [],
         invert: true,
       },
-      startDirectory: '/project',
     },
+    { operation: 'openProject', startDirectory: '/project' },
     {
       operation: 'investmentPerformance',
       options: { accounts: [], commodities: [], excludeCommodities: [] },
-      startDirectory: '/project',
     },
+    { operation: 'commodityDescriptions' },
   ]);
 });
