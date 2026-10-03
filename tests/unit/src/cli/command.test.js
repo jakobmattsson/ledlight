@@ -47,14 +47,14 @@ test('delegates report behavior to the public Node API and only formats results'
       return [{ commodity: 'USD', comment: null, format: '1,000.00 USD', isDefault: true }];
     },
   };
-  const ledlight = {
+  const project = {
     openJournal(journalPath) {
       calls.push({ operation: 'openJournal', journalPath });
       return journal;
     },
   };
   const { runReportCommand } = createCommand({
-    ledlight,
+    project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,
     cliFormat,
@@ -147,11 +147,11 @@ test('delegates non-report commands to the corresponding journal operations', ()
       };
     },
   };
-  const ledlight = {
+  const project = {
     openJournal(journalPath) { calls.push(['openJournal', journalPath]); return journal; },
   };
   const { runReportCommand } = createCommand({
-    ledlight,
+    project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,
     cliFormat,
