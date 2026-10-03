@@ -61,9 +61,6 @@ module.exports = ({
   const schemaInputs = (schema) => Object.keys(schema.shape);
   const journalInputs = (schema) => ['journalPath', ...schemaInputs(schema)];
   const apiDefinitions = Object.freeze({
-    databasePathForJournal: { inputs: ['journalPath'] },
-    ensureDatabaseCurrent: { inputs: ['journalPath'] },
-    openJournal: { inputs: ['journalPath'] },
     accountBalances: { inputs: journalInputs(accountBalancesOptionsSchema) },
     accountPostings: { inputs: journalInputs(accountPostingsOptionsSchema) },
     aggregateReport: { inputs: journalInputs(aggregateReportOptionsSchema) },
@@ -98,10 +95,6 @@ module.exports = ({
     }
   }
 
-  function databasePathForJournal(journalPath) {
-    return journalPaths(journalPath).databasePath;
-  }
-
   function ensureCurrent(journalPath) {
     const paths = journalPaths(journalPath);
     try {
@@ -113,30 +106,6 @@ module.exports = ({
       if (Object.values(errorCodes).includes(error.code)) throw error;
       throw createError(errorCodes.DATABASE, error.message);
     }
-  }
-
-  function aggregateReport(journalPath, options) {
-    return openJournal(journalPath).aggregateReport(options);
-  }
-
-  function balanceHistoryReport(journalPath, options) {
-    return openJournal(journalPath).balanceHistoryReport(options);
-  }
-
-  function investmentPerformance(journalPath, options) {
-    return openJournal(journalPath).investmentPerformance(options);
-  }
-
-  function gainReport(journalPath, options) {
-    return openJournal(journalPath).gainReport(options);
-  }
-
-  function accountBalances(journalPath, options) {
-    return openJournal(journalPath).accountBalances(options);
-  }
-
-  function accountPostings(journalPath, options) {
-    return openJournal(journalPath).accountPostings(options);
   }
 
   function openJournal(journalPath) {
@@ -191,14 +160,7 @@ module.exports = ({
 
   return {
     apiDefinitions,
-    accountBalances,
-    accountPostings,
-    aggregateReport,
-    balanceHistoryReport,
-    gainReport,
-    investmentPerformance,
-    databasePathForJournal,
-    ensureDatabaseCurrent: ensureCurrent,
+    ensureJournalCurrent: ensureCurrent,
     openJournal,
   };
 };

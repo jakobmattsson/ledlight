@@ -1,10 +1,9 @@
 # Node.js API reference
 
-Ledlight is a CommonJS module. Import supported operations from the package
-root:
+Ledlight is a CommonJS module. The package root exports only `openJournal`:
 
 ```js
-const ledlight = require('ledlight');
+const { openJournal } = require('ledlight');
 ```
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
@@ -28,70 +27,25 @@ on a Ledlight-specific error class or inspect message text. Syntax errors also
 expose `source`, `line`, and `column`; an underlying SQLite code is preserved as
 `sqliteCode` when available.
 
-## Journal database paths and freshness
-
-### `databasePathForJournal(journalPath)`
-
-Returns the deterministic SQLite cache path for the journal. `journalPath` may
-be relative to the current working directory, but it must point directly to an
-existing file. Ledlight resolves symbolic links before deriving the cache
-identity. It never searches parent directories or reads `.ledgerrc`.
-
-The cache is stored below the platform cache directory:
-
-- macOS: `~/Library/Caches/ledlight`;
-- Linux: `$XDG_CACHE_HOME/ledlight`, or `~/.cache/ledlight`;
-- Windows: `%LOCALAPPDATA%\ledlight\Cache`.
-
-The database path is `journals/<sha256>/ledger.sqlite` below that directory,
-where the SHA-256 value is derived from the canonical absolute journal path.
-Set `LEDLIGHT_CACHE_HOME` to override the Ledlight cache root.
-
-### `ensureDatabaseCurrent(journalPath)`
-
-Canonicalizes the journal path, compares the source manifest with the stored
-manifest, and rebuilds the database when required. Rebuilds are serialized across
-Ledlight processes. A process that waited for another rebuild checks freshness
-again and reuses the completed database when possible. Waiting is bounded; a
-timeout fails with `error.code === 'LEDLIGHT_DATABASE'`. The result is:
-
-```js
-{
-  journalPath,
-  databasePath,
-  rebuilt,
-  status: {
-    databasePath,
-    journalPath,
-    inSync,
-    reason,
-    added,
-    removed,
-    changed,
-  },
-  summary, // present only after a rebuild
-}
-```
-
-The rebuild summary contains source, entry, transaction, posting, price, and
-materialized-valuation counts together with the valuation commodity.
+## Opening a journal
 
 ### `openJournal(journalPath)`
 
-Ensures database freshness once and returns a journal object. Use this when
-running several operations against one database snapshot. The object contains
-the journal and database paths, freshness result, and all methods documented under
-[Journal methods](#journal-methods). It also provides journal-bound
-versions of all report and account methods below, without the
-`journalPath` argument.
+`journalPath` may be relative to the current working directory, but it must
+point directly to an existing file. Ledlight resolves symbolic links and never
+searches parent directories or reads `.ledgerrc`.
+
+Opening a journal ensures database freshness once and returns a journal object.
+Use the same object for several operations against one database snapshot. Its
+query methods are documented below. Reopen the journal to observe source
+changes.
 
 ## Reports
 
-Top-level report functions accept `(journalPath, options)`. `journalPath` is
-required and `options` may be omitted. Journal-bound methods accept only
-`options`.
+Report methods are called on the object returned by `openJournal()` and accept
+an optional `options` object.
 
-### `aggregateReport(journalPath, options)`
+### `journal.aggregateReport(options)`
 
 Options:
 
@@ -111,7 +65,7 @@ Ordinary rows are `{ account, quantity, commodity }`, sorted by account and
 commodity. `withValuationValue` adds an exact `valuationValue`. A total row is
 `{ account: 'Total', quantity, commodity, isTotal: true }`.
 
-### `balanceHistoryReport(journalPath, options)`
+### `journal.balanceHistoryReport(options)`
 
 Options are `from`, `to`, `accounts`, `dateBasis`, `invert`, and optional
 `accountFactors`. The first five have the same meanings as in
@@ -130,7 +84,7 @@ Returns daily rows sorted by date:
 
 Amounts are exact decimal strings in the journal default commodity.
 
-### `gainReport(journalPath, options)`
+### `journal.gainReport(options)`
 
 Returns unrealized gains and losses for open non-default commodity positions,
 grouped by account and expressed as exact decimal strings in the journal
@@ -142,7 +96,7 @@ and valuation date, `accounts` contains literal account prefixes, and
 `dateBasis` is `posting` (the default) or `transaction`. When `to` is omitted,
 the latest available journal price is used.
 
-### `investmentPerformance(journalPath, options)`
+### `journal.investmentPerformance(options)`
 
 Options are `from`, `to`, `accounts`, `commodities`, and
 `excludeCommodities`. The three selections are arrays of non-empty strings.
@@ -175,12 +129,12 @@ improvement backlog.
 
 ## Account operations
 
-### `accountBalances(journalPath, { account, to })`
+### `journal.accountBalances({ account, to })`
 
 Returns `{ quantity, commodity }` rows for one exact account through the
 optional inclusive date. Rows are sorted by commodity.
 
-### `accountPostings(journalPath, { account, after })`
+### `journal.accountPostings({ account, after })`
 
 Returns resolved amounts for one exact account after the optional exclusive
 date. A row is:
@@ -197,12 +151,9 @@ date. A row is:
 Activity qualifies when either its transaction date or posting date is after
 `after`. Rows are ordered by posting date and journal position.
 
-## Journal methods
+## Additional journal queries
 
-These methods are currently available on the object returned by `openJournal`
-but do not have top-level equivalents.
-
-### `commodityDescriptions()`
+### `journal.commodityDescriptions()`
 
 Returns one row per declared commodity, sorted by commodity symbol:
 
@@ -219,14 +170,14 @@ Returns one row per declared commodity, sorted by commodity symbol:
 commodity has several declarations, later comments and format properties take
 precedence. Other commodity properties are not currently exposed.
 
-### `accountTransactions({ account })`
+### `journal.accountTransactions({ account })`
 
 Returns newest-first transactions containing postings to one exact account.
 Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
 `balance` for that commodity.
 
-### `ledgerAccounts()`
+### `journal.ledgerAccounts()`
 
 Returns declared and used accounts sorted by name:
 
@@ -238,21 +189,21 @@ Returns declared and used accounts sorted by name:
 }
 ```
 
-### `ledgerTransaction({ transactionId })`
+### `journal.ledgerTransaction({ transactionId })`
 
 Returns one transaction or `null`. The transaction contains
 `transactionId`, `transactionDate`, description, payee, narration, comment,
 and postings. Each posting contains its date, account,
 comment, and exact `{ quantity, commodity }` amounts.
 
-### `ledgerTransactions({ order, page, pageSize })`
+### `journal.ledgerTransactions({ order, page, pageSize })`
 
 Returns a paginated transaction collection. `order` is `newest` or `oldest`;
 `page` and `pageSize` are positive integers, and `pageSize` cannot exceed 100.
 The result contains `order`, the selected `page`, `pageSize`,
 `totalTransactions`, `totalPages`, and `transactions`.
 
-### `ledgerValuationRateResolver()`
+### `journal.ledgerValuationRateResolver()`
 
 Returns a cached function `resolve(commodity, throughDate)`. The function
 returns the exact rate from `commodity` to the journal default commodity using
@@ -261,10 +212,10 @@ a circular chain is encountered.
 
 ## Command-line parity
 
-Every callable operation in the package API and on the object returned by
-`openJournal()` has a CLI command. Run `ledlight --help` for the complete
-command list and per-command parameters. Journal database commands require
-`--file PATH`, corresponding to the API's `journalPath` argument.
+Every query method on the object returned by `openJournal()` has a CLI command,
+and every CLI command maps to one such method. Run `ledlight --help` for the
+complete command list and per-command parameters. Commands require `--file
+PATH`, corresponding to the `journalPath` passed to `openJournal()`.
 
 Commands without an established table format return the API result as JSON.
 The report commands preserve their human-readable formats and accept `--json`

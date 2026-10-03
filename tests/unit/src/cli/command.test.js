@@ -129,11 +129,11 @@ test('delegates report behavior to the public Node API and only formats results'
   ]);
 });
 
-test('delegates non-report commands to every remaining public API operation', () => {
+test('delegates non-report commands to the corresponding journal operations', () => {
   const calls = [];
   const journal = {
-    journalPath: '/journal',
-    rebuilt: false,
+    accountBalances(options) { calls.push(['accountBalances', options]); return ['balances']; },
+    accountPostings(options) { calls.push(['accountPostings', options]); return ['postings']; },
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
     commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
     ledgerAccounts() { calls.push(['ledgerAccounts']); return ['accounts']; },
@@ -148,10 +148,6 @@ test('delegates non-report commands to every remaining public API operation', ()
     },
   };
   const ledlight = {
-    databasePathForJournal(journalPath) { calls.push(['databasePathForJournal', journalPath]); return '/cache/ledger.sqlite'; },
-    ensureDatabaseCurrent(journalPath) { calls.push(['ensureDatabaseCurrent', journalPath]); return { rebuilt: true }; },
-    accountBalances(journalPath, options) { calls.push(['accountBalances', journalPath, options]); return ['balances']; },
-    accountPostings(journalPath, options) { calls.push(['accountPostings', journalPath, options]); return ['postings']; },
     openJournal(journalPath) { calls.push(['openJournal', journalPath]); return journal; },
   };
   const { runReportCommand } = createCommand({
@@ -162,9 +158,6 @@ test('delegates non-report commands to every remaining public API operation', ()
   });
   const run = (arguments_) => JSON.parse(runReportCommand(arguments_));
 
-  assert.equal(run(['database-path', '--file', '/journal']), '/cache/ledger.sqlite');
-  assert.deepEqual(run(['ensure-database', '--file', '/journal']), { rebuilt: true });
-  assert.deepEqual(run(['open-journal', '--file', '/journal']), { journalPath: '/journal', rebuilt: false });
   assert.deepEqual(run(['account-balances', '--file', '/journal', '--account', 'Assets:Cash']), ['balances']);
   assert.deepEqual(run(['account-postings', '--file', '/journal', '--account', 'Assets:Cash']), ['postings']);
   assert.deepEqual(run(['account-transactions', '--file', '/journal', '--account', 'Assets:Cash']), ['transactions']);
@@ -179,11 +172,8 @@ test('delegates non-report commands to every remaining public API operation', ()
   ]), '10.5');
 
   assert.deepEqual(calls, [
-    ['databasePathForJournal', '/journal'],
-    ['ensureDatabaseCurrent', '/journal'],
-    ['openJournal', '/journal'],
-    ['accountBalances', '/journal', { account: 'Assets:Cash' }],
-    ['accountPostings', '/journal', { account: 'Assets:Cash' }],
+    ['openJournal', '/journal'], ['accountBalances', { account: 'Assets:Cash' }],
+    ['openJournal', '/journal'], ['accountPostings', { account: 'Assets:Cash' }],
     ['openJournal', '/journal'], ['accountTransactions', { account: 'Assets:Cash' }],
     ['openJournal', '/journal'], ['commodityDescriptions'],
     ['openJournal', '/journal'], ['ledgerAccounts'],

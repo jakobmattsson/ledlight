@@ -9,10 +9,8 @@ const path = require('node:path');
 const test = require('node:test');
 const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
-const {
-  databasePathForJournal,
-  openJournal,
-} = resolveRepositoryModule("src/core/ledlight.js");
+const { openJournal } = resolveRepositoryModule("src/core/ledlight.js");
+const { pathsForJournal } = resolveRepositoryModule("src/core/cache-paths.js");
 const { errorCodes } = resolveRepositoryModule("src/core/public-errors.js");
 const {
   ensureDatabaseCurrent,
@@ -335,7 +333,7 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
   Assets:Cash,Main  1 SEK
   Equity:Opening
 `);
-  const databasePath = databasePathForJournal(journalPath);
+  const { databasePath } = pathsForJournal(journalPath);
 
   const first = execFileSync(process.execPath, [
     cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
