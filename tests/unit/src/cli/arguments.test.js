@@ -11,8 +11,6 @@ const project = resolveRepositoryModule('src/core/project.js');
 
 test('defines one CLI command for every public API operation', () => {
   assert.deepEqual(apiCommands, {
-    loadProjectPaths: 'project-paths',
-    ensureProjectDatabaseCurrent: 'ensure-database',
     openProject: 'open-project',
     accountBalances: 'account-balances',
     accountPostings: 'account-postings',

@@ -20,21 +20,13 @@ module.exports = ({
 
   function runJsonCommand(parsed) {
     const { command, startDirectory, options } = parsed;
-    if (command === 'project-paths') return formatJson(ledlight.loadProjectPaths(startDirectory));
-    if (command === 'ensure-database') {
-      return formatJson(ledlight.ensureProjectDatabaseCurrent(startDirectory));
-    }
+    const project = ledlight.openProject(startDirectory);
     if (command === 'open-project') {
-      return formatJson(jsonProjectSnapshot(ledlight.openProject(startDirectory)));
-    }
-    if (command === 'account-balances') {
-      return formatJson(ledlight.accountBalances(options, startDirectory));
-    }
-    if (command === 'account-postings') {
-      return formatJson(ledlight.accountPostings(options, startDirectory));
+      return formatJson(jsonProjectSnapshot(project));
     }
 
-    const project = ledlight.openProject(startDirectory);
+    if (command === 'account-balances') return formatJson(project.accountBalances(options));
+    if (command === 'account-postings') return formatJson(project.accountPostings(options));
     if (command === 'account-transactions') return formatJson(project.accountTransactions(options));
     if (command === 'commodity-descriptions') return formatJson(project.commodityDescriptions());
     if (command === 'ledger-accounts') return formatJson(project.ledgerAccounts());

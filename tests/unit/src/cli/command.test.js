@@ -118,6 +118,8 @@ test('delegates non-report commands to every remaining public API operation', ()
   const project = {
     projectRoot: '/project',
     rebuilt: false,
+    accountBalances(options) { calls.push(['accountBalances', options]); return ['balances']; },
+    accountPostings(options) { calls.push(['accountPostings', options]); return ['postings']; },
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
     commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
     ledgerAccounts() { calls.push(['ledgerAccounts']); return ['accounts']; },
@@ -132,10 +134,6 @@ test('delegates non-report commands to every remaining public API operation', ()
     },
   };
   const ledlight = {
-    loadProjectPaths(directory) { calls.push(['loadProjectPaths', directory]); return { projectRoot: directory }; },
-    ensureProjectDatabaseCurrent(directory) { calls.push(['ensureProjectDatabaseCurrent', directory]); return { rebuilt: true }; },
-    accountBalances(options, directory) { calls.push(['accountBalances', options, directory]); return ['balances']; },
-    accountPostings(options, directory) { calls.push(['accountPostings', options, directory]); return ['postings']; },
     openProject(directory) { calls.push(['openProject', directory]); return project; },
   };
   const { runReportCommand } = createCommand({
@@ -146,8 +144,6 @@ test('delegates non-report commands to every remaining public API operation', ()
   });
   const run = (arguments_) => JSON.parse(runReportCommand(arguments_, { startDirectory: '/cwd' }));
 
-  assert.deepEqual(run(['project-paths', '--directory', '/other']), { projectRoot: '/other' });
-  assert.deepEqual(run(['ensure-database']), { rebuilt: true });
   assert.deepEqual(run(['open-project']), { projectRoot: '/project', rebuilt: false });
   assert.deepEqual(run(['account-balances', '--account', 'Assets:Cash']), ['balances']);
   assert.deepEqual(run(['account-postings', '--account', 'Assets:Cash']), ['postings']);
@@ -163,11 +159,9 @@ test('delegates non-report commands to every remaining public API operation', ()
   ]), '10.5');
 
   assert.deepEqual(calls, [
-    ['loadProjectPaths', '/other'],
-    ['ensureProjectDatabaseCurrent', '/cwd'],
     ['openProject', '/cwd'],
-    ['accountBalances', { account: 'Assets:Cash' }, '/cwd'],
-    ['accountPostings', { account: 'Assets:Cash' }, '/cwd'],
+    ['openProject', '/cwd'], ['accountBalances', { account: 'Assets:Cash' }],
+    ['openProject', '/cwd'], ['accountPostings', { account: 'Assets:Cash' }],
     ['openProject', '/cwd'], ['accountTransactions', { account: 'Assets:Cash' }],
     ['openProject', '/cwd'], ['commodityDescriptions'],
     ['openProject', '/cwd'], ['ledgerAccounts'],

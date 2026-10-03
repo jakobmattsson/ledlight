@@ -86,7 +86,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       const assert = require('node:assert/strict');
       const ledlight = require('ledlight');
       assert.equal(typeof ledlight.openProject, 'function');
-      assert.deepEqual(ledlight.aggregateReport({}, process.cwd()), [
+      assert.deepEqual(ledlight.openProject(process.cwd()).aggregateReport({}), [
         { account: 'Assets:Cash', quantity: '10', commodity: 'USD' },
         { account: 'Equity:Opening', quantity: '-10', commodity: 'USD' },
       ]);

@@ -46,8 +46,8 @@ const { openProject } = require('ledlight');
 const project = openProject('/path/to/ledger/project');
 ```
 
-See the [Node.js API reference](api.md) for every exported operation, project
-method, option, result shape, and ordering guarantee.
+See the [Node.js API reference](api.md) for `openProject`, every project method,
+option, result shape, and ordering guarantee.
 
 See the [package support policy](package.md) for supported Node.js and native
 platforms, module formats, published files, and compatibility guarantees.
@@ -69,16 +69,18 @@ const history = project.balanceHistoryReport({ from: '2024-01-01' });
 ## Public API and CLI contract
 
 Ledlight has two supported consumer interfaces: the Node.js module exported by
-the package root and the `ledlight` CLI. The Node.js module is the authoritative
-application interface. It owns project discovery, database freshness, report
-selection, filtering, transformations such as inversion, and calculated rows
-such as totals.
+the package root and the `ledlight` CLI. The package exports only `openProject`;
+all queries are methods on the returned project object. This project API is the
+authoritative application interface. It owns project discovery, database
+freshness, report selection, filtering, transformations such as inversion, and
+calculated rows such as totals.
 
 The CLI is a thin adapter over that public module. It may parse command-line
-arguments, map them to public API options, invoke an exported operation, and
-format the returned value as human-readable text, CSV, or JSON. Formatting may
-round values for display, align columns, add separators, and encode an existing
-result, but it must not calculate or otherwise change report semantics.
+arguments, open a project, map arguments to project-method options, invoke the
+method, and format the returned value as human-readable text, CSV, or JSON.
+Formatting may round values for display, align columns, add separators, and
+encode an existing result, but it must not calculate or otherwise change report
+semantics.
 
 The CLI command layer must not obtain data or transformations from internal
 report, project, database, or accounting operations. Pure output code may use
@@ -96,15 +98,13 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `project-paths` | `loadProjectPaths(startDirectory)` | Discover project paths |
-| `ensure-database` | `ensureProjectDatabaseCurrent(startDirectory)` | Refresh the database |
 | `open-project` | `openProject(startDirectory)` | Open and describe a project snapshot |
-| `account-balances` | `accountBalances(options, startDirectory)` | Exact-account balances |
-| `account-postings` | `accountPostings(options, startDirectory)` | Exact-account postings |
-| `aggregate` | `aggregateReport(options, startDirectory)` | Report selection and calculation |
-| `balance-history` | `balanceHistoryReport(options, startDirectory)` | Report selection and calculation |
-| `gain` | `gainReport(options, startDirectory)` | Unrealized gain or loss by account |
-| `investment-performance` | `investmentPerformance(options, startDirectory)` | Report selection and calculation |
+| `account-balances` | `openProject().accountBalances(options)` | Exact-account balances |
+| `account-postings` | `openProject().accountPostings(options)` | Exact-account postings |
+| `aggregate` | `openProject().aggregateReport(options)` | Report selection and calculation |
+| `balance-history` | `openProject().balanceHistoryReport(options)` | Report selection and calculation |
+| `gain` | `openProject().gainReport(options)` | Unrealized gain or loss by account |
+| `investment-performance` | `openProject().investmentPerformance(options)` | Report selection and calculation |
 | `account-transactions` | `openProject().accountTransactions(options)` | Exact-account transactions |
 | `commodity-descriptions` | `openProject().commodityDescriptions()` | Commodity metadata |
 | `ledger-accounts` | `openProject().ledgerAccounts()` | Account metadata |
@@ -222,11 +222,8 @@ in one transaction. Because the database is a reproducible cache, an older
 supported schema version is recreated from the journal instead of preserving
 and transforming cached rows in place.
 
-```js
-const { ensureProjectDatabaseCurrent } = require('ledlight');
-
-const result = ensureProjectDatabaseCurrent();
-```
+Opening a project checks the source manifest and rebuilds the derived database
+when required. Reopen the project when the source journal may have changed.
 
 `database_metadata` stores the schema version, root journal path, build time,
 and selected valuation commodity. It is database bookkeeping and is unrelated
@@ -272,14 +269,16 @@ than evaluate a string function for every posting. By default there is one row
 per account and commodity:
 
 ```js
-const { aggregateReport } = require('ledlight');
+const { openProject } = require('ledlight');
 
-const balanceSheet = aggregateReport({
+const project = openProject();
+
+const balanceSheet = project.aggregateReport({
   to: '2024-12-31',
   accounts: ['Assets:', 'Liabilities:'],
   dateBasis: 'transaction',
 });
-const valuedIncomeStatement = aggregateReport({
+const valuedIncomeStatement = project.aggregateReport({
   from: '2024-01-01',
   to: '2024-12-31',
   accounts: ['Income:', 'Expenses:'],
@@ -307,7 +306,7 @@ and does not apply commodity display separators. With `--value`, CSV amounts
 retain the existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the human-readable total.
 
-The same behavior is available directly through `aggregateReport`: set
+The same behavior is available directly through `project.aggregateReport`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append the total row. `includeTotal` requires `inValuationCommodity: true`, so
 the quantities have one common commodity. The CLI requests this total for
@@ -388,9 +387,11 @@ because their market value can still change. The `dateBasis` option is either
 `posting` (the default) or `transaction`.
 
 ```js
-const { balanceHistoryReport } = require('ledlight');
+const { openProject } = require('ledlight');
 
-const history = balanceHistoryReport({
+const project = openProject();
+
+const history = project.balanceHistoryReport({
   accounts: ['Assets:', 'Liabilities:'],
 });
 ```
@@ -401,7 +402,7 @@ This supports views such as after-tax balances without losing the single daily
 query for an account group:
 
 ```js
-const history = balanceHistoryReport({
+const history = project.balanceHistoryReport({
   accounts: ['Assets:', 'Liabilities:'],
   accountFactors: {
     'Assets:Pension': '0.7',
