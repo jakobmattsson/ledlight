@@ -47,24 +47,19 @@ module.exports = ({
   });
 
   function reportFilter(options) {
-    const clauses = [];
-    const parameters = [];
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
-    if (options.from) {
-      clauses.push(`${dateExpression} >= ?`);
-      parameters.push(options.from);
-    }
-    if (options.to) {
-      clauses.push(`${dateExpression} <= ?`);
-      parameters.push(options.to);
-    }
+    const clauses = [
+      `${dateExpression} >= COALESCE(?, '0000-00-00')`,
+      `${dateExpression} <= COALESCE(?, '9999-12-31')`,
+    ];
+    const parameters = [options.from ?? null, options.to ?? null];
     if (options.accounts.length > 0) {
       const accountFilter = accountPrefixFilter('p.account', options.accounts);
       clauses.push(accountFilter.sql);
       parameters.push(...accountFilter.parameters);
     }
     return {
-      sql: clauses.length > 0 ? `WHERE ${clauses.join('\n      AND ')}` : '',
+      sql: `WHERE ${clauses.join('\n      AND ')}`,
       parameters,
     };
   }
