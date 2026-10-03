@@ -9,7 +9,7 @@ const ledlight = require('ledlight');
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
-Report option objects reject unknown properties and values of the wrong type.
+API option objects reject unknown properties and values of the wrong type.
 
 ## Package metadata and errors
 
@@ -316,3 +316,17 @@ Returns a cached function `resolve(commodity, throughDate)`. The function
 returns the exact rate from `commodity` to the journal default commodity using
 prices on or before `throughDate`. It throws when no conversion path exists or
 a circular chain is encountered.
+
+## Command-line parity
+
+Every callable operation in the package API and on the object returned by
+`openProject()` has a CLI command. Run `ledlight --help` for the complete
+command list and per-command parameters. Project-bound commands accept
+`--directory PATH`, corresponding to the API's `startDirectory` argument.
+
+Commands without an established table format return the API result as JSON.
+The report commands preserve their human-readable formats and accept `--json`
+to return every API field. API option names use kebab case on the command line;
+for example, `withValuationValue` is `--with-valuation-value`, `includeTotal`
+is `--include-total`, and repeated `--account-factor ACCOUNT=FACTOR` values
+form the `accountFactors` object.

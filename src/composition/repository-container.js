@@ -12,47 +12,59 @@ const {
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const MODULE_NAMES = Object.freeze({
-  'src/ledlight/accounting/decimal.js': 'decimal',
-  'src/ledlight/accounting/posting-resolver.js': 'postingResolver',
-  'src/ledlight/accounting/valuation-commodity.js': 'valuationCommodity',
-  'src/ledlight/accounting/validate-journal.js': 'journalValidator',
-  'src/ledlight/application/project.js': 'project',
-  'src/ledlight/cli/arguments.js': 'cliArguments',
-  'src/ledlight/cli/command.js': 'cliCommand',
-  'src/ledlight/cli/format.js': 'cliFormat',
-  'src/ledlight/errors.js': 'publicErrors',
-  'src/ledlight/index.js': 'ledlight',
-  'src/ledlight/journal/create-loader.js': 'journalLoaderFactory',
-  'src/ledlight/journal/include-pattern.js': 'includePattern',
-  'src/ledlight/journal/load.js': 'journal',
-  'src/ledlight/journal/manifest.js': 'journalManifest',
-  'src/ledlight/journal/traverse.js': 'journalTraversal',
-  'src/ledlight/reports/account-details.js': 'accountDetails',
-  'src/ledlight/reports/account-prefix-filter.js': 'accountPrefixFilter',
-  'src/ledlight/reports/aggregate.js': 'aggregateReport',
-  'src/ledlight/reports/balance-history.js': 'balanceHistoryReport',
-  'src/ledlight/reports/commodity-descriptions.js': 'commodityDescriptions',
-  'src/ledlight/reports/gain.js': 'gainReport',
-  'src/ledlight/reports/investment-performance.js': 'investmentPerformanceReport',
-  'src/ledlight/reports/investment-returns.js': 'investmentReturns',
-  'src/ledlight/reports/options.js': 'reportOptions',
-  'src/ledlight/reports/reconciliation-entries.js': 'reconciliationEntries',
-  'src/ledlight/reports/valuation-rates.js': 'valuationRates',
-  'src/ledlight/reports/transactions.js': 'transactionReport',
-  'src/ledlight/sqlite/database.js': 'database',
-  'src/ledlight/sqlite/freshness.js': 'databaseFreshness',
-  'src/ledlight/sqlite/materialize-valuation-prices.js': 'valuationPriceMaterializer',
-  'src/ledlight/sqlite/migrate.js': 'databaseMigration',
-  'src/ledlight/sqlite/rebuild-lock.js': 'databaseRebuildLock',
-  'src/ledlight/sqlite/write-journal.js': 'journalWriter',
-  'src/ledlight/syntax/amount-parser.js': 'amountParser',
-  'src/ledlight/syntax/errors.js': 'syntaxErrors',
-  'src/ledlight/syntax/parser.js': 'ledgerParser',
-  'src/ledlight/syntax/reference/parser.js': 'referenceParser',
+  'src/api/errors.js': 'publicErrors',
+  'src/api/index.js': 'ledlight',
+  'src/api/options.js': 'apiOptions',
+  'src/application/project.js': 'project',
+  'src/cli/arguments.js': 'cliArguments',
+  'src/cli/command.js': 'cliCommand',
+  'src/cli/format.js': 'cliFormat',
+  'src/domain/accounting/decimal.js': 'decimal',
+  'src/domain/accounting/posting-resolver.js': 'postingResolver',
+  'src/domain/accounting/valuation-commodity.js': 'valuationCommodity',
+  'src/domain/accounting/validate-journal.js': 'journalValidator',
+  'src/domain/investments/returns.js': 'investmentReturns',
+  'src/ingestion/database/database.js': 'database',
+  'src/ingestion/database/freshness.js': 'databaseFreshness',
+  'src/ingestion/database/materialize-valuation-prices.js': 'valuationPriceMaterializer',
+  'src/ingestion/database/migrate.js': 'databaseMigration',
+  'src/ingestion/database/rebuild-lock.js': 'databaseRebuildLock',
+  'src/ingestion/database/write-journal.js': 'journalWriter',
+  'src/ingestion/journal/create-loader.js': 'journalLoaderFactory',
+  'src/ingestion/journal/include-pattern.js': 'includePattern',
+  'src/ingestion/journal/load.js': 'journal',
+  'src/ingestion/journal/manifest.js': 'journalManifest',
+  'src/ingestion/journal/traverse.js': 'journalTraversal',
+  'src/ingestion/syntax/amount-parser.js': 'amountParser',
+  'src/ingestion/syntax/errors.js': 'syntaxErrors',
+  'src/ingestion/syntax/parser.js': 'ledgerParser',
+  'src/ingestion/syntax/reference/parser.js': 'referenceParser',
+  'src/queries/account-balances.js': 'accountBalancesQuery',
+  'src/queries/account-postings.js': 'accountPostingsQuery',
+  'src/queries/account-transactions.js': 'accountTransactionsQuery',
+  'src/queries/aggregate.js': 'aggregateQuery',
+  'src/queries/balance-history.js': 'balanceHistoryQuery',
+  'src/queries/commodity-descriptions.js': 'commodityDescriptionsQuery',
+  'src/queries/gain.js': 'gainQuery',
+  'src/queries/investment-performance.js': 'investmentPerformanceQuery',
+  'src/queries/ledger-accounts.js': 'ledgerAccountsQuery',
+  'src/queries/ledger-transaction.js': 'ledgerTransactionQuery',
+  'src/queries/ledger-transactions.js': 'ledgerTransactionsQuery',
+  'src/queries/support/account-prefix-filter.js': 'accountPrefixFilter',
+  'src/queries/support/reconciliation-entries.js': 'reconciliationEntries',
+  'src/queries/support/valuation-rates.js': 'valuationRates',
 });
+const APPLICATION_SOURCE_DIRECTORIES = Object.freeze([
+  'api',
+  'application',
+  'cli',
+  'domain',
+  'ingestion',
+  'queries',
+]);
 const EXCLUDED_FACTORY_FILES = new Set([
-  'src/ledlight/cli/cli-modules.js',
-  'src/ledlight/cli/run.js',
+  'src/cli/cli-modules.js',
+  'src/cli/run.js',
 ]);
 
 function filesBelow(directory) {
@@ -63,7 +75,8 @@ function filesBelow(directory) {
 }
 
 function repositoryFactoryFiles() {
-  return filesBelow(path.join(REPOSITORY_ROOT, 'src/ledlight'))
+  return APPLICATION_SOURCE_DIRECTORIES.flatMap((directory) =>
+    filesBelow(path.join(REPOSITORY_ROOT, 'src', directory)))
     .filter((fileName) => fileName.endsWith('.js'))
     .filter((fileName) => !fileName.includes(`${path.sep}modules${path.sep}`))
     .filter((fileName) => !EXCLUDED_FACTORY_FILES.has(
@@ -99,6 +112,7 @@ function registerExternalModules(container) {
       const Database = require('better-sqlite3');
       return new Database(...arguments_);
     }),
+    zod: asValue(require('zod')),
   });
 }
 

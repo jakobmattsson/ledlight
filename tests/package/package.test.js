@@ -45,7 +45,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       'docs/package.md',
       'index.js',
       'package.json',
-      'src/ledlight/cli/run.js',
+      'src/cli/run.js',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);
     }

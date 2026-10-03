@@ -38,7 +38,7 @@ The current implementation provides:
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
-The public API is exported by `src/ledlight/index.js`:
+The public API is exported by `src/api/index.js`:
 
 ```js
 const { loadJournal, parse } = require('ledlight');
@@ -99,17 +99,33 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
+| `parse SOURCE_TEXT --source NAME` | `parse(sourceText, { source })` | Parse source text |
+| `load-journal ENTRY_PATH` | `loadJournal(entryPath)` | Load an include tree |
+| `project-paths` | `loadProjectPaths(startDirectory)` | Discover project paths |
+| `ensure-database` | `ensureProjectDatabaseCurrent(startDirectory)` | Refresh the database |
+| `open-project` | `openProject(startDirectory)` | Open and describe a project snapshot |
+| `account-balances` | `accountBalances(options, startDirectory)` | Exact-account balances |
+| `account-postings` | `accountPostings(options, startDirectory)` | Exact-account postings |
 | `aggregate` | `aggregateReport(options, startDirectory)` | Report selection and calculation |
 | `balance-history` | `balanceHistoryReport(options, startDirectory)` | Report selection and calculation |
 | `gain` | `gainReport(options, startDirectory)` | Unrealized gain or loss by account |
 | `investment-performance` | `investmentPerformance(options, startDirectory)` | Report selection and calculation |
+| `account-transactions` | `openProject().accountTransactions(options)` | Exact-account transactions |
+| `commodity-descriptions` | `openProject().commodityDescriptions()` | Commodity metadata |
+| `ledger-accounts` | `openProject().ledgerAccounts()` | Account metadata |
+| `ledger-transaction` | `openProject().ledgerTransaction(options)` | One transaction |
+| `ledger-transactions` | `openProject().ledgerTransactions(options)` | Paginated transactions |
+| `valuation-rate` | `openProject().ledgerValuationRateResolver()` | Resolve one valuation rate |
+| `--directory PATH` | `startDirectory` | Project discovery start directory |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
 | `--accounts PREFIX` | `options.accounts` | Repeated account-prefix selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
+| `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
-| Human-readable valued aggregate total | `options.includeTotal` | Total row calculated by the report API and requested by the CLI |
+| `--include-total` | `options.includeTotal` | Total row calculated by the report API |
+| `--account-factor ACCOUNT=FACTOR` | `options.accountFactors` | Exact-account balance-history factors |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `--csv` | None | Output formatting only |
@@ -117,32 +133,45 @@ underlying result.
 | `--version` | `version` | Public package metadata |
 | `--help` | None | CLI usage formatting only |
 
-Tests for the CLI command adapter verify that report calls are delegated to
-these public functions and that calculated rows are returned by the API before
-formatting.
+Commands without a specialized human-readable representation emit JSON.
+Report commands accept `--json` when the complete API result is needed; this
+is required to retain fields such as `valuationValue` and `factoredAmount`.
+Tests compare the callable package and project API inventory with the CLI
+command inventory, verify every parameter mapping, and verify that the command
+adapter delegates calculations to the API before formatting.
+
+Each report and query module owns a strict Zod schema beside its execution
+function and returns both from its module factory. Public calls are parsed by
+that schema before report logic runs. The project layer collects schema keys,
+while CLI coverage is derived from the actual positional arguments and options
+registered with Commander. Adding a field to a local operation schema without
+attaching a CLI argument to that input therefore fails during CLI composition
+and in the parity test.
 
 ## Architecture
 
-The implementation is organized by responsibility under `src/ledlight`:
+The implementation is organized by responsibility directly under `src`:
 
-- `syntax` contains the optimized parser, syntax errors, and the normative Ohm
-  reference implementation;
-- `journal` handles include traversal, glob expansion, source hashing, and
-  manifest-only scans;
-- `accounting` provides exact decimal arithmetic, semantic validation, and
-  posting resolution;
-- `sqlite` owns schema migration, freshness checks, and journal persistence;
-- `reports` separates aggregate SQL queries from price selection and exact
-  valuation-commodity
-  rate resolution;
+- `domain` provides exact decimal arithmetic, semantic validation, posting
+  resolution, and investment calculations;
+- `api` exposes the stable Node.js facade, public errors, and shared runtime-input
+  validation helpers;
+- `ingestion` owns the optimized parser and normative Ohm grammar, traverses
+  journal includes, persists the normalized database, and materializes query
+  optimizations;
+- `queries` contains one module per public API/CLI query—including aggregate,
+  balance-history, gain, and investment-performance queries—with its Zod schema
+  beside its execution function;
+- `queries/support` contains internal SQL, reconciliation, and valuation helpers
+  shared by query implementations;
 - `application` composes project paths, database freshness, and reports; and
 - `cli` contains argument parsing, output formatting, and the executable runner
   over the public Node.js API.
 
-Dependencies point inward: syntax and accounting contain no project or SQLite
-dependency, and application composes the lower-level modules into the public
-Node.js API. The CLI command layer depends on that public API; only its output
-formatter uses the shared exact-decimal helpers directly.
+Dependencies point inward: domain code has no project or SQLite dependency,
+ingestion writes the database, queries read it, and application composes those
+capabilities into the public Node.js API. The CLI command layer depends on that
+public API; only its output formatter uses shared exact-decimal helpers directly.
 
 ## Supported grammar
 
@@ -174,9 +203,9 @@ must have both a lot cost and a transaction price (`@` or `@@`). Unit and total
 annotations may be combined freely. Zero quantities are exempt because they do
 not acquire or dispose of a commodity.
 
-`src/ledlight/syntax/reference/ledger.ohm` is the normative description of the
+`src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `src/ledlight/syntax/reference/parser.js`. Tests parse representative
+semantics in `src/ingestion/syntax/reference/parser.js`. Tests parse representative
 documents with both Ohm and the optimized runtime parser and compare the
 resulting syntax trees. This keeps the grammar reviewable without adding
 parser-framework overhead to production imports.
