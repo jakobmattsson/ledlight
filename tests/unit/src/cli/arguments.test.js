@@ -4,11 +4,11 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const createArguments = require('../../../../src/cli/arguments');
-const argumentsModule = resolveRepositoryModule('src/cli/arguments.js');
+const createArguments = require('../../../../src/cli/cli-arguments');
+const argumentsModule = resolveRepositoryModule('src/cli/cli-arguments.js');
 const { apiCommands, parseArguments, usage } = argumentsModule;
-const journal = resolveRepositoryModule('src/ingestion/journal/load.js');
-const ledgerParser = resolveRepositoryModule('src/ingestion/syntax/parser.js');
+const journal = resolveRepositoryModule('src/ingestion/journal/journal.js');
+const ledgerParser = resolveRepositoryModule('src/ingestion/syntax/ledger-parser.js');
 const project = resolveRepositoryModule('src/core/project.js');
 
 test('defines one CLI command for every public API operation', () => {

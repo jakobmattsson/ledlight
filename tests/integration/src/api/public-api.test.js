@@ -11,7 +11,7 @@ const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
 const cliPath = path.join(ledlightPath, 'src/cli/run.js');
-const { apiCommands } = resolveRepositoryModule('src/cli/arguments.js');
+const { apiCommands } = resolveRepositoryModule('src/cli/cli-arguments.js');
 
 test('exposes the supported public API without eagerly loading SQLite', () => {
   delete require.cache[sqliteModulePath];

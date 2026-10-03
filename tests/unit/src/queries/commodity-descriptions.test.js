@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { openProject } = resolveRepositoryModule('src/core/public-api.js');
+const { openProject } = resolveRepositoryModule('src/core/ledlight.js');
 
 test('returns consolidated commodity metadata in symbol order', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity-descriptions-'));

@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('node:fs');
 const path = require('node:path');
 const {
   asFunction,
@@ -12,54 +11,47 @@ const {
 } = require('awilix');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
-const MODULE_NAMES = Object.freeze({
-  'src/cli/arguments.js': 'cliArguments',
-  'src/cli/command.js': 'cliCommand',
-  'src/cli/format.js': 'cliFormat',
-  'src/core/decimal.js': 'decimal',
-  'src/core/errors.js': 'publicErrors',
-  'src/core/options.js': 'apiOptions',
-  'src/core/project.js': 'project',
-  'src/core/public-api.js': 'ledlight',
-  'src/core/valuation-commodity.js': 'valuationCommodity',
-  'src/core/valuation-rate-resolver.js': 'valuationRateResolver',
-  'src/ingestion/accounting/posting-resolver.js': 'postingResolver',
-  'src/ingestion/accounting/validate-journal.js': 'journalValidator',
-  'src/ingestion/database/database.js': 'database',
-  'src/ingestion/database/freshness.js': 'databaseFreshness',
-  'src/ingestion/database/materialize-valuation-prices.js': 'valuationPriceMaterializer',
-  'src/ingestion/database/migrate.js': 'databaseMigration',
-  'src/ingestion/database/read.js': 'databaseReader',
-  'src/ingestion/database/rebuild-lock.js': 'databaseRebuildLock',
-  'src/ingestion/database/write-journal.js': 'journalWriter',
-  'src/ingestion/journal/create-loader.js': 'journalLoaderFactory',
-  'src/ingestion/journal/include-pattern.js': 'includePattern',
-  'src/ingestion/journal/load.js': 'journal',
-  'src/ingestion/journal/manifest.js': 'journalManifest',
-  'src/ingestion/journal/traverse.js': 'journalTraversal',
-  'src/ingestion/syntax/amount-parser.js': 'amountParser',
-  'src/ingestion/syntax/errors.js': 'syntaxErrors',
-  'src/ingestion/syntax/parser.js': 'ledgerParser',
-  'src/ingestion/syntax/reference/parser.js': 'referenceParser',
-  'src/queries/support/account-prefix-filter.js': 'accountPrefixFilter',
-  'src/queries/support/investment-returns.js': 'investmentReturns',
-  'src/queries/support/reconciliation-entries.js': 'reconciliationEntries',
-  'src/queries/support/valuation-rates.js': 'valuationRates',
-});
-const APPLICATION_SOURCE_DIRECTORIES = Object.freeze([
-  'cli',
-  'core',
-  'ingestion',
-  'queries',
-]);
-const EXCLUDED_FACTORY_FILES = new Set([
-  'src/cli/cli-modules.js',
-  'src/cli/run.js',
+const REPOSITORY_MODULE_PATTERNS = Object.freeze([
+  'src/cli/cli-arguments.js',
+  'src/cli/cli-command.js',
+  'src/cli/cli-format.js',
+  'src/core/*.js',
+  'src/ingestion/**/*.js',
+  'src/queries/support/*.js',
 ]);
 const QUERY_MODULE_PATTERN = 'src/queries/*.js';
+
+function repositoryModuleName(fileName) {
+  const baseName = path.basename(fileName, path.extname(fileName));
+  if (!/^[a-z]+(?:-[a-z]+)*$/u.test(baseName)) {
+    throw new Error(`Repository module filename must use lowercase kebab-case: ${fileName}`);
+  }
+  return baseName.replace(/-([a-z])/gu, (_match, letter) => letter.toUpperCase());
+}
+
+function repositoryModules() {
+  const modules = listModules(REPOSITORY_MODULE_PATTERNS, { cwd: REPOSITORY_ROOT });
+  const locations = new Map();
+  for (const module of modules) {
+    const name = repositoryModuleName(module.path);
+    const previous = locations.get(name);
+    if (previous) {
+      throw new Error(`Duplicate repository module name ${name}: ${previous} and ${module.path}`);
+    }
+    if (name === 'queries') {
+      throw new Error(`Repository module name is reserved for the query collection: ${module.path}`);
+    }
+    locations.set(name, module.path);
+  }
+  return modules;
+}
+
+const REPOSITORY_MODULES = repositoryModules();
 const REGISTRATION_LOCATIONS = new Map([
-  ...Object.entries(MODULE_NAMES).map(([fileName, registrationName]) =>
-    [registrationName, fileName]),
+  ...REPOSITORY_MODULES.map(({ path: fileName }) => [
+    repositoryModuleName(fileName),
+    path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/'),
+  ]),
   ['queries', 'src/queries'],
 ]);
 
@@ -90,26 +82,6 @@ function restrictedDependencies(fileName, dependencies) {
   });
 }
 
-function filesBelow(directory) {
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const entryPath = path.join(directory, entry.name);
-    return entry.isDirectory() ? filesBelow(entryPath) : [entryPath];
-  });
-}
-
-function repositoryFactoryFiles() {
-  const queryFiles = new Set(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
-    .map(({ path: fileName }) => fileName));
-  return APPLICATION_SOURCE_DIRECTORIES.flatMap((directory) =>
-    filesBelow(path.join(REPOSITORY_ROOT, 'src', directory)))
-    .filter((fileName) => fileName.endsWith('.js'))
-    .filter((fileName) => !queryFiles.has(fileName))
-    .filter((fileName) => !fileName.includes(`${path.sep}modules${path.sep}`))
-    .filter((fileName) => !EXCLUDED_FACTORY_FILES.has(
-      path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/'),
-    ));
-}
-
 function loadQueries(dependencies) {
   const names = new Set();
   return Object.freeze(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
@@ -131,13 +103,6 @@ function loadQueries(dependencies) {
       names.add(query.name);
       return Object.freeze(query);
     }));
-}
-
-function repositoryModuleName(fileName) {
-  const relativeName = path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
-  const name = MODULE_NAMES[relativeName];
-  if (!name) throw new Error(`No dependency-injection name is defined for ${relativeName}`);
-  return name;
 }
 
 function registerExternalModules(container) {
@@ -167,17 +132,33 @@ function registerExternalModules(container) {
 
 function registerRepositoryModules(container) {
   registerExternalModules(container);
-  for (const fileName of repositoryFactoryFiles()) {
+  const factoryLocations = new Map(REPOSITORY_MODULES.map(({ path: fileName }) => {
     const relativeName = path.relative(REPOSITORY_ROOT, fileName);
     const factory = require(fileName);
     if (typeof factory !== 'function') {
       throw new TypeError(`${relativeName} must export an Awilix factory.`);
     }
-    container.register(repositoryModuleName(fileName), asFunction(
-      (dependencies) => factory(restrictedDependencies(fileName, dependencies)),
-      { lifetime: Lifetime.SINGLETON },
-    ));
-  }
+    const name = repositoryModuleName(fileName);
+    if (container.hasRegistration(name)) {
+      throw new Error(`Repository module name conflicts with an existing registration: ${name}`);
+    }
+    return [factory, fileName];
+  }));
+  container.loadModules(REPOSITORY_MODULE_PATTERNS, {
+    cwd: REPOSITORY_ROOT,
+    formatName: 'camelCase',
+    resolverOptions: {
+      lifetime: Lifetime.SINGLETON,
+      register(factory, options) {
+        const fileName = factoryLocations.get(factory);
+        if (!fileName) throw new Error('Awilix loaded an unknown repository module factory');
+        return asFunction(
+          (dependencies) => factory(restrictedDependencies(fileName, dependencies)),
+          options,
+        );
+      },
+    },
+  });
   container.register('queries', asFunction(loadQueries, { lifetime: Lifetime.SINGLETON }));
   return container;
 }

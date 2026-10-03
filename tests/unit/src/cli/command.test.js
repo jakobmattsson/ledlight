@@ -4,9 +4,9 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const createCommand = require('../../../../src/cli/command');
-const cliArguments = resolveRepositoryModule('src/cli/arguments.js');
-const cliFormat = resolveRepositoryModule('src/cli/format.js');
+const createCommand = require('../../../../src/cli/cli-command');
+const cliArguments = resolveRepositoryModule('src/cli/cli-arguments.js');
+const cliFormat = resolveRepositoryModule('src/cli/cli-format.js');
 
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];

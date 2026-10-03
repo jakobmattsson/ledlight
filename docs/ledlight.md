@@ -38,7 +38,7 @@ The current implementation provides:
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
-The public API is exported by `src/core/public-api.js`:
+The public API is exported by `src/core/ledlight.js`:
 
 ```js
 const { loadJournal, parse } = require('ledlight');
@@ -174,7 +174,8 @@ Awilix supplies each repository factory through a boundary-checking proxy. Code
 outside `cli` cannot resolve CLI modules, and `ingestion` cannot resolve modules
 from `queries`. The complete container is resolved in a unit test so violations
 fail the verification suite even when the affected feature is not otherwise
-exercised.
+exercised. Repository factories use unique lowercase kebab-case filenames;
+Awilix `loadModules` converts each basename to its camel-case dependency name.
 
 ## Supported grammar
 
@@ -208,7 +209,7 @@ not acquire or dispose of a commodity.
 
 `src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `src/ingestion/syntax/reference/parser.js`. Tests parse representative
+semantics in `src/ingestion/syntax/reference/reference-parser.js`. Tests parse representative
 documents with both Ohm and the optimized runtime parser and compare the
 resulting syntax trees. This keeps the grammar reviewable without adding
 parser-framework overhead to production imports.

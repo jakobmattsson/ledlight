@@ -4,7 +4,7 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parse } = resolveRepositoryModule("src/ingestion/syntax/parser.js");
+const { parse } = resolveRepositoryModule("src/ingestion/syntax/ledger-parser.js");
 const { PostingResolver } = resolveRepositoryModule("src/ingestion/accounting/posting-resolver.js");
 
 function parseTransaction(sourceText) {

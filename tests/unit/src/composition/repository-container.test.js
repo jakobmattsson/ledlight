@@ -2,11 +2,19 @@
 
 const {
   createRepositoryContainer,
-  $$private: { assertDependencyAllowed },
+  $$private: { assertDependencyAllowed, repositoryModuleName },
 } = require('../../../../src/composition/repository-container');
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
+
+test('derives dependency names from unique kebab-case filenames', () => {
+  assert.equal(repositoryModuleName('/example/database-reader.js'), 'databaseReader');
+  assert.throws(
+    () => repositoryModuleName('/example/database_reader.js'),
+    /must use lowercase kebab-case/u,
+  );
+});
 
 test('prevents dependencies on CLI modules from outside the CLI', () => {
   assert.throws(

@@ -9,7 +9,7 @@ const {
   booleanOption,
   dateBasis,
   stringList,
-} = resolveRepositoryModule('src/core/options.js');
+} = resolveRepositoryModule('src/core/api-options.js');
 
 test('normalizes shared report options without mutating caller values', () => {
   const input = { accounts: ['Assets:', 'Assets:'], invert: true };
