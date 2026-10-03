@@ -30,7 +30,7 @@ module.exports = ({
   }
   function registerCommand(command, operation) {
     command.apiOperation = operation;
-    return command;
+    return command.addOption(new Option('-h, --help', 'show command help'));
   }
   const addBooleanOption = (command, flags, description, apiInput) => {
     const option = new Option(flags, description);
@@ -58,6 +58,8 @@ module.exports = ({
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
+    program.addOption(new Option('-V, --version', 'show the package version'));
+    program.addOption(new Option('-h, --help', 'show help'));
 
     for (const [name, operation, description] of [
       ['database-path', 'databasePathForJournal', 'show the journal cache database path'],
@@ -182,9 +184,15 @@ module.exports = ({
     return program;
   }
 
-  function usage() {
+  function usage(commandName) {
     const program = createProgram();
-    return [program, ...program.commands].map((command) => command.helpInformation().trimEnd()).join('\n\n');
+    if (commandName === undefined) {
+      return `${program.helpInformation().trimEnd()}\n\n` +
+        'Run "ledlight <command> --help" for detailed command usage.';
+    }
+    const command = program.commands.find((candidate) => candidate.name() === commandName);
+    if (!command) throw new Error(`Unknown command: ${commandName}`);
+    return command.helpInformation().trimEnd();
   }
   function commandCoverage() {
     return Object.fromEntries(createProgram().commands.map((command) => [

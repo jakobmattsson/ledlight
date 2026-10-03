@@ -86,10 +86,16 @@ module.exports = ({
   }
 
   function runReportCommand(arguments_) {
-    if (arguments_.length === 1 && (arguments_[0] === '--help' || arguments_[0] === '-h')) {
+    if (arguments_.length === 0 ||
+        (arguments_.length === 1 && ['--help', '-h'].includes(arguments_[0]))) {
       return `${usage()}\n`;
     }
-    if (arguments_.length === 1 && arguments_[0] === '--version') return `${version}\n`;
+    if (arguments_.length === 1 && ['--version', '-V'].includes(arguments_[0])) {
+      return `${version}\n`;
+    }
+    if (arguments_.length >= 2 && arguments_.slice(1).some((argument) => ['--help', '-h'].includes(argument))) {
+      return `${usage(arguments_[0])}\n`;
+    }
     const parsed = parseArguments(arguments_);
     return ['aggregate', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
       ? runReport(parsed)

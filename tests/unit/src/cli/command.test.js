@@ -60,8 +60,24 @@ test('delegates report behavior to the public Node API and only formats results'
     cliFormat,
   });
 
-  assert.match(runReportCommand(['--help']), /^Usage:/u);
+  const topLevelHelp = runReportCommand(['--help']);
+  assert.match(topLevelHelp, /^Usage:/u);
+  assert.doesNotMatch(topLevelHelp, /Usage: ledlight aggregate/u);
+  assert.equal(runReportCommand([]), topLevelHelp);
+  assert.match(
+    runReportCommand(['account-balances', '--help']),
+    /^Usage: ledlight account-balances[\s\S]*--account <name>/u,
+  );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
+  assert.equal(runReportCommand(['-V']), '1.2.3\n');
+  assert.throws(
+    () => runReportCommand(['help']),
+    /unknown command 'help'/u,
+  );
+  assert.throws(
+    () => runReportCommand(['version']),
+    /unknown command 'version'/u,
+  );
 
   assert.match(
     runReportCommand([
