@@ -110,50 +110,50 @@ module.exports = ({
 
   function openJournal(journalPath) {
     const current = ensureCurrent(journalPath);
-    const valuationPriceCache = new Map();
+    const caches = Object.freeze({ valuationPriceCache: new Map() });
     let ledgerValuationRateResolver;
+    const runQuery = (queryFunction, options) => queryDatabase(
+      current.databasePath,
+      (database) => queryFunction(database, options, caches),
+    );
     return {
       ...current,
       accountBalances(options) {
-        return queryDatabase(current.databasePath, (database) => queryAccountBalances(database, options));
+        return runQuery(queryAccountBalances, options);
       },
       accountPostings(options) {
-        return queryDatabase(current.databasePath, (database) => queryAccountPostings(database, options));
+        return runQuery(queryAccountPostings, options);
       },
       accountTransactions(options) {
-        return queryDatabase(current.databasePath, (database) => queryAccountTransactions(database, options));
+        return runQuery(queryAccountTransactions, options);
       },
       aggregateReport(options) {
-        return queryDatabase(current.databasePath,
-          (database) => queryAggregate(database, options, { valuationPriceCache }));
+        return runQuery(queryAggregate, options);
       },
       balanceHistoryReport(options) {
-        return queryDatabase(current.databasePath, (database) => queryBalanceHistory(database, options));
+        return runQuery(queryBalanceHistory, options);
       },
       commodityDescriptions() {
-        return queryDatabase(current.databasePath, (database) => queryCommodityDescriptions(database, {}));
+        return runQuery(queryCommodityDescriptions, {});
       },
       gainReport(options) {
-        return queryDatabase(current.databasePath,
-          (database) => queryGain(database, options, { valuationPriceCache }));
+        return runQuery(queryGain, options);
       },
       investmentPerformance(options) {
-        return queryDatabase(current.databasePath,
-          (database) => queryInvestmentPerformance(database, options));
+        return runQuery(queryInvestmentPerformance, options);
       },
       ledgerValuationRateResolver() {
-        ledgerValuationRateResolver ??= queryDatabase(current.databasePath,
-          (database) => queryLedgerValuationRateResolver(database));
+        ledgerValuationRateResolver ??= runQuery(queryLedgerValuationRateResolver, {});
         return ledgerValuationRateResolver;
       },
       ledgerAccounts() {
-        return queryDatabase(current.databasePath, (database) => queryLedgerAccounts(database, {}));
+        return runQuery(queryLedgerAccounts, {});
       },
       ledgerTransaction(options) {
-        return queryDatabase(current.databasePath, (database) => queryLedgerTransaction(database, options));
+        return runQuery(queryLedgerTransaction, options);
       },
       ledgerTransactions(options) {
-        return queryDatabase(current.databasePath, (database) => queryLedgerTransactions(database, options));
+        return runQuery(queryLedgerTransactions, options);
       },
     };
   }

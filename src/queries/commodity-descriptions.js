@@ -6,7 +6,7 @@ module.exports = ({
 }) => {
   const optionsSchema = z.strictObject({});
 
-  function queryCommodityDescriptions(database, options) {
+  function queryCommodityDescriptions(database, options, _caches) {
     parseOptions(optionsSchema, options, 'commodityDescriptions');
     const rows = database.prepare(`
         SELECT declarations.symbol AS commodity, declarations.comment,

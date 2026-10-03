@@ -100,6 +100,11 @@ function loadQueries(dependencies) {
       if (typeof query.execute !== 'function') {
         throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must expose an execute function.`);
       }
+      if (query.execute.length !== 3) {
+        throw new TypeError(
+          `${path.relative(REPOSITORY_ROOT, fileName)} execute must accept database, options, and caches.`,
+        );
+      }
       names.add(query.name);
       return Object.freeze(query);
     }));

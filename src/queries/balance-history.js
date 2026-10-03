@@ -169,7 +169,7 @@ module.exports = ({
     });
   }
 
-  function queryBalanceHistory(database, options) {
+  function queryBalanceHistory(database, options, _caches) {
     const reportOptions = parseOptions(optionsSchema, options, 'balanceHistoryReport');
     return selectBalanceHistory(database, reportOptions, valuationCommodityFromDatabase(database));
   }
