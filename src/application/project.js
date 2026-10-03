@@ -37,6 +37,7 @@ module.exports = ({
     queryLedgerTransactions,
   },
   database: { ensureDatabaseCurrent },
+  databaseReader: { readDatabase },
   publicErrors: { createError, databaseError, errorCodes },
 }) => {
 
@@ -65,9 +66,9 @@ module.exports = ({
   const projectConfigurationError = (message) =>
     createError(errorCodes.PROJECT_CONFIGURATION, message);
 
-  function queryDatabase(operation) {
+  function queryDatabase(databasePath, operation) {
     try {
-      return operation();
+      return readDatabase(databasePath, operation);
     } catch (error) {
       throw databaseError(error);
     }
@@ -154,41 +155,45 @@ module.exports = ({
     return {
       ...current,
       accountBalances(options) {
-        return queryDatabase(() => queryAccountBalances(current.databasePath, options));
+        return queryDatabase(current.databasePath, (database) => queryAccountBalances(database, options));
       },
       accountPostings(options) {
-        return queryDatabase(() => queryAccountPostings(current.databasePath, options));
+        return queryDatabase(current.databasePath, (database) => queryAccountPostings(database, options));
       },
       accountTransactions(options) {
-        return queryDatabase(() => queryAccountTransactions(current.databasePath, options));
+        return queryDatabase(current.databasePath, (database) => queryAccountTransactions(database, options));
       },
       aggregateReport(options) {
-        return queryDatabase(() => queryAggregate(current.databasePath, options, { valuationPriceCache }));
+        return queryDatabase(current.databasePath,
+          (database) => queryAggregate(database, options, { valuationPriceCache }));
       },
       balanceHistoryReport(options) {
-        return queryDatabase(() => queryBalanceHistory(current.databasePath, options));
+        return queryDatabase(current.databasePath, (database) => queryBalanceHistory(database, options));
       },
       commodityDescriptions() {
-        return queryDatabase(() => queryCommodityDescriptions(current.databasePath, {}));
+        return queryDatabase(current.databasePath, (database) => queryCommodityDescriptions(database, {}));
       },
       gainReport(options) {
-        return queryDatabase(() => queryGain(current.databasePath, options, { valuationPriceCache }));
+        return queryDatabase(current.databasePath,
+          (database) => queryGain(database, options, { valuationPriceCache }));
       },
       investmentPerformance(options) {
-        return queryDatabase(() => queryInvestmentPerformance(current.databasePath, options));
+        return queryDatabase(current.databasePath,
+          (database) => queryInvestmentPerformance(database, options));
       },
       ledgerValuationRateResolver() {
-        ledgerValuationRateResolver ??= queryDatabase(() => queryLedgerValuationRateResolver(current.databasePath));
+        ledgerValuationRateResolver ??= queryDatabase(current.databasePath,
+          (database) => queryLedgerValuationRateResolver(database));
         return ledgerValuationRateResolver;
       },
       ledgerAccounts() {
-        return queryDatabase(() => queryLedgerAccounts(current.databasePath, {}));
+        return queryDatabase(current.databasePath, (database) => queryLedgerAccounts(database, {}));
       },
       ledgerTransaction(options) {
-        return queryDatabase(() => queryLedgerTransaction(current.databasePath, options));
+        return queryDatabase(current.databasePath, (database) => queryLedgerTransaction(database, options));
       },
       ledgerTransactions(options) {
-        return queryDatabase(() => queryLedgerTransactions(current.databasePath, options));
+        return queryDatabase(current.databasePath, (database) => queryLedgerTransactions(database, options));
       },
     };
   }

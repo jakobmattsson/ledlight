@@ -1,8 +1,6 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
   zod: { z },
@@ -23,7 +21,7 @@ module.exports = ({
     return number;
   }
 
-  function queryLedgerTransactions(databasePath, options) {
+  function queryLedgerTransactions(database, options) {
     const { order, page, pageSize } = parseOptions(
       optionsSchema, options, 'ledgerTransactions',
     );
@@ -33,13 +31,11 @@ module.exports = ({
     const requestedPage = positiveInteger(page, 'page');
     const normalizedPageSize = positiveInteger(pageSize, 'pageSize');
     if (normalizedPageSize > 100) throw invalidInput('pageSize must not exceed 100');
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      const totalTransactions = database.prepare('SELECT COUNT(*) AS count FROM transactions').get().count;
-      const totalPages = Math.ceil(totalTransactions / normalizedPageSize);
-      const selectedPage = Math.min(requestedPage, Math.max(totalPages, 1));
-      const direction = order === 'newest' ? 'DESC' : 'ASC';
-      const transactionRows = database.prepare(`
+    const totalTransactions = database.prepare('SELECT COUNT(*) AS count FROM transactions').get().count;
+    const totalPages = Math.ceil(totalTransactions / normalizedPageSize);
+    const selectedPage = Math.min(requestedPage, Math.max(totalPages, 1));
+    const direction = order === 'newest' ? 'DESC' : 'ASC';
+    const transactionRows = database.prepare(`
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
@@ -52,12 +48,12 @@ module.exports = ({
       ORDER BY transactions.date ${direction}, entries.sequence ${direction}
       LIMIT ? OFFSET ?
     `).all(normalizedPageSize, (selectedPage - 1) * normalizedPageSize);
-      const transactions = transactionRows.map((row) => ({ ...row, postings: [] }));
-      if (transactions.length > 0) {
-        const byId = new Map(transactions.map((transaction) =>
-          [transaction.transactionId, transaction]));
-        const placeholders = transactions.map(() => '?').join(', ');
-        const postingRows = database.prepare(`
+    const transactions = transactionRows.map((row) => ({ ...row, postings: [] }));
+    if (transactions.length > 0) {
+      const byId = new Map(transactions.map((transaction) =>
+        [transaction.transactionId, transaction]));
+      const placeholders = transactions.map(() => '?').join(', ');
+      const postingRows = database.prepare(`
         SELECT
           postings.transaction_id AS transactionId,
           postings.id AS postingId,
@@ -71,36 +67,33 @@ module.exports = ({
         WHERE postings.transaction_id IN (${placeholders})
         ORDER BY postings.transaction_id, postings.position, amounts.position
       `).all(...transactions.map((transaction) => transaction.transactionId));
-        for (const row of postingRows) {
-          const transaction = byId.get(row.transactionId);
-          let posting = transaction.postings.find((item) => item.id === row.postingId);
-          if (!posting) {
-            posting = {
-              id: row.postingId,
-              postingDate: row.postingDate,
-              account: row.account,
-              comment: row.comment,
-              amounts: [],
-            };
-            transaction.postings.push(posting);
-          }
-          posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
+      for (const row of postingRows) {
+        const transaction = byId.get(row.transactionId);
+        let posting = transaction.postings.find((item) => item.id === row.postingId);
+        if (!posting) {
+          posting = {
+            id: row.postingId,
+            postingDate: row.postingDate,
+            account: row.account,
+            comment: row.comment,
+            amounts: [],
+          };
+          transaction.postings.push(posting);
         }
+        posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
       }
-      return {
-        order,
-        page: selectedPage,
-        pageSize: normalizedPageSize,
-        totalTransactions,
-        totalPages,
-        transactions: transactions.map((transaction) => ({
-          ...transaction,
-          postings: transaction.postings.map(({ id: _id, ...posting }) => posting),
-        })),
-      };
-    } finally {
-      database.close();
     }
+    return {
+      order,
+      page: selectedPage,
+      pageSize: normalizedPageSize,
+      totalTransactions,
+      totalPages,
+      transactions: transactions.map((transaction) => ({
+        ...transaction,
+        postings: transaction.postings.map(({ id: _id, ...posting }) => posting),
+      })),
+    };
   }
 
   return { optionsSchema, queryLedgerTransactions };

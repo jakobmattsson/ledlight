@@ -1,8 +1,6 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   decimal: {
     formatDecimal,
     multiplyDecimals,
@@ -177,13 +175,8 @@ module.exports = ({
     };
   }
 
-  function queryLedgerValuationRateResolver(databasePath) {
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      return createLedgerValuationRateResolver(selectPriceHistory(database), fromDatabase(database));
-    } finally {
-      database.close();
-    }
+  function queryLedgerValuationRateResolver(database) {
+    return createLedgerValuationRateResolver(selectPriceHistory(database), fromDatabase(database));
   }
 
   return {

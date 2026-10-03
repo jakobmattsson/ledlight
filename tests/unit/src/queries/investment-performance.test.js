@@ -10,6 +10,12 @@ const test = require('node:test');
 const { queryInvestmentPerformance } = resolveRepositoryModule("src/queries/investment-performance.js");
 const { xirr } = resolveRepositoryModule("src/domain/investments/returns.js").$$private;
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
+const { readDatabase } = resolveRepositoryModule('src/ingestion/database/read.js');
+
+function investmentPerformance(databasePath, options) {
+  return readDatabase(databasePath,
+    (database) => queryInvestmentPerformance(database, options));
+}
 
 function buildFixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-investment-performance-'));
@@ -49,7 +55,7 @@ P 2024-01-01 HOME 1000 SEK
 }
 
 test('calculates cash profit, time-weighted return and money-weighted return for selected instruments', (t) => {
-  const result = queryInvestmentPerformance(buildFixture(t), {
+  const result = investmentPerformance(buildFixture(t), {
     accounts: ['Assets:'],
     commodities: ['FUND'],
   });
@@ -76,7 +82,7 @@ test('calculates cash profit, time-weighted return and money-weighted return for
 });
 
 test('discovers owned commodities and applies exclusions', (t) => {
-  const result = queryInvestmentPerformance(buildFixture(t), {
+  const result = investmentPerformance(buildFixture(t), {
     accounts: ['Assets:'],
     excludeCommodities: ['SEK', 'HOME'],
   });
@@ -101,7 +107,7 @@ P 2024-02-01 FUND 10 SEK
 `);
   buildDatabase(databasePath, journalPath);
 
-  const result = queryInvestmentPerformance(databasePath, {
+  const result = investmentPerformance(databasePath, {
     accounts: ['Assets:Portfolio'],
     commodities: ['FUND'],
   });

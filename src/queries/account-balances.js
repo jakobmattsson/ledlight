@@ -1,9 +1,6 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
-  decimal: { registerDecimalFunctions },
   apiOptions: { assertDate, parseOptions },
   zod: { z },
 }) => {
@@ -12,15 +9,12 @@ module.exports = ({
     to: z.string().optional(),
   });
 
-  function queryAccountBalances(databasePath, options) {
+  function queryAccountBalances(database, options) {
     const { account, to } = parseOptions(optionsSchema, options, 'accountBalances');
     assertDate(to, 'to');
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      registerDecimalFunctions(database);
-      const dateFilter = to === undefined ? '' : 'AND p.report_date <= ?';
-      const parameters = to === undefined ? [account] : [account, to];
-      return database.prepare(`
+    const dateFilter = to === undefined ? '' : 'AND p.report_date <= ?';
+    const parameters = to === undefined ? [account] : [account, to];
+    return database.prepare(`
       SELECT r.commodity, decimal_sum(r.quantity) AS quantity
       FROM resolved_posting_amounts AS r
       JOIN postings AS p ON p.id = r.posting_id
@@ -28,9 +22,6 @@ module.exports = ({
       GROUP BY r.commodity
       ORDER BY r.commodity
     `).all(...parameters);
-    } finally {
-      database.close();
-    }
   }
 
   return { optionsSchema, queryAccountBalances };

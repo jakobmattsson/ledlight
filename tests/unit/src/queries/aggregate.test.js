@@ -9,9 +9,11 @@ const path = require('node:path');
 const test = require('node:test');
 const { queryAggregate } = resolveRepositoryModule("src/queries/aggregate.js");
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
+const { readDatabase } = resolveRepositoryModule('src/ingestion/database/read.js');
 
 function aggregateReport(databasePath, options) {
-  return queryAggregate(databasePath, options, {});
+  return readDatabase(databasePath,
+    (database) => queryAggregate(database, options, { valuationPriceCache: new Map() }));
 }
 
 function buildFixture(t) {

@@ -1,8 +1,6 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   apiOptions: { assertDate, parseOptions },
   zod: { z },
 }) => {
@@ -11,16 +9,14 @@ module.exports = ({
     after: z.string().optional(),
   });
 
-  function queryAccountPostings(databasePath, options) {
+  function queryAccountPostings(database, options) {
     const { account, after } = parseOptions(optionsSchema, options, 'accountPostings');
     assertDate(after, 'after');
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      const dateFilter = after === undefined
-        ? ''
-        : 'AND (t.date > ? OR p.report_date > ?)';
-      const parameters = after === undefined ? [account] : [account, after, after];
-      return database.prepare(`
+    const dateFilter = after === undefined
+      ? ''
+      : 'AND (t.date > ? OR p.report_date > ?)';
+    const parameters = after === undefined ? [account] : [account, after, after];
+    return database.prepare(`
       SELECT
         t.date AS transactionDate,
         p.report_date AS postingDate,
@@ -32,9 +28,6 @@ module.exports = ({
       WHERE p.account = ? ${dateFilter}
       ORDER BY p.report_date, p.id, r.position
     `).all(...parameters);
-    } finally {
-      database.close();
-    }
   }
 
   return { optionsSchema, queryAccountPostings };

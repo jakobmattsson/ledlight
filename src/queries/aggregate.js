@@ -1,15 +1,12 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   decimal: {
     addDecimals,
     formatDecimal,
     multiplyDecimals,
     negateDecimal,
     parseDecimal,
-    registerDecimalFunctions,
   },
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
@@ -168,21 +165,15 @@ module.exports = ({
     ];
   }
 
-  function queryAggregate(databasePath, options, { valuationPriceCache }) {
+  function queryAggregate(database, options, { valuationPriceCache }) {
     const normalizedOptions = normalizeOptions(options);
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      registerDecimalFunctions(database);
-      const commodityTotals = queryCommodityTotals(database, normalizedOptions);
-      const rows = normalizedOptions.inValuationCommodity
-        ? queryValuationTotals(database, normalizedOptions, commodityTotals, valuationPriceCache)
-        : normalizedOptions.withValuationValue
-          ? withValuationValues(database, normalizedOptions, commodityTotals, valuationPriceCache)
-          : commodityTotals;
-      return transformRows(rows, normalizedOptions);
-    } finally {
-      database.close();
-    }
+    const commodityTotals = queryCommodityTotals(database, normalizedOptions);
+    const rows = normalizedOptions.inValuationCommodity
+      ? queryValuationTotals(database, normalizedOptions, commodityTotals, valuationPriceCache)
+      : normalizedOptions.withValuationValue
+        ? withValuationValues(database, normalizedOptions, commodityTotals, valuationPriceCache)
+        : commodityTotals;
+    return transformRows(rows, normalizedOptions);
   }
 
   return { optionsSchema, queryAggregate };

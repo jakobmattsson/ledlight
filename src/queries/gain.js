@@ -1,15 +1,12 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   decimal: {
     addDecimals,
     compareDecimals,
     formatDecimal,
     multiplyDecimals,
     parseDecimal,
-    registerDecimalFunctions,
     subtractDecimals,
   },
   accountPrefixFilter: { accountPrefixFilter },
@@ -112,23 +109,17 @@ module.exports = ({
       }));
   }
 
-  function queryGain(databasePath, options, { valuationPriceCache }) {
+  function queryGain(database, options, { valuationPriceCache }) {
     const normalizedOptions = normalizeOptions(options);
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      registerDecimalFunctions(database);
-      const valuationCommodity = fromDatabase(database);
-      const positions = queryPositions(database, normalizedOptions, valuationCommodity);
-      const rates = queryValuationRates(
-        database,
-        normalizedOptions.to,
-        new Set(positions.map((position) => position.commodity)),
-        valuationPriceCache,
-      );
-      return calculateRows(positions, rates, valuationCommodity);
-    } finally {
-      database.close();
-    }
+    const valuationCommodity = fromDatabase(database);
+    const positions = queryPositions(database, normalizedOptions, valuationCommodity);
+    const rates = queryValuationRates(
+      database,
+      normalizedOptions.to,
+      new Set(positions.map((position) => position.commodity)),
+      valuationPriceCache,
+    );
+    return calculateRows(positions, rates, valuationCommodity);
   }
 
   return { optionsSchema, queryGain };

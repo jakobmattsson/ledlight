@@ -1,13 +1,10 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   decimal: {
     formatDecimal,
     negateDecimal,
     parseDecimal,
-    registerDecimalFunctions,
   },
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
@@ -203,15 +200,9 @@ module.exports = ({
     });
   }
 
-  function queryBalanceHistory(databasePath, options) {
+  function queryBalanceHistory(database, options) {
     const normalizedOptions = normalizeOptions(options);
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      registerDecimalFunctions(database);
-      return selectBalanceHistory(database, normalizedOptions, fromDatabase(database));
-    } finally {
-      database.close();
-    }
+    return selectBalanceHistory(database, normalizedOptions, fromDatabase(database));
   }
 
   return { optionsSchema, queryBalanceHistory };

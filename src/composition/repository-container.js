@@ -28,6 +28,7 @@ const MODULE_NAMES = Object.freeze({
   'src/ingestion/database/freshness.js': 'databaseFreshness',
   'src/ingestion/database/materialize-valuation-prices.js': 'valuationPriceMaterializer',
   'src/ingestion/database/migrate.js': 'databaseMigration',
+  'src/ingestion/database/read.js': 'databaseReader',
   'src/ingestion/database/rebuild-lock.js': 'databaseRebuildLock',
   'src/ingestion/database/write-journal.js': 'journalWriter',
   'src/ingestion/journal/create-loader.js': 'journalLoaderFactory',
