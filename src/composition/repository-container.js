@@ -16,6 +16,7 @@ const MODULE_NAMES = Object.freeze({
   'src/api/errors.js': 'publicErrors',
   'src/api/index.js': 'ledlight',
   'src/api/options.js': 'apiOptions',
+  'src/application/cache-paths.js': 'cachePaths',
   'src/application/project.js': 'project',
   'src/cli/arguments.js': 'cliArguments',
   'src/cli/command.js': 'cliCommand',
@@ -113,8 +114,11 @@ function registerExternalModules(container) {
   container.register({
     crypto: asValue(require('node:crypto')),
     fs: asValue(require('node:fs')),
+    os: asValue(require('node:os')),
     packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
+    processEnvironment: asValue(process.env),
+    processPlatform: asValue(process.platform),
     systemClock: asValue({
       now: () => Date.now(),
       sleep(milliseconds) {

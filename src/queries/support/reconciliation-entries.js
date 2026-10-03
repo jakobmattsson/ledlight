@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  project: { ensureProjectDatabaseCurrent },
+  project: { ensureDatabaseCurrent },
   databaseReader: { readDatabase },
 }) => {
 
@@ -19,9 +19,9 @@ module.exports = ({
     };
   }
 
-  function loadReconciliationEntries(startDirectory) {
-    const project = ensureProjectDatabaseCurrent(startDirectory);
-    const rows = readDatabase(project.databasePath, (database) => database.prepare(`
+  function loadReconciliationEntries(journalPath) {
+    const journal = ensureDatabaseCurrent(journalPath);
+    const rows = readDatabase(journal.databasePath, (database) => database.prepare(`
       SELECT
         t.entry_id AS transactionId,
         p.report_date AS date,
@@ -50,8 +50,8 @@ module.exports = ({
     });
 
     return {
-      databasePath: project.databasePath,
-      rebuilt: project.rebuilt,
+      databasePath: journal.databasePath,
+      rebuilt: journal.rebuilt,
       readEntries(accounts, options) {
         const related = options?.related ?? false;
         return accounts.flatMap((account) => {

@@ -8,40 +8,40 @@ module.exports = ({
   project: projectApi,
 }) => {
 
-  function aggregateReport(options, startDirectory) {
-    return projectApi.aggregateReport(options, startDirectory);
+  function aggregateReport(journalPath, options) {
+    return projectApi.aggregateReport(journalPath, options);
   }
 
-  function accountBalances(options, startDirectory) {
-    return projectApi.accountBalances(options, startDirectory);
+  function accountBalances(journalPath, options) {
+    return projectApi.accountBalances(journalPath, options);
   }
 
-  function accountPostings(options, startDirectory) {
-    return projectApi.accountPostings(options, startDirectory);
+  function accountPostings(journalPath, options) {
+    return projectApi.accountPostings(journalPath, options);
   }
 
-  function balanceHistoryReport(options, startDirectory) {
-    return projectApi.balanceHistoryReport(options, startDirectory);
+  function balanceHistoryReport(journalPath, options) {
+    return projectApi.balanceHistoryReport(journalPath, options);
   }
 
-  function investmentPerformance(options, startDirectory) {
-    return projectApi.investmentPerformance(options, startDirectory);
+  function investmentPerformance(journalPath, options) {
+    return projectApi.investmentPerformance(journalPath, options);
   }
 
-  function gainReport(options, startDirectory) {
-    return projectApi.gainReport(options, startDirectory);
+  function gainReport(journalPath, options) {
+    return projectApi.gainReport(journalPath, options);
   }
 
-  function ensureProjectDatabaseCurrent(startDirectory) {
-    return projectApi.ensureProjectDatabaseCurrent(startDirectory);
+  function ensureDatabaseCurrent(journalPath) {
+    return projectApi.ensureDatabaseCurrent(journalPath);
   }
 
-  function loadProjectPaths(startDirectory) {
-    return projectApi.loadProjectPaths(startDirectory);
+  function databasePathForJournal(journalPath) {
+    return projectApi.databasePathForJournal(journalPath);
   }
 
-  function openProject(startDirectory) {
-    return projectApi.openProject(startDirectory);
+  function openJournal(journalPath) {
+    return projectApi.openJournal(journalPath);
   }
 
   return {
@@ -51,11 +51,11 @@ module.exports = ({
     balanceHistoryReport,
     gainReport,
     investmentPerformance,
-    ensureProjectDatabaseCurrent,
+    databasePathForJournal,
+    ensureDatabaseCurrent,
     errorCodes,
     loadJournal,
-    loadProjectPaths,
-    openProject,
+    openJournal,
     parse,
     version,
   };

@@ -6,7 +6,7 @@ module.exports = ({
   publicErrors: { errorCodes, withCode },
 }) => {
 
-  const apiDefinition = Object.freeze({ inputs: ['entryPath'] });
+  const apiDefinition = Object.freeze({ inputs: ['journalPath'] });
 
   /**
  * Loads an include tree and returns flattened entries plus a SHA-256 source
@@ -14,9 +14,9 @@ module.exports = ({
  */
   const load = createJournalLoader(parse);
 
-  function loadJournal(entryPath) {
+  function loadJournal(journalPath) {
     try {
-      return load(entryPath);
+      return load(journalPath);
     } catch (error) {
       throw withCode(error, errorCodes.PROJECT_CONFIGURATION);
     }

@@ -13,86 +13,85 @@ module.exports = ({
   },
 }) => {
 
-  function jsonProjectSnapshot(project) {
-    return Object.fromEntries(Object.entries(project).filter(([, value]) => typeof value !== 'function'));
+  function jsonJournalSnapshot(journal) {
+    return Object.fromEntries(Object.entries(journal).filter(([, value]) => typeof value !== 'function'));
   }
 
   function runJsonCommand(parsed) {
-    const { command, startDirectory, options } = parsed;
+    const { command, journalPath, options } = parsed;
     if (command === 'parse') return formatJson(ledlight.parse(...parsed.arguments));
     if (command === 'load-journal') return formatJson(ledlight.loadJournal(...parsed.arguments));
-    if (command === 'project-paths') return formatJson(ledlight.loadProjectPaths(startDirectory));
+    if (command === 'database-path') return formatJson(ledlight.databasePathForJournal(journalPath));
     if (command === 'ensure-database') {
-      return formatJson(ledlight.ensureProjectDatabaseCurrent(startDirectory));
+      return formatJson(ledlight.ensureDatabaseCurrent(journalPath));
     }
-    if (command === 'open-project') {
-      return formatJson(jsonProjectSnapshot(ledlight.openProject(startDirectory)));
+    if (command === 'open-journal') {
+      return formatJson(jsonJournalSnapshot(ledlight.openJournal(journalPath)));
     }
     if (command === 'account-balances') {
-      return formatJson(ledlight.accountBalances(options, startDirectory));
+      return formatJson(ledlight.accountBalances(journalPath, options));
     }
     if (command === 'account-postings') {
-      return formatJson(ledlight.accountPostings(options, startDirectory));
+      return formatJson(ledlight.accountPostings(journalPath, options));
     }
 
-    const project = ledlight.openProject(startDirectory);
-    if (command === 'account-transactions') return formatJson(project.accountTransactions(options));
-    if (command === 'commodity-descriptions') return formatJson(project.commodityDescriptions());
-    if (command === 'ledger-accounts') return formatJson(project.ledgerAccounts());
-    if (command === 'ledger-transaction') return formatJson(project.ledgerTransaction(options));
-    if (command === 'ledger-transactions') return formatJson(project.ledgerTransactions(options));
+    const journal = ledlight.openJournal(journalPath);
+    if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
+    if (command === 'commodity-descriptions') return formatJson(journal.commodityDescriptions());
+    if (command === 'ledger-accounts') return formatJson(journal.ledgerAccounts());
+    if (command === 'ledger-transaction') return formatJson(journal.ledgerTransaction(options));
+    if (command === 'ledger-transactions') return formatJson(journal.ledgerTransactions(options));
     if (command === 'valuation-rate') {
-      return formatJson(project.ledgerValuationRateResolver()(options.commodity, options.throughDate));
+      return formatJson(journal.ledgerValuationRateResolver()(options.commodity, options.throughDate));
     }
     throw new Error(`Unsupported command: ${command}`);
   }
 
   function runReport(parsed) {
-    const { command, reportOptions, startDirectory, output } = parsed;
-    const project = ledlight.openProject(startDirectory);
+    const { command, reportOptions, journalPath, output } = parsed;
+    const journal = ledlight.openJournal(journalPath);
     if (command === 'investment-performance') {
-      const report = project.investmentPerformance(reportOptions);
+      const report = journal.investmentPerformance(reportOptions);
       return output.json
         ? formatJson(report)
-        : formatInvestmentPerformance(report, project.commodityDescriptions());
+        : formatInvestmentPerformance(report, journal.commodityDescriptions());
     }
     if (command === 'gain') {
-      const rows = project.gainReport(reportOptions);
+      const rows = journal.gainReport(reportOptions);
       if (output.json) return formatJson(rows);
       return output.csv
         ? formatCsv(rows, true)
-        : formatHumanReadable(rows, true, project.commodityDescriptions());
+        : formatHumanReadable(rows, true, journal.commodityDescriptions());
     }
     if (command === 'balance-history') {
-      const rows = project.balanceHistoryReport(reportOptions);
+      const rows = journal.balanceHistoryReport(reportOptions);
       if (output.json) return formatJson(rows);
       return output.csv
         ? formatBalanceHistoryCsv(rows)
-        : formatBalanceHistoryHumanReadable(rows, project.commodityDescriptions());
+        : formatBalanceHistoryHumanReadable(rows, journal.commodityDescriptions());
     }
     const aggregateOptions = {
       ...reportOptions,
       includeTotal: reportOptions.includeTotal ??
         (!output.csv && !output.json && reportOptions.inValuationCommodity),
     };
-    const rows = project.aggregateReport(aggregateOptions);
+    const rows = journal.aggregateReport(aggregateOptions);
     if (output.json) return formatJson(rows);
     return output.csv
       ? formatCsv(rows, reportOptions.inValuationCommodity)
       : formatHumanReadable(
         rows,
         reportOptions.inValuationCommodity,
-        project.commodityDescriptions(),
+        journal.commodityDescriptions(),
       );
   }
 
-  function runReportCommand(arguments_, { startDirectory }) {
+  function runReportCommand(arguments_) {
     if (arguments_.length === 1 && (arguments_[0] === '--help' || arguments_[0] === '-h')) {
       return `${usage()}\n`;
     }
     if (arguments_.length === 1 && arguments_[0] === '--version') return `${ledlight.version}\n`;
     const parsed = parseArguments(arguments_);
-    if (parsed.startDirectory === undefined) parsed.startDirectory = startDirectory;
     return ['aggregate', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
       ? runReport(parsed)
       : runJsonCommand(parsed);

@@ -192,7 +192,7 @@ module.exports = ({
       `);
 
         statements.databaseMetadata.run('schema_version', SCHEMA_VERSION);
-        statements.databaseMetadata.run('root_path', journal.rootPath);
+        statements.databaseMetadata.run('root_path', journal.journalPath);
         statements.databaseMetadata.run('built_at', new Date().toISOString());
         if (valuationCommodity) {
           statements.databaseMetadata.run('valuation_commodity', valuationCommodity);
@@ -234,7 +234,7 @@ module.exports = ({
       const counters = replaceContents.immediate();
       return {
         databasePath: resolvedDatabasePath,
-        rootPath: journal.rootPath,
+        journalPath: journal.journalPath,
         files: journal.files.length,
         entries: journal.entries.length,
         transactions: journal.entries.filter((entry) => entry.type === 'transaction').length,

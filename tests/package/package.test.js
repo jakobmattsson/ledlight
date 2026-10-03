@@ -72,8 +72,8 @@ test('the published archive installs and exposes the module and CLI', () => {
 
     const projectDirectory = path.join(consumerDirectory, 'project');
     fs.mkdirSync(projectDirectory);
-    fs.writeFileSync(path.join(projectDirectory, '.ledgerrc'), '--file journal.ledger\n');
-    fs.writeFileSync(path.join(projectDirectory, 'journal.ledger'), `commodity USD
+    const journalPath = path.join(projectDirectory, 'journal.ledger');
+    fs.writeFileSync(journalPath, `commodity USD
   default
 
 2024-01-01 Opening balance
@@ -81,14 +81,18 @@ test('the published archive installs and exposes the module and CLI', () => {
   Equity:Opening
 `);
 
-    const consumerEnvironment = { ...process.env, NODE_PATH: '' };
+    const consumerEnvironment = {
+      ...process.env,
+      LEDLIGHT_CACHE_HOME: path.join(consumerDirectory, 'cache'),
+      NODE_PATH: '',
+    };
     run(process.execPath, ['-e', `
       const assert = require('node:assert/strict');
       const ledlight = require('ledlight');
-      assert.equal(typeof ledlight.openProject, 'function');
+      assert.equal(typeof ledlight.openJournal, 'function');
       assert.equal(ledlight.version, ${JSON.stringify(packageMetadata.version)});
       assert.doesNotThrow(() => ledlight.parse('account Assets:Cash\\n', { source: '<smoke-test>' }));
-      assert.deepEqual(ledlight.aggregateReport({}, process.cwd()), [
+      assert.deepEqual(ledlight.aggregateReport(${JSON.stringify(journalPath)}, {}), [
         { account: 'Assets:Cash', quantity: '10', commodity: 'USD' },
         { account: 'Equity:Opening', quantity: '-10', commodity: 'USD' },
       ]);
@@ -110,7 +114,9 @@ test('the published archive installs and exposes the module and CLI', () => {
       cwd: projectDirectory,
       env: consumerEnvironment,
     }).trim(), packageMetadata.version);
-    assert.equal(run(executableCommand, [...executableArguments, 'aggregate', '--csv'], {
+    assert.equal(run(executableCommand, [
+      ...executableArguments, 'aggregate', '--file', journalPath, '--csv',
+    ], {
       cwd: projectDirectory,
       env: consumerEnvironment,
     }), 'account,amount,commodity\nAssets:Cash,10,USD\nEquity:Opening,-10,USD\n');

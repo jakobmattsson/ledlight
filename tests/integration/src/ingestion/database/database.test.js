@@ -9,7 +9,11 @@ const path = require('node:path');
 const test = require('node:test');
 const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
-const { errorCodes, openProject } = resolveRepositoryModule("src/api/index.js");
+const {
+  databasePathForJournal,
+  errorCodes,
+  openJournal,
+} = resolveRepositoryModule("src/api/index.js");
 const {
   ensureDatabaseCurrent,
 } = resolveRepositoryModule("src/ingestion/database/database.js");
@@ -17,6 +21,9 @@ const {
   buildDatabase,
   checkDatabaseSync,
 } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
+const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-database-cache-'));
+process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
+test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
 
 function temporaryDirectory(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-'));
@@ -161,10 +168,9 @@ test('stores lot costs separately from transaction costs', (t) => {
   );
 });
 
-test('loads the Ledger-compatible price history once per project', (t) => {
+test('loads the Ledger-compatible price history once per journal', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
-  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
   fs.writeFileSync(journalPath, `commodity SEK
   default
 P 2024-01-01 FUND 10 SEK
@@ -173,10 +179,10 @@ P 2024-01-01 FUND 10 SEK
   Equity:Opening  -10 SEK
 `);
 
-  const project = openProject(directory);
-  const resolver = project.ledgerValuationRateResolver();
+  const journal = openJournal(journalPath);
+  const resolver = journal.ledgerValuationRateResolver();
   assert.equal(resolver('FUND', '2024-01-01'), '10');
-  assert.equal(project.ledgerValuationRateResolver(), resolver);
+  assert.equal(journal.ledgerValuationRateResolver(), resolver);
 });
 
 test('materializes the same resolvable price choice used by the public resolver', (t) => {
@@ -224,7 +230,7 @@ test('detects when source files and database contents differ', (t) => {
   buildDatabase(databasePath, journalPath);
   assert.deepEqual(checkDatabaseSync(databasePath, journalPath), {
     databasePath,
-    rootPath: journalPath,
+    journalPath,
     inSync: true,
     reason: 'in_sync',
     added: [],
@@ -322,19 +328,18 @@ commodity USD
 test('aggregate CLI builds stale databases but reuses current databases', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
-  const databasePath = path.join(directory, 'tmp', 'ledger.sqlite');
   const cliPath = path.resolve(__dirname, '../../../../../src/cli/run.js');
-  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
   fs.writeFileSync(journalPath, `commodity SEK
   default
 2024-01-01 Opening
   Assets:Cash,Main  1 SEK
   Equity:Opening
 `);
+  const databasePath = databasePathForJournal(journalPath);
 
   const first = execFileSync(process.execPath, [
-    cliPath, 'aggregate', '--to', '2024-01-01', '--accounts', 'Assets:',
-  ], { cwd: directory, encoding: 'utf8' });
+    cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
+  ], { cwd: directory, encoding: 'utf8', env: process.env });
   assert.equal(first, 'Assets:Cash,Main  1 SEK\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
@@ -347,16 +352,16 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
 `);
   const second = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--to', '2024-01-01', '--accounts', 'Assets:'],
-    { cwd: directory, encoding: 'utf8' },
+    [cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:'],
+    { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(second, '  Assets:Cash,Main       2.005 SEK\nAssets:LongAccount  10,000     SEK\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
   const csv = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--accounts', 'Assets:', '--csv'],
-    { cwd: directory, encoding: 'utf8' },
+    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--csv'],
+    { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
     csv,
@@ -365,8 +370,8 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
 
   const roundedCsv = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--accounts', 'Assets:', '--value', '--csv'],
-    { cwd: directory, encoding: 'utf8' },
+    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--csv'],
+    { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
     roundedCsv,
@@ -375,8 +380,8 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
 
   const roundedHumanReadable = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--accounts', 'Assets:', '--value'],
-    { cwd: directory, encoding: 'utf8' },
+    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value'],
+    { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
     roundedHumanReadable,
@@ -385,8 +390,8 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
 
   const invertedHumanReadable = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--accounts', 'Assets:', '--value', '--invert'],
-    { cwd: directory, encoding: 'utf8' },
+    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--invert'],
+    { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
     invertedHumanReadable,
@@ -395,8 +400,8 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
 
   const invertedCsv = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--accounts', 'Assets:', '--invert', '--csv'],
-    { cwd: directory, encoding: 'utf8' },
+    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--invert', '--csv'],
+    { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
     invertedCsv,

@@ -11,15 +11,15 @@ syntax and reporting behavior.
 
 ## Priority 1: define the public API
 
-The package root and the object returned by `openProject()` do not currently
+The package root and the object returned by `openJournal()` do not currently
 present the same set of operations. The project object additionally exposes
 transaction, account, reconciliation-oriented, and valuation-resolver methods.
-Anything reachable through `openProject()` is public in practice even when it
+Anything reachable through `openJournal()` is public in practice even when it
 is not documented.
 
 Define the supported API inventory and decide which operations are stable.
 Then either expose equivalent top-level functions or explicitly group
-project-scoped operations under a documented project API. Every operation
+journal-scoped operations under a documented journal API. Every operation
 should document:
 
 - accepted options and defaults;
@@ -42,12 +42,12 @@ currently promise a statically typed consumer surface.
 
 The freshness scan and a later report are separate filesystem operations. A
 source file can change after the database has been declared current. An object
-returned by `openProject()` also keeps using the database and cached valuation
+returned by `openJournal()` also keeps using the database and cached valuation
 data without another freshness check.
 
 Choose and document one lifecycle model:
 
-- `openProject()` represents an immutable snapshot, and callers reopen it to
+- `openJournal()` represents an immutable snapshot, and callers reopen it to
   observe changes; or
 - an explicit `refresh()` operation updates the database and invalidates every
   derived cache.

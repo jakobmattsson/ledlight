@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  cachePaths: { pathsForJournal },
   fs,
   path,
   queries,
@@ -10,7 +11,6 @@ module.exports = ({
   publicErrors: { createError, databaseError, errorCodes },
 }) => {
 
-  const DATABASE_RELATIVE_PATH = path.join('tmp', 'ledger.sqlite');
   const queryByName = new Map(queries.map((query) => [query.name, query]));
   const query = (name) => {
     const definition = queryByName.get(name);
@@ -59,24 +59,24 @@ module.exports = ({
     execute: queryLedgerTransactions,
   } = query('ledgerTransactions');
   const schemaInputs = (schema) => Object.keys(schema.shape);
-  const projectInputs = (schema) => [...schemaInputs(schema), 'startDirectory'];
+  const journalInputs = (schema) => ['journalPath', ...schemaInputs(schema)];
   const apiDefinitions = Object.freeze({
-    loadProjectPaths: { inputs: ['startDirectory'] },
-    ensureProjectDatabaseCurrent: { inputs: ['startDirectory'] },
-    openProject: { inputs: ['startDirectory'] },
-    accountBalances: { inputs: projectInputs(accountBalancesOptionsSchema) },
-    accountPostings: { inputs: projectInputs(accountPostingsOptionsSchema) },
-    aggregateReport: { inputs: projectInputs(aggregateReportOptionsSchema) },
-    balanceHistoryReport: { inputs: projectInputs(balanceHistoryOptionsSchema) },
-    gainReport: { inputs: projectInputs(gainReportOptionsSchema) },
-    investmentPerformance: { inputs: projectInputs(investmentPerformanceOptionsSchema) },
-    accountTransactions: { inputs: projectInputs(accountTransactionsOptionsSchema) },
-    commodityDescriptions: { inputs: projectInputs(commodityDescriptionsOptionsSchema) },
-    ledgerAccounts: { inputs: projectInputs(ledgerAccountsOptionsSchema) },
-    ledgerTransaction: { inputs: projectInputs(ledgerTransactionOptionsSchema) },
-    ledgerTransactions: { inputs: projectInputs(ledgerTransactionsOptionsSchema) },
+    databasePathForJournal: { inputs: ['journalPath'] },
+    ensureDatabaseCurrent: { inputs: ['journalPath'] },
+    openJournal: { inputs: ['journalPath'] },
+    accountBalances: { inputs: journalInputs(accountBalancesOptionsSchema) },
+    accountPostings: { inputs: journalInputs(accountPostingsOptionsSchema) },
+    aggregateReport: { inputs: journalInputs(aggregateReportOptionsSchema) },
+    balanceHistoryReport: { inputs: journalInputs(balanceHistoryOptionsSchema) },
+    gainReport: { inputs: journalInputs(gainReportOptionsSchema) },
+    investmentPerformance: { inputs: journalInputs(investmentPerformanceOptionsSchema) },
+    accountTransactions: { inputs: journalInputs(accountTransactionsOptionsSchema) },
+    commodityDescriptions: { inputs: journalInputs(commodityDescriptionsOptionsSchema) },
+    ledgerAccounts: { inputs: journalInputs(ledgerAccountsOptionsSchema) },
+    ledgerTransaction: { inputs: journalInputs(ledgerTransactionOptionsSchema) },
+    ledgerTransactions: { inputs: journalInputs(ledgerTransactionsOptionsSchema) },
     ledgerValuationRateResolver: {
-      inputs: [...resolverInputNames, 'startDirectory'],
+      inputs: ['journalPath', ...resolverInputNames],
     },
   });
   const projectConfigurationError = (message) =>
@@ -90,82 +90,57 @@ module.exports = ({
     }
   }
 
-  function findProjectRoot(startDirectory) {
-    let directory = path.resolve(startDirectory ?? process.cwd());
-    while (true) {
-      if (fs.existsSync(path.join(directory, '.ledgerrc'))) return directory;
-      const parent = path.dirname(directory);
-      if (parent === directory) throw projectConfigurationError('Could not find .ledgerrc in this directory or any parent');
-      directory = parent;
+  function journalPaths(journalPath) {
+    try {
+      return pathsForJournal(journalPath);
+    } catch (error) {
+      throw projectConfigurationError(error.message);
     }
   }
 
-  function optionValue(rawValue, ledgerRcPath) {
-    const value = rawValue.trim();
-    if (!value) throw projectConfigurationError(`Missing --file value in ${ledgerRcPath}`);
-    if (value[0] === '"' || value[0] === "'") {
-      if (value.at(-1) !== value[0]) throw projectConfigurationError(`Unterminated quoted --file value in ${ledgerRcPath}`);
-      return value.slice(1, -1);
+  function databasePathForJournal(journalPath) {
+    return journalPaths(journalPath).databasePath;
+  }
+
+  function ensureCurrent(journalPath) {
+    const paths = journalPaths(journalPath);
+    try {
+      fs.mkdirSync(path.dirname(paths.databasePath), { recursive: true, mode: 0o700 });
+      const current = { ...paths, ...ensureDatabaseCurrent(paths.databasePath, paths.journalPath) };
+      fs.chmodSync(paths.databasePath, 0o600);
+      return current;
+    } catch (error) {
+      if (Object.values(errorCodes).includes(error.code)) throw error;
+      throw createError(errorCodes.DATABASE, error.message);
     }
-    return value;
   }
 
-  function journalPathFromLedgerRc(projectRoot) {
-    const ledgerRcPath = path.join(projectRoot, '.ledgerrc');
-    const source = fs.readFileSync(ledgerRcPath, 'utf8');
-    const values = [];
-    for (const rawLine of source.split(/\r?\n/u)) {
-      const line = rawLine.trim();
-      if (!line || line.startsWith(';') || line.startsWith('#')) continue;
-      const match = /^--file(?:\s+|=)(.*)$/u.exec(line);
-      if (match) values.push(optionValue(match[1], ledgerRcPath));
-    }
-    if (values.length === 0) throw projectConfigurationError(`No --file option found in ${ledgerRcPath}`);
-    if (values.length > 1) throw projectConfigurationError(`Multiple --file options found in ${ledgerRcPath}`);
-    return path.resolve(projectRoot, values[0]);
+  function aggregateReport(journalPath, options) {
+    return openJournal(journalPath).aggregateReport(options);
   }
 
-  function loadProjectPaths(startDirectory) {
-    const projectRoot = findProjectRoot(startDirectory);
-    return {
-      projectRoot,
-      journalPath: journalPathFromLedgerRc(projectRoot),
-      databasePath: path.join(projectRoot, DATABASE_RELATIVE_PATH),
-    };
+  function balanceHistoryReport(journalPath, options) {
+    return openJournal(journalPath).balanceHistoryReport(options);
   }
 
-  function ensureProjectDatabaseCurrent(startDirectory) {
-    const paths = loadProjectPaths(startDirectory);
-    fs.mkdirSync(path.dirname(paths.databasePath), { recursive: true });
-    return { ...paths, ...ensureDatabaseCurrent(paths.databasePath, paths.journalPath) };
+  function investmentPerformance(journalPath, options) {
+    return openJournal(journalPath).investmentPerformance(options);
   }
 
-  function aggregateReport(options, startDirectory) {
-    return openProject(startDirectory).aggregateReport(options);
+  function gainReport(journalPath, options) {
+    return openJournal(journalPath).gainReport(options);
   }
 
-  function balanceHistoryReport(options, startDirectory) {
-    return openProject(startDirectory).balanceHistoryReport(options);
+  function accountBalances(journalPath, options) {
+    return openJournal(journalPath).accountBalances(options);
   }
 
-  function investmentPerformance(options, startDirectory) {
-    return openProject(startDirectory).investmentPerformance(options);
+  function accountPostings(journalPath, options) {
+    return openJournal(journalPath).accountPostings(options);
   }
 
-  function gainReport(options, startDirectory) {
-    return openProject(startDirectory).gainReport(options);
-  }
-
-  function accountBalances(options, startDirectory) {
-    return openProject(startDirectory).accountBalances(options);
-  }
-
-  function accountPostings(options, startDirectory) {
-    return openProject(startDirectory).accountPostings(options);
-  }
-
-  function openProject(startDirectory) {
-    const current = ensureProjectDatabaseCurrent(startDirectory);
+  function openJournal(journalPath) {
+    const current = ensureCurrent(journalPath);
     const valuationPriceCache = new Map();
     let ledgerValuationRateResolver;
     return {
@@ -222,8 +197,8 @@ module.exports = ({
     balanceHistoryReport,
     gainReport,
     investmentPerformance,
-    ensureProjectDatabaseCurrent,
-    loadProjectPaths,
-    openProject,
+    databasePathForJournal,
+    ensureDatabaseCurrent: ensureCurrent,
+    openJournal,
   };
 };

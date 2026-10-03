@@ -8,10 +8,10 @@ module.exports = ({
   databaseMigration: { SCHEMA_VERSION },
 }) => {
 
-  function databaseWithoutSchema(databasePath, entryPath, reason) {
+  function databaseWithoutSchema(databasePath, journalPath, reason) {
     return {
       databasePath: path.resolve(databasePath),
-      rootPath: path.resolve(entryPath),
+      journalPath: path.resolve(journalPath),
       inSync: false,
       reason,
       added: [],
@@ -20,10 +20,10 @@ module.exports = ({
     };
   }
 
-  function checkDatabaseSync(databasePath, entryPath) {
+  function checkDatabaseSync(databasePath, journalPath) {
     const resolvedDatabasePath = path.resolve(databasePath);
     if (!fs.existsSync(resolvedDatabasePath)) {
-      return databaseWithoutSchema(databasePath, entryPath, 'database_missing');
+      return databaseWithoutSchema(databasePath, journalPath, 'database_missing');
     }
 
     const database = new Database(resolvedDatabasePath, { readonly: true, fileMustExist: true });
@@ -38,7 +38,7 @@ module.exports = ({
       SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'source_files'
     `).pluck().get();
       if ((!hasDatabaseMetadata && !hasLegacyMetadata) || !hasSourceFiles) {
-        return databaseWithoutSchema(databasePath, entryPath, 'schema_missing');
+        return databaseWithoutSchema(databasePath, journalPath, 'schema_missing');
       }
 
       const metadataTable = hasDatabaseMetadata ? 'database_metadata' : 'metadata';
@@ -46,10 +46,10 @@ module.exports = ({
         `SELECT key, value FROM ${metadataTable}`,
       ).raw().all());
       if (metadata.get('schema_version') !== SCHEMA_VERSION) {
-        return databaseWithoutSchema(databasePath, entryPath, 'schema_version_mismatch');
+        return databaseWithoutSchema(databasePath, journalPath, 'schema_version_mismatch');
       }
 
-      const journal = loadJournalManifest(entryPath);
+      const journal = loadJournalManifest(journalPath);
       const storedFiles = database.prepare(
         'SELECT path, sha256, size FROM source_files ORDER BY traversal_index',
       ).all();
@@ -63,12 +63,12 @@ module.exports = ({
           return stored && (stored.sha256 !== file.sha256 || stored.size !== file.size);
         })
         .map((file) => file.path);
-      const rootMatches = metadata.get('root_path') === journal.rootPath;
+      const rootMatches = metadata.get('root_path') === journal.journalPath;
       const inSync = rootMatches && added.length === 0 && removed.length === 0 && changed.length === 0;
 
       return {
         databasePath: resolvedDatabasePath,
-        rootPath: journal.rootPath,
+        journalPath: journal.journalPath,
         inSync,
         reason: inSync ? 'in_sync' : (rootMatches ? 'source_files_changed' : 'root_path_changed'),
         added,

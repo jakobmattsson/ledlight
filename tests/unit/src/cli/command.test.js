@@ -10,7 +10,7 @@ const cliFormat = resolveRepositoryModule('src/cli/format.js');
 
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
-  const project = {
+  const journal = {
     aggregateReport(options) {
       calls.push({ operation: 'aggregateReport', options });
       return [
@@ -49,37 +49,37 @@ test('delegates report behavior to the public Node API and only formats results'
   };
   const ledlight = {
     version: '1.2.3',
-    openProject(startDirectory) {
-      calls.push({ operation: 'openProject', startDirectory });
-      return project;
+    openJournal(journalPath) {
+      calls.push({ operation: 'openJournal', journalPath });
+      return journal;
     },
   };
   const { runReportCommand } = createCommand({ ledlight, cliArguments, cliFormat });
 
-  assert.match(runReportCommand(['--help'], { startDirectory: '/project' }), /^Usage:/u);
-  assert.equal(runReportCommand(['--version'], { startDirectory: '/project' }), '1.2.3\n');
+  assert.match(runReportCommand(['--help']), /^Usage:/u);
+  assert.equal(runReportCommand(['--version']), '1.2.3\n');
 
   assert.match(
-    runReportCommand(['aggregate', '--accounts', 'Assets:', '--value', '--invert'], {
-      startDirectory: '/project',
-    }),
+    runReportCommand([
+      'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
+    ]),
     /Total.*-10\.00 USD/u,
   );
   assert.equal(
-    runReportCommand(['balance-history', '--invert', '--csv'], { startDirectory: '/project' }),
+    runReportCommand(['balance-history', '--file', '/journal', '--invert', '--csv']),
     'date,amount\n2024-01-01,-10.00\n',
   );
   assert.match(
-    runReportCommand(['investment-performance'], { startDirectory: '/project' }),
+    runReportCommand(['investment-performance', '--file', '/journal']),
     /Opening value: 0\.00 USD/u,
   );
   assert.equal(
-    runReportCommand(['gain', '--csv'], { startDirectory: '/project' }),
+    runReportCommand(['gain', '--file', '/journal', '--csv']),
     'account,amount,commodity\nAssets:Broker,12.50,USD\n',
   );
 
   assert.deepEqual(calls, [
-    { operation: 'openProject', startDirectory: '/project' },
+    { operation: 'openJournal', journalPath: '/journal' },
     {
       operation: 'aggregateReport',
       options: {
@@ -90,7 +90,7 @@ test('delegates report behavior to the public Node API and only formats results'
       },
     },
     { operation: 'commodityDescriptions' },
-    { operation: 'openProject', startDirectory: '/project' },
+    { operation: 'openJournal', journalPath: '/journal' },
     {
       operation: 'balanceHistoryReport',
       options: {
@@ -98,21 +98,21 @@ test('delegates report behavior to the public Node API and only formats results'
         invert: true,
       },
     },
-    { operation: 'openProject', startDirectory: '/project' },
+    { operation: 'openJournal', journalPath: '/journal' },
     {
       operation: 'investmentPerformance',
       options: { accounts: [], commodities: [], excludeCommodities: [] },
     },
     { operation: 'commodityDescriptions' },
-    { operation: 'openProject', startDirectory: '/project' },
+    { operation: 'openJournal', journalPath: '/journal' },
     { operation: 'gainReport', options: { accounts: [] } },
   ]);
 });
 
 test('delegates non-report commands to every remaining public API operation', () => {
   const calls = [];
-  const project = {
-    projectRoot: '/project',
+  const journal = {
+    journalPath: '/journal',
     rebuilt: false,
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
     commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
@@ -131,47 +131,47 @@ test('delegates non-report commands to every remaining public API operation', ()
     version: '1.2.3',
     parse(...arguments_) { calls.push(['parse', ...arguments_]); return { entries: [] }; },
     loadJournal(...arguments_) { calls.push(['loadJournal', ...arguments_]); return { entries: [] }; },
-    loadProjectPaths(directory) { calls.push(['loadProjectPaths', directory]); return { projectRoot: directory }; },
-    ensureProjectDatabaseCurrent(directory) { calls.push(['ensureProjectDatabaseCurrent', directory]); return { rebuilt: true }; },
-    accountBalances(options, directory) { calls.push(['accountBalances', options, directory]); return ['balances']; },
-    accountPostings(options, directory) { calls.push(['accountPostings', options, directory]); return ['postings']; },
-    openProject(directory) { calls.push(['openProject', directory]); return project; },
+    databasePathForJournal(journalPath) { calls.push(['databasePathForJournal', journalPath]); return '/cache/ledger.sqlite'; },
+    ensureDatabaseCurrent(journalPath) { calls.push(['ensureDatabaseCurrent', journalPath]); return { rebuilt: true }; },
+    accountBalances(journalPath, options) { calls.push(['accountBalances', journalPath, options]); return ['balances']; },
+    accountPostings(journalPath, options) { calls.push(['accountPostings', journalPath, options]); return ['postings']; },
+    openJournal(journalPath) { calls.push(['openJournal', journalPath]); return journal; },
   };
   const { runReportCommand } = createCommand({ ledlight, cliArguments, cliFormat });
-  const run = (arguments_) => JSON.parse(runReportCommand(arguments_, { startDirectory: '/cwd' }));
+  const run = (arguments_) => JSON.parse(runReportCommand(arguments_));
 
   assert.deepEqual(run(['parse', 'account Assets:Cash\n', '--source', 'input']), { entries: [] });
   assert.deepEqual(run(['load-journal', '/journal']), { entries: [] });
-  assert.deepEqual(run(['project-paths', '--directory', '/other']), { projectRoot: '/other' });
-  assert.deepEqual(run(['ensure-database']), { rebuilt: true });
-  assert.deepEqual(run(['open-project']), { projectRoot: '/project', rebuilt: false });
-  assert.deepEqual(run(['account-balances', '--account', 'Assets:Cash']), ['balances']);
-  assert.deepEqual(run(['account-postings', '--account', 'Assets:Cash']), ['postings']);
-  assert.deepEqual(run(['account-transactions', '--account', 'Assets:Cash']), ['transactions']);
-  assert.deepEqual(run(['commodity-descriptions']), ['commodities']);
-  assert.deepEqual(run(['ledger-accounts']), ['accounts']);
-  assert.deepEqual(run(['ledger-transaction', '--transaction-id', '7']), { id: 7 });
+  assert.equal(run(['database-path', '--file', '/journal']), '/cache/ledger.sqlite');
+  assert.deepEqual(run(['ensure-database', '--file', '/journal']), { rebuilt: true });
+  assert.deepEqual(run(['open-journal', '--file', '/journal']), { journalPath: '/journal', rebuilt: false });
+  assert.deepEqual(run(['account-balances', '--file', '/journal', '--account', 'Assets:Cash']), ['balances']);
+  assert.deepEqual(run(['account-postings', '--file', '/journal', '--account', 'Assets:Cash']), ['postings']);
+  assert.deepEqual(run(['account-transactions', '--file', '/journal', '--account', 'Assets:Cash']), ['transactions']);
+  assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), ['commodities']);
+  assert.deepEqual(run(['ledger-accounts', '--file', '/journal']), ['accounts']);
+  assert.deepEqual(run(['ledger-transaction', '--file', '/journal', '--transaction-id', '7']), { id: 7 });
   assert.deepEqual(run([
-    'ledger-transactions', '--order', 'newest', '--page', '2', '--page-size', '10',
+    'ledger-transactions', '--file', '/journal', '--order', 'newest', '--page', '2', '--page-size', '10',
   ]), { page: 2 });
   assert.equal(run([
-    'valuation-rate', '--commodity', 'EUR', '--through-date', '2024-12-31',
+    'valuation-rate', '--file', '/journal', '--commodity', 'EUR', '--through-date', '2024-12-31',
   ]), '10.5');
 
   assert.deepEqual(calls, [
     ['parse', 'account Assets:Cash\n', { source: 'input' }],
     ['loadJournal', '/journal'],
-    ['loadProjectPaths', '/other'],
-    ['ensureProjectDatabaseCurrent', '/cwd'],
-    ['openProject', '/cwd'],
-    ['accountBalances', { account: 'Assets:Cash' }, '/cwd'],
-    ['accountPostings', { account: 'Assets:Cash' }, '/cwd'],
-    ['openProject', '/cwd'], ['accountTransactions', { account: 'Assets:Cash' }],
-    ['openProject', '/cwd'], ['commodityDescriptions'],
-    ['openProject', '/cwd'], ['ledgerAccounts'],
-    ['openProject', '/cwd'], ['ledgerTransaction', { transactionId: '7' }],
-    ['openProject', '/cwd'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
-    ['openProject', '/cwd'], ['ledgerValuationRateResolver'],
+    ['databasePathForJournal', '/journal'],
+    ['ensureDatabaseCurrent', '/journal'],
+    ['openJournal', '/journal'],
+    ['accountBalances', '/journal', { account: 'Assets:Cash' }],
+    ['accountPostings', '/journal', { account: 'Assets:Cash' }],
+    ['openJournal', '/journal'], ['accountTransactions', { account: 'Assets:Cash' }],
+    ['openJournal', '/journal'], ['commodityDescriptions'],
+    ['openJournal', '/journal'], ['ledgerAccounts'],
+    ['openJournal', '/journal'], ['ledgerTransaction', { transactionId: '7' }],
+    ['openJournal', '/journal'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
+    ['openJournal', '/journal'], ['ledgerValuationRateResolver'],
     ['resolveRate', 'EUR', '2024-12-31'],
   ]);
 });

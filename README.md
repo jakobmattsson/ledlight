@@ -25,15 +25,15 @@ version.
 Use the JavaScript API from the package root:
 
 ```js
-const { openProject, parse } = require('ledlight');
+const { openJournal, parse } = require('ledlight');
 
 const document = parse('account Assets:Cash\n', { source: '<input>' });
-const project = openProject('/path/to/ledger/project');
+const journal = openJournal('/path/to/books/main.ledger');
 ```
 
-A Ledger project is a directory containing a `.ledgerrc` with exactly one
-`--file` option. Ledlight stores its derived SQLite database in
-`tmp/ledger.sqlite` below that directory.
+Database operations take the path of the root journal directly. Ledlight stores
+its derived SQLite database in the operating system's application cache
+directory; it does not read `.ledgerrc`.
 
 See [the Ledlight documentation](docs/ledlight.md) for the supported syntax,
 reports, and CLI, and the [Node.js API reference](docs/api.md) for the complete

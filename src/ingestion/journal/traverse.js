@@ -7,8 +7,8 @@ module.exports = ({
   includePattern: { expandIncludePattern },
 }) => {
 
-  function traverseJournal(entryPath, processFile) {
-    const rootPath = path.resolve(entryPath);
+  function traverseJournal(journalPath, processFile) {
+    const resolvedJournalPath = path.resolve(journalPath);
     const filesByPath = new Map();
     const active = new Set();
 
@@ -47,8 +47,8 @@ module.exports = ({
       }
     }
 
-    load(rootPath);
-    return { rootPath, files: [...filesByPath.values()] };
+    load(resolvedJournalPath);
+    return { journalPath: resolvedJournalPath, files: [...filesByPath.values()] };
   }
 
   return { traverseJournal };
