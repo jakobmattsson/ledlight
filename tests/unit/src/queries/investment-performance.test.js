@@ -11,9 +11,9 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { execute: queryInvestmentPerformance } = resolveQuery('investmentPerformance');
-const { xirr } = resolveRepositoryModule("src/domain/investments/returns.js").$$private;
+const { xirr } = resolveRepositoryModule("src/queries/support/investment-returns.js").$$private;
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
-const { readDatabase } = resolveRepositoryModule('src/ingestion/database/read.js');
+const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
 
 function investmentPerformance(databasePath, options) {
   return readDatabase(databasePath,

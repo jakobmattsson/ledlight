@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
-const createDatabaseReader = require('../../../../../src/ingestion/database/read');
+const createDatabaseReader = require('../../../../../src/ingestion/database/database-reader');
 
 function createReader(events) {
   const database = {

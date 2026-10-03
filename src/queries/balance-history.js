@@ -8,64 +8,51 @@ module.exports = ({
   },
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
-  apiOptions: {
-    assertDateInterval,
-    booleanOption,
-    dateBasis,
-    parseOptions,
-    stringList,
-  },
+  apiOptions: { parseOptions },
   valuationCommodity: { fromDatabase },
   zod: { z },
 }) => {
 
+  const accountFactorsSchema = z
+    .record(z.string().min(1), z.union([z.string(), z.number()]))
+    .default({})
+    .transform((factors, context) => {
+      const normalized = {};
+      for (const [account, factor] of Object.entries(factors)) {
+        const decimalFactor = String(factor);
+        try {
+          parseDecimal(decimalFactor);
+        } catch {
+          context.addIssue({
+            code: 'custom',
+            message: `Invalid account factor for ${account}: ${JSON.stringify(factor)}`,
+          });
+          return z.NEVER;
+        }
+        normalized[account] = decimalFactor;
+      }
+      return normalized;
+    });
   const optionsSchema = z.strictObject({
-    accountFactors: z.record(z.string().min(1), z.union([z.string(), z.number()])).optional(),
-    accounts: z.array(z.string().min(1)).optional(),
-    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).optional(),
-    from: z.string().optional(),
-    invert: z.boolean({ error: 'must be a boolean' }).optional(),
-    to: z.string().optional(),
+    accountFactors: accountFactorsSchema,
+    accounts: z.array(z.string().min(1)).default([]),
+    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
+    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
+    invert: z.boolean({ error: 'must be a boolean' }).default(false),
+    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
+  }).superRefine((input, context) => {
+    if (input.from && input.to && input.from > input.to) {
+      context.addIssue({
+        code: 'custom',
+        message: `--from date ${input.from} is after --to date ${input.to}`,
+        path: ['from'],
+      });
+    }
   });
-
-  function normalizeOptions(options) {
-    const input = parseOptions(optionsSchema, options, 'balanceHistoryReport');
-    const normalized = {
-      from: input.from,
-      to: input.to,
-      accounts: stringList(input.accounts, 'accounts', false),
-      accountFactors: input.accountFactors,
-      dateBasis: dateBasis(input.dateBasis),
-      invert: booleanOption(input, 'invert'),
-    };
-    assertDateInterval(normalized.from, normalized.to);
-    if (normalized.accountFactors !== undefined && (
-      normalized.accountFactors === null ||
-    Array.isArray(normalized.accountFactors) ||
-    typeof normalized.accountFactors !== 'object'
-    )) {
-      throw createError(errorCodes.INVALID_API_INPUT, 'accountFactors must be an object', TypeError);
-    }
-    if (normalized.accountFactors) {
-      normalized.accountFactors = Object.fromEntries(
-        Object.entries(normalized.accountFactors).map(([account, factor]) => {
-          if (!account) throw createError(errorCodes.INVALID_API_INPUT, 'accountFactors keys must be non-empty accounts', TypeError);
-          const decimalFactor = String(factor);
-          try {
-            parseDecimal(decimalFactor);
-          } catch {
-            throw createError(errorCodes.INVALID_API_INPUT, `Invalid account factor for ${account}: ${JSON.stringify(factor)}`, TypeError);
-          }
-          return [account, decimalFactor];
-        }),
-      );
-    }
-    return normalized;
-  }
 
   function selectBalanceHistory(database, options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
-    const factorEntries = Object.entries(options.accountFactors ?? {});
+    const factorEntries = Object.entries(options.accountFactors);
     const factorExpression = factorEntries.length > 0
       ? `CASE p.account
           ${factorEntries.map(() => 'WHEN ? THEN ?').join('\n          ')}
@@ -201,8 +188,8 @@ module.exports = ({
   }
 
   function queryBalanceHistory(database, options) {
-    const normalizedOptions = normalizeOptions(options);
-    return selectBalanceHistory(database, normalizedOptions, fromDatabase(database));
+    const reportOptions = parseOptions(optionsSchema, options, 'balanceHistoryReport');
+    return selectBalanceHistory(database, reportOptions, fromDatabase(database));
   }
 
   return { name: 'balanceHistoryReport', inputSchema: optionsSchema, execute: queryBalanceHistory };

@@ -1,6 +1,6 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../../support/repository-container");
+const { resolveRepositoryModule } = require("../../../support/repository-container");
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
@@ -8,7 +8,7 @@ const {
   formatDecimalFixed,
   parseDecimal,
   registerDecimalFunctions,
-} = resolveRepositoryModule("src/domain/accounting/decimal.js");
+} = resolveRepositoryModule("src/core/decimal.js");
 
 test('rounds exact decimal values to a fixed number of places', () => {
   assert.equal(formatDecimalFixed(parseDecimal('10'), 2), '10.00');

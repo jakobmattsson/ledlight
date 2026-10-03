@@ -1,39 +1,30 @@
 'use strict';
 
 module.exports = ({
-  publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
 
-  const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
+  const positiveInteger = z.union([z.string(), z.number()])
+    .refine((value) => {
+      const number = Number(value);
+      return Number.isSafeInteger(number) && number > 0 && String(number) === String(value);
+    }, { error: 'must be a positive integer' })
+    .transform(Number);
   const optionsSchema = z.strictObject({
     order: z.enum(['newest', 'oldest'], { error: 'must be newest or oldest' }),
-    page: z.union([z.string(), z.number()]),
-    pageSize: z.union([z.string(), z.number()]),
+    page: positiveInteger,
+    pageSize: positiveInteger
+      .refine((value) => value <= 100, { error: 'must not exceed 100' }),
   });
-
-  function positiveInteger(value, name) {
-    const number = Number(value);
-    if (!Number.isSafeInteger(number) || number < 1 || String(number) !== String(value)) {
-      throw invalidInput(`${name} must be a positive integer`);
-    }
-    return number;
-  }
 
   function queryLedgerTransactions(database, options) {
     const { order, page, pageSize } = parseOptions(
       optionsSchema, options, 'ledgerTransactions',
     );
-    if (!['newest', 'oldest'].includes(order)) {
-      throw invalidInput('order must be newest or oldest');
-    }
-    const requestedPage = positiveInteger(page, 'page');
-    const normalizedPageSize = positiveInteger(pageSize, 'pageSize');
-    if (normalizedPageSize > 100) throw invalidInput('pageSize must not exceed 100');
     const totalTransactions = database.prepare('SELECT COUNT(*) AS count FROM transactions').get().count;
-    const totalPages = Math.ceil(totalTransactions / normalizedPageSize);
-    const selectedPage = Math.min(requestedPage, Math.max(totalPages, 1));
+    const totalPages = Math.ceil(totalTransactions / pageSize);
+    const selectedPage = Math.min(page, Math.max(totalPages, 1));
     const direction = order === 'newest' ? 'DESC' : 'ASC';
     const transactionRows = database.prepare(`
       SELECT
@@ -47,7 +38,7 @@ module.exports = ({
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
       ORDER BY transactions.date ${direction}, entries.sequence ${direction}
       LIMIT ? OFFSET ?
-    `).all(normalizedPageSize, (selectedPage - 1) * normalizedPageSize);
+    `).all(pageSize, (selectedPage - 1) * pageSize);
     const transactions = transactionRows.map((row) => ({ ...row, postings: [] }));
     if (transactions.length > 0) {
       const byId = new Map(transactions.map((transaction) =>
@@ -86,7 +77,7 @@ module.exports = ({
     return {
       order,
       page: selectedPage,
-      pageSize: normalizedPageSize,
+      pageSize,
       totalTransactions,
       totalPages,
       transactions: transactions.map((transaction) => ({

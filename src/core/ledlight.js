@@ -1,10 +1,6 @@
 'use strict';
 
 module.exports = ({
-  journal: { loadJournal },
-  packageMetadata: { version },
-  publicErrors: { errorCodes },
-  ledgerParser: { parse },
   project: projectApi,
 }) => {
 
@@ -52,11 +48,7 @@ module.exports = ({
     gainReport,
     investmentPerformance,
     ensureProjectDatabaseCurrent,
-    errorCodes,
-    loadJournal,
     loadProjectPaths,
     openProject,
-    parse,
-    version,
   };
 };

@@ -1,17 +1,16 @@
 'use strict';
 
 module.exports = ({
-  apiOptions: { assertDate, parseOptions },
+  apiOptions: { parseOptions },
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({
     account: z.string().min(1, { error: 'must be a non-empty string' }),
-    after: z.string().optional(),
+    after: z.iso.date({ error: 'Invalid after date' }).optional(),
   });
 
   function queryAccountPostings(database, options) {
     const { account, after } = parseOptions(optionsSchema, options, 'accountPostings');
-    assertDate(after, 'after');
     const dateFilter = after === undefined
       ? ''
       : 'AND (t.date > ? OR p.report_date > ?)';

@@ -25,9 +25,8 @@ version.
 Use the JavaScript API from the package root:
 
 ```js
-const { openProject, parse } = require('ledlight');
+const { openProject } = require('ledlight');
 
-const document = parse('account Assets:Cash\n', { source: '<input>' });
 const project = openProject('/path/to/ledger/project');
 ```
 

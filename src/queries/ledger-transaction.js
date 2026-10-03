@@ -2,20 +2,20 @@
 
 module.exports = ({
   apiOptions: { parseOptions },
-  publicErrors: { createError, errorCodes },
   zod: { z },
 }) => {
+  const positiveInteger = z.union([z.string(), z.number()])
+    .refine((value) => {
+      const number = Number(value);
+      return Number.isSafeInteger(number) && number > 0 && String(number) === String(value);
+    }, { error: 'must be a positive integer' })
+    .transform(Number);
   const optionsSchema = z.strictObject({
-    transactionId: z.union([z.string(), z.number()]),
+    transactionId: positiveInteger,
   });
-  const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
 
   function queryLedgerTransaction(database, options) {
     const { transactionId } = parseOptions(optionsSchema, options, 'ledgerTransaction');
-    const id = Number(transactionId);
-    if (!Number.isSafeInteger(id) || id <= 0 || String(id) !== String(transactionId)) {
-      throw invalidInput('transactionId must be a positive integer');
-    }
     const rows = database.prepare(`
       SELECT
         transactions.entry_id AS transactionId,
@@ -36,7 +36,7 @@ module.exports = ({
       JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
       WHERE transactions.entry_id = ?
       ORDER BY postings.position, amounts.position
-    `).all(id);
+    `).all(transactionId);
     if (rows.length === 0) return null;
     const first = rows[0];
     const transaction = {

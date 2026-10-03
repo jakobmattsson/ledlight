@@ -38,13 +38,12 @@ The current implementation provides:
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
-The public API is exported by `src/api/index.js`:
+The public API is exported by `src/core/ledlight.js`:
 
 ```js
-const { loadJournal, parse } = require('ledlight');
+const { openProject } = require('ledlight');
 
-const document = parse(sourceText, { source: 'example.ledger' });
-const journal = loadJournal('journal.ledger');
+const project = openProject('/path/to/ledger/project');
 ```
 
 See the [Node.js API reference](api.md) for every exported operation, project
@@ -53,10 +52,8 @@ method, option, result shape, and ordering guarantee.
 See the [package support policy](package.md) for supported Node.js and native
 platforms, module formats, published files, and compatibility guarantees.
 
-The package entry point loads the parser and journal reader immediately, but
-loads the native SQLite dependency only when a database or report operation is
-called. Consumers that only parse source text therefore do not initialize the
-storage layer.
+The package entry point does not load the native SQLite dependency until a
+database or report operation is called.
 
 Open a project once when running several reports so the source freshness check
 runs once:
@@ -73,7 +70,7 @@ const history = project.balanceHistoryReport({ from: '2024-01-01' });
 
 Ledlight has two supported consumer interfaces: the Node.js module exported by
 the package root and the `ledlight` CLI. The Node.js module is the authoritative
-application interface. It owns journal loading, database freshness, report
+application interface. It owns project discovery, database freshness, report
 selection, filtering, transformations such as inversion, and calculated rows
 such as totals.
 
@@ -99,8 +96,6 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `parse SOURCE_TEXT --source NAME` | `parse(sourceText, { source })` | Parse source text |
-| `load-journal ENTRY_PATH` | `loadJournal(entryPath)` | Load an include tree |
 | `project-paths` | `loadProjectPaths(startDirectory)` | Discover project paths |
 | `ensure-database` | `ensureProjectDatabaseCurrent(startDirectory)` | Refresh the database |
 | `open-project` | `openProject(startDirectory)` | Open and describe a project snapshot |
@@ -130,7 +125,7 @@ underlying result.
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
-| `--version` | `version` | Public package metadata |
+| `--version` | None | CLI package metadata |
 | `--help` | None | CLI usage formatting only |
 
 Commands without a specialized human-readable representation emit JSON.
@@ -152,26 +147,30 @@ and in the parity test.
 
 The implementation is organized by responsibility directly under `src`:
 
-- `domain` provides exact decimal arithmetic, semantic validation, posting
-  resolution, and investment calculations;
-- `api` exposes the stable Node.js facade, public errors, and shared runtime-input
-  validation helpers;
+- `core` exposes the stable Node.js facade and contains project composition,
+  public errors, shared runtime-input validation, exact decimal arithmetic, and
+  valuation logic;
 - `ingestion` owns the optimized parser and normative Ohm grammar, traverses
-  journal includes, persists the normalized database, and materializes query
-  optimizations;
+  journal includes, validates and resolves journal postings, persists the
+  normalized database, and materializes query optimizations;
 - `queries` contains one module per public API/CLI query—including aggregate,
   balance-history, gain, and investment-performance queries—with its Zod schema
   beside its execution function;
-- `queries/support` contains internal SQL, reconciliation, and valuation helpers
-  shared by query implementations;
-- `application` composes project paths, database freshness, and reports; and
+- `queries/support` contains internal SQL, reconciliation, valuation, and
+  investment-return calculations used by query implementations; and
 - `cli` contains argument parsing, output formatting, and the executable runner
   over the public Node.js API.
 
-Dependencies point inward: domain code has no project or SQLite dependency,
-ingestion writes the database, queries read it, and application composes those
-capabilities into the public Node.js API. The CLI command layer depends on that
-public API; only its output formatter uses shared exact-decimal helpers directly.
+Dependencies point inward: ingestion writes the database, queries read it, and
+core composes those capabilities into the public Node.js API. The CLI command
+layer depends on that public API; only its output formatter uses shared
+exact-decimal helpers directly.
+Awilix supplies each repository factory through a boundary-checking proxy. Code
+outside `cli` cannot resolve CLI modules, and `ingestion` cannot resolve modules
+from `queries`. The complete container is resolved in a unit test so violations
+fail the verification suite even when the affected feature is not otherwise
+exercised. Repository factories use unique lowercase kebab-case filenames;
+Awilix `loadModules` converts each basename to its camel-case dependency name.
 
 ## Supported grammar
 
@@ -205,7 +204,7 @@ not acquire or dispose of a commodity.
 
 `src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `src/ingestion/syntax/reference/parser.js`. Tests parse representative
+semantics in `src/ingestion/syntax/reference/reference-parser.js`. Tests parse representative
 documents with both Ohm and the optimized runtime parser and compare the
 resulting syntax trees. This keeps the grammar reviewable without adding
 parser-framework overhead to production imports.

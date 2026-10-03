@@ -1,17 +1,16 @@
 'use strict';
 
 module.exports = ({
-  apiOptions: { assertDate, parseOptions },
+  apiOptions: { parseOptions },
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({
     account: z.string().min(1, { error: 'must be a non-empty string' }),
-    to: z.string().optional(),
+    to: z.iso.date({ error: 'Invalid to date' }).optional(),
   });
 
   function queryAccountBalances(database, options) {
     const { account, to } = parseOptions(optionsSchema, options, 'accountBalances');
-    assertDate(to, 'to');
     const dateFilter = to === undefined ? '' : 'AND p.report_date <= ?';
     const parameters = to === undefined ? [account] : [account, to];
     return database.prepare(`

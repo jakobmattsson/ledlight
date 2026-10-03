@@ -4,17 +4,13 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const createArguments = require('../../../../src/cli/arguments');
-const argumentsModule = resolveRepositoryModule('src/cli/arguments.js');
+const createArguments = require('../../../../src/cli/cli-arguments');
+const argumentsModule = resolveRepositoryModule('src/cli/cli-arguments.js');
 const { apiCommands, parseArguments, usage } = argumentsModule;
-const journal = resolveRepositoryModule('src/ingestion/journal/load.js');
-const ledgerParser = resolveRepositoryModule('src/ingestion/syntax/parser.js');
-const project = resolveRepositoryModule('src/application/project.js');
+const project = resolveRepositoryModule('src/core/project.js');
 
 test('defines one CLI command for every public API operation', () => {
   assert.deepEqual(apiCommands, {
-    parse: 'parse',
-    loadJournal: 'load-journal',
     loadProjectPaths: 'project-paths',
     ensureProjectDatabaseCurrent: 'ensure-database',
     openProject: 'open-project',
@@ -42,8 +38,6 @@ test('fails when a locally declared API input has no actual CLI option', () => {
   };
   assert.throws(
     () => createArguments({
-      journal,
-      ledgerParser,
       project: { apiDefinitions },
     }),
     /CLI inputs do not cover the aggregateReport API contract/u,
@@ -189,16 +183,6 @@ test('maps every remaining API parameter to CLI arguments', () => {
       accountFactors: { 'Assets:Fund': '0.7', 'Assets:Cash': '1' },
     },
     output: { csv: false, json: true },
-  });
-  assert.deepEqual(parseArguments(['parse', 'account Assets:Cash\n', '--source', 'input.ledger']), {
-    command: 'parse',
-    startDirectory: undefined,
-    arguments: ['account Assets:Cash\n', { source: 'input.ledger' }],
-  });
-  assert.deepEqual(parseArguments(['load-journal', '/project/journal.ledger']), {
-    command: 'load-journal',
-    startDirectory: undefined,
-    arguments: ['/project/journal.ledger'],
   });
   assert.deepEqual(parseArguments(['account-balances', '--account', 'Assets:Cash', '--to', '2024-12-31']), {
     command: 'account-balances', startDirectory: undefined,
