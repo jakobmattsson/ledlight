@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  ledlight,
+  project,
   packageMetadata: { version },
   cliArguments: { parseArguments, usage },
   cliFormat: {
@@ -16,7 +16,7 @@ module.exports = ({
 
   function runJsonCommand(parsed) {
     const { command, journalPath, options } = parsed;
-    const journal = ledlight.openJournal(journalPath);
+    const journal = project.openJournal(journalPath);
     if (command === 'account-balances') return formatJson(journal.accountBalances(options));
     if (command === 'account-postings') return formatJson(journal.accountPostings(options));
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
@@ -32,7 +32,7 @@ module.exports = ({
 
   function runReport(parsed) {
     const { command, reportOptions, journalPath, output } = parsed;
-    const journal = ledlight.openJournal(journalPath);
+    const journal = project.openJournal(journalPath);
     if (command === 'investment-performance') {
       const report = journal.investmentPerformance(reportOptions);
       return output.json

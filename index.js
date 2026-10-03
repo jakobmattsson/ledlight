@@ -2,4 +2,6 @@
 
 const { createRepositoryContainer } = require('./src/composition/repository-container');
 
-module.exports = createRepositoryContainer().resolve('ledlight');
+const { openJournal } = createRepositoryContainer().resolve('project');
+
+module.exports = { openJournal };

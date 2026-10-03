@@ -38,7 +38,7 @@ The current implementation provides:
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
-The public API is exported by `src/core/ledlight.js`:
+The public API is exported from the package root using `src/core/project.js`:
 
 ```js
 const { openJournal } = require('ledlight');
@@ -145,7 +145,7 @@ and in the parity test.
 
 The implementation is organized by responsibility directly under `src`:
 
-- `core` exposes the stable Node.js facade and contains project composition,
+- `core` contains project composition for the stable Node.js API,
   public errors, shared runtime-input validation, exact decimal arithmetic, and
   valuation logic;
 - `ingestion` owns the optimized parser and normative Ohm grammar, traverses

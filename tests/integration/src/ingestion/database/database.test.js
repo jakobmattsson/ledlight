@@ -9,7 +9,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
-const { openJournal } = resolveRepositoryModule("src/core/ledlight.js");
+const { openJournal } = resolveRepositoryModule("src/core/project.js");
 const { pathsForJournal } = resolveRepositoryModule("src/core/cache-paths.js");
 const { errorCodes } = resolveRepositoryModule("src/core/public-errors.js");
 const {
