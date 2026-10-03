@@ -33,5 +33,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryAccountBalances };
+  return { name: 'accountBalances', inputSchema: optionsSchema, execute: queryAccountBalances };
 };

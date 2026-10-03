@@ -103,5 +103,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryLedgerTransactions };
+  return { name: 'ledgerTransactions', inputSchema: optionsSchema, execute: queryLedgerTransactions };
 };

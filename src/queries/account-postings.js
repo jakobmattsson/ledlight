@@ -37,5 +37,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryAccountPostings };
+  return { name: 'accountPostings', inputSchema: optionsSchema, execute: queryAccountPostings };
 };

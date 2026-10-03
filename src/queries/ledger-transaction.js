@@ -80,5 +80,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryLedgerTransaction };
+  return { name: 'ledgerTransaction', inputSchema: optionsSchema, execute: queryLedgerTransaction };
 };

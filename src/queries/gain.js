@@ -131,5 +131,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryGain };
+  return { name: 'gainReport', inputSchema: optionsSchema, execute: queryGain };
 };

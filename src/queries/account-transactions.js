@@ -94,5 +94,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryAccountTransactions };
+  return { name: 'accountTransactions', inputSchema: optionsSchema, execute: queryAccountTransactions };
 };

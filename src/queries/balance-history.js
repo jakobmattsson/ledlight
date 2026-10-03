@@ -214,5 +214,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryBalanceHistory };
+  return { name: 'balanceHistoryReport', inputSchema: optionsSchema, execute: queryBalanceHistory };
 };

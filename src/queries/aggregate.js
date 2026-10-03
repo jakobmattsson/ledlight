@@ -185,5 +185,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryAggregate };
+  return { name: 'aggregateReport', inputSchema: optionsSchema, execute: queryAggregate };
 };

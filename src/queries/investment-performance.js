@@ -213,5 +213,9 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryInvestmentPerformance };
+  return {
+    name: 'investmentPerformance',
+    inputSchema: optionsSchema,
+    execute: queryInvestmentPerformance,
+  };
 };
