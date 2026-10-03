@@ -24,13 +24,12 @@ module.exports = ({
   });
 
   function reportFilter(options, valuationCommodity) {
-    const clauses = ['r.commodity != ?'];
-    const parameters = [valuationCommodity];
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
-    if (options.to) {
-      clauses.push(`${dateExpression} <= ?`);
-      parameters.push(options.to);
-    }
+    const clauses = [
+      'r.commodity != ?',
+      `${dateExpression} <= COALESCE(?, '9999-12-31')`,
+    ];
+    const parameters = [valuationCommodity, options.to ?? null];
     if (options.accounts.length > 0) {
       const accountFilter = accountPrefixFilter('p.account', options.accounts);
       clauses.push(accountFilter.sql);

@@ -155,8 +155,8 @@ CREATE INDEX IF NOT EXISTS journal_entries_source_location
   ON journal_entries(source_file_id, line);
 CREATE INDEX IF NOT EXISTS transactions_date
   ON transactions(date);
-CREATE INDEX IF NOT EXISTS postings_account
-  ON postings(account);
+CREATE INDEX IF NOT EXISTS postings_account_report_date
+  ON postings(account, report_date);
 CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity
   ON resolved_posting_amounts(commodity);
 CREATE INDEX IF NOT EXISTS transaction_tags_name

@@ -72,34 +72,15 @@ module.exports = ({
     const latestSelectedDate = options.dateBasis === 'transaction'
       ? 'SELECT MAX(date) AS date FROM transactions'
       : 'SELECT MAX(report_date) AS date FROM postings';
-    const reportEnd = options.to
-      ? `SELECT MIN(date) AS value FROM (
-        SELECT MAX(date) AS date FROM (
+    const reportEnd = `SELECT MIN(value, COALESCE(?, value)) AS value
+      FROM (
+        SELECT MAX(date) AS value FROM (
           ${latestSelectedDate}
           UNION ALL
           SELECT MAX(date) AS date FROM prices
         )
-        UNION ALL
-        SELECT ? AS date
-      )`
-      : `SELECT MAX(date) AS value FROM (
-        ${latestSelectedDate}
-        UNION ALL
-        SELECT MAX(date) AS date FROM prices
       )`;
-    if (options.to) parameters.push(options.to);
-    const outputClauses = [];
-    if (options.from) {
-      outputClauses.push('date >= ?');
-      parameters.push(options.from);
-    }
-    if (options.to) {
-      outputClauses.push('date <= ?');
-      parameters.push(options.to);
-    }
-    const outputWhere = outputClauses.length > 0
-      ? `WHERE ${outputClauses.join('\n      AND ')}`
-      : '';
+    parameters.push(options.to ?? null, options.from ?? null, options.to ?? null);
     const rows = database.prepare(`
     WITH RECURSIVE
       selected_changes AS (
@@ -160,7 +141,8 @@ module.exports = ({
       )
     SELECT date, balance AS amount${factorExpression ? ', factored_balance AS factored_amount' : ''}, missing_commodity
     FROM daily_balances
-    ${outputWhere}
+    WHERE date >= COALESCE(?, '0000-00-00')
+      AND date <= COALESCE(?, '9999-12-31')
     ORDER BY date
   `).all(...parameters);
     for (const row of rows) {

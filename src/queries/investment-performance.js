@@ -70,9 +70,9 @@ module.exports = ({
 
   function queryDailyValues(database, options, commodities, valuationCommodity) {
     const filter = selectionFilter(options, commodities, 'r');
-    const reportEnd = options.to
-      ? `SELECT MIN(date) AS value FROM (
-        SELECT MAX(date) AS date FROM (
+    const reportEnd = `SELECT MIN(value, COALESCE(?, value)) AS value
+      FROM (
+        SELECT MAX(date) AS value FROM (
           SELECT MAX(p.report_date) AS date
           FROM resolved_posting_amounts AS r
           JOIN postings AS p ON p.id = r.posting_id
@@ -81,20 +81,12 @@ module.exports = ({
           UNION ALL
           SELECT MAX(date) AS date FROM prices
         )
-        UNION ALL
-        SELECT ? AS date
-      )`
-      : `SELECT MAX(date) AS value FROM (
-        SELECT MAX(p.report_date) AS date
-        FROM resolved_posting_amounts AS r
-        JOIN postings AS p ON p.id = r.posting_id
-        JOIN transactions AS t ON t.entry_id = p.transaction_id
-        WHERE ${filter.sql}
-        UNION ALL
-        SELECT MAX(date) AS date FROM prices
       )`;
-    const parameters = [...filter.parameters, ...filter.parameters];
-    if (options.to) parameters.push(options.to);
+    const parameters = [
+      ...filter.parameters,
+      ...filter.parameters,
+      options.to ?? null,
+    ];
     return database.prepare(`
     WITH RECURSIVE
       selected_changes AS (
