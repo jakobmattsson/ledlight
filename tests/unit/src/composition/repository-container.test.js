@@ -10,7 +10,7 @@ const test = require('node:test');
 
 test('prevents dependencies on CLI modules from outside the CLI', () => {
   assert.throws(
-    () => assertDependencyAllowed('src/application/example.js', 'cliCommand'),
+    () => assertDependencyAllowed('src/core/example.js', 'cliCommand'),
     /may not depend on CLI module/u,
   );
   assert.doesNotThrow(

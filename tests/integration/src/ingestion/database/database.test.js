@@ -9,7 +9,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
-const { errorCodes, openProject } = resolveRepositoryModule("src/api/index.js");
+const { errorCodes, openProject } = resolveRepositoryModule("src/core/public-api.js");
 const {
   ensureDatabaseCurrent,
 } = resolveRepositoryModule("src/ingestion/database/database.js");

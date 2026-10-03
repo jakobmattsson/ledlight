@@ -4,7 +4,7 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { errorCodes, parse } = resolveRepositoryModule("src/api/index.js");
+const { errorCodes, parse } = resolveRepositoryModule("src/core/public-api.js");
 const ohmParser = resolveRepositoryModule("src/ingestion/syntax/reference/parser.js").$$private;
 
 function parseConformant(sourceText, source) {

@@ -9,7 +9,7 @@ const argumentsModule = resolveRepositoryModule('src/cli/arguments.js');
 const { apiCommands, parseArguments, usage } = argumentsModule;
 const journal = resolveRepositoryModule('src/ingestion/journal/load.js');
 const ledgerParser = resolveRepositoryModule('src/ingestion/syntax/parser.js');
-const project = resolveRepositoryModule('src/application/project.js');
+const project = resolveRepositoryModule('src/core/project.js');
 
 test('defines one CLI command for every public API operation', () => {
   assert.deepEqual(apiCommands, {

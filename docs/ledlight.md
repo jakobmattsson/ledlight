@@ -38,7 +38,7 @@ The current implementation provides:
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
-The public API is exported by `src/api/index.js`:
+The public API is exported by `src/core/public-api.js`:
 
 ```js
 const { loadJournal, parse } = require('ledlight');
@@ -152,26 +152,24 @@ and in the parity test.
 
 The implementation is organized by responsibility directly under `src`:
 
-- `domain` provides shared exact decimal arithmetic, valuation logic, and
-  investment calculations;
-- `api` exposes the stable Node.js facade, public errors, and shared runtime-input
-  validation helpers;
+- `core` exposes the stable Node.js facade and contains project composition,
+  public errors, shared runtime-input validation, exact decimal arithmetic, and
+  valuation logic;
 - `ingestion` owns the optimized parser and normative Ohm grammar, traverses
   journal includes, validates and resolves journal postings, persists the
   normalized database, and materializes query optimizations;
 - `queries` contains one module per public API/CLI query—including aggregate,
   balance-history, gain, and investment-performance queries—with its Zod schema
   beside its execution function;
-- `queries/support` contains internal SQL, reconciliation, and valuation helpers
-  shared by query implementations;
-- `application` composes project paths, database freshness, and reports; and
+- `queries/support` contains internal SQL, reconciliation, valuation, and
+  investment-return calculations used by query implementations; and
 - `cli` contains argument parsing, output formatting, and the executable runner
   over the public Node.js API.
 
-Dependencies point inward: domain code has no project or SQLite dependency,
-ingestion writes the database, queries read it, and application composes those
-capabilities into the public Node.js API. The CLI command layer depends on that
-public API; only its output formatter uses shared exact-decimal helpers directly.
+Dependencies point inward: ingestion writes the database, queries read it, and
+core composes those capabilities into the public Node.js API. The CLI command
+layer depends on that public API; only its output formatter uses shared
+exact-decimal helpers directly.
 Awilix supplies each repository factory through a boundary-checking proxy. Code
 outside `cli` cannot resolve CLI modules, and `ingestion` cannot resolve modules
 from `queries`. The complete container is resolved in a unit test so violations

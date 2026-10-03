@@ -13,17 +13,16 @@ const {
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const MODULE_NAMES = Object.freeze({
-  'src/api/errors.js': 'publicErrors',
-  'src/api/index.js': 'ledlight',
-  'src/api/options.js': 'apiOptions',
-  'src/application/project.js': 'project',
   'src/cli/arguments.js': 'cliArguments',
   'src/cli/command.js': 'cliCommand',
   'src/cli/format.js': 'cliFormat',
-  'src/domain/accounting/decimal.js': 'decimal',
-  'src/domain/accounting/valuation-rate-resolver.js': 'valuationRateResolver',
-  'src/domain/accounting/valuation-commodity.js': 'valuationCommodity',
-  'src/domain/investments/returns.js': 'investmentReturns',
+  'src/core/decimal.js': 'decimal',
+  'src/core/errors.js': 'publicErrors',
+  'src/core/options.js': 'apiOptions',
+  'src/core/project.js': 'project',
+  'src/core/public-api.js': 'ledlight',
+  'src/core/valuation-commodity.js': 'valuationCommodity',
+  'src/core/valuation-rate-resolver.js': 'valuationRateResolver',
   'src/ingestion/accounting/posting-resolver.js': 'postingResolver',
   'src/ingestion/accounting/validate-journal.js': 'journalValidator',
   'src/ingestion/database/database.js': 'database',
@@ -43,14 +42,13 @@ const MODULE_NAMES = Object.freeze({
   'src/ingestion/syntax/parser.js': 'ledgerParser',
   'src/ingestion/syntax/reference/parser.js': 'referenceParser',
   'src/queries/support/account-prefix-filter.js': 'accountPrefixFilter',
+  'src/queries/support/investment-returns.js': 'investmentReturns',
   'src/queries/support/reconciliation-entries.js': 'reconciliationEntries',
   'src/queries/support/valuation-rates.js': 'valuationRates',
 });
 const APPLICATION_SOURCE_DIRECTORIES = Object.freeze([
-  'api',
-  'application',
   'cli',
-  'domain',
+  'core',
   'ingestion',
   'queries',
 ]);
