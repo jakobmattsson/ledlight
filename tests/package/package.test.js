@@ -86,8 +86,6 @@ test('the published archive installs and exposes the module and CLI', () => {
       const assert = require('node:assert/strict');
       const ledlight = require('ledlight');
       assert.equal(typeof ledlight.openProject, 'function');
-      assert.equal(ledlight.version, ${JSON.stringify(packageMetadata.version)});
-      assert.doesNotThrow(() => ledlight.parse('account Assets:Cash\\n', { source: '<smoke-test>' }));
       assert.deepEqual(ledlight.aggregateReport({}, process.cwd()), [
         { account: 'Assets:Cash', quantity: '10', commodity: 'USD' },
         { account: 'Equity:Opening', quantity: '-10', commodity: 'USD' },
@@ -96,7 +94,7 @@ test('the published archive installs and exposes the module and CLI', () => {
     run(process.execPath, ['--input-type=module', '-e', `
       import assert from 'node:assert/strict';
       import ledlight from 'ledlight';
-      assert.equal(ledlight.version, ${JSON.stringify(packageMetadata.version)});
+      assert.equal(typeof ledlight.openProject, 'function');
     `], { cwd: projectDirectory, env: consumerEnvironment });
 
     const executableName = process.platform === 'win32' ? 'ledlight.cmd' : 'ledlight';

@@ -2,6 +2,7 @@
 
 module.exports = ({
   ledlight,
+  packageMetadata: { version },
   cliArguments: { parseArguments, usage },
   cliFormat: {
     formatCsv,
@@ -19,8 +20,6 @@ module.exports = ({
 
   function runJsonCommand(parsed) {
     const { command, startDirectory, options } = parsed;
-    if (command === 'parse') return formatJson(ledlight.parse(...parsed.arguments));
-    if (command === 'load-journal') return formatJson(ledlight.loadJournal(...parsed.arguments));
     if (command === 'project-paths') return formatJson(ledlight.loadProjectPaths(startDirectory));
     if (command === 'ensure-database') {
       return formatJson(ledlight.ensureProjectDatabaseCurrent(startDirectory));
@@ -90,7 +89,7 @@ module.exports = ({
     if (arguments_.length === 1 && (arguments_[0] === '--help' || arguments_[0] === '-h')) {
       return `${usage()}\n`;
     }
-    if (arguments_.length === 1 && arguments_[0] === '--version') return `${ledlight.version}\n`;
+    if (arguments_.length === 1 && arguments_[0] === '--version') return `${version}\n`;
     const parsed = parseArguments(arguments_);
     if (parsed.startDirectory === undefined) parsed.startDirectory = startDirectory;
     return ['aggregate', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)

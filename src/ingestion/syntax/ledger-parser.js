@@ -16,9 +16,6 @@ module.exports = ({
     code !== 123 && code !== 125;
   const sourceLocation = (source, line, column) => ({ source, line, column });
   const optionsSchema = z.strictObject({ source: z.string().optional() });
-  const apiDefinition = Object.freeze({
-    inputs: ['sourceText', ...Object.keys(optionsSchema.shape)],
-  });
 
   function assertCommoditySymbol(value, source, line, column) {
     if (!value || [...value].some((character) => !isCommodityCharacter(character.codePointAt(0)))) {
@@ -265,5 +262,5 @@ module.exports = ({
     return { source, entries };
   }
 
-  return { apiDefinition, optionsSchema, parse };
+  return { parse };
 };

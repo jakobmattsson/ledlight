@@ -41,10 +41,9 @@ The current implementation provides:
 The public API is exported by `src/core/ledlight.js`:
 
 ```js
-const { loadJournal, parse } = require('ledlight');
+const { openProject } = require('ledlight');
 
-const document = parse(sourceText, { source: 'example.ledger' });
-const journal = loadJournal('journal.ledger');
+const project = openProject('/path/to/ledger/project');
 ```
 
 See the [Node.js API reference](api.md) for every exported operation, project
@@ -53,10 +52,8 @@ method, option, result shape, and ordering guarantee.
 See the [package support policy](package.md) for supported Node.js and native
 platforms, module formats, published files, and compatibility guarantees.
 
-The package entry point loads the parser and journal reader immediately, but
-loads the native SQLite dependency only when a database or report operation is
-called. Consumers that only parse source text therefore do not initialize the
-storage layer.
+The package entry point does not load the native SQLite dependency until a
+database or report operation is called.
 
 Open a project once when running several reports so the source freshness check
 runs once:
@@ -73,7 +70,7 @@ const history = project.balanceHistoryReport({ from: '2024-01-01' });
 
 Ledlight has two supported consumer interfaces: the Node.js module exported by
 the package root and the `ledlight` CLI. The Node.js module is the authoritative
-application interface. It owns journal loading, database freshness, report
+application interface. It owns project discovery, database freshness, report
 selection, filtering, transformations such as inversion, and calculated rows
 such as totals.
 
@@ -99,8 +96,6 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `parse SOURCE_TEXT --source NAME` | `parse(sourceText, { source })` | Parse source text |
-| `load-journal ENTRY_PATH` | `loadJournal(entryPath)` | Load an include tree |
 | `project-paths` | `loadProjectPaths(startDirectory)` | Discover project paths |
 | `ensure-database` | `ensureProjectDatabaseCurrent(startDirectory)` | Refresh the database |
 | `open-project` | `openProject(startDirectory)` | Open and describe a project snapshot |
@@ -130,7 +125,7 @@ underlying result.
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
-| `--version` | `version` | Public package metadata |
+| `--version` | None | CLI package metadata |
 | `--help` | None | CLI usage formatting only |
 
 Commands without a specialized human-readable representation emit JSON.
