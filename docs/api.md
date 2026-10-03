@@ -258,10 +258,9 @@ a circular chain is encountered.
 ## Command-line parity
 
 Every callable operation in the package API and on the object returned by
-`openProject()` has a CLI command. Run `ledlight --help` for the command list
-and `ledlight <command> --help` for per-command parameters. Project-bound
-commands accept `--directory PATH`, corresponding to the API's
-`startDirectory` argument.
+`openProject()` has a CLI command. Run `ledlight --help` for the complete
+command list and per-command parameters. Project-bound commands accept
+`--directory PATH`, corresponding to the API's `startDirectory` argument.
 
 Commands without an established table format return the API result as JSON.
 The report commands preserve their human-readable formats and accept `--json`
