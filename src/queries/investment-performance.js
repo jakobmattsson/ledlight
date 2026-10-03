@@ -5,7 +5,7 @@ module.exports = ({
   publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
   investmentReturns: { calculatePerformance },
-  valuationCommodity: { valuationCommodityFromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 

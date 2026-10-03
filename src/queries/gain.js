@@ -12,7 +12,7 @@ module.exports = ({
   accountPrefixFilter: { accountPrefixFilter },
   apiOptions: { parseOptions },
   valuationRates: { queryValuationRates },
-  valuationCommodity: { valuationCommodityFromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 

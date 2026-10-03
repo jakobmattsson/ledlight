@@ -9,7 +9,7 @@ module.exports = ({
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
-  valuationCommodity: { valuationCommodityFromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 

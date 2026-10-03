@@ -6,7 +6,7 @@ module.exports = ({
   decimal: { registerDecimalFunctions },
   postingResolver: { PostingResolver },
   journalValidator: { validateJournal },
-  valuationCommodity: { valuationCommodityFromJournal },
+  journalValuationCommodity: { valuationCommodityFromJournal },
   valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },
 }) => {

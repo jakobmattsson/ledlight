@@ -2,7 +2,7 @@
 
 module.exports = ({
   decimal: { compareDecimals, parseDecimal },
-  valuationCommodity: { valuationCommodityFromJournal },
+  journalValuationCommodity: { valuationCommodityFromJournal },
 }) => {
 
   const ZERO = parseDecimal('0');

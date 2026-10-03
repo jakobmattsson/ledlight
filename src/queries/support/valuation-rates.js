@@ -12,7 +12,7 @@ module.exports = ({
     resolverArgumentsSchema,
     resolverInputNames,
   },
-  valuationCommodity: { valuationCommodityFromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
 }) => {
 
   const missingValuation = (message) => createError(errorCodes.MISSING_VALUATION_DATA, message);
