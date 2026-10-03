@@ -179,15 +179,23 @@ module.exports = ({
       repeatable: true, apiInput: 'excludeCommodities',
     });
     addJson(performance);
+    program.command('version').description('show the package version');
+    program.command('help [command]').description('show help for a command');
     return program;
   }
 
-  function usage() {
+  function usage(commandName) {
     const program = createProgram();
-    return [program, ...program.commands].map((command) => command.helpInformation().trimEnd()).join('\n\n');
+    if (commandName === undefined) {
+      return `${program.helpInformation().trimEnd()}\n\n` +
+        'Run "ledlight <command> --help" for detailed command usage.';
+    }
+    const command = program.commands.find((candidate) => candidate.name() === commandName);
+    if (!command || !command.apiOperation) throw new Error(`Unknown command: ${commandName}`);
+    return command.helpInformation().trimEnd();
   }
   function commandCoverage() {
-    return Object.fromEntries(createProgram().commands.map((command) => [
+    return Object.fromEntries(createProgram().commands.filter((command) => command.apiOperation).map((command) => [
       command.apiOperation,
       {
         command: command.name(),
@@ -242,7 +250,7 @@ module.exports = ({
     const program = createProgram();
     if (arguments_.length === 0) throw new Error(usage());
     let selectedCommand;
-    for (const command of program.commands) command.action((...actionArguments) => {
+    for (const command of program.commands.filter((candidate) => candidate.apiOperation)) command.action((...actionArguments) => {
       const commandObject = actionArguments.at(-1);
       selectedCommand = { name: command.name(), options: commandObject.opts() };
     });

@@ -60,8 +60,22 @@ test('delegates report behavior to the public Node API and only formats results'
     cliFormat,
   });
 
-  assert.match(runReportCommand(['--help'], { startDirectory: '/project' }), /^Usage:/u);
+  const topLevelHelp = runReportCommand(['--help'], { startDirectory: '/project' });
+  assert.match(topLevelHelp, /^Usage:/u);
+  assert.doesNotMatch(topLevelHelp, /Usage: ledlight aggregate/u);
+  assert.equal(runReportCommand([], { startDirectory: '/project' }), topLevelHelp);
+  assert.equal(runReportCommand(['help'], { startDirectory: '/project' }), topLevelHelp);
+  assert.match(
+    runReportCommand(['account-balances', '--help'], { startDirectory: '/project' }),
+    /^Usage: ledlight account-balances[\s\S]*--account <name>/u,
+  );
+  assert.match(
+    runReportCommand(['help', 'account-balances'], { startDirectory: '/project' }),
+    /^Usage: ledlight account-balances[\s\S]*--account <name>/u,
+  );
   assert.equal(runReportCommand(['--version'], { startDirectory: '/project' }), '1.2.3\n');
+  assert.equal(runReportCommand(['version'], { startDirectory: '/project' }), '1.2.3\n');
+  assert.equal(runReportCommand(['-V'], { startDirectory: '/project' }), '1.2.3\n');
 
   assert.match(
     runReportCommand(['aggregate', '--accounts', 'Assets:', '--value', '--invert'], {

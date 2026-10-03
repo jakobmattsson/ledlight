@@ -125,8 +125,9 @@ underlying result.
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
-| `--version` | None | CLI package metadata |
-| `--help` | None | CLI usage formatting only |
+| `version`, `--version`, `-V` | None | CLI package metadata |
+| `help`, `--help`, `-h` | None | Top-level command list |
+| `<command> --help`, `help <command>` | None | Detailed usage for one command |
 
 Commands without a specialized human-readable representation emit JSON.
 Report commands accept `--json` when the complete API result is needed; this

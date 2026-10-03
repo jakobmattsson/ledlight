@@ -232,9 +232,12 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     assert.throws(() => parseArguments(arguments_), /Usage:|may only be specified once/u);
   }
   assert.match(usage(), /^Usage: ledlight/u);
-  assert.match(usage(), /Usage: ledlight aggregate/u);
-  assert.match(usage(), /Usage: ledlight balance-history/u);
-  assert.match(usage(), /Usage: ledlight gain/u);
-  assert.match(usage(), /Usage: ledlight investment-performance/u);
-  assert.match(usage(), /--accounts <prefix>.*repeatable/u);
+  assert.match(usage(), /version\s+show the package version/u);
+  assert.match(usage(), /help \[command\]\s+show help for a command/u);
+  assert.match(usage(), /ledlight <command> --help/u);
+  assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
+  assert.doesNotMatch(usage(), /--accounts <prefix>/u);
+  assert.match(usage('aggregate'), /^Usage: ledlight aggregate/u);
+  assert.match(usage('aggregate'), /--accounts <prefix>.*repeatable/u);
+  assert.throws(() => usage('missing'), /Unknown command: missing/u);
 });

@@ -86,10 +86,19 @@ module.exports = ({
   }
 
   function runReportCommand(arguments_, { startDirectory }) {
-    if (arguments_.length === 1 && (arguments_[0] === '--help' || arguments_[0] === '-h')) {
+    if (arguments_.length === 0 ||
+        (arguments_.length === 1 && ['help', '--help', '-h'].includes(arguments_[0]))) {
       return `${usage()}\n`;
     }
-    if (arguments_.length === 1 && arguments_[0] === '--version') return `${version}\n`;
+    if (arguments_.length === 1 && ['version', '--version', '-V'].includes(arguments_[0])) {
+      return `${version}\n`;
+    }
+    if (arguments_.length === 2 && arguments_[0] === 'help') {
+      return `${usage(arguments_[1])}\n`;
+    }
+    if (arguments_.length === 2 && ['--help', '-h'].includes(arguments_[1])) {
+      return `${usage(arguments_[0])}\n`;
+    }
     const parsed = parseArguments(arguments_);
     if (parsed.startDirectory === undefined) parsed.startDirectory = startDirectory;
     return ['aggregate', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
