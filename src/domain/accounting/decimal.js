@@ -101,10 +101,11 @@ module.exports = () => {
 
   function registerDecimalFunctions(database) {
     database.aggregate('decimal_sum', {
-      start: '0',
-      step: (total, value) => value === null ? total : formatDecimal(
-        addDecimals(parseDecimal(total), parseDecimal(value)),
-      ),
+      start: () => ({ coefficient: 0n, scale: 0 }),
+      step: (total, value) => value === null
+        ? total
+        : addDecimals(total, parseDecimal(value)),
+      result: formatDecimal,
     });
     database.function('decimal_mul', { deterministic: true }, (left, right) => {
       if (left === null || right === null) return null;
