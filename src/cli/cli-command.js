@@ -24,6 +24,9 @@ module.exports = ({
     if (command === 'ledger-accounts') return formatJson(journal.ledgerAccounts());
     if (command === 'ledger-transaction') return formatJson(journal.ledgerTransaction(options));
     if (command === 'ledger-transactions') return formatJson(journal.ledgerTransactions(options));
+    if (command === 'reconciliation-entries') {
+      return formatJson(journal.reconciliationEntries(options));
+    }
     if (command === 'valuation-rate') {
       return formatJson(journal.ledgerValuationRateResolver()(options.commodity, options.throughDate));
     }

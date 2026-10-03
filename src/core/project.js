@@ -58,6 +58,10 @@ module.exports = ({
     inputSchema: ledgerTransactionsOptionsSchema,
     execute: queryLedgerTransactions,
   } = query('ledgerTransactions');
+  const {
+    inputSchema: reconciliationEntriesOptionsSchema,
+    execute: queryReconciliationEntries,
+  } = query('reconciliationEntries');
   const schemaInputs = (schema) => Object.keys(schema.shape);
   const journalInputs = (schema) => ['journalPath', ...schemaInputs(schema)];
   const apiDefinitions = Object.freeze({
@@ -72,6 +76,7 @@ module.exports = ({
     ledgerAccounts: { inputs: journalInputs(ledgerAccountsOptionsSchema) },
     ledgerTransaction: { inputs: journalInputs(ledgerTransactionOptionsSchema) },
     ledgerTransactions: { inputs: journalInputs(ledgerTransactionsOptionsSchema) },
+    reconciliationEntries: { inputs: journalInputs(reconciliationEntriesOptionsSchema) },
     ledgerValuationRateResolver: {
       inputs: ['journalPath', ...resolverInputNames],
     },
@@ -155,12 +160,15 @@ module.exports = ({
       ledgerTransactions(options) {
         return queryDatabase(current.databasePath, (database) => queryLedgerTransactions(database, options));
       },
+      reconciliationEntries(options) {
+        return queryDatabase(current.databasePath,
+          (database) => queryReconciliationEntries(database, options));
+      },
     };
   }
 
   return {
     apiDefinitions,
-    ensureJournalCurrent: ensureCurrent,
     openJournal,
   };
 };

@@ -22,6 +22,7 @@ test('defines one CLI command for every journal operation', () => {
     ledgerAccounts: 'ledger-accounts',
     ledgerTransaction: 'ledger-transaction',
     ledgerTransactions: 'ledger-transactions',
+    reconciliationEntries: 'reconciliation-entries',
     ledgerValuationRateResolver: 'valuation-rate',
   });
 });
@@ -207,6 +208,13 @@ test('maps every remaining API parameter to CLI arguments', () => {
     command: 'ledger-transaction', journalPath: '/journal', options: { transactionId: '42' },
   });
   assert.deepEqual(parseArguments([
+    'reconciliation-entries', '--file', '/journal',
+    '--account', 'Assets:Cash', '--account', 'Assets:Bank', '--related',
+  ]), {
+    command: 'reconciliation-entries', journalPath: '/journal',
+    options: { accounts: ['Assets:Cash', 'Assets:Bank'], related: true },
+  });
+  assert.deepEqual(parseArguments([
     'valuation-rate', '--file', '/journal', '--commodity', 'EUR', '--through-date', '2024-12-31',
   ]), {
     command: 'valuation-rate', journalPath: '/journal',
@@ -228,6 +236,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
     ['gain', '--value'],
+    ['reconciliation-entries', '--file', '/journal'],
   ];
   for (const arguments_ of invalidArguments) {
     assert.throws(() => parseArguments(arguments_), /Usage:|may only be specified once/u);

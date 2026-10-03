@@ -114,6 +114,21 @@ module.exports = ({
     addValueOption(ledgerTransactions, '--page-size <number>', 'set the page size (maximum 100)', {
       required: true, apiInput: 'pageSize',
     });
+    const reconciliationEntries = registerCommand(
+      program.command('reconciliation-entries')
+        .description('show entries for reconciling exact accounts'),
+      'reconciliationEntries',
+    );
+    addJournal(reconciliationEntries);
+    addValueOption(reconciliationEntries, '--account <name>', 'select an exact account (repeatable)', {
+      repeatable: true, required: true, apiInput: 'accounts',
+    });
+    addBooleanOption(
+      reconciliationEntries,
+      '--related',
+      'show other postings from the selected accounts\' transactions',
+      'related',
+    );
     const valuationRate = registerCommand(
       program.command('valuation-rate').description('resolve a valuation rate'),
       'ledgerValuationRateResolver',
@@ -220,6 +235,9 @@ module.exports = ({
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };
     if (commandName === 'ledger-transaction') return { ...common, options: { transactionId: options.transactionId } };
     if (commandName === 'ledger-transactions') return { ...common, options: { order: options.order, page: options.page, pageSize: options.pageSize } };
+    if (commandName === 'reconciliation-entries') {
+      return { ...common, options: compact({ accounts: options.account, related: options.related || undefined }) };
+    }
     if (commandName === 'valuation-rate') return { ...common, options: compact({ commodity: options.commodity, throughDate: options.throughDate }) };
     const reportOptions = compact({
       from: options.from, to: options.to, accounts: options.accounts || [],

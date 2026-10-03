@@ -15,7 +15,7 @@ test('registers all queries as one immutable dependency', () => {
   const queries = container.resolve('queries');
 
   assert.ok(Object.isFrozen(queries));
-  assert.equal(queries.length, 11);
+  assert.equal(queries.length, 12);
   for (const registrationName of [
     'accountBalancesQuery',
     'accountPostingsQuery',
@@ -28,6 +28,7 @@ test('registers all queries as one immutable dependency', () => {
     'ledgerAccountsQuery',
     'ledgerTransactionQuery',
     'ledgerTransactionsQuery',
+    'reconciliationEntriesQuery',
   ]) {
     assert.equal(container.hasRegistration(registrationName), false);
   }

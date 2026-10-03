@@ -107,6 +107,7 @@ underlying result.
 | `ledger-accounts --file PATH` | `openJournal(journalPath).ledgerAccounts()` | Account metadata |
 | `ledger-transaction --file PATH` | `openJournal(journalPath).ledgerTransaction(options)` | One transaction |
 | `ledger-transactions --file PATH` | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
+| `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for exact accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
@@ -120,6 +121,8 @@ underlying result.
 | `--account-factor ACCOUNT=FACTOR` | `options.accountFactors` | Exact-account balance-history factors |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
+| `reconciliation-entries --account NAME` | `options.accounts` | Repeated exact-account selection |
+| `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version`, `-V` | None | CLI package metadata |
@@ -154,8 +157,8 @@ The implementation is organized by responsibility directly under `src`:
 - `queries` contains one module per public API/CLI query—including aggregate,
   balance-history, gain, and investment-performance queries—with its Zod schema
   beside its execution function;
-- `queries/support` contains internal SQL, reconciliation, valuation, and
-  investment-return calculations used by query implementations; and
+- `queries/support` contains internal SQL, valuation, and investment-return
+  calculations used by query implementations; and
 - `cli` contains argument parsing, output formatting, and the executable runner
   over the public Node.js API.
 
