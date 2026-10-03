@@ -29,5 +29,8 @@ module.exports = ({ crypto, envPaths, fs, path, processEnvironment }) => {
     };
   }
 
-  return { cacheRoot, canonicalJournalPath, pathsForJournal };
+  return {
+    pathsForJournal,
+    $$private: { cacheRoot, canonicalJournalPath },
+  };
 };

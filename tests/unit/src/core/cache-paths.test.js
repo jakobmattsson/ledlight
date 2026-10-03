@@ -32,12 +32,12 @@ function cachePaths(settings_) {
 }
 
 test('uses the application cache directory supplied by env-paths', () => {
-  assert.equal(cachePaths().cacheRoot(), '/system/cache/ledlight');
+  assert.equal(cachePaths().$$private.cacheRoot(), '/system/cache/ledlight');
 });
 
 test('honors the explicit cache override', () => {
   assert.equal(
-    cachePaths({ environment: { LEDLIGHT_CACHE_HOME: '/tmp/custom-cache' } }).cacheRoot(),
+    cachePaths({ environment: { LEDLIGHT_CACHE_HOME: '/tmp/custom-cache' } }).$$private.cacheRoot(),
     '/tmp/custom-cache',
   );
 });
