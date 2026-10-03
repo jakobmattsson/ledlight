@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  valuationRates: { createLedgerValuationRateResolver },
+  valuationRateResolver: { createLedgerValuationRateResolver },
 }) => {
 
   function materializeValuationPrices(database, valuationCommodity) {

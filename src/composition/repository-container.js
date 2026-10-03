@@ -21,10 +21,11 @@ const MODULE_NAMES = Object.freeze({
   'src/cli/command.js': 'cliCommand',
   'src/cli/format.js': 'cliFormat',
   'src/domain/accounting/decimal.js': 'decimal',
-  'src/domain/accounting/posting-resolver.js': 'postingResolver',
+  'src/domain/accounting/valuation-rate-resolver.js': 'valuationRateResolver',
   'src/domain/accounting/valuation-commodity.js': 'valuationCommodity',
-  'src/domain/accounting/validate-journal.js': 'journalValidator',
   'src/domain/investments/returns.js': 'investmentReturns',
+  'src/ingestion/accounting/posting-resolver.js': 'postingResolver',
+  'src/ingestion/accounting/validate-journal.js': 'journalValidator',
   'src/ingestion/database/database.js': 'database',
   'src/ingestion/database/freshness.js': 'databaseFreshness',
   'src/ingestion/database/materialize-valuation-prices.js': 'valuationPriceMaterializer',
@@ -58,6 +59,38 @@ const EXCLUDED_FACTORY_FILES = new Set([
   'src/cli/run.js',
 ]);
 const QUERY_MODULE_PATTERN = 'src/queries/*.js';
+const REGISTRATION_LOCATIONS = new Map([
+  ...Object.entries(MODULE_NAMES).map(([fileName, registrationName]) =>
+    [registrationName, fileName]),
+  ['queries', 'src/queries'],
+]);
+
+function sourceArea(fileName) {
+  return /^src\/([^/]+)/u.exec(fileName)?.[1];
+}
+
+function assertDependencyAllowed(consumerFile, dependencyName) {
+  const providerFile = REGISTRATION_LOCATIONS.get(dependencyName);
+  if (!providerFile) return;
+  const consumerArea = sourceArea(consumerFile);
+  const providerArea = sourceArea(providerFile);
+  if (providerArea === 'cli' && consumerArea !== 'cli') {
+    throw new Error(`${consumerFile} may not depend on CLI module ${providerFile}`);
+  }
+  if (consumerArea === 'ingestion' && providerArea === 'queries') {
+    throw new Error(`${consumerFile} may not depend on query module ${providerFile}`);
+  }
+}
+
+function restrictedDependencies(fileName, dependencies) {
+  const consumerFile = path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
+  return new Proxy(dependencies, {
+    get(target, property, receiver) {
+      if (typeof property === 'string') assertDependencyAllowed(consumerFile, property);
+      return Reflect.get(target, property, receiver);
+    },
+  });
+}
 
 function filesBelow(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -83,7 +116,7 @@ function loadQueries(dependencies) {
   const names = new Set();
   return Object.freeze(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
     .map(({ path: fileName }) => {
-      const query = require(fileName)(dependencies);
+      const query = require(fileName)(restrictedDependencies(fileName, dependencies));
       if (!query || typeof query !== 'object' || Array.isArray(query)) {
         throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must return a query object.`);
       }
@@ -142,10 +175,10 @@ function registerRepositoryModules(container) {
     if (typeof factory !== 'function') {
       throw new TypeError(`${relativeName} must export an Awilix factory.`);
     }
-    container.register(
-      repositoryModuleName(fileName),
-      asFunction(factory, { lifetime: Lifetime.SINGLETON }),
-    );
+    container.register(repositoryModuleName(fileName), asFunction(
+      (dependencies) => factory(restrictedDependencies(fileName, dependencies)),
+      { lifetime: Lifetime.SINGLETON },
+    ));
   }
   container.register('queries', asFunction(loadQueries, { lifetime: Lifetime.SINGLETON }));
   return container;
@@ -158,5 +191,5 @@ function createRepositoryContainer() {
 module.exports = {
   createRepositoryContainer,
   registerRepositoryModules,
-  $$private: { repositoryModuleName },
+  $$private: { assertDependencyAllowed, repositoryModuleName },
 };

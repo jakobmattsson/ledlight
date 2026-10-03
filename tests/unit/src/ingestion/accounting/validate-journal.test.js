@@ -7,9 +7,9 @@ const test = require('node:test');
 const { parse } = resolveRepositoryModule("src/ingestion/syntax/parser.js");
 const {
   validateJournal,
-} = resolveRepositoryModule("src/domain/accounting/validate-journal.js");
+} = resolveRepositoryModule("src/ingestion/accounting/validate-journal.js");
 const { JournalValidationError } = resolveRepositoryModule(
-  "src/domain/accounting/validate-journal.js",
+  "src/ingestion/accounting/validate-journal.js",
 ).$$private;
 
 const invalidAmounts = [
