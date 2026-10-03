@@ -12,41 +12,52 @@ const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
 const cliPath = path.join(ledlightPath, 'src/cli/run.js');
 const { apiCommands } = resolveRepositoryModule('src/cli/cli-arguments.js');
+const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-api-cache-'));
+process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
+test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
 
 test('exposes the supported public API without eagerly loading SQLite', () => {
   delete require.cache[sqliteModulePath];
 
   const ledlight = require(ledlightPath);
-  assert.deepEqual(Object.keys(ledlight), ['openProject']);
+  assert.deepEqual(Object.keys(ledlight).sort(), [
+    'accountBalances',
+    'accountPostings',
+    'aggregateReport',
+    'balanceHistoryReport',
+    'databasePathForJournal',
+    'ensureDatabaseCurrent',
+    'gainReport',
+    'investmentPerformance',
+    'openJournal',
+  ]);
   assert.equal(require.cache[sqliteModulePath], undefined);
 });
 
 test('exposes stable error code strings instead of public error classes', (t) => {
   const ledlight = require(ledlightPath);
 
-  const missingProject = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-missing-project-'));
-  t.after(() => fs.rmSync(missingProject, { recursive: true, force: true }));
   assert.throws(
-    () => ledlight.openProject(missingProject),
+    () => ledlight.databasePathForJournal('/missing/journal.ledger'),
     (error) => error.code === 'LEDLIGHT_PROJECT_CONFIGURATION',
   );
 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-error-codes-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
-  fs.writeFileSync(path.join(directory, 'journal.ledger'), 'account Assets:Cash\n');
-  const project = ledlight.openProject(directory);
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, 'account Assets:Cash\n');
+  const journal = ledlight.openJournal(journalPath);
   assert.throws(
-    () => project.aggregateReport({ unknown: true }),
+    () => journal.aggregateReport({ unknown: true }),
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
-    () => project.aggregateReport({ inValuationCommodity: true }),
+    () => journal.aggregateReport({ inValuationCommodity: true }),
     (error) => error.code === 'LEDLIGHT_MISSING_VALUATION_DATA',
   );
-  fs.rmSync(project.databasePath);
+  fs.rmSync(journal.databasePath);
   assert.throws(
-    () => project.ledgerAccounts(),
+    () => journal.ledgerAccounts(),
     (error) => error.code === 'LEDLIGHT_DATABASE',
   );
 });
@@ -59,46 +70,50 @@ test('prints CLI help and the public package version without opening a project',
   );
 });
 
-test('loads SQLite only when a project is opened', (t) => {
+test('loads SQLite only when a journal database operation needs it', (t) => {
   delete require.cache[sqliteModulePath];
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-public-api-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
+  const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(
-    path.join(directory, 'journal.ledger'),
+    journalPath,
     'commodity SEK\n  default\naccount Assets:Cash\n',
   );
 
+  const databasePath = ledlight.databasePathForJournal(journalPath);
+  assert.match(databasePath, /journals\/[a-f\d]{64}\/ledger\.sqlite$/u);
+  assert.equal(databasePath.startsWith(cacheDirectory), true);
   assert.equal(require.cache[sqliteModulePath], undefined);
 
-  const project = ledlight.openProject(directory);
-  assert.match(project.databasePath, /tmp\/ledger\.sqlite$/u);
+  ledlight.ensureDatabaseCurrent(journalPath);
   assert.ok(require.cache[sqliteModulePath]);
+
+  const journal = ledlight.openJournal(journalPath);
   const packageOperations = Object.entries(ledlight)
     .filter(([, value]) => typeof value === 'function')
     .map(([name]) => name);
-  const projectOperations = Object.entries(project)
+  const journalOperations = Object.entries(journal)
     .filter(([, value]) => typeof value === 'function')
     .map(([name]) => name);
   assert.deepEqual(
-    [...new Set([...packageOperations, ...projectOperations])].sort(),
+    [...new Set([...packageOperations, ...journalOperations])].sort(),
     Object.keys(apiCommands).sort(),
     'every callable public API operation must have a CLI command',
   );
-  assert.equal(project.projectRoot, directory);
-  assert.deepEqual(project.accountBalances({ account: 'Assets:Cash' }), []);
-  assert.deepEqual(project.accountPostings({ account: 'Assets:Cash' }), []);
-  assert.deepEqual(project.aggregateReport(), []);
-  assert.deepEqual(project.balanceHistoryReport(), []);
-  assert.deepEqual(project.gainReport(), []);
-  assert.deepEqual(project.commodityDescriptions(), [{
+  assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
+  assert.deepEqual(journal.accountBalances({ account: 'Assets:Cash' }), []);
+  assert.deepEqual(journal.accountPostings({ account: 'Assets:Cash' }), []);
+  assert.deepEqual(journal.aggregateReport(), []);
+  assert.deepEqual(journal.balanceHistoryReport(), []);
+  assert.deepEqual(journal.gainReport(), []);
+  assert.deepEqual(journal.commodityDescriptions(), [{
     commodity: 'SEK',
     comment: null,
     format: null,
     isDefault: true,
   }]);
-  assert.deepEqual(project.investmentPerformance(), {
+  assert.deepEqual(journal.investmentPerformance(), {
     from: null,
     to: null,
     commodities: [],

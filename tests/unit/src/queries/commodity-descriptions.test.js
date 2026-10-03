@@ -7,13 +7,16 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { openProject } = resolveRepositoryModule('src/core/ledlight.js');
+const { openJournal } = resolveRepositoryModule('src/core/ledlight.js');
+const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity-cache-'));
+process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
+test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
 
 test('returns consolidated commodity metadata in symbol order', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity-descriptions-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
-  fs.writeFileSync(path.join(directory, 'journal.ledger'), `commodity FUND ; original
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, `commodity FUND ; original
   format 1,000.0000 FUND
 commodity USD ; dollars
   format 1,000.00 USD
@@ -21,7 +24,7 @@ commodity USD ; dollars
 commodity FUND ; updated
 `);
 
-  assert.deepEqual(openProject(directory).commodityDescriptions(), [
+  assert.deepEqual(openJournal(journalPath).commodityDescriptions(), [
     {
       commodity: 'FUND',
       comment: 'updated',

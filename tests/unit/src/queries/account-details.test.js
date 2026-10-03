@@ -7,13 +7,16 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { openProject } = resolveRepositoryModule("src/core/ledlight.js");
+const { openJournal } = resolveRepositoryModule("src/core/ledlight.js");
+const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-account-details-cache-'));
+process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
+test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
 
 function createProject(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-account-details-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
-  fs.writeFileSync(path.join(directory, 'journal.ledger'), `commodity SEK
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, `commodity SEK
   default
 commodity FUND
 account Assets:Closed
@@ -41,7 +44,7 @@ account Equity:Opening
   Assets:Closed  1 SEK  ; [2023-01-04]
   Equity:Opening  -1 SEK  ; [2023-01-04]
 `);
-  return openProject(directory);
+  return openJournal(journalPath);
 }
 
 test('returns exact-account balances by commodity through an inclusive date', (t) => {

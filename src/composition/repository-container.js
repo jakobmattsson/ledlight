@@ -108,9 +108,11 @@ function loadQueries(dependencies) {
 function registerExternalModules(container) {
   container.register({
     crypto: asValue(require('node:crypto')),
+    envPaths: asValue(require('env-paths')),
     fs: asValue(require('node:fs')),
     packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
+    processEnvironment: asValue(process.env),
     systemClock: asValue({
       now: () => Date.now(),
       sleep(milliseconds) {

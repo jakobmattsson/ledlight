@@ -47,9 +47,9 @@ module.exports = ({
     command, '--accounts <prefix>', 'include an account prefix (repeatable)',
     { repeatable: true, apiInput: 'accounts' },
   );
-  const addDirectory = (command) => addValueOption(
-    command, '--directory <path>', 'start project discovery in this directory',
-    { apiInput: 'startDirectory' },
+  const addJournal = (command) => addValueOption(
+    command, '--file <path>', 'read the journal rooted at this file',
+    { required: true, apiInput: 'journalPath' },
   );
   const addJson = (command) => command.option('--json', 'write the complete API result as JSON');
 
@@ -61,16 +61,17 @@ module.exports = ({
     program.addOption(new Option('-V, --version', 'show the package version'));
     program.addOption(new Option('-h, --help', 'show help'));
 
-    addDirectory(registerCommand(
-      program.command('open-project').description('open a project and print its snapshot metadata'),
-      'openProject',
-    ));
+    for (const [name, operation, description] of [
+      ['database-path', 'databasePathForJournal', 'show the journal cache database path'],
+      ['ensure-database', 'ensureDatabaseCurrent', 'ensure that the journal database is current'],
+      ['open-journal', 'openJournal', 'open a journal and print its snapshot metadata'],
+    ]) addJournal(registerCommand(program.command(name).description(description), operation));
 
     const accountBalances = registerCommand(
       program.command('account-balances').description('show balances for one exact account'),
       'accountBalances',
     );
-    addDirectory(accountBalances);
+    addJournal(accountBalances);
     addValueOption(accountBalances, '--account <name>', 'select an exact account', {
       required: true, apiInput: 'account',
     });
@@ -79,7 +80,7 @@ module.exports = ({
       program.command('account-postings').description('show postings for one exact account'),
       'accountPostings',
     );
-    addDirectory(accountPostings);
+    addJournal(accountPostings);
     addValueOption(accountPostings, '--account <name>', 'select an exact account', {
       required: true, apiInput: 'account',
     });
@@ -88,20 +89,20 @@ module.exports = ({
       program.command('account-transactions').description('show transactions for one exact account'),
       'accountTransactions',
     );
-    addDirectory(accountTransactions);
+    addJournal(accountTransactions);
     addValueOption(accountTransactions, '--account <name>', 'select an exact account', {
       required: true, apiInput: 'account',
     });
     for (const [name, operation, description] of [
       ['commodity-descriptions', 'commodityDescriptions', 'show declared commodities'],
       ['ledger-accounts', 'ledgerAccounts', 'show declared and used accounts'],
-    ]) addDirectory(registerCommand(program.command(name).description(description), operation));
+    ]) addJournal(registerCommand(program.command(name).description(description), operation));
 
     const ledgerTransaction = registerCommand(
       program.command('ledger-transaction').description('show one transaction'),
       'ledgerTransaction',
     );
-    addDirectory(ledgerTransaction);
+    addJournal(ledgerTransaction);
     addValueOption(ledgerTransaction, '--transaction-id <id>', 'select a transaction ID', {
       required: true, apiInput: 'transactionId',
     });
@@ -109,7 +110,7 @@ module.exports = ({
       program.command('ledger-transactions').description('show a page of transactions'),
       'ledgerTransactions',
     );
-    addDirectory(ledgerTransactions);
+    addJournal(ledgerTransactions);
     addValueOption(ledgerTransactions, '--order <order>', 'sort transactions', {
       choices: ['newest', 'oldest'], required: true, apiInput: 'order',
     });
@@ -123,7 +124,7 @@ module.exports = ({
       program.command('valuation-rate').description('resolve a valuation rate'),
       'ledgerValuationRateResolver',
     );
-    addDirectory(valuationRate);
+    addJournal(valuationRate);
     addValueOption(valuationRate, '--commodity <name>', 'select the source commodity', {
       required: true, apiInput: 'commodity',
     });
@@ -133,7 +134,7 @@ module.exports = ({
       program.command('aggregate').description('aggregate account balances'),
       'aggregateReport',
     );
-    addDirectory(aggregate);
+    addJournal(aggregate);
     addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(aggregate); addDateBasisOption(aggregate); addJson(aggregate);
@@ -147,7 +148,7 @@ module.exports = ({
       program.command('balance-history').description('show balances over time'),
       'balanceHistoryReport',
     );
-    addDirectory(balanceHistory);
+    addJournal(balanceHistory);
     addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(balanceHistory); addDateBasisOption(balanceHistory);
@@ -162,14 +163,14 @@ module.exports = ({
       program.command('gain').description('show investment gains'),
       'gainReport',
     );
-    addDirectory(gain);
+    addJournal(gain);
     addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(gain); addDateBasisOption(gain); addJson(gain); gain.option('--csv', 'write CSV output');
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
     );
-    addDirectory(performance);
+    addJournal(performance);
     addDateOption(performance, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(performance, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(performance);
@@ -218,8 +219,8 @@ module.exports = ({
     Object.entries(object).filter(([, value]) => value !== undefined),
   );
   function parsedResult(commandName, options) {
-    const common = { command: commandName, startDirectory: options.directory };
-    if (['open-project', 'commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
+    const common = { command: commandName, journalPath: options.file };
+    if (['database-path', 'ensure-database', 'open-journal', 'commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };

@@ -60,9 +60,15 @@ function normalizedRows(rows) {
 }
 
 function runLedlight(projectDirectory, arguments_) {
-  const output = execFileSync(process.execPath, [cliPath, ...arguments_], {
+  const output = execFileSync(process.execPath, [
+    cliPath,
+    ...arguments_,
+    '--file',
+    path.join(projectDirectory, 'journal.ledger'),
+  ], {
     cwd: projectDirectory,
     encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
   });
   const [header, ...lines] = output.trimEnd().split('\n');
   assert.equal(header, 'account,amount,commodity');

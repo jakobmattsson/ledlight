@@ -72,8 +72,8 @@ test('the published archive installs and exposes the module and CLI', () => {
 
     const projectDirectory = path.join(consumerDirectory, 'project');
     fs.mkdirSync(projectDirectory);
-    fs.writeFileSync(path.join(projectDirectory, '.ledgerrc'), '--file journal.ledger\n');
-    fs.writeFileSync(path.join(projectDirectory, 'journal.ledger'), `commodity USD
+    const journalPath = path.join(projectDirectory, 'journal.ledger');
+    fs.writeFileSync(journalPath, `commodity USD
   default
 
 2024-01-01 Opening balance
@@ -81,12 +81,16 @@ test('the published archive installs and exposes the module and CLI', () => {
   Equity:Opening
 `);
 
-    const consumerEnvironment = { ...process.env, NODE_PATH: '' };
+    const consumerEnvironment = {
+      ...process.env,
+      LEDLIGHT_CACHE_HOME: path.join(consumerDirectory, 'cache'),
+      NODE_PATH: '',
+    };
     run(process.execPath, ['-e', `
       const assert = require('node:assert/strict');
       const ledlight = require('ledlight');
-      assert.equal(typeof ledlight.openProject, 'function');
-      assert.deepEqual(ledlight.openProject(process.cwd()).aggregateReport({}), [
+      assert.equal(typeof ledlight.openJournal, 'function');
+      assert.deepEqual(ledlight.aggregateReport(${JSON.stringify(journalPath)}, {}), [
         { account: 'Assets:Cash', quantity: '10', commodity: 'USD' },
         { account: 'Equity:Opening', quantity: '-10', commodity: 'USD' },
       ]);
@@ -94,7 +98,7 @@ test('the published archive installs and exposes the module and CLI', () => {
     run(process.execPath, ['--input-type=module', '-e', `
       import assert from 'node:assert/strict';
       import ledlight from 'ledlight';
-      assert.equal(typeof ledlight.openProject, 'function');
+      assert.equal(typeof ledlight.openJournal, 'function');
     `], { cwd: projectDirectory, env: consumerEnvironment });
 
     const executableName = process.platform === 'win32' ? 'ledlight.cmd' : 'ledlight';
@@ -108,7 +112,9 @@ test('the published archive installs and exposes the module and CLI', () => {
       cwd: projectDirectory,
       env: consumerEnvironment,
     }).trim(), packageMetadata.version);
-    assert.equal(run(executableCommand, [...executableArguments, 'aggregate', '--csv'], {
+    assert.equal(run(executableCommand, [
+      ...executableArguments, 'aggregate', '--file', journalPath, '--csv',
+    ], {
       cwd: projectDirectory,
       env: consumerEnvironment,
     }), 'account,amount,commodity\nAssets:Cash,10,USD\nEquity:Opening,-10,USD\n');

@@ -12,9 +12,9 @@ module.exports = ({
  */
   const load = createJournalLoader(parse);
 
-  function loadJournal(entryPath) {
+  function loadJournal(journalPath) {
     try {
-      return load(entryPath);
+      return load(journalPath);
     } catch (error) {
       throw withCode(error, errorCodes.PROJECT_CONFIGURATION);
     }

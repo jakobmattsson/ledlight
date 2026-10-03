@@ -41,13 +41,13 @@ The current implementation provides:
 The public API is exported by `src/core/ledlight.js`:
 
 ```js
-const { openProject } = require('ledlight');
+const { openJournal } = require('ledlight');
 
-const project = openProject('/path/to/ledger/project');
+const journal = openJournal('/path/to/books/main.ledger');
 ```
 
-See the [Node.js API reference](api.md) for `openProject`, every project method,
-option, result shape, and ordering guarantee.
+See the [Node.js API reference](api.md) for every exported operation, journal
+method, option, result shape, and ordering guarantee.
 
 See the [package support policy](package.md) for supported Node.js and native
 platforms, module formats, published files, and compatibility guarantees.
@@ -55,35 +55,33 @@ platforms, module formats, published files, and compatibility guarantees.
 The package entry point does not load the native SQLite dependency until a
 database or report operation is called.
 
-Open a project once when running several reports so the source freshness check
+Open a journal once when running several reports so the source freshness check
 runs once:
 
 ```js
-const { openProject } = require('ledlight');
+const { openJournal } = require('ledlight');
 
-const project = openProject();
-const balance = project.aggregateReport({ to: '2024-12-31' });
-const history = project.balanceHistoryReport({ from: '2024-01-01' });
+const journal = openJournal('/path/to/books/main.ledger');
+const balance = journal.aggregateReport({ to: '2024-12-31' });
+const history = journal.balanceHistoryReport({ from: '2024-01-01' });
 ```
 
 ## Public API and CLI contract
 
 Ledlight has two supported consumer interfaces: the Node.js module exported by
-the package root and the `ledlight` CLI. The package exports only `openProject`;
-all queries are methods on the returned project object. This project API is the
-authoritative application interface. It owns project discovery, database
-freshness, report selection, filtering, transformations such as inversion, and
-calculated rows such as totals.
+the package root and the `ledlight` CLI. The Node.js module is the authoritative
+application interface. It owns journal loading, database freshness, report
+selection, filtering, transformations such as inversion, and calculated rows
+such as totals.
 
 The CLI is a thin adapter over that public module. It may parse command-line
-arguments, open a project, map arguments to project-method options, invoke the
-method, and format the returned value as human-readable text, CSV, or JSON.
-Formatting may round values for display, align columns, add separators, and
-encode an existing result, but it must not calculate or otherwise change report
-semantics.
+arguments, map them to public API options, invoke an exported operation, and
+format the returned value as human-readable text, CSV, or JSON. Formatting may
+round values for display, align columns, add separators, and encode an existing
+result, but it must not calculate or otherwise change report semantics.
 
 The CLI command layer must not obtain data or transformations from internal
-report, project, database, or accounting operations. Pure output code may use
+report, journal, database, or accounting operations. Pure output code may use
 shared exact-decimal helpers to round values for display. Any behavior offered
 by the CLI must first exist through the public Node.js API. This dependency
 direction keeps the two interfaces consistent and makes the CLI an example
@@ -98,20 +96,22 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `open-project` | `openProject(startDirectory)` | Open and describe a project snapshot |
-| `account-balances` | `openProject().accountBalances(options)` | Exact-account balances |
-| `account-postings` | `openProject().accountPostings(options)` | Exact-account postings |
-| `aggregate` | `openProject().aggregateReport(options)` | Report selection and calculation |
-| `balance-history` | `openProject().balanceHistoryReport(options)` | Report selection and calculation |
-| `gain` | `openProject().gainReport(options)` | Unrealized gain or loss by account |
-| `investment-performance` | `openProject().investmentPerformance(options)` | Report selection and calculation |
-| `account-transactions` | `openProject().accountTransactions(options)` | Exact-account transactions |
-| `commodity-descriptions` | `openProject().commodityDescriptions()` | Commodity metadata |
-| `ledger-accounts` | `openProject().ledgerAccounts()` | Account metadata |
-| `ledger-transaction` | `openProject().ledgerTransaction(options)` | One transaction |
-| `ledger-transactions` | `openProject().ledgerTransactions(options)` | Paginated transactions |
-| `valuation-rate` | `openProject().ledgerValuationRateResolver()` | Resolve one valuation rate |
-| `--directory PATH` | `startDirectory` | Project discovery start directory |
+| `database-path --file PATH` | `databasePathForJournal(journalPath)` | Resolve the cache database path |
+| `ensure-database --file PATH` | `ensureDatabaseCurrent(journalPath)` | Refresh the database |
+| `open-journal --file PATH` | `openJournal(journalPath)` | Open and describe a journal snapshot |
+| `account-balances --file PATH` | `accountBalances(journalPath, options)` | Exact-account balances |
+| `account-postings --file PATH` | `accountPostings(journalPath, options)` | Exact-account postings |
+| `aggregate --file PATH` | `aggregateReport(journalPath, options)` | Report selection and calculation |
+| `balance-history --file PATH` | `balanceHistoryReport(journalPath, options)` | Report selection and calculation |
+| `gain --file PATH` | `gainReport(journalPath, options)` | Unrealized gain or loss by account |
+| `investment-performance --file PATH` | `investmentPerformance(journalPath, options)` | Report selection and calculation |
+| `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Exact-account transactions |
+| `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
+| `ledger-accounts --file PATH` | `openJournal(journalPath).ledgerAccounts()` | Account metadata |
+| `ledger-transaction --file PATH` | `openJournal(journalPath).ledgerTransaction(options)` | One transaction |
+| `ledger-transactions --file PATH` | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
+| `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
+| `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
 | `--accounts PREFIX` | `options.accounts` | Repeated account-prefix selection |
@@ -132,13 +132,13 @@ underlying result.
 Commands without a specialized human-readable representation emit JSON.
 Report commands accept `--json` when the complete API result is needed; this
 is required to retain fields such as `valuationValue` and `factoredAmount`.
-Tests compare the callable package and project API inventory with the CLI
+Tests compare the callable package and journal API inventory with the CLI
 command inventory, verify every parameter mapping, and verify that the command
 adapter delegates calculations to the API before formatting.
 
 Each report and query module owns a strict Zod schema beside its execution
 function and returns both from its module factory. Public calls are parsed by
-that schema before report logic runs. The project layer collects schema keys,
+that schema before report logic runs. The application layer collects schema keys,
 while CLI coverage is derived from the actual positional arguments and options
 registered with Commander. Adding a field to a local operation schema without
 attaching a CLI argument to that input therefore fails during CLI composition
@@ -215,16 +215,21 @@ dependency on Ohm.
 
 ## SQLite database
 
-SQLite is the default storage engine. The database always lives at
-`tmp/ledger.sqlite`, relative to the project root containing `.ledgerrc`. The
-root journal is always read from the `--file` option in `.ledgerrc`; neither
-path is a command-line setting. Rebuilding the database replaces its contents
+SQLite is the default storage engine. The root journal is supplied directly to
+the API or through the CLI's required `--file` option; Ledlight does not read
+`.ledgerrc`. The database lives under the operating system's application cache
+directory as `ledlight/journals/<sha256>/ledger.sqlite`, where the hash is
+derived from the canonical absolute journal path. `LEDLIGHT_CACHE_HOME` can
+override the Ledlight cache root. Rebuilding the database replaces its contents
 in one transaction. Because the database is a reproducible cache, an older
 supported schema version is recreated from the journal instead of preserving
 and transforming cached rows in place.
 
-Opening a project checks the source manifest and rebuilds the derived database
-when required. Reopen the project when the source journal may have changed.
+```js
+const { ensureDatabaseCurrent } = require('ledlight');
+
+const result = ensureDatabaseCurrent('/path/to/books/main.ledger');
+```
 
 `database_metadata` stores the schema version, root journal path, build time,
 and selected valuation commodity. It is database bookkeeping and is unrelated
@@ -270,16 +275,15 @@ than evaluate a string function for every posting. By default there is one row
 per account and commodity:
 
 ```js
-const { openProject } = require('ledlight');
+const { aggregateReport } = require('ledlight');
+const journalPath = '/path/to/books/main.ledger';
 
-const project = openProject();
-
-const balanceSheet = project.aggregateReport({
+const balanceSheet = aggregateReport(journalPath, {
   to: '2024-12-31',
   accounts: ['Assets:', 'Liabilities:'],
   dateBasis: 'transaction',
 });
-const valuedIncomeStatement = project.aggregateReport({
+const valuedIncomeStatement = aggregateReport(journalPath, {
   from: '2024-01-01',
   to: '2024-12-31',
   accounts: ['Income:', 'Expenses:'],
@@ -290,11 +294,11 @@ const valuedIncomeStatement = project.aggregateReport({
 The command-line equivalent is:
 
 ```console
-ledlight aggregate --to 2024-12-31
-ledlight aggregate --to 2024-12-31 --date-basis transaction
-ledlight aggregate --from 2024-01-01 --to 2024-12-31 \
+ledlight aggregate --file main.ledger --to 2024-12-31
+ledlight aggregate --file main.ledger --to 2024-12-31 --date-basis transaction
+ledlight aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 \
   --accounts "Income:" --accounts "Expenses:" --value --invert
-ledlight aggregate --to 2024-12-31 --accounts "Assets:" --csv
+ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:" --csv
 ```
 
 By default, the command prints right-aligned account names followed by aligned
@@ -307,7 +311,7 @@ and does not apply commodity display separators. With `--value`, CSV amounts
 retain the existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the human-readable total.
 
-The same behavior is available directly through `project.aggregateReport`: set
+The same behavior is available directly through `aggregateReport`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append the total row. `includeTotal` requires `inValuationCommodity: true`, so
 the quantities have one common commodity. The CLI requests this total for
@@ -320,9 +324,9 @@ hashes, but does not parse transactions. If the manifest has changed, Ledlight
 parses the journal and rebuilds the database before running the report. If it
 has not changed, the report proceeds directly against the existing database.
 
-This is also the first-build command. If `tmp/ledger.sqlite` does not exist,
-Ledlight creates its directory, reads the journal path from `.ledgerrc`, and
-builds the database before producing the report.
+This is also the first-build command. If the derived cache database does not
+exist, Ledlight creates its directory and builds the database from the supplied
+journal before producing the report.
 
 Valuation follows Ledger's price-path preference. For each commodity, Ledlight
 first uses the latest direct quote to the valuation commodity, even when a
@@ -339,7 +343,7 @@ commodity USD
 ```
 
 This `commodity` property is the only supported way to declare the valuation
-commodity. Marking more than one declaration as `default` is a project
+commodity. Marking more than one declaration as `default` is a journal
 configuration error, including repeated declarations of the same symbol. There
 is no API or command-line option for choosing another target.
 Price chains can pass through intermediate commodities. Missing and circular
@@ -367,9 +371,9 @@ grouped by account, expressed in the journal default commodity, and omit zero
 gains. Losses are returned as negative quantities.
 
 ```console
-ledlight gain
-ledlight gain --to 2024-12-31 --accounts "Assets:Broker"
-ledlight gain --csv
+ledlight gain --file main.ledger
+ledlight gain --file main.ledger --to 2024-12-31 --accounts "Assets:Broker"
+ledlight gain --file main.ledger --csv
 ```
 
 The report accepts `to`, repeated `accounts`, and `date-basis`. It uses the
@@ -388,11 +392,10 @@ because their market value can still change. The `dateBasis` option is either
 `posting` (the default) or `transaction`.
 
 ```js
-const { openProject } = require('ledlight');
+const { balanceHistoryReport } = require('ledlight');
+const journalPath = '/path/to/books/main.ledger';
 
-const project = openProject();
-
-const history = project.balanceHistoryReport({
+const history = balanceHistoryReport(journalPath, {
   accounts: ['Assets:', 'Liabilities:'],
 });
 ```
@@ -403,7 +406,7 @@ This supports views such as after-tax balances without losing the single daily
 query for an account group:
 
 ```js
-const history = project.balanceHistoryReport({
+const history = balanceHistoryReport(journalPath, {
   accounts: ['Assets:', 'Liabilities:'],
   accountFactors: {
     'Assets:Pension': '0.7',
@@ -419,11 +422,11 @@ The command prints the complete history by default. `--from`, `--to`,
 `--accounts`, `--invert`, and `--csv` work as for the aggregate report:
 
 ```console
-ledlight balance-history \
+ledlight balance-history --file main.ledger \
   --accounts "Assets:" --accounts "Liabilities:"
-ledlight balance-history --date-basis transaction \
+ledlight balance-history --file main.ledger --date-basis transaction \
   --accounts "Assets:" --accounts "Liabilities:"
-ledlight balance-history --accounts "Assets:" --csv
+ledlight balance-history --file main.ledger --accounts "Assets:" --csv
 ```
 
 Human-readable amounts use the default commodity's declared format. CSV
@@ -445,7 +448,7 @@ The CLI's `--invert` option maps directly to the public report option
 
 ## Consumer integration
 
-Ledlight's aggregate command is a general exact-query interface over a project
+Ledlight's aggregate command is a general exact-query interface over a journal
 journal. Consumer applications own account selection, derived-account rules,
 presentation, and compatibility with their existing commands. Keeping those
 policies outside Ledlight lets applications such as Fonden use the same parsing,

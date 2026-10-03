@@ -27,8 +27,8 @@ module.exports = ({
     return includes;
   }
 
-  function loadJournalManifest(entryPath) {
-    return traverseJournal(entryPath, ({ content, include }) => {
+  function loadJournalManifest(journalPath) {
+    return traverseJournal(journalPath, ({ content, include }) => {
       for (const includePath of includePaths(content)) include(includePath);
     });
   }

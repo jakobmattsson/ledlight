@@ -9,16 +9,16 @@ module.exports = ({
   publicErrors: { databaseError },
 }) => {
 
-  function buildDatabase(databasePath, entryPath) {
+  function buildDatabase(databasePath, journalPath) {
     try {
-      return writeJournalDatabase(databasePath, loadJournal(entryPath));
+      return writeJournalDatabase(databasePath, loadJournal(journalPath));
     } catch (error) {
       throw databaseError(error);
     }
   }
 
-  function ensureDatabaseCurrent(databasePath, entryPath) {
-    const journalPath = entryPath ? path.resolve(entryPath) : databaseJournalPath(databasePath);
+  function ensureDatabaseCurrent(databasePath, sourceJournalPath) {
+    const journalPath = sourceJournalPath ? path.resolve(sourceJournalPath) : databaseJournalPath(databasePath);
     if (!journalPath) {
       throw databaseError(new Error('Cannot update the database without a journal path'));
     }

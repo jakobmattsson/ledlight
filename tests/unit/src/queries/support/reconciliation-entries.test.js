@@ -10,12 +10,15 @@ const test = require('node:test');
 const { loadReconciliationEntries } = resolveRepositoryModule(
   "src/queries/support/reconciliation-entries.js",
 ).$$private;
+const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-reconciliation-cache-'));
+process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
+test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
 
 function createProject(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-reconciliation-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  fs.writeFileSync(path.join(directory, '.ledgerrc'), '--file journal.ledger\n');
-  fs.writeFileSync(path.join(directory, 'journal.ledger'), `commodity SEK
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, `commodity SEK
   default
 account Assets:Cash
 account Expenses:Food
@@ -24,7 +27,7 @@ account Expenses:Food
   Assets:Cash  -10 SEK
   Expenses:Food  10 SEK
 `);
-  return directory;
+  return journalPath;
 }
 
 function reconciliationFields(entry) {
@@ -36,8 +39,8 @@ function reconciliationFields(entry) {
 }
 
 test('reads direct and related reconciliation entries from one current database', (t) => {
-  const directory = createProject(t);
-  const first = loadReconciliationEntries(directory);
+  const journalPath = createProject(t);
+  const first = loadReconciliationEntries(journalPath);
 
   assert.equal(first.rebuilt, true);
   assert.deepEqual(first.readEntries(['Assets:Cash']).map(reconciliationFields), [{
@@ -59,6 +62,6 @@ test('reads direct and related reconciliation entries from one current database'
     }],
   );
 
-  const second = loadReconciliationEntries(directory);
+  const second = loadReconciliationEntries(journalPath);
   assert.equal(second.rebuilt, false);
 });

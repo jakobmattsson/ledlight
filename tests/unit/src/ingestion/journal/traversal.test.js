@@ -31,7 +31,7 @@ test('expands include globs in deterministic path order', (t) => {
   assert.deepEqual(journal.entries.map((entry) => entry.name), ['Assets:First', 'Assets:Second']);
   assert.deepEqual(journal.files.map((file) => file.path), [journalPath, firstPath, secondPath]);
   assert.deepEqual(loadJournalManifest(journalPath), {
-    rootPath: journalPath,
+    journalPath,
     files: journal.files,
   });
 });

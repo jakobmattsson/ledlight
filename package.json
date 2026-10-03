@@ -35,7 +35,7 @@
     "ledlight": "src/cli/run.js"
   },
   "engines": {
-    "node": "^22.0.0"
+    "node": "^22.12.0"
   },
   "publishConfig": {
     "access": "public"
@@ -55,6 +55,7 @@
     "awilix": "^13.0.5",
     "better-sqlite3": "11.7.0",
     "commander": "^13.1.0",
+    "env-paths": "2.2.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -11,7 +11,9 @@ const project = resolveRepositoryModule('src/core/project.js');
 
 test('defines one CLI command for every public API operation', () => {
   assert.deepEqual(apiCommands, {
-    openProject: 'open-project',
+    databasePathForJournal: 'database-path',
+    ensureDatabaseCurrent: 'ensure-database',
+    openJournal: 'open-journal',
     accountBalances: 'account-balances',
     accountPostings: 'account-postings',
     aggregateReport: 'aggregate',
@@ -45,6 +47,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
 test('parses aggregate report options and output flags', () => {
   assert.deepEqual(parseArguments([
     'aggregate',
+    '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
@@ -54,7 +57,7 @@ test('parses aggregate report options and output flags', () => {
     '--csv',
   ]), {
     command: 'aggregate',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: {
       from: '2024-01-01',
       to: '2024-12-31',
@@ -67,9 +70,9 @@ test('parses aggregate report options and output flags', () => {
 });
 
 test('uses aggregate defaults when no options are supplied', () => {
-  assert.deepEqual(parseArguments(['aggregate']), {
+  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal']), {
     command: 'aggregate',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: { accounts: [] },
     output: { csv: false, json: false },
   });
@@ -78,6 +81,7 @@ test('uses aggregate defaults when no options are supplied', () => {
 test('parses balance history options', () => {
   assert.deepEqual(parseArguments([
     'balance-history',
+    '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
@@ -86,7 +90,7 @@ test('parses balance history options', () => {
     '--csv',
   ]), {
     command: 'balance-history',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: {
       from: '2024-01-01',
       to: '2024-12-31',
@@ -102,13 +106,14 @@ test('parses balance history options', () => {
 test('parses gain report options and output flags', () => {
   assert.deepEqual(parseArguments([
     'gain',
+    '--file', '/journal',
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
     '--date-basis', 'transaction',
     '--csv',
   ]), {
     command: 'gain',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: {
       to: '2024-12-31',
       accounts: ['Assets:'],
@@ -116,9 +121,9 @@ test('parses gain report options and output flags', () => {
     },
     output: { csv: true, json: false },
   });
-  assert.deepEqual(parseArguments(['gain']), {
+  assert.deepEqual(parseArguments(['gain', '--file', '/journal']), {
     command: 'gain',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: { accounts: [] },
     output: { csv: false, json: false },
   });
@@ -128,6 +133,7 @@ test('parses gain report options and output flags', () => {
 test('parses investment performance selections and JSON output', () => {
   assert.deepEqual(parseArguments([
     'investment-performance',
+    '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
@@ -137,7 +143,7 @@ test('parses investment performance selections and JSON output', () => {
     '--json',
   ]), {
     command: 'investment-performance',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: {
       from: '2024-01-01',
       to: '2024-12-31',
@@ -147,9 +153,9 @@ test('parses investment performance selections and JSON output', () => {
     },
     output: { csv: false, json: true },
   });
-  assert.deepEqual(parseArguments(['investment-performance']), {
+  assert.deepEqual(parseArguments(['investment-performance', '--file', '/journal']), {
     command: 'investment-performance',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: { accounts: [], commodities: [], excludeCommodities: [] },
     output: { csv: false, json: false },
   });
@@ -157,56 +163,56 @@ test('parses investment performance selections and JSON output', () => {
 
 test('maps every remaining API parameter to CLI arguments', () => {
   assert.deepEqual(parseArguments([
-    'aggregate', '--directory', '/project', '--with-valuation-value', '--json',
+    'aggregate', '--file', '/journal', '--with-valuation-value', '--json',
   ]), {
     command: 'aggregate',
-    startDirectory: '/project',
+    journalPath: '/journal',
     reportOptions: { accounts: [], withValuationValue: true },
     output: { csv: false, json: true },
   });
-  assert.deepEqual(parseArguments(['aggregate', '--value', '--include-total']), {
+  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal', '--value', '--include-total']), {
     command: 'aggregate',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: { accounts: [], inValuationCommodity: true, includeTotal: true },
     output: { csv: false, json: false },
   });
   assert.deepEqual(parseArguments([
-    'balance-history', '--account-factor', 'Assets:Fund=0.7',
+    'balance-history', '--file', '/journal', '--account-factor', 'Assets:Fund=0.7',
     '--account-factor', 'Assets:Cash=1', '--json',
   ]), {
     command: 'balance-history',
-    startDirectory: undefined,
+    journalPath: '/journal',
     reportOptions: {
       accounts: [],
       accountFactors: { 'Assets:Fund': '0.7', 'Assets:Cash': '1' },
     },
     output: { csv: false, json: true },
   });
-  assert.deepEqual(parseArguments(['account-balances', '--account', 'Assets:Cash', '--to', '2024-12-31']), {
-    command: 'account-balances', startDirectory: undefined,
+  assert.deepEqual(parseArguments(['account-balances', '--file', '/journal', '--account', 'Assets:Cash', '--to', '2024-12-31']), {
+    command: 'account-balances', journalPath: '/journal',
     options: { account: 'Assets:Cash', to: '2024-12-31' },
   });
-  assert.deepEqual(parseArguments(['account-postings', '--account', 'Assets:Cash', '--after', '2024-01-01']), {
-    command: 'account-postings', startDirectory: undefined,
+  assert.deepEqual(parseArguments(['account-postings', '--file', '/journal', '--account', 'Assets:Cash', '--after', '2024-01-01']), {
+    command: 'account-postings', journalPath: '/journal',
     options: { account: 'Assets:Cash', after: '2024-01-01' },
   });
-  assert.deepEqual(parseArguments(['account-transactions', '--account', 'Assets:Cash']), {
-    command: 'account-transactions', startDirectory: undefined,
+  assert.deepEqual(parseArguments(['account-transactions', '--file', '/journal', '--account', 'Assets:Cash']), {
+    command: 'account-transactions', journalPath: '/journal',
     options: { account: 'Assets:Cash' },
   });
   assert.deepEqual(parseArguments([
-    'ledger-transactions', '--order', 'oldest', '--page', '2', '--page-size', '25',
+    'ledger-transactions', '--file', '/journal', '--order', 'oldest', '--page', '2', '--page-size', '25',
   ]), {
-    command: 'ledger-transactions', startDirectory: undefined,
+    command: 'ledger-transactions', journalPath: '/journal',
     options: { order: 'oldest', page: '2', pageSize: '25' },
   });
-  assert.deepEqual(parseArguments(['ledger-transaction', '--transaction-id', '42']), {
-    command: 'ledger-transaction', startDirectory: undefined, options: { transactionId: '42' },
+  assert.deepEqual(parseArguments(['ledger-transaction', '--file', '/journal', '--transaction-id', '42']), {
+    command: 'ledger-transaction', journalPath: '/journal', options: { transactionId: '42' },
   });
   assert.deepEqual(parseArguments([
-    'valuation-rate', '--commodity', 'EUR', '--through-date', '2024-12-31',
+    'valuation-rate', '--file', '/journal', '--commodity', 'EUR', '--through-date', '2024-12-31',
   ]), {
-    command: 'valuation-rate', startDirectory: undefined,
+    command: 'valuation-rate', journalPath: '/journal',
     options: { commodity: 'EUR', throughDate: '2024-12-31' },
   });
 });
