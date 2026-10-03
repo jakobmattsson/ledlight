@@ -3,6 +3,8 @@
 module.exports = ({
   amountParser: { parseAmountExpression },
   syntaxErrors: { syntaxError },
+  publicErrors: { createError, errorCodes },
+  zod: { z },
 }) => {
 
   const DATE_LENGTH = 10;
@@ -13,6 +15,10 @@ module.exports = ({
     code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64 &&
     code !== 123 && code !== 125;
   const sourceLocation = (source, line, column) => ({ source, line, column });
+  const optionsSchema = z.strictObject({ source: z.string().optional() });
+  const apiDefinition = Object.freeze({
+    inputs: ['sourceText', ...Object.keys(optionsSchema.shape)],
+  });
 
   function assertCommoditySymbol(value, source, line, column) {
     if (!value || [...value].some((character) => !isCommodityCharacter(character.codePointAt(0)))) {
@@ -155,7 +161,15 @@ module.exports = ({
 
   /** Fast runtime parser. Its behavior is checked against ledger.ohm. */
   function parse(sourceText, options) {
-    const source = options.source || '<input>';
+    const result = optionsSchema.safeParse(options ?? {});
+    if (!result.success) {
+      throw createError(
+        errorCodes.INVALID_API_INPUT,
+        `Invalid parse options: ${result.error.issues[0].message}`,
+        TypeError,
+      );
+    }
+    const source = result.data.source || '<input>';
     const entries = [];
     let transaction = null;
     let commodity = null;
@@ -251,5 +265,5 @@ module.exports = ({
     return { source, entries };
   }
 
-  return { parse };
+  return { apiDefinition, optionsSchema, parse };
 };

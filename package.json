@@ -54,7 +54,8 @@
   "dependencies": {
     "awilix": "^13.0.5",
     "better-sqlite3": "11.7.0",
-    "commander": "^13.1.0"
+    "commander": "^13.1.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

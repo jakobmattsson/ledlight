@@ -1,7 +1,6 @@
 'use strict';
 
 module.exports = ({
-  apiContract: { optionNames },
   path,
   sqlite: Database,
   decimal: { registerDecimalFunctions },
@@ -9,19 +8,24 @@ module.exports = ({
   publicErrors: { createError, errorCodes },
   reportOptions: {
     assertDateInterval,
-    knownOptions,
+    parseOptions,
     stringList,
   },
   investmentReturns: { calculatePerformance },
   valuationCommodity: { fromDatabase },
+  zod: { z },
 }) => {
 
+  const optionsSchema = z.strictObject({
+    accounts: z.array(z.string().min(1)).optional(),
+    commodities: z.array(z.string().min(1)).optional(),
+    excludeCommodities: z.array(z.string().min(1)).optional(),
+    from: z.string().optional(),
+    to: z.string().optional(),
+  });
+
   function normalizeOptions(options) {
-    const input = knownOptions(
-      options,
-      optionNames('investmentPerformance'),
-      'investmentPerformance',
-    );
+    const input = parseOptions(optionsSchema, options, 'investmentPerformance');
     const normalized = {
       from: input.from,
       to: input.to,
@@ -209,5 +213,5 @@ module.exports = ({
     }
   }
 
-  return { queryInvestmentPerformance };
+  return { optionsSchema, queryInvestmentPerformance };
 };

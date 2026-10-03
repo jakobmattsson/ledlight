@@ -4,9 +4,12 @@ const { resolveRepositoryModule } = require('../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const createArguments = require('../../../../../src/ledlight/cli/arguments');
 const argumentsModule = resolveRepositoryModule('src/ledlight/cli/arguments.js');
-const { apiCommands, apiInputCoverage, parseArguments, usage } = argumentsModule;
-const apiContract = resolveRepositoryModule('src/ledlight/api-contract.js');
+const { apiCommands, parseArguments, usage } = argumentsModule;
+const journal = resolveRepositoryModule('src/ledlight/journal/load.js');
+const ledgerParser = resolveRepositoryModule('src/ledlight/syntax/parser.js');
+const project = resolveRepositoryModule('src/ledlight/application/project.js');
 
 test('defines one CLI command for every public API operation', () => {
   assert.deepEqual(apiCommands, {
@@ -30,15 +33,21 @@ test('defines one CLI command for every public API operation', () => {
   });
 });
 
-test('covers every accepted API input with an actual CLI argument or option', () => {
-  assert.deepEqual(Object.keys(apiInputCoverage).sort(), Object.keys(apiContract.definitions).sort());
-  for (const [operation, definition] of Object.entries(apiContract.definitions)) {
-    assert.deepEqual(
-      [...apiInputCoverage[operation].inputs].sort(),
-      [...definition.inputs].sort(),
-      `${operation} CLI inputs must exactly cover its API inputs`,
-    );
-  }
+test('fails when a locally declared API input has no actual CLI option', () => {
+  const apiDefinitions = {
+    ...project.apiDefinitions,
+    aggregateReport: {
+      inputs: [...project.apiDefinitions.aggregateReport.inputs, 'futureOption'],
+    },
+  };
+  assert.throws(
+    () => createArguments({
+      journal,
+      ledgerParser,
+      project: { apiDefinitions },
+    }),
+    /CLI inputs do not cover the aggregateReport API contract/u,
+  );
 });
 
 test('parses aggregate report options and output flags', () => {

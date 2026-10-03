@@ -8,13 +8,11 @@ const {
   assertDateInterval,
   booleanOption,
   dateBasis,
-  knownOptions,
   stringList,
 } = resolveRepositoryModule('src/ledlight/reports/options.js');
 
 test('normalizes shared report options without mutating caller values', () => {
   const input = { accounts: ['Assets:', 'Assets:'], invert: true };
-  assert.equal(knownOptions(input, ['accounts', 'invert'], 'report'), input);
   assert.deepEqual(stringList(input.accounts, 'accounts', true), ['Assets:']);
   assert.deepEqual(input.accounts, ['Assets:', 'Assets:']);
   assert.equal(booleanOption(input, 'invert'), true);
@@ -23,9 +21,7 @@ test('normalizes shared report options without mutating caller values', () => {
   assert.doesNotThrow(() => assertDateInterval('2024-01-01', '2024-12-31'));
 });
 
-test('rejects invalid containers, unknown options, and incorrect primitive types', () => {
-  assert.throws(() => knownOptions([], [], 'report'), /options must be an object/u);
-  assert.throws(() => knownOptions({ typo: true }, [], 'report'), /Unknown report option: typo/u);
+test('rejects incorrect primitive types', () => {
   assert.throws(() => booleanOption({ invert: 'true' }, 'invert'), /invert must be a boolean/u);
   assert.throws(() => stringList('Assets:', 'accounts', false), /accounts must be an array/u);
   assert.throws(() => dateBasis('actual'), /Invalid dateBasis/u);

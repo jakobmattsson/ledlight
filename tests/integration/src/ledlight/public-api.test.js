@@ -5,13 +5,13 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { resolveRepositoryModule } = require('../../../support/repository-container');
 const { execFileSync } = require('node:child_process');
 const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
 const cliPath = path.join(ledlightPath, 'src/ledlight/cli/run.js');
-const apiContract = require('../../../../src/ledlight/api-contract')();
-const { apiCommands } = require('../../../../src/ledlight/cli/arguments')({ apiContract });
+const { apiCommands } = resolveRepositoryModule('src/ledlight/cli/arguments.js');
 
 test('exposes the supported public API without eagerly loading SQLite', () => {
   delete require.cache[sqliteModulePath];

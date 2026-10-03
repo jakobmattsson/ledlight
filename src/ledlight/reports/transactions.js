@@ -1,14 +1,19 @@
 'use strict';
 
 module.exports = ({
-  apiContract: { optionNames },
   path,
   sqlite: Database,
   publicErrors: { createError, errorCodes },
-  reportOptions: { knownOptions },
+  reportOptions: { parseOptions },
+  zod: { z },
 }) => {
 
   const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
+  const optionsSchema = z.strictObject({
+    order: z.enum(['newest', 'oldest'], { error: 'must be newest or oldest' }),
+    page: z.union([z.string(), z.number()]),
+    pageSize: z.union([z.string(), z.number()]),
+  });
 
   function positiveInteger(value, name) {
     const number = Number(value);
@@ -19,10 +24,8 @@ module.exports = ({
   }
 
   function queryLedgerTransactions(databasePath, options) {
-    const { order, page, pageSize } = knownOptions(
-      options,
-      optionNames('ledgerTransactions'),
-      'ledgerTransactions',
+    const { order, page, pageSize } = parseOptions(
+      optionsSchema, options, 'ledgerTransactions',
     );
     if (!['newest', 'oldest'].includes(order)) {
       throw invalidInput('order must be newest or oldest');
@@ -102,5 +105,5 @@ module.exports = ({
     }
   }
 
-  return { queryLedgerTransactions };
+  return { optionsSchema, queryLedgerTransactions };
 };

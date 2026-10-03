@@ -4,24 +4,52 @@ module.exports = ({
   fs,
   path,
   accountDetails: {
+    accountBalancesOptionsSchema,
+    accountPostingsOptionsSchema,
+    accountTransactionsOptionsSchema,
+    ledgerTransactionOptionsSchema,
     queryAccountBalances,
     queryAccountPostings,
     queryAccountTransactions,
     queryLedgerAccounts,
     queryLedgerTransaction,
   },
-  aggregateReport: { queryAggregateReport },
-  balanceHistoryReport: { queryBalanceHistoryReport },
+  aggregateReport: { optionsSchema: aggregateReportOptionsSchema, queryAggregateReport },
+  balanceHistoryReport: { optionsSchema: balanceHistoryOptionsSchema, queryBalanceHistoryReport },
   commodityDescriptions: { queryCommodityDescriptions },
-  gainReport: { queryGainReport },
-  investmentPerformanceReport: { queryInvestmentPerformance },
-  valuationRates: { queryLedgerValuationRateResolver },
-  transactionReport: { queryLedgerTransactions },
+  gainReport: { optionsSchema: gainReportOptionsSchema, queryGainReport },
+  investmentPerformanceReport: {
+    optionsSchema: investmentPerformanceOptionsSchema,
+    queryInvestmentPerformance,
+  },
+  valuationRates: { queryLedgerValuationRateResolver, resolverInputNames },
+  transactionReport: { optionsSchema: ledgerTransactionsOptionsSchema, queryLedgerTransactions },
   database: { ensureDatabaseCurrent },
   publicErrors: { createError, databaseError, errorCodes },
 }) => {
 
   const DATABASE_RELATIVE_PATH = path.join('tmp', 'ledger.sqlite');
+  const schemaInputs = (schema) => Object.keys(schema.shape);
+  const projectInputs = (schema) => [...schemaInputs(schema), 'startDirectory'];
+  const apiDefinitions = Object.freeze({
+    loadProjectPaths: { inputs: ['startDirectory'] },
+    ensureProjectDatabaseCurrent: { inputs: ['startDirectory'] },
+    openProject: { inputs: ['startDirectory'] },
+    accountBalances: { inputs: projectInputs(accountBalancesOptionsSchema) },
+    accountPostings: { inputs: projectInputs(accountPostingsOptionsSchema) },
+    aggregateReport: { inputs: projectInputs(aggregateReportOptionsSchema) },
+    balanceHistoryReport: { inputs: projectInputs(balanceHistoryOptionsSchema) },
+    gainReport: { inputs: projectInputs(gainReportOptionsSchema) },
+    investmentPerformance: { inputs: projectInputs(investmentPerformanceOptionsSchema) },
+    accountTransactions: { inputs: projectInputs(accountTransactionsOptionsSchema) },
+    commodityDescriptions: { inputs: ['startDirectory'] },
+    ledgerAccounts: { inputs: ['startDirectory'] },
+    ledgerTransaction: { inputs: projectInputs(ledgerTransactionOptionsSchema) },
+    ledgerTransactions: { inputs: projectInputs(ledgerTransactionsOptionsSchema) },
+    ledgerValuationRateResolver: {
+      inputs: [...resolverInputNames, 'startDirectory'],
+    },
+  });
   const projectConfigurationError = (message) =>
     createError(errorCodes.PROJECT_CONFIGURATION, message);
 
@@ -154,6 +182,7 @@ module.exports = ({
   }
 
   return {
+    apiDefinitions,
     accountBalances,
     accountPostings,
     aggregateReport,

@@ -2,7 +2,16 @@
 
 const { Command, InvalidArgumentError, Option } = require('commander');
 
-module.exports = ({ apiContract: { definitions } }) => {
+module.exports = ({
+  journal: { apiDefinition: loadJournalDefinition },
+  ledgerParser: { apiDefinition: parseDefinition },
+  project: { apiDefinitions: projectDefinitions },
+}) => {
+  const definitions = Object.freeze({
+    parse: parseDefinition,
+    loadJournal: loadJournalDefinition,
+    ...projectDefinitions,
+  });
 
   const collect = (value, previous) => (previous || []).concat(value);
   const singleValue = (optionName) => (value, previous) => {

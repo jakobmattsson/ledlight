@@ -1,7 +1,6 @@
 'use strict';
 
 module.exports = ({
-  apiContract: { optionNames },
   path,
   sqlite: Database,
   decimal: {
@@ -17,17 +16,23 @@ module.exports = ({
   reportOptions: {
     assertDate,
     dateBasis,
-    knownOptions,
+    parseOptions,
     stringList,
   },
   valuationRates: { queryValuationRates },
   valuationCommodity: { fromDatabase },
+  zod: { z },
 }) => {
 
   const ZERO = parseDecimal('0');
+  const optionsSchema = z.strictObject({
+    accounts: z.array(z.string().min(1)).optional(),
+    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).optional(),
+    to: z.string().optional(),
+  });
 
   function normalizeOptions(options) {
-    const input = knownOptions(options, optionNames('gainReport'), 'gainReport');
+    const input = parseOptions(optionsSchema, options, 'gainReport');
     const normalized = {
       accounts: stringList(input.accounts, 'accounts', false),
       dateBasis: dateBasis(input.dateBasis),
@@ -126,5 +131,5 @@ module.exports = ({
     }
   }
 
-  return { queryGainReport };
+  return { optionsSchema, queryGainReport };
 };

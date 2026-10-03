@@ -10,11 +10,17 @@ module.exports = ({
   },
   publicErrors: { createError, errorCodes },
   valuationCommodity: { fromDatabase },
+  zod: { z },
 }) => {
 
   const missingValuation = (message) => createError(errorCodes.MISSING_VALUATION_DATA, message);
 
   const LEDGER_RESOLVER_CACHE_KEY = Symbol('ledger valuation rate resolver');
+  const resolverArgumentsSchema = z.tuple([
+    z.string().min(1),
+    z.string().optional(),
+  ]);
+  const resolverInputNames = Object.freeze(['commodity', 'throughDate']);
 
   function selectLatestPrices(database, throughDate) {
     const prices = new Map();
@@ -159,7 +165,17 @@ module.exports = ({
       visiting.delete(commodity);
       throw missingValuation(`No price for ${commodity} on or before ${throughDate} can convert it to ${valuationCommodity}`);
     }
-    return (commodity, throughDate) => resolve(commodity, throughDate, new Set());
+    return (commodity, throughDate) => {
+      const result = resolverArgumentsSchema.safeParse([commodity, throughDate]);
+      if (!result.success) {
+        throw createError(
+          errorCodes.INVALID_API_INPUT,
+          `Invalid valuation-rate arguments: ${result.error.issues[0].message}`,
+          TypeError,
+        );
+      }
+      return resolve(result.data[0], result.data[1], new Set());
+    };
   }
 
   function queryLedgerValuationRateResolver(databasePath) {
@@ -173,6 +189,8 @@ module.exports = ({
 
   return {
     createLedgerValuationRateResolver,
+    resolverArgumentsSchema,
+    resolverInputNames,
     queryValuationRates,
     queryLedgerValuationRateResolver,
     $$private: {

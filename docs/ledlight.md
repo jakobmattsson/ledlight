@@ -140,11 +140,13 @@ Tests compare the callable package and project API inventory with the CLI
 command inventory, verify every parameter mapping, and verify that the command
 adapter delegates calculations to the API before formatting.
 
-The accepted inputs and option-object keys are declared once in the internal
-API contract. API option validation reads that contract, and the parity test
-derives coverage from the actual positional arguments and options registered
-with Commander. Adding an accepted API option without attaching a CLI argument
-to the same contract input therefore fails the test automatically.
+Each report and query module owns a strict Zod schema beside its execution
+function and returns both from its module factory. Public calls are parsed by
+that schema before report logic runs. The project layer collects schema keys,
+while CLI coverage is derived from the actual positional arguments and options
+registered with Commander. Adding a field to a local operation schema without
+attaching a CLI argument to that input therefore fails during CLI composition
+and in the parity test.
 
 ## Architecture
 

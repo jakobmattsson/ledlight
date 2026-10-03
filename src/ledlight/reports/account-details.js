@@ -1,7 +1,6 @@
 'use strict';
 
 module.exports = ({
-  apiContract: { optionNames },
   path,
   sqlite: Database,
   decimal: {
@@ -11,10 +10,25 @@ module.exports = ({
     registerDecimalFunctions,
   },
   publicErrors: { createError, errorCodes },
-  reportOptions: { knownOptions },
+  reportOptions: { parseOptions },
+  zod: { z },
 }) => {
 
   const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
+  const accountBalancesOptionsSchema = z.strictObject({
+    account: z.string().min(1, { error: 'must be a non-empty string' }),
+    to: z.string().optional(),
+  });
+  const accountPostingsOptionsSchema = z.strictObject({
+    account: z.string().min(1, { error: 'must be a non-empty string' }),
+    after: z.string().optional(),
+  });
+  const accountTransactionsOptionsSchema = z.strictObject({
+    account: z.string().min(1, { error: 'must be a non-empty string' }),
+  });
+  const ledgerTransactionOptionsSchema = z.strictObject({
+    transactionId: z.union([z.string(), z.number()]),
+  });
 
   function assertAccount(account) {
     if (typeof account !== 'string' || account.length === 0) {
@@ -35,10 +49,8 @@ module.exports = ({
   }
 
   function queryAccountPostings(databasePath, options) {
-    const { account, after } = knownOptions(
-      options,
-      optionNames('accountPostings'),
-      'accountPostings',
+    const { account, after } = parseOptions(
+      accountPostingsOptionsSchema, options, 'accountPostings',
     );
     assertAccount(account);
     assertDate(after, 'after');
@@ -66,11 +78,7 @@ module.exports = ({
   }
 
   function queryAccountBalances(databasePath, options) {
-    const { account, to } = knownOptions(
-      options,
-      optionNames('accountBalances'),
-      'accountBalances',
-    );
+    const { account, to } = parseOptions(accountBalancesOptionsSchema, options, 'accountBalances');
     assertAccount(account);
     assertDate(to, 'to');
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
@@ -122,10 +130,8 @@ module.exports = ({
   }
 
   function queryAccountTransactions(databasePath, options) {
-    const { account } = knownOptions(
-      options,
-      optionNames('accountTransactions'),
-      'accountTransactions',
+    const { account } = parseOptions(
+      accountTransactionsOptionsSchema, options, 'accountTransactions',
     );
     assertAccount(account);
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
@@ -216,10 +222,8 @@ module.exports = ({
   }
 
   function queryLedgerTransaction(databasePath, options) {
-    const { transactionId } = knownOptions(
-      options,
-      optionNames('ledgerTransaction'),
-      'ledgerTransaction',
+    const { transactionId } = parseOptions(
+      ledgerTransactionOptionsSchema, options, 'ledgerTransaction',
     );
     const id = Number(transactionId);
     if (!Number.isSafeInteger(id) || id <= 0 || String(id) !== String(transactionId)) {
@@ -292,6 +296,10 @@ module.exports = ({
   }
 
   return {
+    accountBalancesOptionsSchema,
+    accountPostingsOptionsSchema,
+    accountTransactionsOptionsSchema,
+    ledgerTransactionOptionsSchema,
     queryAccountBalances,
     queryAccountPostings,
     queryAccountTransactions,
