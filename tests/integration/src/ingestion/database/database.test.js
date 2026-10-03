@@ -304,6 +304,37 @@ test('rejects non-default commodity trades without direction-specific annotation
   assert.equal(fs.existsSync(databasePath), false);
 });
 
+test('stores a zero-value non-default commodity acquisition', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+2024-01-01 Free subscription rights
+  Assets:Rights  420 RIGHT {0 SEK} @ 0 SEK
+`);
+
+  assert.doesNotThrow(() => buildDatabase(databasePath, journalPath));
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(
+    database.prepare(`
+      SELECT amount_quantity, amount_commodity,
+        lot_cost_quantity, lot_cost_commodity,
+        cost_quantity, cost_commodity
+      FROM postings
+    `).get(),
+    {
+      amount_quantity: '420',
+      amount_commodity: 'RIGHT',
+      lot_cost_quantity: '0',
+      lot_cost_commodity: 'SEK',
+      cost_quantity: '0',
+      cost_commodity: 'SEK',
+    },
+  );
+});
+
 test('rejects every second default commodity declaration', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');

@@ -197,8 +197,11 @@ Explicit non-zero postings in commodities other than the journal default must
 also describe their trade direction unambiguously. A positive quantity must
 have a lot cost (`{}` or `{{}}`) and no transaction price. A negative quantity
 must have both a lot cost and a transaction price (`@` or `@@`). Unit and total
-annotations may be combined freely. Zero quantities are exempt because they do
-not acquire or dispose of a commodity.
+annotations may be combined freely. As a Ledger-compatible special case, a
+positive quantity may have both annotations when both prices are zero. This
+represents a cost-free acquisition that still needs an explicit zero transaction
+price to balance. Zero quantities are exempt because they do not acquire or
+dispose of a commodity.
 
 `src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building

@@ -90,7 +90,13 @@ function parseTrade(posting) {
 }
 
 test('requires positive non-default commodity postings to use only a lot cost', () => {
-  for (const posting of ['1 FUND', '1 FUND @ 10 SEK', '1 FUND {10 SEK} @ 10 SEK']) {
+  for (const posting of [
+    '1 FUND',
+    '1 FUND @ 10 SEK',
+    '1 FUND {10 SEK} @ 10 SEK',
+    '1 FUND {0 SEK} @ 10 SEK',
+    '1 FUND {10 SEK} @ 0 SEK',
+  ]) {
     assert.throws(
       () => validateJournal(parseTrade(posting)),
       (error) => error instanceof JournalValidationError &&
@@ -100,6 +106,11 @@ test('requires positive non-default commodity postings to use only a lot cost', 
 
   assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {10 SEK}')));
   assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {{10 SEK}}')));
+});
+
+test('allows positive non-default commodity postings with zero lot and transaction prices', () => {
+  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {0 SEK} @ 0 SEK')));
+  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {{0 SEK}} @@ 0 SEK')));
 });
 
 test('requires negative non-default commodity postings to use lot cost and transaction price', () => {
