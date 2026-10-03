@@ -8,7 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { loadReconciliationEntries } = resolveRepositoryModule(
-  "src/ledlight/reports/reconciliation-entries.js",
+  "src/ledlight/investments/reconciliation-entries.js",
 ).$$private;
 
 function createProject(t) {

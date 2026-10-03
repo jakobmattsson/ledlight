@@ -4,7 +4,7 @@ module.exports = ({
   path,
   sqlite: Database,
   publicErrors: { createError, errorCodes },
-  reportOptions: { parseOptions },
+  apiOptions: { parseOptions },
   zod: { z },
 }) => {
 

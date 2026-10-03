@@ -5,7 +5,7 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const Database = require('better-sqlite3');
-const valuationRates = resolveRepositoryModule("src/ledlight/reports/valuation-rates.js");
+const valuationRates = resolveRepositoryModule("src/ledlight/valuation/rates.js");
 const { createLedgerValuationRateResolver } = valuationRates;
 const {
   resolveValuationRates,

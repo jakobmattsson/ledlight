@@ -158,10 +158,15 @@ The implementation is organized by responsibility under `src/ledlight`:
   manifest-only scans;
 - `accounting` provides exact decimal arithmetic, semantic validation, and
   posting resolution;
+- `api` contains shared runtime-input validation helpers;
 - `sqlite` owns schema migration, freshness checks, and journal persistence;
-- `reports` separates aggregate SQL queries from price selection and exact
-  valuation-commodity
-  rate resolution;
+- `queries` contains one module per public account, transaction, or metadata
+  query, with its Zod schema beside its execution function;
+- `reports` contains only the aggregate, balance-history, gain, and investment-
+  performance reports, again as one public operation and schema per module;
+- `investments` contains investment-return and reconciliation calculations;
+- `valuation` owns price selection and exact valuation-commodity rate
+  resolution;
 - `application` composes project paths, database freshness, and reports; and
 - `cli` contains argument parsing, output formatting, and the executable runner
   over the public Node.js API.

@@ -8,7 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { queryInvestmentPerformance } = resolveRepositoryModule("src/ledlight/reports/investment-performance.js");
-const { xirr } = resolveRepositoryModule("src/ledlight/reports/investment-returns.js").$$private;
+const { xirr } = resolveRepositoryModule("src/ledlight/investments/returns.js").$$private;
 const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js").$$private;
 
 function buildFixture(t) {

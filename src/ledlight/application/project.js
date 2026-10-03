@@ -3,27 +3,39 @@
 module.exports = ({
   fs,
   path,
-  accountDetails: {
-    accountBalancesOptionsSchema,
-    accountPostingsOptionsSchema,
-    accountTransactionsOptionsSchema,
-    ledgerTransactionOptionsSchema,
+  accountBalancesQuery: {
+    optionsSchema: accountBalancesOptionsSchema,
     queryAccountBalances,
+  },
+  accountPostingsQuery: {
+    optionsSchema: accountPostingsOptionsSchema,
     queryAccountPostings,
+  },
+  accountTransactionsQuery: {
+    optionsSchema: accountTransactionsOptionsSchema,
     queryAccountTransactions,
-    queryLedgerAccounts,
-    queryLedgerTransaction,
   },
   aggregateReport: { optionsSchema: aggregateReportOptionsSchema, queryAggregateReport },
   balanceHistoryReport: { optionsSchema: balanceHistoryOptionsSchema, queryBalanceHistoryReport },
-  commodityDescriptions: { queryCommodityDescriptions },
+  commodityDescriptionsQuery: {
+    optionsSchema: commodityDescriptionsOptionsSchema,
+    queryCommodityDescriptions,
+  },
   gainReport: { optionsSchema: gainReportOptionsSchema, queryGainReport },
   investmentPerformanceReport: {
     optionsSchema: investmentPerformanceOptionsSchema,
     queryInvestmentPerformance,
   },
   valuationRates: { queryLedgerValuationRateResolver, resolverInputNames },
-  transactionReport: { optionsSchema: ledgerTransactionsOptionsSchema, queryLedgerTransactions },
+  ledgerAccountsQuery: { optionsSchema: ledgerAccountsOptionsSchema, queryLedgerAccounts },
+  ledgerTransactionQuery: {
+    optionsSchema: ledgerTransactionOptionsSchema,
+    queryLedgerTransaction,
+  },
+  ledgerTransactionsQuery: {
+    optionsSchema: ledgerTransactionsOptionsSchema,
+    queryLedgerTransactions,
+  },
   database: { ensureDatabaseCurrent },
   publicErrors: { createError, databaseError, errorCodes },
 }) => {
@@ -42,8 +54,8 @@ module.exports = ({
     gainReport: { inputs: projectInputs(gainReportOptionsSchema) },
     investmentPerformance: { inputs: projectInputs(investmentPerformanceOptionsSchema) },
     accountTransactions: { inputs: projectInputs(accountTransactionsOptionsSchema) },
-    commodityDescriptions: { inputs: ['startDirectory'] },
-    ledgerAccounts: { inputs: ['startDirectory'] },
+    commodityDescriptions: { inputs: projectInputs(commodityDescriptionsOptionsSchema) },
+    ledgerAccounts: { inputs: projectInputs(ledgerAccountsOptionsSchema) },
     ledgerTransaction: { inputs: projectInputs(ledgerTransactionOptionsSchema) },
     ledgerTransactions: { inputs: projectInputs(ledgerTransactionsOptionsSchema) },
     ledgerValuationRateResolver: {
@@ -157,7 +169,7 @@ module.exports = ({
         return queryDatabase(() => queryBalanceHistoryReport(current.databasePath, options));
       },
       commodityDescriptions() {
-        return queryDatabase(() => queryCommodityDescriptions(current.databasePath));
+        return queryDatabase(() => queryCommodityDescriptions(current.databasePath, {}));
       },
       gainReport(options) {
         return queryDatabase(() => queryGainReport(current.databasePath, options, { valuationPriceCache }));
@@ -170,7 +182,7 @@ module.exports = ({
         return ledgerValuationRateResolver;
       },
       ledgerAccounts() {
-        return queryDatabase(() => queryLedgerAccounts(current.databasePath));
+        return queryDatabase(() => queryLedgerAccounts(current.databasePath, {}));
       },
       ledgerTransaction(options) {
         return queryDatabase(() => queryLedgerTransaction(current.databasePath, options));

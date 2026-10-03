@@ -6,7 +6,7 @@ module.exports = ({
   decimal: { registerDecimalFunctions },
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
-  reportOptions: {
+  apiOptions: {
     assertDateInterval,
     parseOptions,
     stringList,

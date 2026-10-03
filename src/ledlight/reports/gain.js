@@ -13,7 +13,7 @@ module.exports = ({
     subtractDecimals,
   },
   accountPrefixFilter: { accountPrefixFilter },
-  reportOptions: {
+  apiOptions: {
     assertDate,
     dateBasis,
     parseOptions,

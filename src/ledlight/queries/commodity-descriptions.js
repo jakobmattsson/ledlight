@@ -3,9 +3,13 @@
 module.exports = ({
   path,
   sqlite: Database,
+  apiOptions: { parseOptions },
+  zod: { z },
 }) => {
+  const optionsSchema = z.strictObject({});
 
-  function queryCommodityDescriptions(databasePath) {
+  function queryCommodityDescriptions(databasePath, options) {
+    parseOptions(optionsSchema, options, 'commodityDescriptions');
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
       const rows = database.prepare(`
@@ -37,5 +41,5 @@ module.exports = ({
     }
   }
 
-  return { queryCommodityDescriptions };
+  return { optionsSchema, queryCommodityDescriptions };
 };

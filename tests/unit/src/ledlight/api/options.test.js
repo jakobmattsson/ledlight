@@ -9,7 +9,7 @@ const {
   booleanOption,
   dateBasis,
   stringList,
-} = resolveRepositoryModule('src/ledlight/reports/options.js');
+} = resolveRepositoryModule('src/ledlight/api/options.js');
 
 test('normalizes shared report options without mutating caller values', () => {
   const input = { accounts: ['Assets:', 'Assets:'], invert: true };

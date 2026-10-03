@@ -11,7 +11,7 @@ module.exports = ({
   },
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
-  reportOptions: {
+  apiOptions: {
     assertDateInterval,
     booleanOption,
     dateBasis,
