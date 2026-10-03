@@ -112,7 +112,7 @@ module.exports = ({
       }));
   }
 
-  function queryGainReport(databasePath, options, { valuationPriceCache }) {
+  function queryGain(databasePath, options, { valuationPriceCache }) {
     const normalizedOptions = normalizeOptions(options);
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
@@ -131,5 +131,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryGainReport };
+  return { optionsSchema, queryGain };
 };

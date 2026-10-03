@@ -168,7 +168,7 @@ module.exports = ({
     ];
   }
 
-  function queryAggregateReport(databasePath, options, { valuationPriceCache }) {
+  function queryAggregate(databasePath, options, { valuationPriceCache }) {
     const normalizedOptions = normalizeOptions(options);
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
@@ -185,5 +185,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryAggregateReport };
+  return { optionsSchema, queryAggregate };
 };

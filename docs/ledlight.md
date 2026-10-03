@@ -160,10 +160,10 @@ The implementation is organized by responsibility under `src/ledlight`:
   posting resolution;
 - `api` contains shared runtime-input validation helpers;
 - `sqlite` owns schema migration, freshness checks, and journal persistence;
-- `queries` contains one module per public account, transaction, or metadata
-  query, with its Zod schema beside its execution function;
-- `reports` contains only the aggregate, balance-history, gain, and investment-
-  performance reports, again as one public operation and schema per module;
+- `queries` contains one module per public API/CLI query—including aggregate,
+  balance-history, gain, and investment-performance queries—with its Zod schema
+  beside its execution function;
+- `query-support` contains internal helpers shared by query implementations;
 - `investments` contains investment-return and reconciliation calculations;
 - `valuation` owns price selection and exact valuation-commodity rate
   resolution;

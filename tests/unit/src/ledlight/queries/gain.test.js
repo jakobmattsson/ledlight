@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { queryGainReport } = resolveRepositoryModule('src/ledlight/reports/gain.js');
+const { queryGain } = resolveRepositoryModule('src/ledlight/queries/gain.js');
 const { buildDatabase } = resolveRepositoryModule('src/ledlight/sqlite/database.js').$$private;
 
 function buildFixture(t) {
@@ -46,7 +46,7 @@ P 2024-02-01 ETF 60 USD
 }
 
 function gainReport(databasePath, options) {
-  return queryGainReport(databasePath, options, { valuationPriceCache: new Map() });
+  return queryGain(databasePath, options, { valuationPriceCache: new Map() });
 }
 
 test('returns unrealized gains and losses by account in the default commodity', (t) => {

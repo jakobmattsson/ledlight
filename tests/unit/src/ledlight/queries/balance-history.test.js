@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { queryBalanceHistoryReport } = resolveRepositoryModule("src/ledlight/reports/balance-history.js");
+const { queryBalanceHistory: queryBalanceHistoryReport } = resolveRepositoryModule("src/ledlight/queries/balance-history.js");
 const { buildDatabase } = resolveRepositoryModule("src/ledlight/sqlite/database.js").$$private;
 
 function buildFixture(t) {

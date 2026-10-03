@@ -66,7 +66,7 @@ module.exports = ({
     return normalized;
   }
 
-  function queryBalanceHistory(database, options, valuationCommodity) {
+  function selectBalanceHistory(database, options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
     const factorEntries = Object.entries(options.accountFactors ?? {});
     const factorExpression = factorEntries.length > 0
@@ -203,16 +203,16 @@ module.exports = ({
     });
   }
 
-  function queryBalanceHistoryReport(databasePath, options) {
+  function queryBalanceHistory(databasePath, options) {
     const normalizedOptions = normalizeOptions(options);
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
       registerDecimalFunctions(database);
-      return queryBalanceHistory(database, normalizedOptions, fromDatabase(database));
+      return selectBalanceHistory(database, normalizedOptions, fromDatabase(database));
     } finally {
       database.close();
     }
   }
 
-  return { optionsSchema, queryBalanceHistoryReport };
+  return { optionsSchema, queryBalanceHistory };
 };

@@ -15,14 +15,14 @@ module.exports = ({
     optionsSchema: accountTransactionsOptionsSchema,
     queryAccountTransactions,
   },
-  aggregateReport: { optionsSchema: aggregateReportOptionsSchema, queryAggregateReport },
-  balanceHistoryReport: { optionsSchema: balanceHistoryOptionsSchema, queryBalanceHistoryReport },
+  aggregateQuery: { optionsSchema: aggregateReportOptionsSchema, queryAggregate },
+  balanceHistoryQuery: { optionsSchema: balanceHistoryOptionsSchema, queryBalanceHistory },
   commodityDescriptionsQuery: {
     optionsSchema: commodityDescriptionsOptionsSchema,
     queryCommodityDescriptions,
   },
-  gainReport: { optionsSchema: gainReportOptionsSchema, queryGainReport },
-  investmentPerformanceReport: {
+  gainQuery: { optionsSchema: gainReportOptionsSchema, queryGain },
+  investmentPerformanceQuery: {
     optionsSchema: investmentPerformanceOptionsSchema,
     queryInvestmentPerformance,
   },
@@ -163,16 +163,16 @@ module.exports = ({
         return queryDatabase(() => queryAccountTransactions(current.databasePath, options));
       },
       aggregateReport(options) {
-        return queryDatabase(() => queryAggregateReport(current.databasePath, options, { valuationPriceCache }));
+        return queryDatabase(() => queryAggregate(current.databasePath, options, { valuationPriceCache }));
       },
       balanceHistoryReport(options) {
-        return queryDatabase(() => queryBalanceHistoryReport(current.databasePath, options));
+        return queryDatabase(() => queryBalanceHistory(current.databasePath, options));
       },
       commodityDescriptions() {
         return queryDatabase(() => queryCommodityDescriptions(current.databasePath, {}));
       },
       gainReport(options) {
-        return queryDatabase(() => queryGainReport(current.databasePath, options, { valuationPriceCache }));
+        return queryDatabase(() => queryGain(current.databasePath, options, { valuationPriceCache }));
       },
       investmentPerformance(options) {
         return queryDatabase(() => queryInvestmentPerformance(current.databasePath, options));
