@@ -5,43 +5,70 @@ module.exports = ({
   path,
 }) => {
 
-  const SCHEMA_VERSION = '12';
+  const SCHEMA_VERSION = '13';
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 
-  function migrateDatabase(database) {
-    database.exec(schema);
-    const existingVersion = database.prepare(
-      "SELECT value FROM metadata WHERE key = 'schema_version'",
+  const supportedVersions = new Set([
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', SCHEMA_VERSION,
+  ]);
+
+  function tableExists(database, name) {
+    return database.prepare(
+      'SELECT 1 FROM sqlite_schema WHERE type = \'table\' AND name = ?',
+    ).pluck().get(name) !== undefined;
+  }
+
+  function storedSchemaVersion(database) {
+    const table = tableExists(database, 'database_metadata')
+      ? 'database_metadata'
+      : (tableExists(database, 'metadata') ? 'metadata' : null);
+    if (!table) return undefined;
+    return database.prepare(
+      `SELECT value FROM ${table} WHERE key = 'schema_version'`,
     ).pluck().get();
-    if (existingVersion !== undefined && ![
-      '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', SCHEMA_VERSION,
-    ].includes(existingVersion)) {
+  }
+
+  function recreateDatabase(database) {
+    const foreignKeys = database.pragma('foreign_keys', { simple: true });
+    database.pragma('foreign_keys = OFF');
+    try {
+      database.transaction(() => {
+        database.exec(`
+          DROP TABLE IF EXISTS posting_tags;
+          DROP TABLE IF EXISTS transaction_tags;
+          DROP TABLE IF EXISTS resolved_posting_amounts;
+          DROP TABLE IF EXISTS transaction_notes;
+          DROP TABLE IF EXISTS postings;
+          DROP TABLE IF EXISTS prices;
+          DROP TABLE IF EXISTS valuation_prices;
+          DROP TABLE IF EXISTS account_declarations;
+          DROP TABLE IF EXISTS tag_declarations;
+          DROP TABLE IF EXISTS commodity_properties;
+          DROP TABLE IF EXISTS commodity_declarations;
+          DROP TABLE IF EXISTS transactions;
+          DROP TABLE IF EXISTS journal_entries;
+          DROP TABLE IF EXISTS source_files;
+          DROP TABLE IF EXISTS database_metadata;
+          DROP TABLE IF EXISTS metadata;
+          DROP TABLE IF EXISTS sek_prices;
+        `);
+        database.exec(schema);
+      })();
+    } finally {
+      database.pragma(`foreign_keys = ${foreignKeys ? 'ON' : 'OFF'}`);
+    }
+  }
+
+  function migrateDatabase(database) {
+    const existingVersion = storedSchemaVersion(database);
+    if (existingVersion !== undefined && !supportedVersions.has(existingVersion)) {
       throw new Error(`Unsupported Ledlight database schema version: ${existingVersion}`);
     }
-    const transactionColumns = database.pragma('table_info(transactions)').map((column) => column.name);
-    if (transactionColumns.includes('effective_date')) {
-      database.exec('ALTER TABLE transactions DROP COLUMN effective_date');
+    if (existingVersion !== undefined && existingVersion !== SCHEMA_VERSION) {
+      recreateDatabase(database);
+    } else {
+      database.exec(schema);
     }
-    const postingColumns = database.pragma('table_info(postings)').map((column) => column.name);
-    if (!postingColumns.includes('report_date')) {
-      if (postingColumns.includes('effective_date')) {
-        database.exec('ALTER TABLE postings RENAME COLUMN effective_date TO report_date');
-      } else {
-        database.exec('ALTER TABLE postings ADD COLUMN report_date TEXT');
-      }
-    }
-    if (!postingColumns.includes('lot_cost_quantity')) {
-      database.exec(`
-        ALTER TABLE postings ADD COLUMN lot_cost_quantity TEXT;
-        ALTER TABLE postings ADD COLUMN lot_cost_commodity TEXT;
-        ALTER TABLE postings ADD COLUMN lot_cost_is_total INTEGER
-          CHECK (lot_cost_is_total IN (0, 1));
-      `);
-    }
-    const hasLegacySekPrices = database.prepare(
-      "SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'sek_prices'",
-    ).pluck().get();
-    if (hasLegacySekPrices) database.exec('DROP TABLE sek_prices');
   }
 
   return { SCHEMA_VERSION, migrateDatabase };

@@ -43,8 +43,6 @@ module.exports = ({
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
-        transactions.status,
-        transactions.code,
         transactions.description,
         transactions.payee,
         transactions.narration,

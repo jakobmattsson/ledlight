@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS metadata (
+CREATE TABLE IF NOT EXISTS database_metadata (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 ) WITHOUT ROWID;
@@ -23,8 +23,6 @@ CREATE TABLE IF NOT EXISTS journal_entries (
 CREATE TABLE IF NOT EXISTS transactions (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
   date TEXT NOT NULL,
-  status TEXT,
-  code TEXT,
   description TEXT NOT NULL,
   payee TEXT,
   narration TEXT NOT NULL,
@@ -52,6 +50,18 @@ CREATE TABLE IF NOT EXISTS postings (
   balance_assertion_quantity TEXT,
   balance_assertion_commodity TEXT,
   comment TEXT,
+  CHECK ((amount_quantity IS NULL) = (amount_commodity IS NULL)),
+  CHECK (
+    (lot_cost_quantity IS NULL AND lot_cost_commodity IS NULL AND lot_cost_is_total IS NULL) OR
+    (lot_cost_quantity IS NOT NULL AND lot_cost_commodity IS NOT NULL AND lot_cost_is_total IS NOT NULL)
+  ),
+  CHECK (
+    (cost_quantity IS NULL AND cost_commodity IS NULL AND cost_is_total IS NULL) OR
+    (cost_quantity IS NOT NULL AND cost_commodity IS NOT NULL AND cost_is_total IS NOT NULL)
+  ),
+  CHECK ((balance_assignment_quantity IS NULL) = (balance_assignment_commodity IS NULL)),
+  CHECK ((balance_assertion_quantity IS NULL) = (balance_assertion_commodity IS NULL)),
+  CHECK (amount_quantity IS NULL OR balance_assignment_quantity IS NULL),
   UNIQUE (transaction_id, position)
 );
 
@@ -76,12 +86,31 @@ CREATE TABLE IF NOT EXISTS resolved_posting_amounts (
   UNIQUE (posting_id, position)
 );
 
+CREATE TABLE IF NOT EXISTS transaction_tags (
+  id INTEGER PRIMARY KEY,
+  transaction_id INTEGER NOT NULL REFERENCES transactions(entry_id) ON DELETE CASCADE,
+  note_id INTEGER REFERENCES transaction_notes(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL,
+  name TEXT NOT NULL CHECK (length(name) > 0),
+  value TEXT,
+  UNIQUE (transaction_id, position)
+);
+
+CREATE TABLE IF NOT EXISTS posting_tags (
+  id INTEGER PRIMARY KEY,
+  posting_id INTEGER NOT NULL REFERENCES postings(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL,
+  name TEXT NOT NULL CHECK (length(name) > 0),
+  value TEXT,
+  UNIQUE (posting_id, position)
+);
+
 CREATE TABLE IF NOT EXISTS prices (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
   date TEXT NOT NULL,
-  commodity TEXT NOT NULL,
-  price_quantity TEXT NOT NULL,
-  price_commodity TEXT,
+  base_commodity TEXT NOT NULL,
+  quote_quantity TEXT NOT NULL,
+  quote_commodity TEXT NOT NULL,
   comment TEXT
 );
 
@@ -130,5 +159,9 @@ CREATE INDEX IF NOT EXISTS postings_account
   ON postings(account);
 CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity
   ON resolved_posting_amounts(commodity);
-CREATE INDEX IF NOT EXISTS prices_commodity_date
-  ON prices(commodity, date);
+CREATE INDEX IF NOT EXISTS transaction_tags_name
+  ON transaction_tags(name);
+CREATE INDEX IF NOT EXISTS posting_tags_name
+  ON posting_tags(name);
+CREATE INDEX IF NOT EXISTS prices_base_commodity_date
+  ON prices(base_commodity, date);

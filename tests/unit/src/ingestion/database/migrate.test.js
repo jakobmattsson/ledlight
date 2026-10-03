@@ -25,8 +25,11 @@ test('creates the current schema in an empty database', (t) => {
   const tables = database.prepare(`
     SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY name
   `).pluck().all();
-  assert.ok(tables.includes('metadata'));
+  assert.ok(tables.includes('database_metadata'));
+  assert.ok(!tables.includes('metadata'));
   assert.ok(tables.includes('journal_entries'));
+  assert.ok(tables.includes('transaction_tags'));
+  assert.ok(tables.includes('posting_tags'));
   assert.ok(tables.includes('resolved_posting_amounts'));
   assert.ok(tables.includes('valuation_prices'));
   const reportDate = database.pragma('table_info(postings)')
@@ -37,72 +40,64 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(postingColumns.includes('lot_cost_commodity'));
   assert.ok(postingColumns.includes('lot_cost_is_total'));
   const transactionColumns = database.pragma('table_info(transactions)').map((column) => column.name);
-  assert.ok(!transactionColumns.includes('effective_date'));
+  assert.ok(!transactionColumns.includes('status'));
+  assert.ok(!transactionColumns.includes('code'));
+  const priceColumns = database.pragma('table_info(prices)');
+  assert.deepEqual(
+    priceColumns.filter((column) => [
+      'base_commodity', 'quote_quantity', 'quote_commodity',
+    ].includes(column.name))
+      .map(({ name, notnull }) => ({ name, notnull })),
+    [
+      { name: 'base_commodity', notnull: 1 },
+      { name: 'quote_quantity', notnull: 1 },
+      { name: 'quote_commodity', notnull: 1 },
+    ],
+  );
+  assert.throws(
+    () => database.prepare(`
+      INSERT INTO prices (entry_id, date, base_commodity, quote_quantity)
+      VALUES (1, '2024-01-01', 'FUND', '10')
+    `).run(),
+    /NOT NULL constraint failed: prices\.quote_commodity/u,
+  );
+  assert.throws(
+    () => database.prepare(`
+      INSERT INTO postings
+        (id, transaction_id, position, report_date, line, column, account, amount_quantity)
+      VALUES (1, 1, 0, '2024-01-01', 1, 1, 'Assets:Fund', '10')
+    `).run(),
+    /CHECK constraint failed/u,
+  );
 });
 
-test('removes the unused transaction effective date from version 6', (t) => {
+test('recreates a supported legacy cache with the current schema', (t) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
-    INSERT INTO metadata (key, value) VALUES ('schema_version', '6');
+    INSERT INTO metadata (key, value) VALUES ('schema_version', '12');
     CREATE TABLE transactions (
       entry_id INTEGER PRIMARY KEY,
       date TEXT NOT NULL,
-      effective_date TEXT,
+      status TEXT,
+      code TEXT,
       description TEXT NOT NULL
     );
-    INSERT INTO transactions (entry_id, date, effective_date, description)
-    VALUES (1, '2024-01-01', NULL, 'Opening');
+    INSERT INTO transactions (entry_id, date, status, code, description)
+    VALUES (1, '2024-01-01', '*', 'opening', 'Opening');
   `);
 
   migrateDatabase(database);
 
   const columns = database.pragma('table_info(transactions)').map((column) => column.name);
-  assert.ok(!columns.includes('effective_date'));
-  assert.deepEqual(
-    database.prepare('SELECT entry_id, date, description FROM transactions').get(),
-    { entry_id: 1, date: '2024-01-01', description: 'Opening' },
-  );
-});
-
-test('adds the posting report date to a legacy schema', (t) => {
-  const database = temporaryDatabase(t);
-  database.exec(`
-    CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
-    INSERT INTO metadata (key, value) VALUES ('schema_version', '2');
-    CREATE TABLE postings (id INTEGER PRIMARY KEY, account TEXT NOT NULL);
-  `);
-
-  migrateDatabase(database);
-
-  const columns = database.pragma('table_info(postings)').map((column) => column.name);
-  assert.ok(columns.includes('report_date'));
-  assert.ok(columns.includes('lot_cost_quantity'));
-});
-
-test('renames the posting effective date while preserving version 3 data', (t) => {
-  const database = temporaryDatabase(t);
-  database.exec(`
-    CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
-    INSERT INTO metadata (key, value) VALUES ('schema_version', '3');
-    CREATE TABLE postings (
-      id INTEGER PRIMARY KEY,
-      effective_date TEXT NOT NULL,
-      account TEXT NOT NULL
-    );
-    INSERT INTO postings (id, effective_date, account)
-    VALUES (1, '2024-03-02', 'Assets:Cash');
-  `);
-
-  migrateDatabase(database);
-
-  const columns = database.pragma('table_info(postings)').map((column) => column.name);
-  assert.ok(columns.includes('report_date'));
-  assert.ok(!columns.includes('effective_date'));
-  assert.equal(
-    database.prepare('SELECT report_date FROM postings WHERE id = 1').pluck().get(),
-    '2024-03-02',
-  );
+  assert.ok(!columns.includes('status'));
+  assert.ok(!columns.includes('code'));
+  assert.equal(database.prepare('SELECT COUNT(*) FROM transactions').pluck().get(), 0);
+  const tables = database.prepare(
+    "SELECT name FROM sqlite_schema WHERE type = 'table'",
+  ).pluck().all();
+  assert.ok(tables.includes('database_metadata'));
+  assert.ok(!tables.includes('metadata'));
 });
 
 test('rejects unsupported schema versions', (t) => {

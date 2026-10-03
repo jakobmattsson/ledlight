@@ -28,17 +28,23 @@ module.exports = ({
 
     const database = new Database(resolvedDatabasePath, { readonly: true, fileMustExist: true });
     try {
-      const hasMetadata = database.prepare(`
+      const hasDatabaseMetadata = database.prepare(`
+      SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'database_metadata'
+    `).pluck().get();
+      const hasLegacyMetadata = database.prepare(`
       SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'metadata'
     `).pluck().get();
       const hasSourceFiles = database.prepare(`
       SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'source_files'
     `).pluck().get();
-      if (!hasMetadata || !hasSourceFiles) {
+      if ((!hasDatabaseMetadata && !hasLegacyMetadata) || !hasSourceFiles) {
         return databaseWithoutSchema(databasePath, entryPath, 'schema_missing');
       }
 
-      const metadata = new Map(database.prepare('SELECT key, value FROM metadata').raw().all());
+      const metadataTable = hasDatabaseMetadata ? 'database_metadata' : 'metadata';
+      const metadata = new Map(database.prepare(
+        `SELECT key, value FROM ${metadataTable}`,
+      ).raw().all());
       if (metadata.get('schema_version') !== SCHEMA_VERSION) {
         return databaseWithoutSchema(databasePath, entryPath, 'schema_version_mismatch');
       }
@@ -79,12 +85,16 @@ module.exports = ({
     if (!fs.existsSync(resolvedDatabasePath)) return null;
     const database = new Database(resolvedDatabasePath, { readonly: true, fileMustExist: true });
     try {
-      const hasMetadata = database.prepare(`
+      const hasDatabaseMetadata = database.prepare(`
+      SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'database_metadata'
+    `).pluck().get();
+      const hasLegacyMetadata = database.prepare(`
       SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'metadata'
     `).pluck().get();
-      if (!hasMetadata) return null;
+      if (!hasDatabaseMetadata && !hasLegacyMetadata) return null;
+      const metadataTable = hasDatabaseMetadata ? 'database_metadata' : 'metadata';
       return database.prepare(
-        "SELECT value FROM metadata WHERE key = 'root_path'",
+        `SELECT value FROM ${metadataTable} WHERE key = 'root_path'`,
       ).pluck().get() || null;
     } finally {
       database.close();

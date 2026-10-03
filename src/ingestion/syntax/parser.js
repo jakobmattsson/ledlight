@@ -96,7 +96,7 @@ module.exports = ({
     if (!description) throw syntaxError('Expected a transaction description', source, line, cursor + 1);
     const tags = parseCommentTags(parts.comment);
     return {
-      type: 'transaction', date, status: null, code: null, description,
+      type: 'transaction', date, description,
       payee: pipe < 0 ? null : parts.text.slice(0, pipe).trim(),
       narration: pipe < 0 ? description : parts.text.slice(pipe + 1).trim(),
       comment: parts.comment, ...(tags.length > 0 ? { tags } : {}), postings: [], notes: [], location: sourceLocation(source, line, 1),

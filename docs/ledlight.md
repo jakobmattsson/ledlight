@@ -176,8 +176,8 @@ public API; only its output formatter uses shared exact-decimal helpers directly
 ## Supported grammar
 
 The parser currently supports account, tag, commodity, price, and include
-directives; commodity properties; transaction status, code, payee/narration,
-and comments; postings with omitted or explicit amounts; unit and total lot
+directives; commodity properties; transaction descriptions, payee/narration,
+tags, and comments; postings with omitted or explicit amounts; unit and total lot
 costs (`{}` and `{{}}`); unit and total transaction costs (`@` and `@@`);
 balance assignments; and balance assertions.
 
@@ -186,9 +186,9 @@ silently ignored. The runtime parser has no I/O or database dependency;
 `loadJournal` is the thin layer responsible for file I/O, include expansion,
 and hashing.
 
-Before persistence, semantic validation requires commodities on explicit
-posting amounts, lot costs, transaction costs, balance assertions, and prices.
-Implicit postings and balance assignments may still infer their commodity.
+The grammar requires commodities on explicit posting amounts, lot costs,
+transaction costs, balance assignments, balance assertions, and prices.
+Implicit postings infer their resolved commodity during accounting validation.
 Explicit transactions must balance, allowing Ledger-style two-commodity
 exchanges and the precision tolerance associated with calculated unit costs.
 When a posting has both a lot cost and a transaction cost, its lot cost
@@ -219,7 +219,9 @@ SQLite is the default storage engine. The database always lives at
 `tmp/ledger.sqlite`, relative to the project root containing `.ledgerrc`. The
 root journal is always read from the `--file` option in `.ledgerrc`; neither
 path is a command-line setting. Rebuilding the database replaces its contents
-in one transaction.
+in one transaction. Because the database is a reproducible cache, an older
+supported schema version is recreated from the journal instead of preserving
+and transforming cached rows in place.
 
 ```js
 const { ensureProjectDatabaseCurrent } = require('ledlight');
@@ -227,17 +229,27 @@ const { ensureProjectDatabaseCurrent } = require('ledlight');
 const result = ensureProjectDatabaseCurrent();
 ```
 
+`database_metadata` stores the schema version, root journal path, build time,
+and selected valuation commodity. It is database bookkeeping and is unrelated
+to journal comment metadata.
+
 `source_files` stores every resolved source path, its byte size, its SHA-256
 hash, and its traversal order. `checkDatabaseSync` rebuilds the current source
 manifest and reports added, removed, and changed files.
 
 The main query tables are `transactions`, `postings`, `transaction_notes`,
-`prices`, `valuation_prices`, the three declaration tables, and
-`commodity_properties`. `valuation_prices` is derived from `prices` at the end of
+`transaction_tags`, `posting_tags`, `prices`, `valuation_prices`, the three
+declaration tables, and `commodity_properties`. Transaction tags identify their
+originating note through `note_id`; a null `note_id` means the tag came from the
+transaction header. `tag_declarations` stores `tag` directives rather than tag
+occurrences. `valuation_prices` is derived from `prices` at the end of
 each database build and is not an independent journal source.
 `journal_entries` preserves the global source order and source location shared
 by all entry types. Quantities are stored as `TEXT`, exactly as parsed, so SQL
 storage never rounds an accounting value through binary floating point.
+Price directives use `base_commodity`, `quote_quantity`, and `quote_commodity`;
+for example, `P 2024-01-01 FUND 10 SEK` prices the base commodity `FUND` as a
+quote of `10 SEK`.
 
 Each posting has a non-null `report_date`: its explicit posting date when one
 is present, otherwise the transaction's primary date. This preserves source

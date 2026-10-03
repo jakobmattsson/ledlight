@@ -36,10 +36,10 @@ commodity SEK
 include transactions.ledger
 P 2024-01-01 FUND 123.45 SEK
 `);
-  fs.writeFileSync(transactionsPath, `2024-01-02 Bank | Deposit
+  fs.writeFileSync(transactionsPath, `2024-01-02 Bank | Deposit ; :imported: bank statement
   ; Source: statement.csv:4
-  Assets:Cash  8.000000000000000001 SEK
-  Equity:Opening
+  Assets:Cash  8.000000000000000001 SEK ; Receipt: 1234
+  Equity:Opening  ; :balanced:
 `);
 
   const result = buildDatabase(databasePath, journalPath);
@@ -58,7 +58,7 @@ P 2024-01-01 FUND 123.45 SEK
   t.after(() => database.close());
   assert.deepEqual(
     database.prepare(`
-      SELECT t.date, t.code, p.position, p.report_date, p.account,
+      SELECT t.date, p.position, p.report_date, p.account,
         p.amount_quantity, p.amount_commodity
       FROM transactions AS t
       JOIN postings AS p ON p.transaction_id = t.entry_id
@@ -67,7 +67,6 @@ P 2024-01-01 FUND 123.45 SEK
     [
       {
         date: '2024-01-02',
-        code: null,
         position: 0,
         report_date: '2024-01-02',
         account: 'Assets:Cash',
@@ -76,7 +75,6 @@ P 2024-01-01 FUND 123.45 SEK
       },
       {
         date: '2024-01-02',
-        code: null,
         position: 1,
         report_date: '2024-01-02',
         account: 'Equity:Opening',
@@ -88,6 +86,30 @@ P 2024-01-01 FUND 123.45 SEK
   assert.deepEqual(
     database.prepare('SELECT key, value FROM transaction_notes').get(),
     { key: 'Source', value: 'statement.csv:4' },
+  );
+  assert.deepEqual(
+    database.prepare(`
+      SELECT tags.position, tags.name, tags.value, notes.position AS note_position
+      FROM transaction_tags AS tags
+      LEFT JOIN transaction_notes AS notes ON notes.id = tags.note_id
+      ORDER BY tags.position
+    `).all(),
+    [
+      { position: 0, name: 'imported', value: null, note_position: null },
+      { position: 1, name: 'Source', value: 'statement.csv:4', note_position: 0 },
+    ],
+  );
+  assert.deepEqual(
+    database.prepare(`
+      SELECT postings.position AS posting_position, tags.position, tags.name, tags.value
+      FROM posting_tags AS tags
+      JOIN postings ON postings.id = tags.posting_id
+      ORDER BY postings.position, tags.position
+    `).all(),
+    [
+      { posting_position: 0, position: 0, name: 'Receipt', value: '1234' },
+      { posting_position: 1, position: 0, name: 'balanced', value: null },
+    ],
   );
   assert.deepEqual(
     database.prepare("SELECT name, value FROM commodity_properties WHERE name = 'format'").get(),

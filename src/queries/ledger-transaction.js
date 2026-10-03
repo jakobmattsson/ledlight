@@ -24,8 +24,6 @@ module.exports = ({
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
-        transactions.status,
-        transactions.code,
         transactions.description,
         transactions.payee,
         transactions.narration,
@@ -48,8 +46,6 @@ module.exports = ({
       const transaction = {
         transactionId: first.transactionId,
         transactionDate: first.transactionDate,
-        status: first.status,
-        code: first.code,
         description: first.description,
         payee: first.payee,
         narration: first.narration,
