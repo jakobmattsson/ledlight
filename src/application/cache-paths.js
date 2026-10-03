@@ -1,24 +1,12 @@
 'use strict';
 
-module.exports = ({ crypto, fs, os, path, processEnvironment, processPlatform }) => {
+module.exports = ({ crypto, envPaths, fs, path, processEnvironment }) => {
 
   function cacheRoot() {
     if (processEnvironment.LEDLIGHT_CACHE_HOME) {
       return path.resolve(processEnvironment.LEDLIGHT_CACHE_HOME);
     }
-    if (processPlatform === 'darwin') {
-      return path.join(os.homedir(), 'Library', 'Caches', 'ledlight');
-    }
-    if (processPlatform === 'win32') {
-      const localAppData = processEnvironment.LOCALAPPDATA ??
-        path.join(os.homedir(), 'AppData', 'Local');
-      return path.join(localAppData, 'ledlight', 'Cache');
-    }
-    const configuredCacheHome = processEnvironment.XDG_CACHE_HOME;
-    const cacheHome = configuredCacheHome && path.isAbsolute(configuredCacheHome)
-      ? configuredCacheHome
-      : path.join(os.homedir(), '.cache');
-    return path.join(cacheHome, 'ledlight');
+    return envPaths('ledlight', { suffix: '' }).cache;
   }
 
   function canonicalJournalPath(journalPath) {

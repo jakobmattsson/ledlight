@@ -113,12 +113,11 @@ function repositoryModuleName(fileName) {
 function registerExternalModules(container) {
   container.register({
     crypto: asValue(require('node:crypto')),
+    envPaths: asValue(require('env-paths')),
     fs: asValue(require('node:fs')),
-    os: asValue(require('node:os')),
     packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
     processEnvironment: asValue(process.env),
-    processPlatform: asValue(process.platform),
     systemClock: asValue({
       now: () => Date.now(),
       sleep(milliseconds) {

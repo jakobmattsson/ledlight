@@ -10,51 +10,29 @@ function cachePaths(settings_) {
   const {
     canonicalPath = '/books/main.ledger',
     environment = {},
-    homedir = '/home/example',
+    generatedCachePath = '/system/cache/ledlight',
     pathModule = path.posix,
-    platform = 'linux',
   } = settings_ ?? {};
   const realpathSync = () => canonicalPath;
   realpathSync.native = realpathSync;
   return createCachePaths({
     crypto,
+    envPaths: (name, options) => {
+      assert.equal(name, 'ledlight');
+      assert.deepEqual(options, { suffix: '' });
+      return { cache: generatedCachePath };
+    },
     fs: {
       realpathSync,
       statSync: () => ({ isFile: () => true }),
     },
-    os: { homedir: () => homedir },
     path: pathModule,
     processEnvironment: environment,
-    processPlatform: platform,
   });
 }
 
-test('uses the native application cache directory on each supported platform', () => {
-  assert.equal(
-    cachePaths({ platform: 'darwin', homedir: '/Users/example' }).cacheRoot(),
-    '/Users/example/Library/Caches/ledlight',
-  );
-  assert.equal(
-    cachePaths({ environment: { XDG_CACHE_HOME: '/var/cache/example' } }).cacheRoot(),
-    '/var/cache/example/ledlight',
-  );
-  assert.equal(
-    cachePaths().cacheRoot(),
-    '/home/example/.cache/ledlight',
-  );
-  assert.equal(
-    cachePaths({ environment: { XDG_CACHE_HOME: 'relative-cache' } }).cacheRoot(),
-    '/home/example/.cache/ledlight',
-  );
-  assert.equal(
-    cachePaths({
-      environment: { LOCALAPPDATA: 'C:\\Users\\example\\AppData\\Local' },
-      homedir: 'C:\\Users\\example',
-      pathModule: path.win32,
-      platform: 'win32',
-    }).cacheRoot(),
-    'C:\\Users\\example\\AppData\\Local\\ledlight\\Cache',
-  );
+test('uses the application cache directory supplied by env-paths', () => {
+  assert.equal(cachePaths().cacheRoot(), '/system/cache/ledlight');
 });
 
 test('honors the explicit cache override', () => {
@@ -86,14 +64,13 @@ test('rejects missing journal paths and paths that do not name files', () => {
   realpathSync.native = realpathSync;
   const paths = createCachePaths({
     crypto,
+    envPaths: () => ({ cache: '/system/cache/ledlight' }),
     fs: {
       realpathSync,
       statSync: () => ({ isFile: () => false }),
     },
-    os: { homedir: () => '/home/example' },
     path: path.posix,
     processEnvironment: {},
-    processPlatform: 'linux',
   });
   assert.throws(() => paths.pathsForJournal('/books'), /Journal path is not a file/u);
 });
