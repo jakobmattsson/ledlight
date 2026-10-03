@@ -9,45 +9,16 @@ The Ledger CLI differential test corpus is not listed here because it has
 already been implemented. It should continue to grow alongside supported
 syntax and reporting behavior.
 
-## Priority 1: define the public API
-
-The package root and the object returned by `openJournal()` do not currently
-present the same set of operations. The project object additionally exposes
-transaction, account, reconciliation-oriented, and valuation-resolver methods.
-Anything reachable through `openJournal()` is public in practice even when it
-is not documented.
-
-Define the supported API inventory and decide which operations are stable.
-Then either expose equivalent top-level functions or explicitly group
-journal-scoped operations under a documented journal API. Every operation
-should document:
-
-- accepted options and defaults;
-- whether unknown options are rejected;
-- result fields and their value types;
-- ordering guarantees;
-- snapshot and freshness behavior; and
-- possible errors.
-
-Stable error codes distinguish syntax errors, invalid API input, project
-configuration errors, missing valuation data, and database failures. Public
-error classes are intentionally not part of the compatibility contract, and
-consumers do not need to inspect error-message text.
-
-The Markdown API reference remains the source of truth for parameter and result
-types. TypeScript declarations are intentionally deferred; the package does not
-currently promise a statically typed consumer surface.
-
-## Priority 2: make database freshness and rebuilds robust
+## Priority 1: make database freshness and rebuilds robust
 
 The freshness scan and a later report are separate filesystem operations. A
 source file can change after the database has been declared current. An object
-returned by `openJournal()` also keeps using the database and cached valuation
+returned by `openProject()` also keeps using the database and cached valuation
 data without another freshness check.
 
 Choose and document one lifecycle model:
 
-- `openJournal()` represents an immutable snapshot, and callers reopen it to
+- `openProject()` represents an immutable snapshot, and callers reopen it to
   observe changes; or
 - an explicit `refresh()` operation updates the database and invalidates every
   derived cache.
@@ -64,7 +35,7 @@ Add tests for a source change during freshness checking, a failed rebuild
 preserving the previous usable database, and cache invalidation after a
 successful refresh.
 
-## Priority 3: establish performance limits
+## Priority 2: establish performance limits
 
 `valuation_prices` currently stores one row per commodity and calendar day from
 the commodity's first appearance through the latest relevant date. Balance
@@ -87,7 +58,7 @@ Optimize only after measuring. If daily materialization becomes the limiting
 factor, evaluate sparse rate intervals or change-point storage while preserving
 the exact public report semantics.
 
-## Priority 4: use commodity format metadata
+## Priority 3: use commodity format metadata
 
 Ledlight stores the journal's commodity `format` property, but CLI monetary
 output currently assumes two fractional digits and comma thousands separators.
@@ -104,7 +75,7 @@ format without digit grouping. Declared formats apply only to human-readable
 CLI output; CSV and JSON retain canonical, ungrouped decimal values. A missing
 `format` declaration still needs one documented fallback policy.
 
-## Priority 5: make numeric precision boundaries explicit
+## Priority 4: make numeric precision boundaries explicit
 
 Accounting quantities and valuation rates use exact decimal strings through
 parsing, storage, aggregation, and valuation. Investment performance converts
@@ -126,11 +97,9 @@ beyond JavaScript's safe integer precision and with long fractional quantities.
 
 ## Suggested implementation order
 
-1. Stabilize the public API before additional consumers depend on
-   accidental behavior.
-2. Define project snapshot and rebuild behavior before introducing long-lived
+1. Define project snapshot and rebuild behavior before introducing long-lived
    processes or concurrent callers.
-3. Add benchmarks and precision-boundary tests before changing storage or
+2. Add benchmarks and precision-boundary tests before changing storage or
    investment-result representations.
-4. Apply commodity-aware presentation.
-5. Address the smaller maintainability items incrementally.
+3. Apply commodity-aware presentation.
+4. Address the smaller maintainability items incrementally.
