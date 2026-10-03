@@ -20,4 +20,10 @@ function resolveRepositoryModule(fileName) {
   return container.resolve(repositoryModuleName(resolvedFileName));
 }
 
-module.exports = { resolveRepositoryModule };
+function resolveQuery(name) {
+  const query = container.resolve('queries').find((candidate) => candidate.name === name);
+  if (!query) throw new Error(`Unknown query: ${name}`);
+  return query;
+}
+
+module.exports = { resolveQuery, resolveRepositoryModule };

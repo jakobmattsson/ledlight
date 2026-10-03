@@ -7,6 +7,7 @@ const {
   asValue,
   createContainer,
   InjectionMode,
+  listModules,
   Lifetime,
 } = require('awilix');
 
@@ -39,17 +40,6 @@ const MODULE_NAMES = Object.freeze({
   'src/ingestion/syntax/errors.js': 'syntaxErrors',
   'src/ingestion/syntax/parser.js': 'ledgerParser',
   'src/ingestion/syntax/reference/parser.js': 'referenceParser',
-  'src/queries/account-balances.js': 'accountBalancesQuery',
-  'src/queries/account-postings.js': 'accountPostingsQuery',
-  'src/queries/account-transactions.js': 'accountTransactionsQuery',
-  'src/queries/aggregate.js': 'aggregateQuery',
-  'src/queries/balance-history.js': 'balanceHistoryQuery',
-  'src/queries/commodity-descriptions.js': 'commodityDescriptionsQuery',
-  'src/queries/gain.js': 'gainQuery',
-  'src/queries/investment-performance.js': 'investmentPerformanceQuery',
-  'src/queries/ledger-accounts.js': 'ledgerAccountsQuery',
-  'src/queries/ledger-transaction.js': 'ledgerTransactionQuery',
-  'src/queries/ledger-transactions.js': 'ledgerTransactionsQuery',
   'src/queries/support/account-prefix-filter.js': 'accountPrefixFilter',
   'src/queries/support/reconciliation-entries.js': 'reconciliationEntries',
   'src/queries/support/valuation-rates.js': 'valuationRates',
@@ -66,6 +56,7 @@ const EXCLUDED_FACTORY_FILES = new Set([
   'src/cli/cli-modules.js',
   'src/cli/run.js',
 ]);
+const QUERY_MODULE_PATTERN = 'src/queries/*.js';
 
 function filesBelow(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -75,13 +66,39 @@ function filesBelow(directory) {
 }
 
 function repositoryFactoryFiles() {
+  const queryFiles = new Set(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
+    .map(({ path: fileName }) => fileName));
   return APPLICATION_SOURCE_DIRECTORIES.flatMap((directory) =>
     filesBelow(path.join(REPOSITORY_ROOT, 'src', directory)))
     .filter((fileName) => fileName.endsWith('.js'))
+    .filter((fileName) => !queryFiles.has(fileName))
     .filter((fileName) => !fileName.includes(`${path.sep}modules${path.sep}`))
     .filter((fileName) => !EXCLUDED_FACTORY_FILES.has(
       path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/'),
     ));
+}
+
+function loadQueries(dependencies) {
+  const names = new Set();
+  return Object.freeze(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
+    .map(({ path: fileName }) => {
+      const query = require(fileName)(dependencies);
+      if (!query || typeof query !== 'object' || Array.isArray(query)) {
+        throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must return a query object.`);
+      }
+      if (typeof query.name !== 'string' || query.name.length === 0) {
+        throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must expose a name.`);
+      }
+      if (names.has(query.name)) throw new Error(`Duplicate query name: ${query.name}`);
+      if (typeof query.inputSchema?.safeParse !== 'function') {
+        throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must expose an inputSchema.`);
+      }
+      if (typeof query.execute !== 'function') {
+        throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must expose an execute function.`);
+      }
+      names.add(query.name);
+      return Object.freeze(query);
+    }));
 }
 
 function repositoryModuleName(fileName) {
@@ -129,6 +146,7 @@ function registerRepositoryModules(container) {
       asFunction(factory, { lifetime: Lifetime.SINGLETON }),
     );
   }
+  container.register('queries', asFunction(loadQueries, { lifetime: Lifetime.SINGLETON }));
   return container;
 }
 

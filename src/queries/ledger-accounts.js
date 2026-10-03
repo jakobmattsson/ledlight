@@ -39,5 +39,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryLedgerAccounts };
+  return { name: 'ledgerAccounts', inputSchema: optionsSchema, execute: queryLedgerAccounts };
 };

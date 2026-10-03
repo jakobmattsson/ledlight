@@ -41,5 +41,5 @@ module.exports = ({
     }
   }
 
-  return { optionsSchema, queryCommodityDescriptions };
+  return { name: 'commodityDescriptions', inputSchema: optionsSchema, execute: queryCommodityDescriptions };
 };

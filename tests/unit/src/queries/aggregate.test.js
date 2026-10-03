@@ -1,13 +1,16 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../support/repository-container");
+const {
+  resolveQuery,
+  resolveRepositoryModule,
+} = require("../../../support/repository-container");
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { queryAggregate } = resolveRepositoryModule("src/queries/aggregate.js");
+const { execute: queryAggregate } = resolveQuery('aggregateReport');
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
 
 function aggregateReport(databasePath, options) {

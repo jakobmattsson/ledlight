@@ -1,13 +1,16 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../support/repository-container");
+const {
+  resolveQuery,
+  resolveRepositoryModule,
+} = require("../../../support/repository-container");
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { queryBalanceHistory: queryBalanceHistoryReport } = resolveRepositoryModule("src/queries/balance-history.js");
+const { execute: queryBalanceHistoryReport } = resolveQuery('balanceHistoryReport');
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
 
 function buildFixture(t) {

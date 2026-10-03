@@ -3,44 +3,60 @@
 module.exports = ({
   fs,
   path,
-  accountBalancesQuery: {
-    optionsSchema: accountBalancesOptionsSchema,
-    queryAccountBalances,
-  },
-  accountPostingsQuery: {
-    optionsSchema: accountPostingsOptionsSchema,
-    queryAccountPostings,
-  },
-  accountTransactionsQuery: {
-    optionsSchema: accountTransactionsOptionsSchema,
-    queryAccountTransactions,
-  },
-  aggregateQuery: { optionsSchema: aggregateReportOptionsSchema, queryAggregate },
-  balanceHistoryQuery: { optionsSchema: balanceHistoryOptionsSchema, queryBalanceHistory },
-  commodityDescriptionsQuery: {
-    optionsSchema: commodityDescriptionsOptionsSchema,
-    queryCommodityDescriptions,
-  },
-  gainQuery: { optionsSchema: gainReportOptionsSchema, queryGain },
-  investmentPerformanceQuery: {
-    optionsSchema: investmentPerformanceOptionsSchema,
-    queryInvestmentPerformance,
-  },
+  queries,
   valuationRates: { queryLedgerValuationRateResolver, resolverInputNames },
-  ledgerAccountsQuery: { optionsSchema: ledgerAccountsOptionsSchema, queryLedgerAccounts },
-  ledgerTransactionQuery: {
-    optionsSchema: ledgerTransactionOptionsSchema,
-    queryLedgerTransaction,
-  },
-  ledgerTransactionsQuery: {
-    optionsSchema: ledgerTransactionsOptionsSchema,
-    queryLedgerTransactions,
-  },
   database: { ensureDatabaseCurrent },
   publicErrors: { createError, databaseError, errorCodes },
 }) => {
 
   const DATABASE_RELATIVE_PATH = path.join('tmp', 'ledger.sqlite');
+  const queryByName = new Map(queries.map((query) => [query.name, query]));
+  const query = (name) => {
+    const definition = queryByName.get(name);
+    if (!definition) throw new Error(`Unknown query: ${name}`);
+    return definition;
+  };
+  const {
+    inputSchema: accountBalancesOptionsSchema,
+    execute: queryAccountBalances,
+  } = query('accountBalances');
+  const {
+    inputSchema: accountPostingsOptionsSchema,
+    execute: queryAccountPostings,
+  } = query('accountPostings');
+  const {
+    inputSchema: accountTransactionsOptionsSchema,
+    execute: queryAccountTransactions,
+  } = query('accountTransactions');
+  const {
+    inputSchema: aggregateReportOptionsSchema,
+    execute: queryAggregate,
+  } = query('aggregateReport');
+  const {
+    inputSchema: balanceHistoryOptionsSchema,
+    execute: queryBalanceHistory,
+  } = query('balanceHistoryReport');
+  const {
+    inputSchema: commodityDescriptionsOptionsSchema,
+    execute: queryCommodityDescriptions,
+  } = query('commodityDescriptions');
+  const { inputSchema: gainReportOptionsSchema, execute: queryGain } = query('gainReport');
+  const {
+    inputSchema: investmentPerformanceOptionsSchema,
+    execute: queryInvestmentPerformance,
+  } = query('investmentPerformance');
+  const {
+    inputSchema: ledgerAccountsOptionsSchema,
+    execute: queryLedgerAccounts,
+  } = query('ledgerAccounts');
+  const {
+    inputSchema: ledgerTransactionOptionsSchema,
+    execute: queryLedgerTransaction,
+  } = query('ledgerTransaction');
+  const {
+    inputSchema: ledgerTransactionsOptionsSchema,
+    execute: queryLedgerTransactions,
+  } = query('ledgerTransactions');
   const schemaInputs = (schema) => Object.keys(schema.shape);
   const projectInputs = (schema) => [...schemaInputs(schema), 'startDirectory'];
   const apiDefinitions = Object.freeze({

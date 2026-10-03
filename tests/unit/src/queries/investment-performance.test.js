@@ -1,13 +1,16 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../support/repository-container");
+const {
+  resolveQuery,
+  resolveRepositoryModule,
+} = require("../../../support/repository-container");
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { queryInvestmentPerformance } = resolveRepositoryModule("src/queries/investment-performance.js");
+const { execute: queryInvestmentPerformance } = resolveQuery('investmentPerformance');
 const { xirr } = resolveRepositoryModule("src/domain/investments/returns.js").$$private;
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
 
