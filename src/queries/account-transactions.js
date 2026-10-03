@@ -1,8 +1,6 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   decimal: { addDecimals, formatDecimal, parseDecimal },
   apiOptions: { parseOptions },
   zod: { z },
@@ -11,11 +9,9 @@ module.exports = ({
     account: z.string().min(1, { error: 'must be a non-empty string' }),
   });
 
-  function queryAccountTransactions(databasePath, options) {
+  function queryAccountTransactions(database, options) {
     const { account } = parseOptions(optionsSchema, options, 'accountTransactions');
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      const rows = database.prepare(`
+    const rows = database.prepare(`
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
@@ -37,61 +33,58 @@ module.exports = ({
       ORDER BY postings.report_date, entries.sequence,
         postings.position, amounts.position
     `).all(account);
-      const transactions = [];
-      const byId = new Map();
-      const balances = new Map();
-      for (const row of rows) {
-        const balance = addDecimals(
-          balances.get(row.commodity) ?? parseDecimal('0'),
-          parseDecimal(row.quantity),
-        );
-        balances.set(row.commodity, balance);
-        let transaction = byId.get(row.transactionId);
-        if (!transaction) {
-          transaction = {
-            transactionId: row.transactionId,
-            transactionDate: row.transactionDate,
-            description: row.description,
-            payee: row.payee,
-            narration: row.narration,
-            sequence: row.transactionSequence,
-            postings: [],
-          };
-          byId.set(row.transactionId, transaction);
-          transactions.push(transaction);
-        }
-        let posting = transaction.postings.find((item) => item.id === row.postingId);
-        if (!posting) {
-          posting = { id: row.postingId, postingDate: row.postingDate, amounts: [] };
-          transaction.postings.push(posting);
-        }
-        posting.amounts.push({
-          quantity: row.quantity,
-          commodity: row.commodity,
-          balance: formatDecimal(balance),
-        });
+    const transactions = [];
+    const byId = new Map();
+    const balances = new Map();
+    for (const row of rows) {
+      const balance = addDecimals(
+        balances.get(row.commodity) ?? parseDecimal('0'),
+        parseDecimal(row.quantity),
+      );
+      balances.set(row.commodity, balance);
+      let transaction = byId.get(row.transactionId);
+      if (!transaction) {
+        transaction = {
+          transactionId: row.transactionId,
+          transactionDate: row.transactionDate,
+          description: row.description,
+          payee: row.payee,
+          narration: row.narration,
+          sequence: row.transactionSequence,
+          postings: [],
+        };
+        byId.set(row.transactionId, transaction);
+        transactions.push(transaction);
       }
-      return transactions
-        .sort((left, right) =>
-          right.transactionDate.localeCompare(left.transactionDate) ||
-        right.sequence - left.sequence)
-        .map((transaction) => ({
-          transactionId: transaction.transactionId,
-          transactionDate: transaction.transactionDate,
-          description: transaction.description,
-          payee: transaction.payee,
-          narration: transaction.narration,
-          postings: transaction.postings
-            .sort((left, right) =>
-              right.postingDate.localeCompare(left.postingDate) || left.id - right.id)
-            .map((posting) => ({
-              postingDate: posting.postingDate,
-              amounts: posting.amounts,
-            })),
-        }));
-    } finally {
-      database.close();
+      let posting = transaction.postings.find((item) => item.id === row.postingId);
+      if (!posting) {
+        posting = { id: row.postingId, postingDate: row.postingDate, amounts: [] };
+        transaction.postings.push(posting);
+      }
+      posting.amounts.push({
+        quantity: row.quantity,
+        commodity: row.commodity,
+        balance: formatDecimal(balance),
+      });
     }
+    return transactions
+      .sort((left, right) =>
+        right.transactionDate.localeCompare(left.transactionDate) ||
+        right.sequence - left.sequence)
+      .map((transaction) => ({
+        transactionId: transaction.transactionId,
+        transactionDate: transaction.transactionDate,
+        description: transaction.description,
+        payee: transaction.payee,
+        narration: transaction.narration,
+        postings: transaction.postings
+          .sort((left, right) =>
+            right.postingDate.localeCompare(left.postingDate) || left.id - right.id)
+          .map((posting) => ({
+            postingDate: posting.postingDate,
+            amounts: posting.amounts,
+          })),
+      }));
   }
 
   return { name: 'accountTransactions', inputSchema: optionsSchema, execute: queryAccountTransactions };

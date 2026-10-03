@@ -1,18 +1,14 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({});
 
-  function queryLedgerAccounts(databasePath, options) {
+  function queryLedgerAccounts(database, options) {
     parseOptions(optionsSchema, options, 'ledgerAccounts');
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      return database.prepare(`
+    return database.prepare(`
       WITH account_names AS (
         SELECT name AS account FROM account_declarations
         UNION
@@ -34,9 +30,6 @@ module.exports = ({
       GROUP BY names.account
       ORDER BY names.account
     `).all();
-    } finally {
-      database.close();
-    }
   }
 
   return { name: 'ledgerAccounts', inputSchema: optionsSchema, execute: queryLedgerAccounts };

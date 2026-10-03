@@ -1,9 +1,8 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
   project: { ensureProjectDatabaseCurrent },
+  databaseReader: { readDatabase },
 }) => {
 
   function toEntry(row, account, related, rowNumber) {
@@ -22,10 +21,7 @@ module.exports = ({
 
   function loadReconciliationEntries(startDirectory) {
     const project = ensureProjectDatabaseCurrent(startDirectory);
-    const database = new Database(path.resolve(project.databasePath), { readonly: true, fileMustExist: true });
-    let rows;
-    try {
-      rows = database.prepare(`
+    const rows = readDatabase(project.databasePath, (database) => database.prepare(`
       SELECT
         t.entry_id AS transactionId,
         p.report_date AS date,
@@ -41,10 +37,7 @@ module.exports = ({
       JOIN journal_entries AS je ON je.id = t.entry_id
       JOIN source_files AS sf ON sf.id = je.source_file_id
       ORDER BY p.report_date, p.id, r.position
-    `).all();
-    } finally {
-      database.close();
-    }
+    `).all());
     const directByAccount = new Map();
     const transactionIdsByAccount = new Map();
     rows.forEach((row, index) => {

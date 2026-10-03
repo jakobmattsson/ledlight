@@ -1,9 +1,6 @@
 'use strict';
 
 module.exports = ({
-  path,
-  sqlite: Database,
-  decimal: { registerDecimalFunctions },
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
   apiOptions: {
@@ -197,20 +194,14 @@ module.exports = ({
     });
   }
 
-  function queryInvestmentPerformance(databasePath, options) {
+  function queryInvestmentPerformance(database, options) {
     const normalized = normalizeOptions(options);
-    const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
-    try {
-      registerDecimalFunctions(database);
-      const valuationCommodity = fromDatabase(database);
-      const commodities = selectedCommodities(database, normalized);
-      if (commodities.length === 0) return calculatePerformance([], [], normalized, [], valuationCommodity);
-      const values = queryDailyValues(database, { ...normalized, from: undefined }, commodities, valuationCommodity);
-      const flows = queryDailyFlows(database, normalized, commodities, valuationCommodity);
-      return calculatePerformance(values, flows, normalized, commodities, valuationCommodity);
-    } finally {
-      database.close();
-    }
+    const valuationCommodity = fromDatabase(database);
+    const commodities = selectedCommodities(database, normalized);
+    if (commodities.length === 0) return calculatePerformance([], [], normalized, [], valuationCommodity);
+    const values = queryDailyValues(database, { ...normalized, from: undefined }, commodities, valuationCommodity);
+    const flows = queryDailyFlows(database, normalized, commodities, valuationCommodity);
+    return calculatePerformance(values, flows, normalized, commodities, valuationCommodity);
   }
 
   return {
