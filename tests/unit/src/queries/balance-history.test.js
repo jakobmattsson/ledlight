@@ -12,7 +12,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { execute: queryBalanceHistoryReport } = resolveQuery('balanceHistoryReport');
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
-const { readDatabase } = resolveRepositoryModule('src/ingestion/database/read.js');
+const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
 
 function balanceHistoryReport(databasePath, options) {
   return readDatabase(databasePath,

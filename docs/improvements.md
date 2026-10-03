@@ -121,8 +121,6 @@ beyond JavaScript's safe integer precision and with long fractional quantities.
 
 - Several `commodity` declarations marked `default` are rejected as a project
   configuration error, including repeated declarations of the same symbol.
-- Replace source-tree scanning plus the manually maintained dependency-injection
-  name map with explicit registration or a generated and verified manifest.
 - Keep extending the Ledger differential corpus whenever syntax or aggregate
   behavior is added or corrected.
 

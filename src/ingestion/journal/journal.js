@@ -6,8 +6,6 @@ module.exports = ({
   publicErrors: { errorCodes, withCode },
 }) => {
 
-  const apiDefinition = Object.freeze({ inputs: ['journalPath'] });
-
   /**
  * Loads an include tree and returns flattened entries plus a SHA-256 source
  * manifest suitable for a future database freshness table.
@@ -22,5 +20,5 @@ module.exports = ({
     }
   }
 
-  return { apiDefinition, loadJournal };
+  return { loadJournal };
 };

@@ -11,84 +11,22 @@ Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
 API option objects reject unknown properties and values of the wrong type.
 
-## Package metadata and errors
+## Errors
 
-### `version`
+Public failures expose a stable string through `error.code`:
 
-The package version string from `package.json`.
+| Code | Meaning |
+| --- | --- |
+| `LEDLIGHT_SYNTAX` | Unsupported or malformed journal syntax |
+| `LEDLIGHT_INVALID_API_INPUT` | Invalid options or arguments supplied by the caller |
+| `LEDLIGHT_PROJECT_CONFIGURATION` | Invalid journal path, configuration, or structure |
+| `LEDLIGHT_MISSING_VALUATION_DATA` | A required default commodity or conversion price is unavailable |
+| `LEDLIGHT_DATABASE` | A database could not be opened, read, or updated |
 
-### `errorCodes`
-
-A frozen object containing stable codes for public failures:
-
-| Name | Value | Meaning |
-| --- | --- | --- |
-| `SYNTAX` | `LEDLIGHT_SYNTAX` | Unsupported or malformed journal syntax |
-| `INVALID_API_INPUT` | `LEDLIGHT_INVALID_API_INPUT` | Invalid options or arguments supplied by the caller |
-| `PROJECT_CONFIGURATION` | `LEDLIGHT_PROJECT_CONFIGURATION` | Invalid journal path, configuration, or structure |
-| `MISSING_VALUATION_DATA` | `LEDLIGHT_MISSING_VALUATION_DATA` | A required default commodity or conversion price is unavailable |
-| `DATABASE` | `LEDLIGHT_DATABASE` | A database could not be opened, read, or updated |
-
-Public errors expose one of these values through `error.code`. Consumers should
-not depend on a Ledlight-specific error class or inspect message text. Syntax
-errors additionally expose `source`, `line`, and `column`; an underlying SQLite
-code is preserved as `sqliteCode` when available.
-
-## Parsing and journal loading
-
-### `parse(sourceText, { source })`
-
-Parses one source string without filesystem access. `source` identifies the
-input in locations and error messages. The result is:
-
-```js
-{
-  source,
-  entries,
-}
-```
-
-Every entry has `type` and `location: { source, line, column }`. Supported entry
-shapes are:
-
-- account and tag declarations: `name`, `comment`, and `location`;
-- commodity declarations: `symbol`, `comment`, `properties`, and `location`;
-- commodity properties: `name`, `value`, `comment`, and `location`;
-- prices: `date`, `commodity`, `price`, `comment`, and `location`;
-- includes: `path`, `comment`, and `location`; and
-- transactions: `date`, `description`, `payee`, `narration`, `comment`, `tags`,
-  `postings`, `notes`, and `location`.
-
-An amount is `{ quantity, commodity }`. Posting amounts can be `null` before
-semantic resolution. A posting can also contain a `lotCost`, transaction
-`cost`, balance assignment, balance assertion, posting date, and comment. Lot
-costs and transaction costs are `{ total, amount }`; `total` distinguishes
-`{{}}` or `@@` from `{}` or `@`. A tag is `{ name, value }`, where `value` is
-`null` for a binary tag. Transaction `tags` combine tags from the transaction
-header and its indented notes. Each note also retains its own `tags` so callers
-can identify the source note. Posting `tags` contain metadata parsed from that
-posting's comment. Transaction notes also contain `text`, optional `key` and
-`value`, and a source location.
-
-Semantic validation requires positive non-default commodity postings to carry
-a lot cost and no transaction price. Negative non-default commodity postings
-must carry both annotations. This rule runs after parsing and therefore reports
-a journal validation error at the posting location rather than a syntax error.
-
-### `loadJournal(journalPath)`
-
-Loads and parses a root journal and its complete include tree. Includes are
-replaced by their entries in deterministic traversal order. The result is:
-
-```js
-{
-  journalPath,
-  files: [{ path, sha256, size }],
-  entries,
-}
-```
-
-Paths are absolute. `entries` use the same structures as `parse`.
+Consumers should compare `error.code` with these strings and should not depend
+on a Ledlight-specific error class or inspect message text. Syntax errors also
+expose `source`, `line`, and `column`; an underlying SQLite code is preserved as
+`sqliteCode` when available.
 
 ## Journal database paths and freshness
 
@@ -115,7 +53,7 @@ Canonicalizes the journal path, compares the source manifest with the stored
 manifest, and rebuilds the database when required. Rebuilds are serialized across
 Ledlight processes. A process that waited for another rebuild checks freshness
 again and reuses the completed database when possible. Waiting is bounded; a
-timeout fails with `errorCodes.DATABASE`. The result is:
+timeout fails with `error.code === 'LEDLIGHT_DATABASE'`. The result is:
 
 ```js
 {

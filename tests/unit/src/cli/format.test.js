@@ -12,7 +12,7 @@ const {
   formatInvestmentPerformance,
   formatInvestmentPerformanceJson,
   formatJson,
-} = resolveRepositoryModule("src/cli/format.js");
+} = resolveRepositoryModule("src/cli/cli-format.js");
 
 const rows = [
   { account: 'Assets:Cash,Main', quantity: '2.005', commodity: 'SEK' },

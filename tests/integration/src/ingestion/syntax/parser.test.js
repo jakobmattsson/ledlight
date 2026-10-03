@@ -4,8 +4,11 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { errorCodes, parse } = resolveRepositoryModule("src/api/index.js");
-const ohmParser = resolveRepositoryModule("src/ingestion/syntax/reference/parser.js").$$private;
+const { errorCodes } = resolveRepositoryModule("src/core/public-errors.js");
+const { parse } = resolveRepositoryModule("src/ingestion/syntax/ledger-parser.js");
+const ohmParser = resolveRepositoryModule(
+  "src/ingestion/syntax/reference/reference-parser.js",
+).$$private;
 
 function parseConformant(sourceText, source) {
   const document = parse(sourceText, { source });

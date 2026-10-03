@@ -1,10 +1,6 @@
 'use strict';
 
 module.exports = ({
-  journal: { loadJournal },
-  packageMetadata: { version },
-  publicErrors: { errorCodes },
-  ledgerParser: { parse },
   project: projectApi,
 }) => {
 
@@ -53,10 +49,6 @@ module.exports = ({
     investmentPerformance,
     databasePathForJournal,
     ensureDatabaseCurrent,
-    errorCodes,
-    loadJournal,
     openJournal,
-    parse,
-    version,
   };
 };

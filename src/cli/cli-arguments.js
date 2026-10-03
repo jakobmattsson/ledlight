@@ -3,15 +3,9 @@
 const { Command, InvalidArgumentError, Option } = require('commander');
 
 module.exports = ({
-  journal: { apiDefinition: loadJournalDefinition },
-  ledgerParser: { apiDefinition: parseDefinition },
   project: { apiDefinitions: projectDefinitions },
 }) => {
-  const definitions = Object.freeze({
-    parse: parseDefinition,
-    loadJournal: loadJournalDefinition,
-    ...projectDefinitions,
-  });
+  const definitions = Object.freeze({ ...projectDefinitions });
 
   const collect = (value, previous) => (previous || []).concat(value);
   const singleValue = (optionName) => (value, previous) => {
@@ -34,9 +28,8 @@ module.exports = ({
     if (settings.apiInput) option.apiInput = settings.apiInput;
     return command.addOption(option);
   }
-  function registerCommand(command, operation, positionalInputs_) {
+  function registerCommand(command, operation) {
     command.apiOperation = operation;
-    command.apiPositionalInputs = positionalInputs_ ?? [];
     return command;
   }
   const addBooleanOption = (command, flags, description, apiInput) => {
@@ -66,19 +59,6 @@ module.exports = ({
       .addHelpCommand(false).exitOverride()
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
-    const parse = registerCommand(
-      program.command('parse <source-text>').description('parse Ledger source text'),
-      'parse',
-      ['sourceText'],
-    );
-    addValueOption(parse, '--source <name>', 'identify the source in locations and errors', {
-      apiInput: 'source',
-    });
-    registerCommand(
-      program.command('load-journal <journal-path>').description('load a journal and its include tree'),
-      'loadJournal',
-      ['journalPath'],
-    );
     for (const [name, operation, description] of [
       ['database-path', 'databasePathForJournal', 'show the journal cache database path'],
       ['ensure-database', 'ensureDatabaseCurrent', 'ensure that the journal database is current'],
@@ -211,10 +191,9 @@ module.exports = ({
       command.apiOperation,
       {
         command: command.name(),
-        inputs: [
-          ...command.apiPositionalInputs,
-          ...command.options.filter((option) => option.apiInput).map((option) => option.apiInput),
-        ],
+        inputs: command.options
+          .filter((option) => option.apiInput)
+          .map((option) => option.apiInput),
       },
     ]));
   }
@@ -231,9 +210,7 @@ module.exports = ({
   const compact = (object) => Object.fromEntries(
     Object.entries(object).filter(([, value]) => value !== undefined),
   );
-  function parsedResult(commandName, options, positional) {
-    if (commandName === 'parse') return { command: commandName, arguments: [positional[0], compact({ source: options.source })] };
-    if (commandName === 'load-journal') return { command: commandName, arguments: [positional[0]] };
+  function parsedResult(commandName, options) {
     const common = { command: commandName, journalPath: options.file };
     if (['database-path', 'ensure-database', 'open-journal', 'commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
@@ -267,7 +244,7 @@ module.exports = ({
     let selectedCommand;
     for (const command of program.commands) command.action((...actionArguments) => {
       const commandObject = actionArguments.at(-1);
-      selectedCommand = { name: command.name(), options: commandObject.opts(), positional: actionArguments.slice(0, -1) };
+      selectedCommand = { name: command.name(), options: commandObject.opts() };
     });
     try {
       program.parse(arguments_, { from: 'user' });
@@ -278,7 +255,7 @@ module.exports = ({
       throw new Error(`${message}\n\n${(command || program).helpInformation().trimEnd()}`);
     }
     if (!selectedCommand) throw new Error(usage());
-    return parsedResult(selectedCommand.name, selectedCommand.options, selectedCommand.positional);
+    return parsedResult(selectedCommand.name, selectedCommand.options);
   }
   const apiInputCoverage = commandCoverage();
   const apiCommands = Object.freeze(Object.fromEntries(

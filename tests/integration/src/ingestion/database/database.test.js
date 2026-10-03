@@ -11,9 +11,9 @@ const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
 const {
   databasePathForJournal,
-  errorCodes,
   openJournal,
-} = resolveRepositoryModule("src/api/index.js");
+} = resolveRepositoryModule("src/core/ledlight.js");
+const { errorCodes } = resolveRepositoryModule("src/core/public-errors.js");
 const {
   ensureDatabaseCurrent,
 } = resolveRepositoryModule("src/ingestion/database/database.js");

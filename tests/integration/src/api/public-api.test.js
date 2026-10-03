@@ -11,7 +11,7 @@ const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
 const cliPath = path.join(ledlightPath, 'src/cli/run.js');
-const { apiCommands } = resolveRepositoryModule('src/cli/arguments.js');
+const { apiCommands } = resolveRepositoryModule('src/cli/cli-arguments.js');
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-api-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
@@ -27,39 +27,19 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
     'balanceHistoryReport',
     'databasePathForJournal',
     'ensureDatabaseCurrent',
-    'errorCodes',
     'gainReport',
     'investmentPerformance',
-    'loadJournal',
     'openJournal',
-    'parse',
-    'version',
   ]);
-  assert.equal(ledlight.version, packageMetadata.version);
-  assert.equal(require.cache[sqliteModulePath], undefined);
-
-  const document = ledlight.parse('account Assets:Cash\n', { source: '<input>' });
-  assert.equal(document.entries[0].name, 'Assets:Cash');
   assert.equal(require.cache[sqliteModulePath], undefined);
 });
 
-test('exposes stable error codes instead of public error classes', (t) => {
+test('exposes stable error code strings instead of public error classes', (t) => {
   const ledlight = require(ledlightPath);
-  assert.deepEqual(ledlight.errorCodes, {
-    SYNTAX: 'LEDLIGHT_SYNTAX',
-    INVALID_API_INPUT: 'LEDLIGHT_INVALID_API_INPUT',
-    PROJECT_CONFIGURATION: 'LEDLIGHT_PROJECT_CONFIGURATION',
-    MISSING_VALUATION_DATA: 'LEDLIGHT_MISSING_VALUATION_DATA',
-    DATABASE: 'LEDLIGHT_DATABASE',
-  });
-  assert.throws(
-    () => ledlight.parse('not supported\n', { source: '<input>' }),
-    (error) => error.code === ledlight.errorCodes.SYNTAX,
-  );
 
   assert.throws(
     () => ledlight.databasePathForJournal('/missing/journal.ledger'),
-    (error) => error.code === ledlight.errorCodes.PROJECT_CONFIGURATION,
+    (error) => error.code === 'LEDLIGHT_PROJECT_CONFIGURATION',
   );
 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-error-codes-'));
@@ -69,16 +49,16 @@ test('exposes stable error codes instead of public error classes', (t) => {
   const journal = ledlight.openJournal(journalPath);
   assert.throws(
     () => journal.aggregateReport({ unknown: true }),
-    (error) => error.code === ledlight.errorCodes.INVALID_API_INPUT,
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
     () => journal.aggregateReport({ inValuationCommodity: true }),
-    (error) => error.code === ledlight.errorCodes.MISSING_VALUATION_DATA,
+    (error) => error.code === 'LEDLIGHT_MISSING_VALUATION_DATA',
   );
   fs.rmSync(journal.databasePath);
   assert.throws(
     () => journal.ledgerAccounts(),
-    (error) => error.code === ledlight.errorCodes.DATABASE,
+    (error) => error.code === 'LEDLIGHT_DATABASE',
   );
 });
 

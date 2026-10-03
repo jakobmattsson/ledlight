@@ -4,9 +4,9 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const createCommand = require('../../../../src/cli/command');
-const cliArguments = resolveRepositoryModule('src/cli/arguments.js');
-const cliFormat = resolveRepositoryModule('src/cli/format.js');
+const createCommand = require('../../../../src/cli/cli-command');
+const cliArguments = resolveRepositoryModule('src/cli/cli-arguments.js');
+const cliFormat = resolveRepositoryModule('src/cli/cli-format.js');
 
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
@@ -48,13 +48,17 @@ test('delegates report behavior to the public Node API and only formats results'
     },
   };
   const ledlight = {
-    version: '1.2.3',
     openJournal(journalPath) {
       calls.push({ operation: 'openJournal', journalPath });
       return journal;
     },
   };
-  const { runReportCommand } = createCommand({ ledlight, cliArguments, cliFormat });
+  const { runReportCommand } = createCommand({
+    ledlight,
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
 
   assert.match(runReportCommand(['--help']), /^Usage:/u);
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
@@ -128,20 +132,20 @@ test('delegates non-report commands to every remaining public API operation', ()
     },
   };
   const ledlight = {
-    version: '1.2.3',
-    parse(...arguments_) { calls.push(['parse', ...arguments_]); return { entries: [] }; },
-    loadJournal(...arguments_) { calls.push(['loadJournal', ...arguments_]); return { entries: [] }; },
     databasePathForJournal(journalPath) { calls.push(['databasePathForJournal', journalPath]); return '/cache/ledger.sqlite'; },
     ensureDatabaseCurrent(journalPath) { calls.push(['ensureDatabaseCurrent', journalPath]); return { rebuilt: true }; },
     accountBalances(journalPath, options) { calls.push(['accountBalances', journalPath, options]); return ['balances']; },
     accountPostings(journalPath, options) { calls.push(['accountPostings', journalPath, options]); return ['postings']; },
     openJournal(journalPath) { calls.push(['openJournal', journalPath]); return journal; },
   };
-  const { runReportCommand } = createCommand({ ledlight, cliArguments, cliFormat });
+  const { runReportCommand } = createCommand({
+    ledlight,
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
   const run = (arguments_) => JSON.parse(runReportCommand(arguments_));
 
-  assert.deepEqual(run(['parse', 'account Assets:Cash\n', '--source', 'input']), { entries: [] });
-  assert.deepEqual(run(['load-journal', '/journal']), { entries: [] });
   assert.equal(run(['database-path', '--file', '/journal']), '/cache/ledger.sqlite');
   assert.deepEqual(run(['ensure-database', '--file', '/journal']), { rebuilt: true });
   assert.deepEqual(run(['open-journal', '--file', '/journal']), { journalPath: '/journal', rebuilt: false });
@@ -159,8 +163,6 @@ test('delegates non-report commands to every remaining public API operation', ()
   ]), '10.5');
 
   assert.deepEqual(calls, [
-    ['parse', 'account Assets:Cash\n', { source: 'input' }],
-    ['loadJournal', '/journal'],
     ['databasePathForJournal', '/journal'],
     ['ensureDatabaseCurrent', '/journal'],
     ['openJournal', '/journal'],

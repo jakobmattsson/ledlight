@@ -25,9 +25,8 @@ version.
 Use the JavaScript API from the package root:
 
 ```js
-const { openJournal, parse } = require('ledlight');
+const { openJournal } = require('ledlight');
 
-const document = parse('account Assets:Cash\n', { source: '<input>' });
 const journal = openJournal('/path/to/books/main.ledger');
 ```
 

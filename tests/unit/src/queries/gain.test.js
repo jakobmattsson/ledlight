@@ -12,7 +12,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { execute: queryGain } = resolveQuery('gainReport');
 const { buildDatabase } = resolveRepositoryModule('src/ingestion/database/database.js').$$private;
-const { readDatabase } = resolveRepositoryModule('src/ingestion/database/read.js');
+const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
 
 function buildFixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-gain-'));
