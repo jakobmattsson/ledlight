@@ -139,6 +139,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ledgerAccounts() { calls.push(['ledgerAccounts']); return ['accounts']; },
     ledgerTransaction(options) { calls.push(['ledgerTransaction', options]); return { id: 7 }; },
     ledgerTransactions(options) { calls.push(['ledgerTransactions', options]); return { page: 2 }; },
+    reconciliationEntries(options) { calls.push(['reconciliationEntries', options]); return ['entries']; },
     ledgerValuationRateResolver() {
       calls.push(['ledgerValuationRateResolver']);
       return (commodity, throughDate) => {
@@ -167,6 +168,9 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(run([
     'ledger-transactions', '--file', '/journal', '--order', 'newest', '--page', '2', '--page-size', '10',
   ]), { page: 2 });
+  assert.deepEqual(run([
+    'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',
+  ]), ['entries']);
   assert.equal(run([
     'valuation-rate', '--file', '/journal', '--commodity', 'EUR', '--through-date', '2024-12-31',
   ]), '10.5');
@@ -179,6 +183,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['ledgerAccounts'],
     ['openJournal', '/journal'], ['ledgerTransaction', { transactionId: '7' }],
     ['openJournal', '/journal'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
+    ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
     ['openJournal', '/journal'], ['ledgerValuationRateResolver'],
     ['resolveRate', 'EUR', '2024-12-31'],
   ]);
