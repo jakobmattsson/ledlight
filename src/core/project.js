@@ -61,8 +61,6 @@ module.exports = ({
   const schemaInputs = (schema) => Object.keys(schema.shape);
   const projectInputs = (schema) => [...schemaInputs(schema), 'startDirectory'];
   const apiDefinitions = Object.freeze({
-    loadProjectPaths: { inputs: ['startDirectory'] },
-    ensureProjectDatabaseCurrent: { inputs: ['startDirectory'] },
     openProject: { inputs: ['startDirectory'] },
     accountBalances: { inputs: projectInputs(accountBalancesOptionsSchema) },
     accountPostings: { inputs: projectInputs(accountPostingsOptionsSchema) },
@@ -140,30 +138,6 @@ module.exports = ({
     return { ...paths, ...ensureDatabaseCurrent(paths.databasePath, paths.journalPath) };
   }
 
-  function aggregateReport(options, startDirectory) {
-    return openProject(startDirectory).aggregateReport(options);
-  }
-
-  function balanceHistoryReport(options, startDirectory) {
-    return openProject(startDirectory).balanceHistoryReport(options);
-  }
-
-  function investmentPerformance(options, startDirectory) {
-    return openProject(startDirectory).investmentPerformance(options);
-  }
-
-  function gainReport(options, startDirectory) {
-    return openProject(startDirectory).gainReport(options);
-  }
-
-  function accountBalances(options, startDirectory) {
-    return openProject(startDirectory).accountBalances(options);
-  }
-
-  function accountPostings(options, startDirectory) {
-    return openProject(startDirectory).accountPostings(options);
-  }
-
   function openProject(startDirectory) {
     const current = ensureProjectDatabaseCurrent(startDirectory);
     const valuationPriceCache = new Map();
@@ -216,12 +190,6 @@ module.exports = ({
 
   return {
     apiDefinitions,
-    accountBalances,
-    accountPostings,
-    aggregateReport,
-    balanceHistoryReport,
-    gainReport,
-    investmentPerformance,
     ensureProjectDatabaseCurrent,
     loadProjectPaths,
     openProject,

@@ -17,17 +17,7 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
   delete require.cache[sqliteModulePath];
 
   const ledlight = require(ledlightPath);
-  assert.deepEqual(Object.keys(ledlight).sort(), [
-    'accountBalances',
-    'accountPostings',
-    'aggregateReport',
-    'balanceHistoryReport',
-    'ensureProjectDatabaseCurrent',
-    'gainReport',
-    'investmentPerformance',
-    'loadProjectPaths',
-    'openProject',
-  ]);
+  assert.deepEqual(Object.keys(ledlight), ['openProject']);
   assert.equal(require.cache[sqliteModulePath], undefined);
 });
 
@@ -37,7 +27,7 @@ test('exposes stable error code strings instead of public error classes', (t) =>
   const missingProject = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-missing-project-'));
   t.after(() => fs.rmSync(missingProject, { recursive: true, force: true }));
   assert.throws(
-    () => ledlight.loadProjectPaths(missingProject),
+    () => ledlight.openProject(missingProject),
     (error) => error.code === 'LEDLIGHT_PROJECT_CONFIGURATION',
   );
 
@@ -69,7 +59,7 @@ test('prints CLI help and the public package version without opening a project',
   );
 });
 
-test('loads SQLite only when a project database operation needs it', (t) => {
+test('loads SQLite only when a project is opened', (t) => {
   delete require.cache[sqliteModulePath];
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-public-api-'));
@@ -80,14 +70,11 @@ test('loads SQLite only when a project database operation needs it', (t) => {
     'commodity SEK\n  default\naccount Assets:Cash\n',
   );
 
-  const paths = ledlight.loadProjectPaths(directory);
-  assert.match(paths.databasePath, /tmp\/ledger\.sqlite$/u);
   assert.equal(require.cache[sqliteModulePath], undefined);
 
-  ledlight.ensureProjectDatabaseCurrent(directory);
-  assert.ok(require.cache[sqliteModulePath]);
-
   const project = ledlight.openProject(directory);
+  assert.match(project.databasePath, /tmp\/ledger\.sqlite$/u);
+  assert.ok(require.cache[sqliteModulePath]);
   const packageOperations = Object.entries(ledlight)
     .filter(([, value]) => typeof value === 'function')
     .map(([name]) => name);

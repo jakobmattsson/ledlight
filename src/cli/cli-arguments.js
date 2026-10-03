@@ -59,11 +59,10 @@ module.exports = ({
       .addHelpCommand(false).exitOverride()
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
-    for (const [name, operation, description] of [
-      ['project-paths', 'loadProjectPaths', 'discover project, journal, and database paths'],
-      ['ensure-database', 'ensureProjectDatabaseCurrent', 'ensure that the project database is current'],
-      ['open-project', 'openProject', 'open a project and print its snapshot metadata'],
-    ]) addDirectory(registerCommand(program.command(name).description(description), operation));
+    addDirectory(registerCommand(
+      program.command('open-project').description('open a project and print its snapshot metadata'),
+      'openProject',
+    ));
 
     const accountBalances = registerCommand(
       program.command('account-balances').description('show balances for one exact account'),
@@ -212,7 +211,7 @@ module.exports = ({
   );
   function parsedResult(commandName, options) {
     const common = { command: commandName, startDirectory: options.directory };
-    if (['project-paths', 'ensure-database', 'open-project', 'commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
+    if (['open-project', 'commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };

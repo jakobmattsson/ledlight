@@ -1,10 +1,9 @@
 # Node.js API reference
 
-Ledlight is a CommonJS module. Import supported operations from the package
-root:
+Ledlight is a CommonJS module. The package root exports only `openProject`:
 
 ```js
-const ledlight = require('ledlight');
+const { openProject } = require('ledlight');
 ```
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
@@ -28,66 +27,25 @@ on a Ledlight-specific error class or inspect message text. Syntax errors also
 expose `source`, `line`, and `column`; an underlying SQLite code is preserved as
 `sqliteCode` when available.
 
-## Project discovery and database freshness
-
-### `loadProjectPaths(startDirectory)`
-
-Searches `startDirectory`, or the current working directory, and its parents
-for `.ledgerrc`. The file must contain exactly one `--file` option. Returns:
-
-```js
-{
-  projectRoot,
-  journalPath,
-  databasePath,
-}
-```
-
-The database path is `<projectRoot>/tmp/ledger.sqlite`.
-
-### `ensureProjectDatabaseCurrent(startDirectory)`
-
-Discovers the project, compares the source manifest with the stored manifest,
-and rebuilds the database when required. Rebuilds are serialized across
-Ledlight processes. A process that waited for another rebuild checks freshness
-again and reuses the completed database when possible. Waiting is bounded; a
-timeout fails with `error.code === 'LEDLIGHT_DATABASE'`. The result contains
-the three project paths plus:
-
-```js
-{
-  rebuilt,
-  status: {
-    databasePath,
-    rootPath,
-    inSync,
-    reason,
-    added,
-    removed,
-    changed,
-  },
-  summary, // present only after a rebuild
-}
-```
-
-The rebuild summary contains source, entry, transaction, posting, price, and
-materialized-valuation counts together with the valuation commodity.
+## Opening a project
 
 ### `openProject(startDirectory)`
 
-Ensures database freshness once and returns a project object. Use this when
-running several operations against one database snapshot. The object contains
-the project paths, freshness result, and all methods documented under
-[Project-only methods](#project-only-methods). It also provides project-bound
-versions of all report and account methods below, without the
-`startDirectory` argument.
+Searches `startDirectory`, or the current working directory, and its parents
+for `.ledgerrc`. The file must contain exactly one `--file` option. It then
+ensures database freshness once and returns a project object. Rebuilds are
+serialized across Ledlight processes, and waiting is bounded.
+
+The object contains `projectRoot`, `journalPath`, `databasePath`, the freshness
+result, and all query methods documented below. The database path is
+`<projectRoot>/tmp/ledger.sqlite`. Reopen the project to observe source changes.
 
 ## Reports
 
-Top-level report functions accept `(options, startDirectory)`. Both arguments
-may be omitted. Project-bound methods accept only `options`.
+Report methods are called on the object returned by `openProject()` and accept
+an optional `options` object.
 
-### `aggregateReport(options, startDirectory)`
+### `project.aggregateReport(options)`
 
 Options:
 
@@ -107,7 +65,7 @@ Ordinary rows are `{ account, quantity, commodity }`, sorted by account and
 commodity. `withValuationValue` adds an exact `valuationValue`. A total row is
 `{ account: 'Total', quantity, commodity, isTotal: true }`.
 
-### `balanceHistoryReport(options, startDirectory)`
+### `project.balanceHistoryReport(options)`
 
 Options are `from`, `to`, `accounts`, `dateBasis`, `invert`, and optional
 `accountFactors`. The first five have the same meanings as in
@@ -126,7 +84,7 @@ Returns daily rows sorted by date:
 
 Amounts are exact decimal strings in the journal default commodity.
 
-### `gainReport(options, startDirectory)`
+### `project.gainReport(options)`
 
 Returns unrealized gains and losses for open non-default commodity positions,
 grouped by account and expressed as exact decimal strings in the journal
@@ -138,7 +96,7 @@ and valuation date, `accounts` contains literal account prefixes, and
 `dateBasis` is `posting` (the default) or `transaction`. When `to` is omitted,
 the latest available journal price is used.
 
-### `investmentPerformance(options, startDirectory)`
+### `project.investmentPerformance(options)`
 
 Options are `from`, `to`, `accounts`, `commodities`, and
 `excludeCommodities`. The three selections are arrays of non-empty strings.
@@ -171,12 +129,12 @@ improvement backlog.
 
 ## Account operations
 
-### `accountBalances({ account, to }, startDirectory)`
+### `project.accountBalances({ account, to })`
 
 Returns `{ quantity, commodity }` rows for one exact account through the
 optional inclusive date. Rows are sorted by commodity.
 
-### `accountPostings({ account, after }, startDirectory)`
+### `project.accountPostings({ account, after })`
 
 Returns resolved amounts for one exact account after the optional exclusive
 date. A row is:
@@ -193,12 +151,9 @@ date. A row is:
 Activity qualifies when either its transaction date or posting date is after
 `after`. Rows are ordered by posting date and journal position.
 
-## Project-only methods
+## Additional project queries
 
-These methods are currently available on the object returned by `openProject`
-but do not have top-level equivalents.
-
-### `commodityDescriptions()`
+### `project.commodityDescriptions()`
 
 Returns one row per declared commodity, sorted by commodity symbol:
 
@@ -215,14 +170,14 @@ Returns one row per declared commodity, sorted by commodity symbol:
 commodity has several declarations, later comments and format properties take
 precedence. Other commodity properties are not currently exposed.
 
-### `accountTransactions({ account })`
+### `project.accountTransactions({ account })`
 
 Returns newest-first transactions containing postings to one exact account.
 Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
 `balance` for that commodity.
 
-### `ledgerAccounts()`
+### `project.ledgerAccounts()`
 
 Returns declared and used accounts sorted by name:
 
@@ -234,21 +189,21 @@ Returns declared and used accounts sorted by name:
 }
 ```
 
-### `ledgerTransaction({ transactionId })`
+### `project.ledgerTransaction({ transactionId })`
 
 Returns one transaction or `null`. The transaction contains
 `transactionId`, `transactionDate`, description, payee, narration, comment,
 and postings. Each posting contains its date, account,
 comment, and exact `{ quantity, commodity }` amounts.
 
-### `ledgerTransactions({ order, page, pageSize })`
+### `project.ledgerTransactions({ order, page, pageSize })`
 
 Returns a paginated transaction collection. `order` is `newest` or `oldest`;
 `page` and `pageSize` are positive integers, and `pageSize` cannot exceed 100.
 The result contains `order`, the selected `page`, `pageSize`,
 `totalTransactions`, `totalPages`, and `transactions`.
 
-### `ledgerValuationRateResolver()`
+### `project.ledgerValuationRateResolver()`
 
 Returns a cached function `resolve(commodity, throughDate)`. The function
 returns the exact rate from `commodity` to the journal default commodity using
@@ -257,10 +212,10 @@ a circular chain is encountered.
 
 ## Command-line parity
 
-Every callable operation in the package API and on the object returned by
-`openProject()` has a CLI command. Run `ledlight --help` for the complete
-command list and per-command parameters. Project-bound commands accept
-`--directory PATH`, corresponding to the API's `startDirectory` argument.
+`openProject()` and every query method on its returned object have a CLI
+command. Run `ledlight --help` for the complete command list and per-command
+parameters. Commands accept `--directory PATH`, corresponding to the
+`startDirectory` passed to `openProject()`.
 
 Commands without an established table format return the API result as JSON.
 The report commands preserve their human-readable formats and accept `--json`
