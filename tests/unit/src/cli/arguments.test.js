@@ -9,11 +9,8 @@ const argumentsModule = resolveRepositoryModule('src/cli/cli-arguments.js');
 const { apiCommands, parseArguments, usage } = argumentsModule;
 const project = resolveRepositoryModule('src/core/project.js');
 
-test('defines one CLI command for every public API operation', () => {
+test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
-    databasePathForJournal: 'database-path',
-    ensureDatabaseCurrent: 'ensure-database',
-    openJournal: 'open-journal',
     accountBalances: 'account-balances',
     accountPostings: 'account-postings',
     aggregateReport: 'aggregate',
@@ -239,6 +236,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /-V, --version\s+show the package version/u);
   assert.match(usage(), /-h, --help\s+show help/u);
   assert.match(usage(), /ledlight <command> --help/u);
+  assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <prefix>/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate/u);

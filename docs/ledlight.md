@@ -53,7 +53,7 @@ See the [package support policy](package.md) for supported Node.js and native
 platforms, module formats, published files, and compatibility guarantees.
 
 The package entry point does not load the native SQLite dependency until a
-database or report operation is called.
+journal is opened.
 
 Open a journal once when running several reports so the source freshness check
 runs once:
@@ -75,7 +75,7 @@ selection, filtering, transformations such as inversion, and calculated rows
 such as totals.
 
 The CLI is a thin adapter over that public module. It may parse command-line
-arguments, map them to public API options, invoke an exported operation, and
+arguments, map them to public API options, invoke a journal operation, and
 format the returned value as human-readable text, CSV, or JSON. Formatting may
 round values for display, align columns, add separators, and encode an existing
 result, but it must not calculate or otherwise change report semantics.
@@ -96,15 +96,12 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `database-path --file PATH` | `databasePathForJournal(journalPath)` | Resolve the cache database path |
-| `ensure-database --file PATH` | `ensureDatabaseCurrent(journalPath)` | Refresh the database |
-| `open-journal --file PATH` | `openJournal(journalPath)` | Open and describe a journal snapshot |
-| `account-balances --file PATH` | `accountBalances(journalPath, options)` | Exact-account balances |
-| `account-postings --file PATH` | `accountPostings(journalPath, options)` | Exact-account postings |
-| `aggregate --file PATH` | `aggregateReport(journalPath, options)` | Report selection and calculation |
-| `balance-history --file PATH` | `balanceHistoryReport(journalPath, options)` | Report selection and calculation |
-| `gain --file PATH` | `gainReport(journalPath, options)` | Unrealized gain or loss by account |
-| `investment-performance --file PATH` | `investmentPerformance(journalPath, options)` | Report selection and calculation |
+| `account-balances --file PATH` | `openJournal(journalPath).accountBalances(options)` | Exact-account balances |
+| `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Exact-account postings |
+| `aggregate --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
+| `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
+| `gain --file PATH` | `openJournal(journalPath).gainReport(options)` | Unrealized gain or loss by account |
+| `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Exact-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `ledger-accounts --file PATH` | `openJournal(journalPath).ledgerAccounts()` | Account metadata |
@@ -132,9 +129,9 @@ underlying result.
 Commands without a specialized human-readable representation emit JSON.
 Report commands accept `--json` when the complete API result is needed; this
 is required to retain fields such as `valuationValue` and `factoredAmount`.
-Tests compare the callable package and journal API inventory with the CLI
-command inventory, verify every parameter mapping, and verify that the command
-adapter delegates calculations to the API before formatting.
+Tests compare the journal method inventory with the CLI command inventory,
+verify every parameter mapping, and verify that the command adapter delegates
+calculations to the API before formatting.
 
 Each report and query module owns a strict Zod schema beside its execution
 function and returns both from its module factory. Public calls are parsed by
@@ -225,12 +222,6 @@ in one transaction. Because the database is a reproducible cache, an older
 supported schema version is recreated from the journal instead of preserving
 and transforming cached rows in place.
 
-```js
-const { ensureDatabaseCurrent } = require('ledlight');
-
-const result = ensureDatabaseCurrent('/path/to/books/main.ledger');
-```
-
 `database_metadata` stores the schema version, root journal path, build time,
 and selected valuation commodity. It is database bookkeeping and is unrelated
 to journal comment metadata.
@@ -275,15 +266,15 @@ than evaluate a string function for every posting. By default there is one row
 per account and commodity:
 
 ```js
-const { aggregateReport } = require('ledlight');
-const journalPath = '/path/to/books/main.ledger';
+const { openJournal } = require('ledlight');
+const journal = openJournal('/path/to/books/main.ledger');
 
-const balanceSheet = aggregateReport(journalPath, {
+const balanceSheet = journal.aggregateReport({
   to: '2024-12-31',
   accounts: ['Assets:', 'Liabilities:'],
   dateBasis: 'transaction',
 });
-const valuedIncomeStatement = aggregateReport(journalPath, {
+const valuedIncomeStatement = journal.aggregateReport({
   from: '2024-01-01',
   to: '2024-12-31',
   accounts: ['Income:', 'Expenses:'],
@@ -311,7 +302,7 @@ and does not apply commodity display separators. With `--value`, CSV amounts
 retain the existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the human-readable total.
 
-The same behavior is available directly through `aggregateReport`: set
+The same behavior is available directly through `journal.aggregateReport`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append the total row. `includeTotal` requires `inValuationCommodity: true`, so
 the quantities have one common commodity. The CLI requests this total for
@@ -392,10 +383,10 @@ because their market value can still change. The `dateBasis` option is either
 `posting` (the default) or `transaction`.
 
 ```js
-const { balanceHistoryReport } = require('ledlight');
-const journalPath = '/path/to/books/main.ledger';
+const { openJournal } = require('ledlight');
+const journal = openJournal('/path/to/books/main.ledger');
 
-const history = balanceHistoryReport(journalPath, {
+const history = journal.balanceHistoryReport({
   accounts: ['Assets:', 'Liabilities:'],
 });
 ```
@@ -406,7 +397,7 @@ This supports views such as after-tax balances without losing the single daily
 query for an account group:
 
 ```js
-const history = balanceHistoryReport(journalPath, {
+const history = journal.balanceHistoryReport({
   accounts: ['Assets:', 'Liabilities:'],
   accountFactors: {
     'Assets:Pension': '0.7',

@@ -61,12 +61,6 @@ module.exports = ({
     program.addOption(new Option('-V, --version', 'show the package version'));
     program.addOption(new Option('-h, --help', 'show help'));
 
-    for (const [name, operation, description] of [
-      ['database-path', 'databasePathForJournal', 'show the journal cache database path'],
-      ['ensure-database', 'ensureDatabaseCurrent', 'ensure that the journal database is current'],
-      ['open-journal', 'openJournal', 'open a journal and print its snapshot metadata'],
-    ]) addJournal(registerCommand(program.command(name).description(description), operation));
-
     const accountBalances = registerCommand(
       program.command('account-balances').description('show balances for one exact account'),
       'accountBalances',
@@ -220,7 +214,7 @@ module.exports = ({
   );
   function parsedResult(commandName, options) {
     const common = { command: commandName, journalPath: options.file };
-    if (['database-path', 'ensure-database', 'open-journal', 'commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
+    if (['commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };

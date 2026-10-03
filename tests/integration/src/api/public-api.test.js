@@ -20,17 +20,7 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
   delete require.cache[sqliteModulePath];
 
   const ledlight = require(ledlightPath);
-  assert.deepEqual(Object.keys(ledlight).sort(), [
-    'accountBalances',
-    'accountPostings',
-    'aggregateReport',
-    'balanceHistoryReport',
-    'databasePathForJournal',
-    'ensureDatabaseCurrent',
-    'gainReport',
-    'investmentPerformance',
-    'openJournal',
-  ]);
+  assert.deepEqual(Object.keys(ledlight), ['openJournal']);
   assert.equal(require.cache[sqliteModulePath], undefined);
 });
 
@@ -38,7 +28,7 @@ test('exposes stable error code strings instead of public error classes', (t) =>
   const ledlight = require(ledlightPath);
 
   assert.throws(
-    () => ledlight.databasePathForJournal('/missing/journal.ledger'),
+    () => ledlight.openJournal('/missing/journal.ledger'),
     (error) => error.code === 'LEDLIGHT_PROJECT_CONFIGURATION',
   );
 
@@ -70,7 +60,7 @@ test('prints CLI help and the public package version without opening a project',
   );
 });
 
-test('loads SQLite only when a journal database operation needs it', (t) => {
+test('loads SQLite only when a journal is opened', (t) => {
   delete require.cache[sqliteModulePath];
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-public-api-'));
@@ -81,25 +71,19 @@ test('loads SQLite only when a journal database operation needs it', (t) => {
     'commodity SEK\n  default\naccount Assets:Cash\n',
   );
 
-  const databasePath = ledlight.databasePathForJournal(journalPath);
-  assert.match(databasePath, /journals\/[a-f\d]{64}\/ledger\.sqlite$/u);
-  assert.equal(databasePath.startsWith(cacheDirectory), true);
   assert.equal(require.cache[sqliteModulePath], undefined);
 
-  ledlight.ensureDatabaseCurrent(journalPath);
-  assert.ok(require.cache[sqliteModulePath]);
-
   const journal = ledlight.openJournal(journalPath);
-  const packageOperations = Object.entries(ledlight)
-    .filter(([, value]) => typeof value === 'function')
-    .map(([name]) => name);
+  assert.match(journal.databasePath, /journals\/[a-f\d]{64}\/ledger\.sqlite$/u);
+  assert.equal(journal.databasePath.startsWith(cacheDirectory), true);
+  assert.ok(require.cache[sqliteModulePath]);
   const journalOperations = Object.entries(journal)
     .filter(([, value]) => typeof value === 'function')
     .map(([name]) => name);
   assert.deepEqual(
-    [...new Set([...packageOperations, ...journalOperations])].sort(),
+    journalOperations.sort(),
     Object.keys(apiCommands).sort(),
-    'every callable public API operation must have a CLI command',
+    'every journal operation must have a CLI command',
   );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
   assert.deepEqual(journal.accountBalances({ account: 'Assets:Cash' }), []);

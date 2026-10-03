@@ -90,7 +90,8 @@ test('the published archive installs and exposes the module and CLI', () => {
       const assert = require('node:assert/strict');
       const ledlight = require('ledlight');
       assert.equal(typeof ledlight.openJournal, 'function');
-      assert.deepEqual(ledlight.aggregateReport(${JSON.stringify(journalPath)}, {}), [
+      assert.deepEqual(Object.keys(ledlight), ['openJournal']);
+      assert.deepEqual(ledlight.openJournal(${JSON.stringify(journalPath)}).aggregateReport({}), [
         { account: 'Assets:Cash', quantity: '10', commodity: 'USD' },
         { account: 'Equity:Opening', quantity: '-10', commodity: 'USD' },
       ]);

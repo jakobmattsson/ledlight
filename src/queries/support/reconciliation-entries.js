@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  project: { ensureDatabaseCurrent },
+  project: { ensureJournalCurrent },
   databaseReader: { readDatabase },
 }) => {
 
@@ -20,7 +20,7 @@ module.exports = ({
   }
 
   function loadReconciliationEntries(journalPath) {
-    const journal = ensureDatabaseCurrent(journalPath);
+    const journal = ensureJournalCurrent(journalPath);
     const rows = readDatabase(journal.databasePath, (database) => database.prepare(`
       SELECT
         t.entry_id AS transactionId,

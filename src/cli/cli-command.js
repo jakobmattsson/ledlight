@@ -14,27 +14,11 @@ module.exports = ({
   },
 }) => {
 
-  function jsonJournalSnapshot(journal) {
-    return Object.fromEntries(Object.entries(journal).filter(([, value]) => typeof value !== 'function'));
-  }
-
   function runJsonCommand(parsed) {
     const { command, journalPath, options } = parsed;
-    if (command === 'database-path') return formatJson(ledlight.databasePathForJournal(journalPath));
-    if (command === 'ensure-database') {
-      return formatJson(ledlight.ensureDatabaseCurrent(journalPath));
-    }
-    if (command === 'open-journal') {
-      return formatJson(jsonJournalSnapshot(ledlight.openJournal(journalPath)));
-    }
-    if (command === 'account-balances') {
-      return formatJson(ledlight.accountBalances(journalPath, options));
-    }
-    if (command === 'account-postings') {
-      return formatJson(ledlight.accountPostings(journalPath, options));
-    }
-
     const journal = ledlight.openJournal(journalPath);
+    if (command === 'account-balances') return formatJson(journal.accountBalances(options));
+    if (command === 'account-postings') return formatJson(journal.accountPostings(options));
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
     if (command === 'commodity-descriptions') return formatJson(journal.commodityDescriptions());
     if (command === 'ledger-accounts') return formatJson(journal.ledgerAccounts());
