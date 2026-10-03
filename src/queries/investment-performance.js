@@ -6,35 +6,30 @@ module.exports = ({
   apiOptions: {
     assertDateInterval,
     parseOptions,
-    stringList,
   },
   investmentReturns: { calculatePerformance },
   valuationCommodity: { fromDatabase },
   zod: { z },
 }) => {
 
+  const uniqueStringList = z.array(z.string().min(1))
+    .default([])
+    .transform((values) => [...new Set(values)]);
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1)).optional(),
-    commodities: z.array(z.string().min(1)).optional(),
-    excludeCommodities: z.array(z.string().min(1)).optional(),
+    accounts: uniqueStringList,
+    commodities: uniqueStringList,
+    excludeCommodities: uniqueStringList,
     from: z.string().optional(),
     to: z.string().optional(),
   });
 
-  function normalizeOptions(options) {
+  function parseReportOptions(options) {
     const input = parseOptions(optionsSchema, options, 'investmentPerformance');
-    const normalized = {
-      from: input.from,
-      to: input.to,
-      accounts: stringList(input.accounts, 'accounts', true),
-      commodities: stringList(input.commodities, 'commodities', true),
-      excludeCommodities: stringList(input.excludeCommodities, 'excludeCommodities', true),
-    };
-    assertDateInterval(normalized.from, normalized.to);
-    if (normalized.commodities.some((commodity) => normalized.excludeCommodities.includes(commodity))) {
+    assertDateInterval(input.from, input.to);
+    if (input.commodities.some((commodity) => input.excludeCommodities.includes(commodity))) {
       throw createError(errorCodes.INVALID_API_INPUT, 'A commodity cannot be both included and excluded', TypeError);
     }
-    return normalized;
+    return input;
   }
 
   function selectedCommodities(database, options) {
@@ -195,13 +190,13 @@ module.exports = ({
   }
 
   function queryInvestmentPerformance(database, options) {
-    const normalized = normalizeOptions(options);
+    const reportOptions = parseReportOptions(options);
     const valuationCommodity = fromDatabase(database);
-    const commodities = selectedCommodities(database, normalized);
-    if (commodities.length === 0) return calculatePerformance([], [], normalized, [], valuationCommodity);
-    const values = queryDailyValues(database, { ...normalized, from: undefined }, commodities, valuationCommodity);
-    const flows = queryDailyFlows(database, normalized, commodities, valuationCommodity);
-    return calculatePerformance(values, flows, normalized, commodities, valuationCommodity);
+    const commodities = selectedCommodities(database, reportOptions);
+    if (commodities.length === 0) return calculatePerformance([], [], reportOptions, [], valuationCommodity);
+    const values = queryDailyValues(database, { ...reportOptions, from: undefined }, commodities, valuationCommodity);
+    const flows = queryDailyFlows(database, reportOptions, commodities, valuationCommodity);
+    return calculatePerformance(values, flows, reportOptions, commodities, valuationCommodity);
   }
 
   return {

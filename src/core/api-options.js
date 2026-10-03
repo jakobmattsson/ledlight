@@ -23,21 +23,6 @@ module.exports = ({ publicErrors: { createError, errorCodes } }) => {
     throw invalidInput(`${name}${issue.message}`);
   }
 
-  function booleanOption(input, name) {
-    const value = input[name];
-    if (value === undefined) return false;
-    if (typeof value !== 'boolean') throw invalidInput(`${name} must be a boolean`);
-    return value;
-  }
-
-  function stringList(value, name, deduplicate) {
-    const result = value ?? [];
-    if (!Array.isArray(result) || result.some((item) => typeof item !== 'string' || item.length === 0)) {
-      throw invalidInput(`${name} must be an array of non-empty strings`);
-    }
-    return deduplicate ? [...new Set(result)] : [...result];
-  }
-
   function assertDate(value, name) {
     if (value === undefined) return;
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) {
@@ -56,20 +41,9 @@ module.exports = ({ publicErrors: { createError, errorCodes } }) => {
     if (from && to && from > to) throw invalidInput(`--from date ${from} is after --to date ${to}`);
   }
 
-  function dateBasis(value) {
-    const normalized = value ?? 'posting';
-    if (normalized !== 'posting' && normalized !== 'transaction') {
-      throw invalidInput(`Invalid dateBasis: ${JSON.stringify(normalized)}; expected posting or transaction`);
-    }
-    return normalized;
-  }
-
   return {
     assertDate,
     assertDateInterval,
-    booleanOption,
-    dateBasis,
     parseOptions,
-    stringList,
   };
 };

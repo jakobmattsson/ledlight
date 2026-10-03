@@ -12,9 +12,7 @@ module.exports = ({
   accountPrefixFilter: { accountPrefixFilter },
   apiOptions: {
     assertDate,
-    dateBasis,
     parseOptions,
-    stringList,
   },
   valuationRates: { queryValuationRates },
   valuationCommodity: { fromDatabase },
@@ -23,20 +21,15 @@ module.exports = ({
 
   const ZERO = parseDecimal('0');
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1)).optional(),
-    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).optional(),
+    accounts: z.array(z.string().min(1)).default([]),
+    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
     to: z.string().optional(),
   });
 
-  function normalizeOptions(options) {
+  function parseReportOptions(options) {
     const input = parseOptions(optionsSchema, options, 'gainReport');
-    const normalized = {
-      accounts: stringList(input.accounts, 'accounts', false),
-      dateBasis: dateBasis(input.dateBasis),
-      to: input.to,
-    };
-    assertDate(normalized.to, '--to');
-    return normalized;
+    assertDate(input.to, '--to');
+    return input;
   }
 
   function reportFilter(options, valuationCommodity) {
@@ -110,12 +103,12 @@ module.exports = ({
   }
 
   function queryGain(database, options, { valuationPriceCache }) {
-    const normalizedOptions = normalizeOptions(options);
+    const reportOptions = parseReportOptions(options);
     const valuationCommodity = fromDatabase(database);
-    const positions = queryPositions(database, normalizedOptions, valuationCommodity);
+    const positions = queryPositions(database, reportOptions, valuationCommodity);
     const rates = queryValuationRates(
       database,
-      normalizedOptions.to,
+      reportOptions.to,
       new Set(positions.map((position) => position.commodity)),
       valuationPriceCache,
     );

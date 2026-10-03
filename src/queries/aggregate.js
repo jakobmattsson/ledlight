@@ -12,10 +12,7 @@ module.exports = ({
   publicErrors: { createError, errorCodes },
   apiOptions: {
     assertDateInterval,
-    booleanOption,
-    dateBasis,
     parseOptions,
-    stringList,
   },
   valuationRates: { queryValuationRates },
   valuationCommodity: { fromDatabase },
@@ -23,36 +20,26 @@ module.exports = ({
 }) => {
 
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1)).optional(),
-    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).optional(),
+    accounts: z.array(z.string().min(1)).default([]),
+    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
     from: z.string().optional(),
-    includeTotal: z.boolean({ error: 'must be a boolean' }).optional(),
-    inValuationCommodity: z.boolean({ error: 'must be a boolean' }).optional(),
-    invert: z.boolean({ error: 'must be a boolean' }).optional(),
+    includeTotal: z.boolean({ error: 'must be a boolean' }).default(false),
+    inValuationCommodity: z.boolean({ error: 'must be a boolean' }).default(false),
+    invert: z.boolean({ error: 'must be a boolean' }).default(false),
     to: z.string().optional(),
-    withValuationValue: z.boolean({ error: 'must be a boolean' }).optional(),
+    withValuationValue: z.boolean({ error: 'must be a boolean' }).default(false),
   });
 
-  function normalizeOptions(options) {
+  function parseReportOptions(options) {
     const input = parseOptions(optionsSchema, options, 'aggregateReport');
-    const normalized = {
-      from: input.from,
-      to: input.to,
-      accounts: stringList(input.accounts, 'accounts', false),
-      dateBasis: dateBasis(input.dateBasis),
-      inValuationCommodity: booleanOption(input, 'inValuationCommodity'),
-      includeTotal: booleanOption(input, 'includeTotal'),
-      invert: booleanOption(input, 'invert'),
-      withValuationValue: booleanOption(input, 'withValuationValue'),
-    };
-    assertDateInterval(normalized.from, normalized.to);
-    if (normalized.inValuationCommodity && normalized.withValuationValue) {
+    assertDateInterval(input.from, input.to);
+    if (input.inValuationCommodity && input.withValuationValue) {
       throw createError(errorCodes.INVALID_API_INPUT, 'inValuationCommodity and withValuationValue cannot be used together', TypeError);
     }
-    if (normalized.includeTotal && !normalized.inValuationCommodity) {
+    if (input.includeTotal && !input.inValuationCommodity) {
       throw createError(errorCodes.INVALID_API_INPUT, 'includeTotal requires inValuationCommodity', TypeError);
     }
-    return normalized;
+    return input;
   }
 
   function reportFilter(options) {
@@ -166,14 +153,14 @@ module.exports = ({
   }
 
   function queryAggregate(database, options, { valuationPriceCache }) {
-    const normalizedOptions = normalizeOptions(options);
-    const commodityTotals = queryCommodityTotals(database, normalizedOptions);
-    const rows = normalizedOptions.inValuationCommodity
-      ? queryValuationTotals(database, normalizedOptions, commodityTotals, valuationPriceCache)
-      : normalizedOptions.withValuationValue
-        ? withValuationValues(database, normalizedOptions, commodityTotals, valuationPriceCache)
+    const reportOptions = parseReportOptions(options);
+    const commodityTotals = queryCommodityTotals(database, reportOptions);
+    const rows = reportOptions.inValuationCommodity
+      ? queryValuationTotals(database, reportOptions, commodityTotals, valuationPriceCache)
+      : reportOptions.withValuationValue
+        ? withValuationValues(database, reportOptions, commodityTotals, valuationPriceCache)
         : commodityTotals;
-    return transformRows(rows, normalizedOptions);
+    return transformRows(rows, reportOptions);
   }
 
   return { name: 'aggregateReport', inputSchema: optionsSchema, execute: queryAggregate };
