@@ -8,10 +8,7 @@ module.exports = ({
   },
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
-  apiOptions: {
-    assertDateInterval,
-    parseOptions,
-  },
+  apiOptions: { parseOptions },
   valuationCommodity: { fromDatabase },
   zod: { z },
 }) => {
@@ -40,16 +37,18 @@ module.exports = ({
     accountFactors: accountFactorsSchema,
     accounts: z.array(z.string().min(1)).default([]),
     dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
-    from: z.string().optional(),
+    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
     invert: z.boolean({ error: 'must be a boolean' }).default(false),
-    to: z.string().optional(),
+    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
+  }).superRefine((input, context) => {
+    if (input.from && input.to && input.from > input.to) {
+      context.addIssue({
+        code: 'custom',
+        message: `--from date ${input.from} is after --to date ${input.to}`,
+        path: ['from'],
+      });
+    }
   });
-
-  function parseReportOptions(options) {
-    const input = parseOptions(optionsSchema, options, 'balanceHistoryReport');
-    assertDateInterval(input.from, input.to);
-    return input;
-  }
 
   function selectBalanceHistory(database, options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
@@ -189,7 +188,7 @@ module.exports = ({
   }
 
   function queryBalanceHistory(database, options) {
-    const reportOptions = parseReportOptions(options);
+    const reportOptions = parseOptions(optionsSchema, options, 'balanceHistoryReport');
     return selectBalanceHistory(database, reportOptions, fromDatabase(database));
   }
 

@@ -9,11 +9,7 @@ module.exports = ({
     parseDecimal,
   },
   accountPrefixFilter: { accountPrefixFilter },
-  publicErrors: { createError, errorCodes },
-  apiOptions: {
-    assertDateInterval,
-    parseOptions,
-  },
+  apiOptions: { parseOptions },
   valuationRates: { queryValuationRates },
   valuationCommodity: { fromDatabase },
   zod: { z },
@@ -22,25 +18,33 @@ module.exports = ({
   const optionsSchema = z.strictObject({
     accounts: z.array(z.string().min(1)).default([]),
     dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
-    from: z.string().optional(),
+    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
     includeTotal: z.boolean({ error: 'must be a boolean' }).default(false),
     inValuationCommodity: z.boolean({ error: 'must be a boolean' }).default(false),
     invert: z.boolean({ error: 'must be a boolean' }).default(false),
-    to: z.string().optional(),
+    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
     withValuationValue: z.boolean({ error: 'must be a boolean' }).default(false),
-  });
-
-  function parseReportOptions(options) {
-    const input = parseOptions(optionsSchema, options, 'aggregateReport');
-    assertDateInterval(input.from, input.to);
+  }).superRefine((input, context) => {
+    if (input.from && input.to && input.from > input.to) {
+      context.addIssue({
+        code: 'custom',
+        message: `--from date ${input.from} is after --to date ${input.to}`,
+        path: ['from'],
+      });
+    }
     if (input.inValuationCommodity && input.withValuationValue) {
-      throw createError(errorCodes.INVALID_API_INPUT, 'inValuationCommodity and withValuationValue cannot be used together', TypeError);
+      context.addIssue({
+        code: 'custom',
+        message: 'inValuationCommodity and withValuationValue cannot be used together',
+      });
     }
     if (input.includeTotal && !input.inValuationCommodity) {
-      throw createError(errorCodes.INVALID_API_INPUT, 'includeTotal requires inValuationCommodity', TypeError);
+      context.addIssue({
+        code: 'custom',
+        message: 'includeTotal requires inValuationCommodity',
+      });
     }
-    return input;
-  }
+  });
 
   function reportFilter(options) {
     const clauses = [];
@@ -153,7 +157,7 @@ module.exports = ({
   }
 
   function queryAggregate(database, options, { valuationPriceCache }) {
-    const reportOptions = parseReportOptions(options);
+    const reportOptions = parseOptions(optionsSchema, options, 'aggregateReport');
     const commodityTotals = queryCommodityTotals(database, reportOptions);
     const rows = reportOptions.inValuationCommodity
       ? queryValuationTotals(database, reportOptions, commodityTotals, valuationPriceCache)

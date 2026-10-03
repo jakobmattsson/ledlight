@@ -3,10 +3,7 @@
 module.exports = ({
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
-  apiOptions: {
-    assertDateInterval,
-    parseOptions,
-  },
+  apiOptions: { parseOptions },
   investmentReturns: { calculatePerformance },
   valuationCommodity: { fromDatabase },
   zod: { z },
@@ -19,18 +16,23 @@ module.exports = ({
     accounts: uniqueStringList,
     commodities: uniqueStringList,
     excludeCommodities: uniqueStringList,
-    from: z.string().optional(),
-    to: z.string().optional(),
-  });
-
-  function parseReportOptions(options) {
-    const input = parseOptions(optionsSchema, options, 'investmentPerformance');
-    assertDateInterval(input.from, input.to);
-    if (input.commodities.some((commodity) => input.excludeCommodities.includes(commodity))) {
-      throw createError(errorCodes.INVALID_API_INPUT, 'A commodity cannot be both included and excluded', TypeError);
+    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
+    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
+  }).superRefine((input, context) => {
+    if (input.from && input.to && input.from > input.to) {
+      context.addIssue({
+        code: 'custom',
+        message: `--from date ${input.from} is after --to date ${input.to}`,
+        path: ['from'],
+      });
     }
-    return input;
-  }
+    if (input.commodities.some((commodity) => input.excludeCommodities.includes(commodity))) {
+      context.addIssue({
+        code: 'custom',
+        message: 'A commodity cannot be both included and excluded',
+      });
+    }
+  });
 
   function selectedCommodities(database, options) {
     if (options.commodities.length > 0) return options.commodities;
@@ -190,7 +192,7 @@ module.exports = ({
   }
 
   function queryInvestmentPerformance(database, options) {
-    const reportOptions = parseReportOptions(options);
+    const reportOptions = parseOptions(optionsSchema, options, 'investmentPerformance');
     const valuationCommodity = fromDatabase(database);
     const commodities = selectedCommodities(database, reportOptions);
     if (commodities.length === 0) return calculatePerformance([], [], reportOptions, [], valuationCommodity);
