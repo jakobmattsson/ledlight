@@ -39,6 +39,11 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(postingColumns.includes('lot_cost_quantity'));
   assert.ok(postingColumns.includes('lot_cost_commodity'));
   assert.ok(postingColumns.includes('lot_cost_is_total'));
+  assert.deepEqual(
+    database.pragma('index_info(postings_account_report_date)')
+      .map((column) => column.name),
+    ['account', 'report_date'],
+  );
   const transactionColumns = database.pragma('table_info(transactions)').map((column) => column.name);
   assert.ok(!transactionColumns.includes('status'));
   assert.ok(!transactionColumns.includes('code'));

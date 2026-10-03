@@ -47,6 +47,10 @@ account Equity:Opening
 test('returns exact-account balances by commodity through an inclusive date', (t) => {
   const project = createProject(t);
 
+  assert.deepEqual(project.accountBalances({ account: 'Assets:Closed' }), [
+    { commodity: 'FUND', quantity: '0' },
+    { commodity: 'SEK', quantity: '1' },
+  ]);
   assert.deepEqual(project.accountBalances({ account: 'Assets:Closed', to: '2023-01-02' }), [
     { commodity: 'FUND', quantity: '0' },
     { commodity: 'SEK', quantity: '0' },
@@ -56,6 +60,7 @@ test('returns exact-account balances by commodity through an inclusive date', (t
 test('returns exact-account activity after either its transaction or posting date', (t) => {
   const project = createProject(t);
 
+  assert.equal(project.accountPostings({ account: 'Assets:Closed' }).length, 5);
   assert.deepEqual(project.accountPostings({ account: 'Assets:Closed', after: '2023-01-02' }), [
     {
       transactionDate: '2023-01-02',

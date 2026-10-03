@@ -11,16 +11,15 @@ module.exports = ({
 
   function queryAccountBalances(database, options) {
     const { account, to } = parseOptions(optionsSchema, options, 'accountBalances');
-    const dateFilter = to === undefined ? '' : 'AND p.report_date <= ?';
-    const parameters = to === undefined ? [account] : [account, to];
     return database.prepare(`
       SELECT r.commodity, decimal_sum(r.quantity) AS quantity
       FROM resolved_posting_amounts AS r
       JOIN postings AS p ON p.id = r.posting_id
-      WHERE p.account = ? ${dateFilter}
+      WHERE p.account = ?
+        AND p.report_date <= COALESCE(?, '9999-12-31')
       GROUP BY r.commodity
       ORDER BY r.commodity
-    `).all(...parameters);
+    `).all(account, to ?? null);
   }
 
   return { name: 'accountBalances', inputSchema: optionsSchema, execute: queryAccountBalances };

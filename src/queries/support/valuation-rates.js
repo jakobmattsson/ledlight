@@ -21,15 +21,13 @@ module.exports = ({
 
   function selectLatestPrices(database, throughDate) {
     const prices = new Map();
-    const dateFilter = throughDate ? 'WHERE p.date <= ?' : '';
-    const parameters = throughDate ? [throughDate] : [];
     const rows = database.prepare(`
     SELECT p.base_commodity, p.quote_quantity, p.quote_commodity
     FROM prices AS p
     JOIN journal_entries AS e ON e.id = p.entry_id
-    ${dateFilter}
+    WHERE p.date <= COALESCE(?, '9999-12-31')
     ORDER BY p.base_commodity, p.date DESC, e.sequence DESC
-  `).all(...parameters);
+  `).all(throughDate ?? null);
     for (const row of rows) {
       if (!prices.has(row.base_commodity)) prices.set(row.base_commodity, row);
     }
@@ -76,11 +74,11 @@ module.exports = ({
       WHERE date = (
         SELECT MAX(date)
         FROM valuation_prices
-        WHERE (? IS NULL OR date <= ?)
+        WHERE date <= COALESCE(?, '9999-12-31')
       )
         AND commodity IN (${placeholders})
       ORDER BY commodity
-    `).all(throughDate ?? null, throughDate ?? null, ...selected);
+    `).all(throughDate ?? null, ...selected);
     for (const row of rows) rates.set(row.commodity, row.rate);
     return rates;
   }
@@ -111,15 +109,13 @@ module.exports = ({
   }
 
   function selectPriceHistory(database, throughDate) {
-    const dateFilter = throughDate ? 'WHERE p.date <= ?' : '';
-    const parameters = throughDate ? [throughDate] : [];
     return database.prepare(`
     SELECT p.date, p.base_commodity, p.quote_quantity, p.quote_commodity
     FROM prices AS p
     JOIN journal_entries AS e ON e.id = p.entry_id
-    ${dateFilter}
+    WHERE p.date <= COALESCE(?, '9999-12-31')
     ORDER BY p.base_commodity, p.date, e.sequence
-  `).all(...parameters);
+  `).all(throughDate ?? null);
   }
 
   function queryLedgerValuationRateResolver(database) {

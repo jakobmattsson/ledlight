@@ -11,10 +11,6 @@ module.exports = ({
 
   function queryAccountPostings(database, options) {
     const { account, after } = parseOptions(optionsSchema, options, 'accountPostings');
-    const dateFilter = after === undefined
-      ? ''
-      : 'AND (t.date > ? OR p.report_date > ?)';
-    const parameters = after === undefined ? [account] : [account, after, after];
     return database.prepare(`
       SELECT
         t.date AS transactionDate,
@@ -24,9 +20,13 @@ module.exports = ({
       FROM resolved_posting_amounts AS r
       JOIN postings AS p ON p.id = r.posting_id
       JOIN transactions AS t ON t.entry_id = p.transaction_id
-      WHERE p.account = ? ${dateFilter}
+      WHERE p.account = ?
+        AND (
+          t.date > COALESCE(?, '0000-00-00')
+          OR p.report_date > COALESCE(?, '0000-00-00')
+        )
       ORDER BY p.report_date, p.id, r.position
-    `).all(...parameters);
+    `).all(account, after ?? null, after ?? null);
   }
 
   return { name: 'accountPostings', inputSchema: optionsSchema, execute: queryAccountPostings };
