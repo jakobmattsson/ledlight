@@ -17,7 +17,7 @@ const { readDatabase } = resolveRepositoryModule('src/ingestion/database/databas
 
 function investmentPerformance(databasePath, options) {
   return readDatabase(databasePath,
-    (database) => queryInvestmentPerformance(database, options));
+    (database) => queryInvestmentPerformance(database, options, { valuationPriceCache: new Map() }));
 }
 
 function buildFixture(t) {

@@ -52,6 +52,8 @@ test('each query module is exposed through the query collection', () => {
     assert.equal(typeof query.inputSchema?.safeParse, 'function',
       `${fileName} must expose inputSchema`);
     assert.equal(typeof query.execute, 'function', `${fileName} must expose execute`);
+    assert.equal(query.execute.length, 3,
+      `${fileName} execute must accept database, options, and caches`);
     assert.ok(Object.isFrozen(query), `${fileName} must be immutable`);
   }
 });

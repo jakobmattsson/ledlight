@@ -49,9 +49,10 @@ P 2024-02-01 ETF 60 USD
   return databasePath;
 }
 
-function gainReport(databasePath, options) {
+function gainReport(databasePath, options, caches) {
+  const queryCaches = caches ?? { valuationPriceCache: new Map() };
   return readDatabase(databasePath,
-    (database) => queryGain(database, options, { valuationPriceCache: new Map() }));
+    (database) => queryGain(database, options, queryCaches));
 }
 
 test('returns unrealized gains and losses by account in the default commodity', (t) => {

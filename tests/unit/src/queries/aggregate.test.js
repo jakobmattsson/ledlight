@@ -14,9 +14,10 @@ const { execute: queryAggregate } = resolveQuery('aggregateReport');
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
 const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
 
-function aggregateReport(databasePath, options) {
+function aggregateReport(databasePath, options, caches) {
+  const queryCaches = caches ?? { valuationPriceCache: new Map() };
   return readDatabase(databasePath,
-    (database) => queryAggregate(database, options, { valuationPriceCache: new Map() }));
+    (database) => queryAggregate(database, options, queryCaches));
 }
 
 function buildFixture(t) {

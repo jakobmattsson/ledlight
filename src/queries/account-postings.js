@@ -9,7 +9,7 @@ module.exports = ({
     after: z.iso.date({ error: 'Invalid after date' }).optional(),
   });
 
-  function queryAccountPostings(database, options) {
+  function queryAccountPostings(database, options, _caches) {
     const { account, after } = parseOptions(optionsSchema, options, 'accountPostings');
     return database.prepare(`
       SELECT

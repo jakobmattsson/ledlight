@@ -6,7 +6,7 @@ module.exports = ({
 }) => {
   const optionsSchema = z.strictObject({});
 
-  function queryLedgerAccounts(database, options) {
+  function queryLedgerAccounts(database, options, _caches) {
     parseOptions(optionsSchema, options, 'ledgerAccounts');
     return database.prepare(`
       WITH account_names AS (

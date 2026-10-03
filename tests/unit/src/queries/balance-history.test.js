@@ -16,7 +16,7 @@ const { readDatabase } = resolveRepositoryModule('src/ingestion/database/databas
 
 function balanceHistoryReport(databasePath, options) {
   return readDatabase(databasePath,
-    (database) => queryBalanceHistoryReport(database, options));
+    (database) => queryBalanceHistoryReport(database, options, { valuationPriceCache: new Map() }));
 }
 
 function buildFixture(t) {

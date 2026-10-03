@@ -118,7 +118,7 @@ module.exports = ({
   `).all(throughDate ?? null);
   }
 
-  function queryLedgerValuationRateResolver(database) {
+  function queryLedgerValuationRateResolver(database, _options, _caches) {
     return createLedgerValuationRateResolver(
       selectPriceHistory(database),
       valuationCommodityFromDatabase(database),

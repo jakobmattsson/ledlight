@@ -18,7 +18,7 @@ module.exports = ({
       .refine((value) => value <= 100, { error: 'must not exceed 100' }),
   });
 
-  function queryLedgerTransactions(database, options) {
+  function queryLedgerTransactions(database, options, _caches) {
     const { order, page, pageSize } = parseOptions(
       optionsSchema, options, 'ledgerTransactions',
     );

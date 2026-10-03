@@ -14,7 +14,7 @@ module.exports = ({
     transactionId: positiveInteger,
   });
 
-  function queryLedgerTransaction(database, options) {
+  function queryLedgerTransaction(database, options, _caches) {
     const { transactionId } = parseOptions(optionsSchema, options, 'ledgerTransaction');
     const rows = database.prepare(`
       SELECT
