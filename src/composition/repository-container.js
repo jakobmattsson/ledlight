@@ -12,6 +12,7 @@ const {
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const MODULE_NAMES = Object.freeze({
+  'src/ledlight/api-contract.js': 'apiContract',
   'src/ledlight/accounting/decimal.js': 'decimal',
   'src/ledlight/accounting/posting-resolver.js': 'postingResolver',
   'src/ledlight/accounting/valuation-commodity.js': 'valuationCommodity',

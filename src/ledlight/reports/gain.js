@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  apiContract: { optionNames },
   path,
   sqlite: Database,
   decimal: {
@@ -26,7 +27,7 @@ module.exports = ({
   const ZERO = parseDecimal('0');
 
   function normalizeOptions(options) {
-    const input = knownOptions(options, ['accounts', 'dateBasis', 'to'], 'gainReport');
+    const input = knownOptions(options, optionNames('gainReport'), 'gainReport');
     const normalized = {
       accounts: stringList(input.accounts, 'accounts', false),
       dateBasis: dateBasis(input.dateBasis),

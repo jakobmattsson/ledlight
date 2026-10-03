@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  apiContract: { optionNames },
   path,
   sqlite: Database,
   decimal: {
@@ -25,16 +26,7 @@ module.exports = ({
 }) => {
 
   function normalizeOptions(options) {
-    const input = knownOptions(options, [
-      'accounts',
-      'dateBasis',
-      'from',
-      'includeTotal',
-      'inValuationCommodity',
-      'invert',
-      'to',
-      'withValuationValue',
-    ], 'aggregateReport');
+    const input = knownOptions(options, optionNames('aggregateReport'), 'aggregateReport');
     const normalized = {
       from: input.from,
       to: input.to,

@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  apiContract: { optionNames },
   path,
   sqlite: Database,
   decimal: {
@@ -10,6 +11,7 @@ module.exports = ({
     registerDecimalFunctions,
   },
   publicErrors: { createError, errorCodes },
+  reportOptions: { knownOptions },
 }) => {
 
   const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
@@ -32,7 +34,12 @@ module.exports = ({
     }
   }
 
-  function queryAccountPostings(databasePath, { account, after }) {
+  function queryAccountPostings(databasePath, options) {
+    const { account, after } = knownOptions(
+      options,
+      optionNames('accountPostings'),
+      'accountPostings',
+    );
     assertAccount(account);
     assertDate(after, 'after');
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
@@ -58,7 +65,12 @@ module.exports = ({
     }
   }
 
-  function queryAccountBalances(databasePath, { account, to }) {
+  function queryAccountBalances(databasePath, options) {
+    const { account, to } = knownOptions(
+      options,
+      optionNames('accountBalances'),
+      'accountBalances',
+    );
     assertAccount(account);
     assertDate(to, 'to');
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
@@ -109,7 +121,12 @@ module.exports = ({
     }
   }
 
-  function queryAccountTransactions(databasePath, { account }) {
+  function queryAccountTransactions(databasePath, options) {
+    const { account } = knownOptions(
+      options,
+      optionNames('accountTransactions'),
+      'accountTransactions',
+    );
     assertAccount(account);
     const database = new Database(path.resolve(databasePath), { readonly: true, fileMustExist: true });
     try {
@@ -198,7 +215,12 @@ module.exports = ({
     }
   }
 
-  function queryLedgerTransaction(databasePath, { transactionId }) {
+  function queryLedgerTransaction(databasePath, options) {
+    const { transactionId } = knownOptions(
+      options,
+      optionNames('ledgerTransaction'),
+      'ledgerTransaction',
+    );
     const id = Number(transactionId);
     if (!Number.isSafeInteger(id) || id <= 0 || String(id) !== String(transactionId)) {
       throw invalidInput('transactionId must be a positive integer');

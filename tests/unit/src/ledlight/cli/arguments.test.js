@@ -5,7 +5,8 @@ const { resolveRepositoryModule } = require('../../../../support/repository-cont
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const argumentsModule = resolveRepositoryModule('src/ledlight/cli/arguments.js');
-const { apiCommands, parseArguments, usage } = argumentsModule;
+const { apiCommands, apiInputCoverage, parseArguments, usage } = argumentsModule;
+const apiContract = resolveRepositoryModule('src/ledlight/api-contract.js');
 
 test('defines one CLI command for every public API operation', () => {
   assert.deepEqual(apiCommands, {
@@ -27,6 +28,17 @@ test('defines one CLI command for every public API operation', () => {
     ledgerTransactions: 'ledger-transactions',
     ledgerValuationRateResolver: 'valuation-rate',
   });
+});
+
+test('covers every accepted API input with an actual CLI argument or option', () => {
+  assert.deepEqual(Object.keys(apiInputCoverage).sort(), Object.keys(apiContract.definitions).sort());
+  for (const [operation, definition] of Object.entries(apiContract.definitions)) {
+    assert.deepEqual(
+      [...apiInputCoverage[operation].inputs].sort(),
+      [...definition.inputs].sort(),
+      `${operation} CLI inputs must exactly cover its API inputs`,
+    );
+  }
 });
 
 test('parses aggregate report options and output flags', () => {

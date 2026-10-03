@@ -69,4 +69,7 @@ test('clamps pages and rejects invalid list options', (t) => {
     /page must be a positive integer/u);
   assert.throws(() => project.ledgerTransactions({ order: 'newest', page: 1, pageSize: 101 }),
     /pageSize must not exceed 100/u);
+  assert.throws(() => project.ledgerTransactions({
+    order: 'newest', page: 1, pageSize: 2, unknown: true,
+  }), /Unknown ledgerTransactions option: unknown/u);
 });

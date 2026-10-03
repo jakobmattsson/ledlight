@@ -9,7 +9,7 @@ const ledlight = require('ledlight');
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
-Report option objects reject unknown properties and values of the wrong type.
+API option objects reject unknown properties and values of the wrong type.
 
 ## Package metadata and errors
 

@@ -1,9 +1,11 @@
 'use strict';
 
 module.exports = ({
+  apiContract: { optionNames },
   path,
   sqlite: Database,
   publicErrors: { createError, errorCodes },
+  reportOptions: { knownOptions },
 }) => {
 
   const invalidInput = (message) => createError(errorCodes.INVALID_API_INPUT, message, TypeError);
@@ -16,11 +18,12 @@ module.exports = ({
     return number;
   }
 
-  function queryLedgerTransactions(databasePath, {
-    order,
-    page,
-    pageSize,
-  }) {
+  function queryLedgerTransactions(databasePath, options) {
+    const { order, page, pageSize } = knownOptions(
+      options,
+      optionNames('ledgerTransactions'),
+      'ledgerTransactions',
+    );
     if (!['newest', 'oldest'].includes(order)) {
       throw invalidInput('order must be newest or oldest');
     }

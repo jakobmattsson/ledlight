@@ -2,17 +2,7 @@
 
 const { Command, InvalidArgumentError, Option } = require('commander');
 
-module.exports = () => {
-  const API_COMMANDS = Object.freeze({
-    parse: 'parse', loadJournal: 'load-journal', loadProjectPaths: 'project-paths',
-    ensureProjectDatabaseCurrent: 'ensure-database', openProject: 'open-project',
-    accountBalances: 'account-balances', accountPostings: 'account-postings',
-    aggregateReport: 'aggregate', balanceHistoryReport: 'balance-history',
-    gainReport: 'gain', investmentPerformance: 'investment-performance',
-    accountTransactions: 'account-transactions', commodityDescriptions: 'commodity-descriptions',
-    ledgerAccounts: 'ledger-accounts', ledgerTransaction: 'ledger-transaction',
-    ledgerTransactions: 'ledger-transactions', ledgerValuationRateResolver: 'valuation-rate',
-  });
+module.exports = ({ apiContract: { definitions } }) => {
 
   const collect = (value, previous) => (previous || []).concat(value);
   const singleValue = (optionName) => (value, previous) => {
@@ -32,18 +22,32 @@ module.exports = () => {
       option.argParser(parseValue);
     }
     if (settings.required) option.makeOptionMandatory();
+    if (settings.apiInput) option.apiInput = settings.apiInput;
     return command.addOption(option);
   }
-  const addDateOption = (command, flags, description) => addValueOption(command, flags, description);
+  function registerCommand(command, operation, positionalInputs_) {
+    command.apiOperation = operation;
+    command.apiPositionalInputs = positionalInputs_ ?? [];
+    return command;
+  }
+  const addBooleanOption = (command, flags, description, apiInput) => {
+    const option = new Option(flags, description);
+    option.apiInput = apiInput;
+    return command.addOption(option);
+  };
+  const addDateOption = (command, flags, description, apiInput) =>
+    addValueOption(command, flags, description, { apiInput });
   const addDateBasisOption = (command) => addValueOption(
     command, '--date-basis <basis>', 'select posting or transaction dates',
-    { choices: ['posting', 'transaction'] },
+    { choices: ['posting', 'transaction'], apiInput: 'dateBasis' },
   );
   const addAccountPrefixes = (command) => addValueOption(
-    command, '--accounts <prefix>', 'include an account prefix (repeatable)', { repeatable: true },
+    command, '--accounts <prefix>', 'include an account prefix (repeatable)',
+    { repeatable: true, apiInput: 'accounts' },
   );
   const addDirectory = (command) => addValueOption(
     command, '--directory <path>', 'start project discovery in this directory',
+    { apiInput: 'startDirectory' },
   );
   const addJson = (command) => command.option('--json', 'write the complete API result as JSON');
 
@@ -53,74 +57,138 @@ module.exports = () => {
       .addHelpCommand(false).exitOverride()
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
-    const parse = program.command('parse <source-text>').description('parse Ledger source text');
-    addValueOption(parse, '--source <name>', 'identify the source in locations and errors');
-    program.command('load-journal <entry-path>').description('load a journal and its include tree');
-    for (const [name, description] of [
-      ['project-paths', 'discover project, journal, and database paths'],
-      ['ensure-database', 'ensure that the project database is current'],
-      ['open-project', 'open a project and print its snapshot metadata'],
-    ]) addDirectory(program.command(name).description(description));
+    const parse = registerCommand(
+      program.command('parse <source-text>').description('parse Ledger source text'),
+      'parse',
+      ['sourceText'],
+    );
+    addValueOption(parse, '--source <name>', 'identify the source in locations and errors', {
+      apiInput: 'source',
+    });
+    registerCommand(
+      program.command('load-journal <entry-path>').description('load a journal and its include tree'),
+      'loadJournal',
+      ['entryPath'],
+    );
+    for (const [name, operation, description] of [
+      ['project-paths', 'loadProjectPaths', 'discover project, journal, and database paths'],
+      ['ensure-database', 'ensureProjectDatabaseCurrent', 'ensure that the project database is current'],
+      ['open-project', 'openProject', 'open a project and print its snapshot metadata'],
+    ]) addDirectory(registerCommand(program.command(name).description(description), operation));
 
-    const accountBalances = program.command('account-balances').description('show balances for one exact account');
+    const accountBalances = registerCommand(
+      program.command('account-balances').description('show balances for one exact account'),
+      'accountBalances',
+    );
     addDirectory(accountBalances);
-    addValueOption(accountBalances, '--account <name>', 'select an exact account', { required: true });
-    addDateOption(accountBalances, '--to <date>', 'include entries on or before YYYY-MM-DD');
-    const accountPostings = program.command('account-postings').description('show postings for one exact account');
+    addValueOption(accountBalances, '--account <name>', 'select an exact account', {
+      required: true, apiInput: 'account',
+    });
+    addDateOption(accountBalances, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
+    const accountPostings = registerCommand(
+      program.command('account-postings').description('show postings for one exact account'),
+      'accountPostings',
+    );
     addDirectory(accountPostings);
-    addValueOption(accountPostings, '--account <name>', 'select an exact account', { required: true });
-    addDateOption(accountPostings, '--after <date>', 'include activity after YYYY-MM-DD');
-    const accountTransactions = program.command('account-transactions').description('show transactions for one exact account');
+    addValueOption(accountPostings, '--account <name>', 'select an exact account', {
+      required: true, apiInput: 'account',
+    });
+    addDateOption(accountPostings, '--after <date>', 'include activity after YYYY-MM-DD', 'after');
+    const accountTransactions = registerCommand(
+      program.command('account-transactions').description('show transactions for one exact account'),
+      'accountTransactions',
+    );
     addDirectory(accountTransactions);
-    addValueOption(accountTransactions, '--account <name>', 'select an exact account', { required: true });
-    for (const [name, description] of [
-      ['commodity-descriptions', 'show declared commodities'],
-      ['ledger-accounts', 'show declared and used accounts'],
-    ]) addDirectory(program.command(name).description(description));
+    addValueOption(accountTransactions, '--account <name>', 'select an exact account', {
+      required: true, apiInput: 'account',
+    });
+    for (const [name, operation, description] of [
+      ['commodity-descriptions', 'commodityDescriptions', 'show declared commodities'],
+      ['ledger-accounts', 'ledgerAccounts', 'show declared and used accounts'],
+    ]) addDirectory(registerCommand(program.command(name).description(description), operation));
 
-    const ledgerTransaction = program.command('ledger-transaction').description('show one transaction');
+    const ledgerTransaction = registerCommand(
+      program.command('ledger-transaction').description('show one transaction'),
+      'ledgerTransaction',
+    );
     addDirectory(ledgerTransaction);
-    addValueOption(ledgerTransaction, '--transaction-id <id>', 'select a transaction ID', { required: true });
-    const ledgerTransactions = program.command('ledger-transactions').description('show a page of transactions');
+    addValueOption(ledgerTransaction, '--transaction-id <id>', 'select a transaction ID', {
+      required: true, apiInput: 'transactionId',
+    });
+    const ledgerTransactions = registerCommand(
+      program.command('ledger-transactions').description('show a page of transactions'),
+      'ledgerTransactions',
+    );
     addDirectory(ledgerTransactions);
-    addValueOption(ledgerTransactions, '--order <order>', 'sort transactions', { choices: ['newest', 'oldest'], required: true });
-    addValueOption(ledgerTransactions, '--page <number>', 'select a page', { required: true });
-    addValueOption(ledgerTransactions, '--page-size <number>', 'set the page size (maximum 100)', { required: true });
-    const valuationRate = program.command('valuation-rate').description('resolve a valuation rate');
+    addValueOption(ledgerTransactions, '--order <order>', 'sort transactions', {
+      choices: ['newest', 'oldest'], required: true, apiInput: 'order',
+    });
+    addValueOption(ledgerTransactions, '--page <number>', 'select a page', {
+      required: true, apiInput: 'page',
+    });
+    addValueOption(ledgerTransactions, '--page-size <number>', 'set the page size (maximum 100)', {
+      required: true, apiInput: 'pageSize',
+    });
+    const valuationRate = registerCommand(
+      program.command('valuation-rate').description('resolve a valuation rate'),
+      'ledgerValuationRateResolver',
+    );
     addDirectory(valuationRate);
-    addValueOption(valuationRate, '--commodity <name>', 'select the source commodity', { required: true });
-    addDateOption(valuationRate, '--through-date <date>', 'use prices on or before YYYY-MM-DD');
+    addValueOption(valuationRate, '--commodity <name>', 'select the source commodity', {
+      required: true, apiInput: 'commodity',
+    });
+    addDateOption(valuationRate, '--through-date <date>', 'use prices on or before YYYY-MM-DD', 'throughDate');
 
-    const aggregate = program.command('aggregate').description('aggregate account balances');
+    const aggregate = registerCommand(
+      program.command('aggregate').description('aggregate account balances'),
+      'aggregateReport',
+    );
     addDirectory(aggregate);
-    addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD');
-    addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
+    addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(aggregate); addDateBasisOption(aggregate); addJson(aggregate);
-    aggregate.option('--value', 'convert amounts to the valuation commodity')
-      .option('--with-valuation-value', 'add the valuation value to commodity rows')
-      .option('--invert', 'invert the sign of report amounts')
-      .option('--include-total', 'append an exact total (requires --value)')
-      .option('--csv', 'write CSV output');
+    addBooleanOption(aggregate, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
+    addBooleanOption(aggregate, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
+    addBooleanOption(aggregate, '--invert', 'invert the sign of report amounts', 'invert');
+    addBooleanOption(aggregate, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
+    aggregate.option('--csv', 'write CSV output');
 
-    const balanceHistory = program.command('balance-history').description('show balances over time');
+    const balanceHistory = registerCommand(
+      program.command('balance-history').description('show balances over time'),
+      'balanceHistoryReport',
+    );
     addDirectory(balanceHistory);
-    addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD');
-    addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
+    addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(balanceHistory); addDateBasisOption(balanceHistory);
-    addValueOption(balanceHistory, '--account-factor <account=factor>', 'factor an exact account (repeatable)', { repeatable: true });
+    addValueOption(balanceHistory, '--account-factor <account=factor>', 'factor an exact account (repeatable)', {
+      repeatable: true, apiInput: 'accountFactors',
+    });
     addJson(balanceHistory);
-    balanceHistory.option('--invert', 'invert the sign of report amounts').option('--csv', 'write CSV output');
+    addBooleanOption(balanceHistory, '--invert', 'invert the sign of report amounts', 'invert');
+    balanceHistory.option('--csv', 'write CSV output');
 
-    const gain = program.command('gain').description('show investment gains');
-    addDirectory(gain); addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    const gain = registerCommand(
+      program.command('gain').description('show investment gains'),
+      'gainReport',
+    );
+    addDirectory(gain);
+    addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(gain); addDateBasisOption(gain); addJson(gain); gain.option('--csv', 'write CSV output');
-    const performance = program.command('investment-performance').description('show investment performance');
+    const performance = registerCommand(
+      program.command('investment-performance').description('show investment performance'),
+      'investmentPerformance',
+    );
     addDirectory(performance);
-    addDateOption(performance, '--from <date>', 'include entries on or after YYYY-MM-DD');
-    addDateOption(performance, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    addDateOption(performance, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
+    addDateOption(performance, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPrefixes(performance);
-    addValueOption(performance, '--commodities <name>', 'include a commodity (repeatable)', { repeatable: true });
-    addValueOption(performance, '--exclude-commodities <name>', 'exclude a commodity (repeatable)', { repeatable: true });
+    addValueOption(performance, '--commodities <name>', 'include a commodity (repeatable)', {
+      repeatable: true, apiInput: 'commodities',
+    });
+    addValueOption(performance, '--exclude-commodities <name>', 'exclude a commodity (repeatable)', {
+      repeatable: true, apiInput: 'excludeCommodities',
+    });
     addJson(performance);
     return program;
   }
@@ -128,6 +196,18 @@ module.exports = () => {
   function usage() {
     const program = createProgram();
     return [program, ...program.commands].map((command) => command.helpInformation().trimEnd()).join('\n\n');
+  }
+  function commandCoverage() {
+    return Object.fromEntries(createProgram().commands.map((command) => [
+      command.apiOperation,
+      {
+        command: command.name(),
+        inputs: [
+          ...command.apiPositionalInputs,
+          ...command.options.filter((option) => option.apiInput).map((option) => option.apiInput),
+        ],
+      },
+    ]));
   }
   function accountFactors(values) {
     if (values === undefined) return undefined;
@@ -191,5 +271,20 @@ module.exports = () => {
     if (!selectedCommand) throw new Error(usage());
     return parsedResult(selectedCommand.name, selectedCommand.options, selectedCommand.positional);
   }
-  return { apiCommands: API_COMMANDS, parseArguments, usage };
+  const apiInputCoverage = commandCoverage();
+  const apiCommands = Object.freeze(Object.fromEntries(
+    Object.entries(apiInputCoverage).map(([operation, coverage]) => [operation, coverage.command]),
+  ));
+  const operationNames = new Set([
+    ...Object.keys(definitions),
+    ...Object.keys(apiInputCoverage),
+  ]);
+  for (const operation of operationNames) {
+    const apiInputs = [...(definitions[operation]?.inputs ?? [])].sort();
+    const cliInputs = [...(apiInputCoverage[operation]?.inputs ?? [])].sort();
+    if (JSON.stringify(apiInputs) !== JSON.stringify(cliInputs)) {
+      throw new Error(`CLI inputs do not cover the ${operation} API contract`);
+    }
+  }
+  return { apiCommands, apiInputCoverage, parseArguments, usage };
 };

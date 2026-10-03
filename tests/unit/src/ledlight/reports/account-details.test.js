@@ -73,6 +73,10 @@ test('rejects invalid account-detail options', (t) => {
     /account must be a non-empty string/u);
   assert.throws(() => project.accountBalances({ account: 'Assets:Closed', to: '2023-02-30' }),
     /Invalid to date/u);
+  assert.throws(() => project.accountBalances({ account: 'Assets:Closed', unknown: true }),
+    /Unknown accountBalances option: unknown/u);
+  assert.throws(() => project.accountTransactions({ account: 'Assets:Closed', unknown: true }),
+    /Unknown accountTransactions option: unknown/u);
 });
 
 test('lists declared and used accounts with transaction counts', (t) => {

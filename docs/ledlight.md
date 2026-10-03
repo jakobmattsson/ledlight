@@ -140,6 +140,12 @@ Tests compare the callable package and project API inventory with the CLI
 command inventory, verify every parameter mapping, and verify that the command
 adapter delegates calculations to the API before formatting.
 
+The accepted inputs and option-object keys are declared once in the internal
+API contract. API option validation reads that contract, and the parity test
+derives coverage from the actual positional arguments and options registered
+with Commander. Adding an accepted API option without attaching a CLI argument
+to the same contract input therefore fails the test automatically.
+
 ## Architecture
 
 The implementation is organized by responsibility under `src/ledlight`:
