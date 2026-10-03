@@ -12,7 +12,7 @@ module.exports = ({
     resolverArgumentsSchema,
     resolverInputNames,
   },
-  valuationCommodity: { fromDatabase },
+  valuationCommodity: { valuationCommodityFromDatabase },
 }) => {
 
   const missingValuation = (message) => createError(errorCodes.MISSING_VALUATION_DATA, message);
@@ -84,7 +84,7 @@ module.exports = ({
   }
 
   function queryValuationRates(database, throughDate, commodities, priceCache) {
-    const valuationCommodity = fromDatabase(database);
+    const valuationCommodity = valuationCommodityFromDatabase(database);
     const materializedRates = selectMaterializedValuationRates(
       database, throughDate, commodities, valuationCommodity,
     );
@@ -119,7 +119,10 @@ module.exports = ({
   }
 
   function queryLedgerValuationRateResolver(database) {
-    return createLedgerValuationRateResolver(selectPriceHistory(database), fromDatabase(database));
+    return createLedgerValuationRateResolver(
+      selectPriceHistory(database),
+      valuationCommodityFromDatabase(database),
+    );
   }
 
   return {

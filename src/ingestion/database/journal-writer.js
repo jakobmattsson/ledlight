@@ -6,7 +6,7 @@ module.exports = ({
   decimal: { registerDecimalFunctions },
   postingResolver: { PostingResolver },
   journalValidator: { validateJournal },
-  valuationCommodity: { fromJournal },
+  valuationCommodity: { valuationCommodityFromJournal },
   valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },
 }) => {
@@ -173,7 +173,7 @@ module.exports = ({
   }
 
   function writeJournalDatabase(databasePath, journal) {
-    const valuationCommodity = fromJournal(journal);
+    const valuationCommodity = valuationCommodityFromJournal(journal);
     validateJournal(journal, valuationCommodity);
     const resolvedDatabasePath = path.resolve(databasePath);
     const database = new Database(resolvedDatabasePath);
