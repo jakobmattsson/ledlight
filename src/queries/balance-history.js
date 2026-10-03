@@ -9,7 +9,7 @@ module.exports = ({
   accountPrefixFilter: { accountPrefixFilter },
   publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
-  valuationCommodity: { fromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 
@@ -171,7 +171,7 @@ module.exports = ({
 
   function queryBalanceHistory(database, options) {
     const reportOptions = parseOptions(optionsSchema, options, 'balanceHistoryReport');
-    return selectBalanceHistory(database, reportOptions, fromDatabase(database));
+    return selectBalanceHistory(database, reportOptions, valuationCommodityFromDatabase(database));
   }
 
   return { name: 'balanceHistoryReport', inputSchema: optionsSchema, execute: queryBalanceHistory };

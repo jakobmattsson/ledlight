@@ -11,7 +11,7 @@ module.exports = ({
   accountPrefixFilter: { accountPrefixFilter },
   apiOptions: { parseOptions },
   valuationRates: { queryValuationRates },
-  valuationCommodity: { fromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 
@@ -88,7 +88,7 @@ module.exports = ({
       new Set(commodityTotals.map((row) => row.commodity)),
       valuationPriceCache,
     );
-    const valuationCommodity = fromDatabase(database);
+    const valuationCommodity = valuationCommodityFromDatabase(database);
     database.function('valuation_rate', { deterministic: true }, (commodity) => rates.get(commodity));
     const filter = reportFilter(options);
     return database.prepare(`

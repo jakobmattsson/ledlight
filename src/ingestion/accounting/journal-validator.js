@@ -2,7 +2,7 @@
 
 module.exports = ({
   decimal: { compareDecimals, parseDecimal },
-  valuationCommodity: { fromJournal },
+  journalValuationCommodity: { valuationCommodityFromJournal },
 }) => {
 
   const ZERO = parseDecimal('0');
@@ -54,7 +54,7 @@ module.exports = ({
 
   function validateJournal(journal, defaultCommodity) {
     const effectiveDefaultCommodity = defaultCommodity === undefined
-      ? fromJournal(journal)
+      ? valuationCommodityFromJournal(journal)
       : defaultCommodity;
     for (const entry of journal.entries) {
       if (entry.type === 'transaction') {

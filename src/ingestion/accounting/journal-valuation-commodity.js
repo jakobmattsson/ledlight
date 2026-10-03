@@ -2,7 +2,7 @@
 
 module.exports = ({ publicErrors: { createError, errorCodes } }) => {
 
-  function fromJournal(journal) {
+  function valuationCommodityFromJournal(journal) {
     let valuationCommodity = null;
     let defaultLocation = null;
     for (const entry of journal.entries) {
@@ -23,18 +23,5 @@ module.exports = ({ publicErrors: { createError, errorCodes } }) => {
     return valuationCommodity;
   }
 
-  function fromDatabase(database) {
-    const valuationCommodity = database.prepare(
-      "SELECT value FROM database_metadata WHERE key = 'valuation_commodity'",
-    ).pluck().get();
-    if (!valuationCommodity) {
-      throw createError(
-        errorCodes.MISSING_VALUATION_DATA,
-        'The journal does not declare a default commodity for valuation',
-      );
-    }
-    return valuationCommodity;
-  }
-
-  return { fromJournal, fromDatabase };
+  return { valuationCommodityFromJournal };
 };

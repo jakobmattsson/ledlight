@@ -12,7 +12,7 @@ module.exports = ({
   accountPrefixFilter: { accountPrefixFilter },
   apiOptions: { parseOptions },
   valuationRates: { queryValuationRates },
-  valuationCommodity: { fromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 
@@ -94,7 +94,7 @@ module.exports = ({
 
   function queryGain(database, options, { valuationPriceCache }) {
     const reportOptions = parseOptions(optionsSchema, options, 'gainReport');
-    const valuationCommodity = fromDatabase(database);
+    const valuationCommodity = valuationCommodityFromDatabase(database);
     const positions = queryPositions(database, reportOptions, valuationCommodity);
     const rates = queryValuationRates(
       database,

@@ -5,7 +5,7 @@ module.exports = ({
   publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
   investmentReturns: { calculatePerformance },
-  valuationCommodity: { fromDatabase },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 
@@ -185,7 +185,7 @@ module.exports = ({
 
   function queryInvestmentPerformance(database, options) {
     const reportOptions = parseOptions(optionsSchema, options, 'investmentPerformance');
-    const valuationCommodity = fromDatabase(database);
+    const valuationCommodity = valuationCommodityFromDatabase(database);
     const commodities = selectedCommodities(database, reportOptions);
     if (commodities.length === 0) return calculatePerformance([], [], reportOptions, [], valuationCommodity);
     const values = queryDailyValues(database, { ...reportOptions, from: undefined }, commodities, valuationCommodity);
