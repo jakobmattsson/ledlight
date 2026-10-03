@@ -38,7 +38,7 @@ The current implementation provides:
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
-The public API is exported by `src/ledlight/index.js`:
+The public API is exported by `src/api/index.js`:
 
 ```js
 const { loadJournal, parse } = require('ledlight');
@@ -150,31 +150,28 @@ and in the parity test.
 
 ## Architecture
 
-The implementation is organized by responsibility under `src/ledlight`:
+The implementation is organized by responsibility directly under `src`:
 
-- `syntax` contains the optimized parser, syntax errors, and the normative Ohm
-  reference implementation;
-- `journal` handles include traversal, glob expansion, source hashing, and
-  manifest-only scans;
-- `accounting` provides exact decimal arithmetic, semantic validation, and
-  posting resolution;
-- `api` contains shared runtime-input validation helpers;
-- `sqlite` owns schema migration, freshness checks, and journal persistence;
+- `domain` provides exact decimal arithmetic, semantic validation, posting
+  resolution, and investment calculations;
+- `api` exposes the stable Node.js facade, public errors, and shared runtime-input
+  validation helpers;
+- `ingestion` owns the optimized parser and normative Ohm grammar, traverses
+  journal includes, persists the normalized database, and materializes query
+  optimizations;
 - `queries` contains one module per public API/CLI query—including aggregate,
   balance-history, gain, and investment-performance queries—with its Zod schema
   beside its execution function;
-- `query-support` contains internal helpers shared by query implementations;
-- `investments` contains investment-return and reconciliation calculations;
-- `valuation` owns price selection and exact valuation-commodity rate
-  resolution;
+- `queries/support` contains internal SQL, reconciliation, and valuation helpers
+  shared by query implementations;
 - `application` composes project paths, database freshness, and reports; and
 - `cli` contains argument parsing, output formatting, and the executable runner
   over the public Node.js API.
 
-Dependencies point inward: syntax and accounting contain no project or SQLite
-dependency, and application composes the lower-level modules into the public
-Node.js API. The CLI command layer depends on that public API; only its output
-formatter uses the shared exact-decimal helpers directly.
+Dependencies point inward: domain code has no project or SQLite dependency,
+ingestion writes the database, queries read it, and application composes those
+capabilities into the public Node.js API. The CLI command layer depends on that
+public API; only its output formatter uses shared exact-decimal helpers directly.
 
 ## Supported grammar
 
@@ -206,9 +203,9 @@ must have both a lot cost and a transaction price (`@` or `@@`). Unit and total
 annotations may be combined freely. Zero quantities are exempt because they do
 not acquire or dispose of a commodity.
 
-`src/ledlight/syntax/reference/ledger.ohm` is the normative description of the
+`src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `src/ledlight/syntax/reference/parser.js`. Tests parse representative
+semantics in `src/ingestion/syntax/reference/parser.js`. Tests parse representative
 documents with both Ohm and the optimized runtime parser and compare the
 resulting syntax trees. This keeps the grammar reviewable without adding
 parser-framework overhead to production imports.
