@@ -30,7 +30,7 @@ module.exports = ({
   }
   function registerCommand(command, operation) {
     command.apiOperation = operation;
-    return command;
+    return command.addOption(new Option('-h, --help', 'show command help'));
   }
   const addBooleanOption = (command, flags, description, apiInput) => {
     const option = new Option(flags, description);
@@ -58,6 +58,8 @@ module.exports = ({
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
+    program.addOption(new Option('-V, --version', 'show the package version'));
+    program.addOption(new Option('-h, --help', 'show help'));
 
     for (const [name, operation, description] of [
       ['project-paths', 'loadProjectPaths', 'discover project, journal, and database paths'],
@@ -179,8 +181,6 @@ module.exports = ({
       repeatable: true, apiInput: 'excludeCommodities',
     });
     addJson(performance);
-    program.command('version').description('show the package version');
-    program.command('help [command]').description('show help for a command');
     return program;
   }
 
@@ -191,11 +191,11 @@ module.exports = ({
         'Run "ledlight <command> --help" for detailed command usage.';
     }
     const command = program.commands.find((candidate) => candidate.name() === commandName);
-    if (!command || !command.apiOperation) throw new Error(`Unknown command: ${commandName}`);
+    if (!command) throw new Error(`Unknown command: ${commandName}`);
     return command.helpInformation().trimEnd();
   }
   function commandCoverage() {
-    return Object.fromEntries(createProgram().commands.filter((command) => command.apiOperation).map((command) => [
+    return Object.fromEntries(createProgram().commands.map((command) => [
       command.apiOperation,
       {
         command: command.name(),
@@ -250,7 +250,7 @@ module.exports = ({
     const program = createProgram();
     if (arguments_.length === 0) throw new Error(usage());
     let selectedCommand;
-    for (const command of program.commands.filter((candidate) => candidate.apiOperation)) command.action((...actionArguments) => {
+    for (const command of program.commands) command.action((...actionArguments) => {
       const commandObject = actionArguments.at(-1);
       selectedCommand = { name: command.name(), options: commandObject.opts() };
     });

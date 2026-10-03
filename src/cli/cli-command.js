@@ -87,16 +87,13 @@ module.exports = ({
 
   function runReportCommand(arguments_, { startDirectory }) {
     if (arguments_.length === 0 ||
-        (arguments_.length === 1 && ['help', '--help', '-h'].includes(arguments_[0]))) {
+        (arguments_.length === 1 && ['--help', '-h'].includes(arguments_[0]))) {
       return `${usage()}\n`;
     }
-    if (arguments_.length === 1 && ['version', '--version', '-V'].includes(arguments_[0])) {
+    if (arguments_.length === 1 && ['--version', '-V'].includes(arguments_[0])) {
       return `${version}\n`;
     }
-    if (arguments_.length === 2 && arguments_[0] === 'help') {
-      return `${usage(arguments_[1])}\n`;
-    }
-    if (arguments_.length === 2 && ['--help', '-h'].includes(arguments_[1])) {
+    if (arguments_.length >= 2 && arguments_.slice(1).some((argument) => ['--help', '-h'].includes(argument))) {
       return `${usage(arguments_[0])}\n`;
     }
     const parsed = parseArguments(arguments_);
