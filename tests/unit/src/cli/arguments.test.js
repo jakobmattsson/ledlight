@@ -398,7 +398,11 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage(),
-    /misc:\n {2}account-balances\s+show balances for matching accounts[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /reports:\n {2}unrealized-gains\s+show unrealized investment gains/u,
+  );
+  assert.match(
+    usage(),
+    /misc:\n {2}account-balances\s+show balances for matching accounts[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\|print\s+show a page of transactions/u);

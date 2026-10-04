@@ -27,7 +27,7 @@ function formatGroupedHelp(command, helper) {
     helper,
   ));
   const defaultSection = [helper.styleTitle('Commands:'), ...defaultCommandList, ''].join('\n');
-  const groupedSection = ['raw', 'misc'].flatMap((group) => [
+  const groupedSection = ['raw', 'reports', 'misc'].flatMap((group) => [
     helper.styleTitle(`${group}:`),
     ...formatCommands(group),
     '',
@@ -267,7 +267,7 @@ module.exports = ({
     const unrealizedGains = registerCommand(
       program.command('unrealized-gains').description('show unrealized investment gains'),
       'unrealizedGains',
-      'misc',
+      'reports',
     );
     addJournal(unrealizedGains);
     addDateOption(unrealizedGains, '--at <date>', 'show gains at YYYY-MM-DD', 'at');
