@@ -16,8 +16,7 @@ module.exports = ({
   };
   function addValueOption(command, flags, description, settings_) {
     const settings = settings_ ?? {};
-    const optionDescription = settings.required ? `${description} (required)` : description;
-    const option = new Option(flags, optionDescription);
+    const option = new Option(flags, description);
     const parseValue = settings.repeatable ? collect : singleValue(flags.split(' ')[0]);
     if (settings.choices) {
       option.choices(settings.choices);
@@ -192,6 +191,12 @@ module.exports = ({
       repeatable: true, apiInput: 'excludeCommodities',
     });
     addJson(performance);
+    for (const command of program.commands) {
+      const mandatoryOptions = command.options
+        .filter((option) => option.mandatory)
+        .map((option) => option.flags);
+      command.usage(`${mandatoryOptions.join(' ')} [options]`);
+    }
     return program;
   }
 
