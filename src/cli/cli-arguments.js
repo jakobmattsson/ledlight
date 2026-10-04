@@ -16,7 +16,8 @@ module.exports = ({
   };
   function addValueOption(command, flags, description, settings_) {
     const settings = settings_ ?? {};
-    const option = new Option(flags, description);
+    const optionDescription = settings.required ? `${description} (required)` : description;
+    const option = new Option(flags, optionDescription);
     const parseValue = settings.repeatable ? collect : singleValue(flags.split(' ')[0]);
     if (settings.choices) {
       option.choices(settings.choices);

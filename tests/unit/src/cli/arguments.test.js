@@ -269,7 +269,11 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <prefix>/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate/u);
+  assert.match(usage('aggregate'), /--file <path>\s+read the journal rooted at this file \(required\)/u);
   assert.match(usage('aggregate'), /--accounts <prefix>.*repeatable/u);
+  assert.doesNotMatch(usage('aggregate'), /--accounts <prefix>.*required/u);
+  assert.match(usage('account-balances'), /--account <name>\s+select an exact account \(required\)/u);
+  assert.doesNotMatch(usage('account-balances'), /--to <date>.*required/u);
   assert.match(usage('aggregate'), /-h, --help\s+show command help/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
 });
