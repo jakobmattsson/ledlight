@@ -252,11 +252,13 @@ module.exports = ({
       from: options.from, to: options.to, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
-    if (commandName === 'aggregate') Object.assign(reportOptions, compact({
-      inValuationCommodity: options.value || undefined,
-      withValuationValue: options.withValuationValue || undefined,
-      includeTotal: options.includeTotal || undefined,
-    }));
+    if (commandName === 'aggregate') {
+      Object.assign(reportOptions, compact({
+        inValuationCommodity: options.value || undefined,
+        withValuationValue: options.withValuationValue || undefined,
+        includeTotal: options.includeTotal || undefined,
+      }));
+    }
     if (commandName === 'balance-history') {
       const factors = accountFactors(options.accountFactor);
       if (factors !== undefined) reportOptions.accountFactors = factors;
@@ -272,10 +274,12 @@ module.exports = ({
     const program = createProgram();
     if (arguments_.length === 0) throw new Error(usage());
     let selectedCommand;
-    for (const command of program.commands) command.action((...actionArguments) => {
-      const commandObject = actionArguments.at(-1);
-      selectedCommand = { name: command.name(), options: commandObject.opts() };
-    });
+    for (const command of program.commands) {
+      command.action((...actionArguments) => {
+        const commandObject = actionArguments.at(-1);
+        selectedCommand = { name: command.name(), options: commandObject.opts() };
+      });
+    }
     try {
       program.parse(arguments_, { from: 'user' });
     } catch (error) {

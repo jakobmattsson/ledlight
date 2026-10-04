@@ -47,15 +47,21 @@ module.exports = ({
 
   function validatePosting(posting, defaultCommodity, warnings) {
     let storable = true;
-    if (posting.amount) storable = requireCommodity(
-      posting.amount, 'Posting amount', posting.location, warnings,
-    ) && storable;
-    if (posting.lotCost) storable = requireCommodity(
-      posting.lotCost.amount, 'Lot cost', posting.location, warnings,
-    ) && storable;
-    if (posting.cost) storable = requireCommodity(
-      posting.cost.amount, 'Posting cost', posting.location, warnings,
-    ) && storable;
+    if (posting.amount) {
+      storable = requireCommodity(
+        posting.amount, 'Posting amount', posting.location, warnings,
+      ) && storable;
+    }
+    if (posting.lotCost) {
+      storable = requireCommodity(
+        posting.lotCost.amount, 'Lot cost', posting.location, warnings,
+      ) && storable;
+    }
+    if (posting.cost) {
+      storable = requireCommodity(
+        posting.cost.amount, 'Posting cost', posting.location, warnings,
+      ) && storable;
+    }
     if (posting.balanceAssertion) {
       storable = requireCommodity(
         posting.balanceAssertion, 'Balance assertion', posting.location, warnings,
