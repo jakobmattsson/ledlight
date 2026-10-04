@@ -147,6 +147,7 @@ test('delegates report behavior to the public Node API and only formats results'
     {
       operation: 'balanceHistoryReport',
       options: {
+        accounts: [],
         invert: true,
       },
     },

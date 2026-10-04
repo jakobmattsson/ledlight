@@ -64,7 +64,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   );
   assert.deepEqual(argumentsModule.apiInputCoverage.balanceHistoryReport, {
     command: 'balance-history',
-    inputs: ['journalPath', 'from', 'to', 'dateBasis', 'accountFactors', 'invert'],
+    inputs: ['journalPath', 'from', 'to', 'accounts', 'dateBasis', 'invert'],
     outputInputs: ['format'],
   });
 });
@@ -199,7 +199,7 @@ test('parses balance history options', () => {
     '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
-    '--account-factor', 'Assets:=1',
+    '--accounts', 'Assets:',
     '--date-basis', 'transaction',
     '--invert',
     '--format', 'csv',
@@ -209,14 +209,14 @@ test('parses balance history options', () => {
     reportOptions: {
       from: '2024-01-01',
       to: '2024-12-31',
-      accountFactors: { 'Assets:': '1' },
+      accounts: ['Assets:'],
       dateBasis: 'transaction',
       invert: true,
     },
     output: { format: 'csv' },
   });
   assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
-  assert.throws(() => parseArguments(['balance-history', '--accounts', 'Assets:']), /Usage:/u);
+  assert.throws(() => parseArguments(['balance-history', '--account-factor', 'Assets:=1']), /Usage:/u);
   assert.throws(() => parseArguments(['balance-history', '--csv']), /Usage:/u);
   assert.throws(() => parseArguments(['balance-history', '--json']), /Usage:/u);
 });
@@ -309,13 +309,13 @@ test('maps every remaining API parameter to CLI arguments', () => {
     output: { format: 'text' },
   });
   assert.deepEqual(parseArguments([
-    'balance-history', '--file', '/journal', '--account-factor', 'Assets:Fund=0.7',
-    '--account-factor', 'Assets:Cash=1', '--format', 'json',
+    'balance-history', '--file', '/journal', '--accounts', 'Assets:Fund',
+    '--accounts', 'Assets:Cash', '--format', 'json',
   ]), {
     command: 'balance-history',
     journalPath: '/journal',
     reportOptions: {
-      accountFactors: { 'Assets:Fund': '0.7', 'Assets:Cash': '1' },
+      accounts: ['Assets:Fund', 'Assets:Cash'],
     },
     output: { format: 'json' },
   });

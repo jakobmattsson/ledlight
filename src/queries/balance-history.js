@@ -13,28 +13,8 @@ module.exports = ({
   zod: { z },
 }) => {
 
-  const accountFactorsSchema = z
-    .record(z.string().min(1), z.union([z.string(), z.number()]))
-    .default({})
-    .transform((factors, context) => {
-      const normalized = {};
-      for (const [account, factor] of Object.entries(factors)) {
-        const decimalFactor = String(factor);
-        try {
-          parseDecimal(decimalFactor);
-        } catch {
-          context.addIssue({
-            code: 'custom',
-            message: `Invalid account factor for ${account}: ${JSON.stringify(factor)}`,
-          });
-          return z.NEVER;
-        }
-        normalized[account] = decimalFactor;
-      }
-      return normalized;
-    });
   const optionsSchema = z.strictObject({
-    accountFactors: accountFactorsSchema,
+    accounts: z.array(z.string().min(1)).default([]),
     dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
     from: z.iso.date({ error: 'Invalid --from date' }).optional(),
     invert: z.boolean({ error: 'must be a boolean' }).default(false),
@@ -51,22 +31,10 @@ module.exports = ({
 
   function selectBalanceHistory(database, options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
-    const factorEntries = Object.entries(options.accountFactors);
-    const factorFilters = factorEntries.map(([pattern]) => accountFilter('p.account', [pattern]));
-    const factorExpression = factorEntries.length > 0
-      ? `CASE
-          ${factorFilters.map((filter) => `WHEN ${filter.sql} THEN ?`).join('\n          ')}
-          ELSE '1'
-        END`
+    const selectionFilter = options.accounts.length > 0
+      ? accountFilter('p.account', options.accounts)
       : undefined;
-    const selectionFilter = factorEntries.length > 0
-      ? accountFilter('p.account', factorEntries.map(([pattern]) => pattern))
-      : undefined;
-    const parameters = factorEntries.flatMap(([, factor], index) => [
-      ...factorFilters[index].parameters,
-      factor,
-    ]);
-    parameters.push(...(selectionFilter?.parameters ?? []));
+    const parameters = selectionFilter?.parameters ?? [];
     const postingWhere = selectionFilter
       ? `WHERE ${selectionFilter.sql}`
       : '';
@@ -88,8 +56,7 @@ module.exports = ({
         SELECT
           ${dateExpression} AS date,
           r.commodity,
-          decimal_sum(r.quantity) AS quantity${factorExpression ? `,
-          decimal_sum(decimal_mul(r.quantity, ${factorExpression})) AS factored_quantity` : ''}
+          decimal_sum(r.quantity) AS quantity
         FROM resolved_posting_amounts AS r
         JOIN postings AS p ON p.id = r.posting_id
         JOIN transactions AS t ON t.entry_id = p.transaction_id
@@ -104,11 +71,11 @@ module.exports = ({
       report_end(value) AS MATERIALIZED (
         ${reportEnd}
       ),
-      positions(commodity, date, quantity${factorExpression ? ', factored_quantity' : ''}) AS (
+      positions(commodity, date, quantity) AS (
         SELECT
           bounds.commodity,
           bounds.start_date,
-          COALESCE(changes.quantity, '0')${factorExpression ? ",\n          COALESCE(changes.factored_quantity, '0')" : ''}
+          COALESCE(changes.quantity, '0')
         FROM commodity_bounds AS bounds
         JOIN report_end ON bounds.start_date <= report_end.value
         LEFT JOIN selected_changes AS changes
@@ -118,7 +85,7 @@ module.exports = ({
         SELECT
           positions.commodity,
           date(positions.date, '+1 day'),
-          decimal_add(positions.quantity, COALESCE(changes.quantity, '0'))${factorExpression ? ",\n          decimal_add(positions.factored_quantity, COALESCE(changes.factored_quantity, '0'))" : ''}
+          decimal_add(positions.quantity, COALESCE(changes.quantity, '0'))
         FROM positions
         JOIN report_end ON positions.date < report_end.value
         LEFT JOIN selected_changes AS changes
@@ -128,7 +95,7 @@ module.exports = ({
       daily_balances AS (
         SELECT
           positions.date,
-          decimal_sum(decimal_mul(positions.quantity, valuation_prices.rate)) AS balance${factorExpression ? ",\n          decimal_sum(decimal_mul(positions.factored_quantity, valuation_prices.rate)) AS factored_balance" : ''},
+          decimal_sum(decimal_mul(positions.quantity, valuation_prices.rate)) AS balance,
           MIN(CASE
             WHEN valuation_prices.rate IS NULL
               AND decimal_cmp(positions.quantity, '0') != 0
@@ -140,7 +107,7 @@ module.exports = ({
           AND valuation_prices.date = positions.date
         GROUP BY positions.date
       )
-    SELECT date, balance AS amount${factorExpression ? ', factored_balance AS factored_amount' : ''}, missing_commodity
+    SELECT date, balance AS amount, missing_commodity
     FROM daily_balances
     WHERE date >= COALESCE(?, '0000-00-00')
       AND date <= COALESCE(?, '9999-12-31')
@@ -154,18 +121,14 @@ module.exports = ({
         );
       }
     }
-    return rows.map(({ date, amount, factored_amount: factoredAmount }) => {
+    return rows.map(({ date, amount }) => {
       const value = options.invert
         ? formatDecimal(negateDecimal(parseDecimal(amount)))
         : amount;
-      const factoredValue = options.invert && factoredAmount !== undefined
-        ? formatDecimal(negateDecimal(parseDecimal(factoredAmount)))
-        : factoredAmount;
       return {
         date,
         amount: value,
         commodity: valuationCommodity,
-        ...(factorExpression ? { factoredAmount: factoredValue } : {}),
       };
     });
   }

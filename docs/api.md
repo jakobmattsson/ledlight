@@ -111,11 +111,8 @@ accounts, and retain exact zero balances. `withValuationValue` adds an exact
 
 ### `journal.balanceHistoryReport(options)`
 
-Options are `from`, `to`, `dateBasis`, `invert`, and optional `accountFactors`.
-The date and inversion options have the same meanings as in `aggregateReport`.
-`accountFactors` maps account patterns to decimal factors and selects the
-accounts included in the report. When patterns overlap, the first matching
-entry supplies the factor. Omitting it includes all accounts.
+Options are `from`, `to`, `accounts`, `dateBasis`, and `invert`, with the same
+meanings as in `aggregateReport`.
 
 Returns daily rows sorted by date:
 
@@ -124,7 +121,6 @@ Returns daily rows sorted by date:
   date,
   amount,
   commodity,
-  factoredAmount, // present when accountFactors was supplied
 }
 ```
 
@@ -309,8 +305,7 @@ API result as JSON. The report commands preserve their human-readable formats.
 `balance`, `balance-history`, and `unrealized-gains` accept `--format json`;
 `investment-performance` accepts `--json` to return every API field. API option
 names use kebab case on the command line; for example, `withValuationValue` is
-`--with-valuation-value`, `includeTotal` is `--include-total`, and repeated
-`--account-factor ACCOUNT=FACTOR` values form the `accountFactors` object.
+`--with-valuation-value` and `includeTotal` is `--include-total`.
 
 `accounts` defaults to `--format text` and prints the same
 newline-separated account names as `ledger accounts`. Repeating `--accounts

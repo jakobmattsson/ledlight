@@ -137,7 +137,6 @@ underlying result.
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
-| `balance-history --account-factor PATTERN=FACTOR` | `options.accountFactors` | Select and factor matching accounts |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `reconciliation-entries --account PATTERN` | `options.accounts` | Repeated account-pattern selection |
@@ -165,7 +164,7 @@ in each selected transaction. `--id` optionally selects one transaction, and all
 The `balance`, `balance-history`, and `unrealized-gains` commands use `--format
 json` when the complete API result is needed. `investment-performance` uses
 `--json`. JSON is required to retain fields such as `valuationValue` and
-`factoredAmount`.
+other API-only metadata.
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
@@ -534,43 +533,20 @@ const { openJournal } = require('ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
 const history = journal.balanceHistoryReport({
-  accountFactors: {
-    '^Assets:': '1',
-    '^Liabilities:': '1',
-  },
+  accounts: ['^Assets:', '^Liabilities:'],
 });
 ```
-
-`accountFactors` is keyed by account pattern. Its patterns select the included
-accounts, and its values factor their contributions. The report includes a
-`factoredAmount` beside each unmodified `amount`. This supports views such as
-after-tax balances without losing the single daily query for an account group:
-
-```js
-const history = journal.balanceHistoryReport({
-  accountFactors: {
-    '^Assets:Cash': '1',
-    'Assets:Pension': '0.7',
-    'Liabilities:DeferredTax': '0.75',
-  },
-});
-```
-
-Accounts without a matching pattern are excluded. If patterns overlap, the
-first matching factor applies. Omitting `accountFactors` includes all accounts
-and omits `factoredAmount`.
 
 The command prints the complete history by default. `--from`, `--to`, and
-`--invert` work as for the balance report. Repeated `--account-factor
-PATTERN=FACTOR` values select and factor accounts, while `--format` selects
-`text`, `json`, or `csv` output:
+`--invert` work as for the balance report. Repeated `--accounts PATTERN` values
+select accounts, while `--format` selects `text`, `json`, or `csv` output:
 
 ```console
 ledlight balance-history --file main.ledger \
-  --account-factor "^Assets:=1" --account-factor "^Liabilities:=1"
+  --accounts "^Assets:" --accounts "^Liabilities:"
 ledlight balance-history --file main.ledger --date-basis transaction \
-  --account-factor "^Assets:=1" --account-factor "^Liabilities:=1"
-ledlight balance-history --file main.ledger --account-factor "^Assets:=1" --format csv
+  --accounts "^Assets:" --accounts "^Liabilities:"
+ledlight balance-history --file main.ledger --accounts "^Assets:" --format csv
 ```
 
 Human-readable amounts use the default commodity's declared format. CSV
