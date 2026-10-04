@@ -160,7 +160,7 @@ module.exports = ({
     ].join('\n')}\n`;
   }
 
-  function formatLedgerAccounts(rows, { details, format }) {
+  function formatAccounts(rows, { details, format }) {
     const accountNames = rows.map(({ account }) => account);
     const selectedRows = details ? rows : accountNames;
     if (format === 'json') return formatJson(selectedRows);
@@ -221,7 +221,7 @@ module.exports = ({
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
     formatJson,
-    formatLedgerAccounts,
+    formatAccounts,
     $$private: { parseCommodityFormat },
   };
 };

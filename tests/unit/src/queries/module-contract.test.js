@@ -25,7 +25,7 @@ test('registers all queries as one immutable dependency', () => {
     'commodityDescriptionsQuery',
     'gainQuery',
     'investmentPerformanceQuery',
-    'ledgerAccountsQuery',
+    'accountsQuery',
     'ledgerTransactionQuery',
     'ledgerTransactionsQuery',
     'reconciliationEntriesQuery',

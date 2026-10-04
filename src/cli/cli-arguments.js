@@ -108,15 +108,15 @@ module.exports = ({
       'commodityDescriptions',
     );
     addJournal(commodityDescriptions);
-    const ledgerAccounts = registerCommand(
-      program.command('ledger-accounts').description('show declared and used accounts'),
-      'ledgerAccounts',
+    const accounts = registerCommand(
+      program.command('accounts').description('show declared and used accounts'),
+      'accounts',
     );
-    addJournal(ledgerAccounts);
+    addJournal(accounts);
     addOutputBooleanOption(
-      ledgerAccounts, '--details', 'include comments and transaction counts', 'details',
+      accounts, '--details', 'include comments and transaction counts', 'details',
     );
-    addOutputValueOption(ledgerAccounts, '--format <format>', 'select the output format', {
+    addOutputValueOption(accounts, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
 
@@ -277,7 +277,7 @@ module.exports = ({
   function parsedResult(commandName, options) {
     const common = { command: commandName, journalPath: options.file };
     if (commandName === 'commodity-descriptions') return common;
-    if (commandName === 'ledger-accounts') {
+    if (commandName === 'accounts') {
       return {
         ...common,
         output: { details: options.details || false, format: options.format },
