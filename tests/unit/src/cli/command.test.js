@@ -8,23 +8,7 @@ const createCommand = require('../../../../src/cli/cli-command');
 const cliArguments = resolveRepositoryModule('src/cli/cli-arguments.js');
 const cliFormat = resolveRepositoryModule('src/cli/cli-format.js');
 
-const commandNames = [
-  'accounts',
-  'tags',
-  'commodities',
-  'prices',
-  'account-postings',
-  'account-transactions',
-  'commodity-descriptions',
-  'transactions',
-  'print',
-  'reconciliation-entries',
-  'valuation-rate',
-  'balance',
-  'balance-history',
-  'gain',
-  'investment-performance',
-];
+const commandNames = [...new Set([...Object.values(cliArguments.apiCommands), 'print'])];
 
 test('shows identical command help with or without the explicit help option', () => {
   const { runReportCommand } = createCommand({
