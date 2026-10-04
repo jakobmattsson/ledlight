@@ -7,25 +7,27 @@ module.exports = ({
 }) => {
   const optionsSchema = z.strictObject({
     accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' })).default([]),
+    usage: z.enum(['all', 'used', 'unused']).default('all'),
   });
 
   function queryAccounts(database, options, _caches) {
-    const { accounts } = parseOptions(optionsSchema, options, 'accounts');
+    const { accounts, usage } = parseOptions(optionsSchema, options, 'accounts');
     const filter = accounts.length === 0
       ? { sql: '1 = 1', parameters: [] }
-      : accountFilter('postings.account', accounts);
+      : accountFilter('declarations.name', accounts);
     return database.prepare(`
       SELECT
-        postings.account,
+        declarations.name AS account,
         declarations.comment,
+        declarations.used,
         COUNT(DISTINCT postings.transaction_id) AS transactionCount
-      FROM postings
-      JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
-      LEFT JOIN account_declarations AS declarations ON declarations.name = postings.account
-      WHERE decimal_cmp(amounts.quantity, '0') != 0 AND ${filter.sql}
-      GROUP BY postings.account
-      ORDER BY postings.account || char(1114111)
-    `).all(...filter.parameters);
+      FROM account_declarations AS declarations
+      LEFT JOIN postings ON postings.account = declarations.name
+      WHERE (? = 'all' OR declarations.used = (? = 'used')) AND ${filter.sql}
+      GROUP BY declarations.entry_id
+      ORDER BY declarations.name || char(1114111)
+    `).all(usage, usage, ...filter.parameters)
+      .map((row) => ({ ...row, used: Boolean(row.used) }));
   }
 
   return { name: 'accounts', inputSchema: optionsSchema, execute: queryAccounts };

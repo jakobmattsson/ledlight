@@ -276,6 +276,16 @@ P 2024-01-01 FUND 10 USD
     ]);
     assert.equal(ledlightOutput, ledgerOutput, `${ledlightCommand} output differs`);
   }
+
+  assert.equal(exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'accounts', '--file', journalPath, '--usage', 'unused',
+  ]), 'Assets:Unused\nEquity:Opening\n');
+  assert.equal(exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'tags', '--file', journalPath, '--usage', 'unused',
+  ]), 'Unused\n');
+  assert.equal(exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'commodities', '--file', journalPath, '--usage', 'unused',
+  ]), 'UNUSED\n');
 });
 
 test('transactions does not apply the API page limit to default text output', (t) => {

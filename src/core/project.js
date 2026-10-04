@@ -167,11 +167,11 @@ module.exports = ({
       accounts(options) {
         return runQuery(queryAccounts, options);
       },
-      tags() {
-        return runQuery(queryTags, {});
+      tags(options) {
+        return runQuery(queryTags, options);
       },
-      commodities() {
-        return runQuery(queryCommodities, {});
+      commodities(options) {
+        return runQuery(queryCommodities, options);
       },
       prices() {
         return runQuery(queryPrices, {});

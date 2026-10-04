@@ -3,7 +3,7 @@
 module.exports = ({
   path,
   sqlite: Database,
-  decimal: { registerDecimalFunctions },
+  decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
   postingResolver: { PostingResolver },
   journalValidator: { validateJournal },
   journalValuationCommodity: { valuationCommodityFromJournal },
@@ -68,13 +68,13 @@ module.exports = ({
       VALUES (?, ?, ?, ?, ?, ?)
     `),
       account: database.prepare(`
-      INSERT INTO account_declarations (entry_id, name, comment) VALUES (?, ?, ?)
+      INSERT INTO account_declarations (entry_id, name, comment, used) VALUES (?, ?, ?, ?)
     `),
       tag: database.prepare(`
-      INSERT INTO tag_declarations (entry_id, name, comment) VALUES (?, ?, ?)
+      INSERT INTO tag_declarations (entry_id, name, comment, used) VALUES (?, ?, ?, ?)
     `),
       commodity: database.prepare(`
-      INSERT INTO commodity_declarations (entry_id, symbol, comment) VALUES (?, ?, ?)
+      INSERT INTO commodity_declarations (entry_id, symbol, comment, used) VALUES (?, ?, ?, ?)
     `),
       commodityProperty: database.prepare(`
       INSERT INTO commodity_properties
@@ -141,7 +141,7 @@ module.exports = ({
   }
 
   function insertEntry(
-    statements, entryId, entry, counters, resolvedTransactions, ignoredProperties,
+    statements, entryId, entry, counters, resolvedTransactions, ignoredProperties, usage,
   ) {
     switch (entry.type) {
       case 'transaction':
@@ -154,13 +154,15 @@ module.exports = ({
         );
         break;
       case 'account':
-        statements.account.run(entryId, entry.name, entry.comment);
+        statements.account.run(entryId, entry.name, entry.comment, Number(usage.accounts.has(entry.name)));
         break;
       case 'tag':
-        statements.tag.run(entryId, entry.name, entry.comment);
+        statements.tag.run(entryId, entry.name, entry.comment, Number(usage.tags.has(entry.name)));
         break;
       case 'commodity':
-        statements.commodity.run(entryId, entry.symbol, entry.comment);
+        statements.commodity.run(
+          entryId, entry.symbol, entry.comment, Number(usage.commodities.has(entry.symbol)),
+        );
         entry.properties.filter((property) => !ignoredProperties.has(property))
           .forEach((property, position) => {
             statements.commodityProperty.run(
@@ -172,6 +174,42 @@ module.exports = ({
       default:
         throw new Error(`Cannot store unsupported journal entry type: ${entry.type}`);
     }
+  }
+
+  function declarationUsage(entries, resolvedTransactions) {
+    const usage = {
+      accounts: new Set(),
+      commodities: new Set(),
+      tags: new Set(),
+    };
+    for (const entry of entries) {
+      if (entry.type !== 'transaction') continue;
+      const resolvedPostings = resolvedTransactions.get(entry);
+      if (!resolvedPostings) continue;
+      let transactionUsed = false;
+      entry.postings.forEach((posting, position) => {
+        const postingUsed = resolvedPostings[position].some(({ quantity }) =>
+          compareDecimals(parseDecimal(quantity), parseDecimal('0')) !== 0);
+        if (!postingUsed) return;
+        transactionUsed = true;
+        usage.accounts.add(posting.account);
+        for (const amount of [
+          posting.amount,
+          posting.lotCost?.amount,
+          posting.cost?.amount,
+          posting.balanceAssignment,
+          posting.balanceAssertion,
+          ...resolvedPostings[position],
+        ]) {
+          if (amount?.commodity) usage.commodities.add(amount.commodity);
+        }
+        for (const tag of posting.tags || []) usage.tags.add(tag.name);
+      });
+      if (transactionUsed) {
+        for (const tag of entry.tags || []) usage.tags.add(tag.name);
+      }
+    }
+    return usage;
   }
 
   function writeJournalDatabase(databasePath, journal) {
@@ -191,6 +229,7 @@ module.exports = ({
     const storableEntries = journal.entries.filter((entry) =>
       !validation.invalidEntries.has(entry) &&
       (entry.type !== 'transaction' || resolvedTransactions.has(entry)));
+    const usage = declarationUsage(storableEntries, resolvedTransactions);
     const resolvedDatabasePath = path.resolve(databasePath);
     const database = new Database(resolvedDatabasePath);
     database.pragma('foreign_keys = ON');
@@ -245,7 +284,7 @@ module.exports = ({
             entryId, sequence, sourceFileId, entry.type, entry.location.line, entry.location.column,
           );
           insertEntry(
-            statements, entryId, entry, counters, resolvedTransactions, ignoredProperties,
+            statements, entryId, entry, counters, resolvedTransactions, ignoredProperties, usage,
           );
         });
 

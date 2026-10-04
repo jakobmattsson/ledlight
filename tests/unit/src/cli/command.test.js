@@ -158,8 +158,10 @@ test('delegates non-report commands to the corresponding journal operations', ()
       calls.push(['accounts', options]);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
-    tags() { calls.push(['tags']); return [{ tag: 'Imported' }]; },
-    commodities() { calls.push(['commodities']); return [{ commodity: 'USD' }]; },
+    tags(options) { calls.push(['tags', options]); return [{ tag: 'Imported' }]; },
+    commodities(options) {
+      calls.push(['commodities', options]); return [{ commodity: 'USD' }];
+    },
     prices() {
       calls.push(['prices']);
       return [{
@@ -256,10 +258,12 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['accountPostings', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['accountTransactions', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['commodityDescriptions'],
-    ['openJournal', '/journal'], ['accounts', { accounts: [] }],
-    ['openJournal', '/journal'], ['accounts', { accounts: ['Assets:Cash'] }],
-    ['openJournal', '/journal'], ['tags'],
-    ['openJournal', '/journal'], ['commodities'],
+    ['openJournal', '/journal'], ['accounts', { accounts: [], usage: 'used' }],
+    ['openJournal', '/journal'], ['accounts', {
+      accounts: ['Assets:Cash'], usage: 'used',
+    }],
+    ['openJournal', '/journal'], ['tags', { usage: 'used' }],
+    ['openJournal', '/journal'], ['commodities', { usage: 'used' }],
     ['openJournal', '/journal'], ['prices'],
     ['openJournal', '/journal'], ['transactions', {
       accounts: ['Assets:Cash'], id: '7', order: 'newest', page: '2', pageSize: '10',

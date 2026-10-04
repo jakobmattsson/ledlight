@@ -4,26 +4,19 @@ module.exports = ({
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
-  const optionsSchema = z.strictObject({});
+  const optionsSchema = z.strictObject({
+    usage: z.enum(['all', 'used', 'unused']).default('all'),
+  });
 
   function queryCommodities(database, options, _caches) {
-    parseOptions(optionsSchema, options, 'commodities');
+    const { usage } = parseOptions(optionsSchema, options, 'commodities');
     return database.prepare(`
-      SELECT commodity FROM resolved_posting_amounts
-      UNION
-      SELECT amount_commodity AS commodity FROM postings WHERE amount_commodity IS NOT NULL
-      UNION
-      SELECT lot_cost_commodity AS commodity FROM postings WHERE lot_cost_commodity IS NOT NULL
-      UNION
-      SELECT cost_commodity AS commodity FROM postings WHERE cost_commodity IS NOT NULL
-      UNION
-      SELECT balance_assignment_commodity AS commodity
-      FROM postings WHERE balance_assignment_commodity IS NOT NULL
-      UNION
-      SELECT balance_assertion_commodity AS commodity
-      FROM postings WHERE balance_assertion_commodity IS NOT NULL
-      ORDER BY commodity
-    `).all();
+      SELECT symbol AS commodity, used
+      FROM commodity_declarations
+      WHERE ? = 'all' OR used = (? = 'used')
+      ORDER BY commodity, entry_id
+    `).all(usage, usage)
+      .map((row) => ({ ...row, used: Boolean(row.used) }));
   }
 
   return { name: 'commodities', inputSchema: optionsSchema, execute: queryCommodities };

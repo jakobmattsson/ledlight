@@ -4,16 +4,19 @@ module.exports = ({
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
-  const optionsSchema = z.strictObject({});
+  const optionsSchema = z.strictObject({
+    usage: z.enum(['all', 'used', 'unused']).default('all'),
+  });
 
   function queryTags(database, options, _caches) {
-    parseOptions(optionsSchema, options, 'tags');
+    const { usage } = parseOptions(optionsSchema, options, 'tags');
     return database.prepare(`
-      SELECT name AS tag FROM transaction_tags
-      UNION
-      SELECT name AS tag FROM posting_tags
-      ORDER BY tag
-    `).all();
+      SELECT name AS tag, used
+      FROM tag_declarations
+      WHERE ? = 'all' OR used = (? = 'used')
+      ORDER BY tag, entry_id
+    `).all(usage, usage)
+      .map((row) => ({ ...row, used: Boolean(row.used) }));
   }
 
   return { name: 'tags', inputSchema: optionsSchema, execute: queryTags };

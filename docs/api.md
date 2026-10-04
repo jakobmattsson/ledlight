@@ -219,29 +219,34 @@ Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
 `balance` for that commodity.
 
-### `journal.accounts({ accounts })`
+### `journal.accounts({ accounts, usage })`
 
-Returns one row per used, non-zero account in Ledger order. A matching account
-declaration supplies its comment. The optional `accounts`
-array selects names matching any supplied pattern and defaults to `[]`:
+Returns one row per declared account in Ledger order. The optional `accounts`
+array selects names matching any supplied pattern and defaults to `[]`.
+`usage` is `all`, `used`, or `unused` and defaults to `all`. Selecting `used`
+returns only accounts used by non-zero postings, matching Ledger's `accounts`
+command; selecting `unused` finds declarations that can be removed:
 
 ```js
 {
   account,
   comment,
+  used,
   transactionCount,
 }
 ```
 
-### `journal.tags()`
+### `journal.tags({ usage })`
 
-Returns one row per used tag, sorted by name. Unused declarations are omitted.
-Each row is `{ tag }`.
+Returns declared tags sorted by name. `usage` accepts `all`, `used`, or `unused`
+and defaults to `all`; `used` matches Ledger's `tags` command. Each row is
+`{ tag, used }`.
 
-### `journal.commodities()`
+### `journal.commodities({ usage })`
 
-Returns one row per commodity used by a non-zero posting, sorted by symbol.
-Unused declarations are omitted. Each row is `{ commodity }`.
+Returns declared commodities sorted by symbol. `usage` accepts `all`, `used`,
+or `unused` and defaults to `all`; `used` matches Ledger's `commodities`
+command. Each row is `{ commodity, used }`.
 
 ### `journal.prices()`
 

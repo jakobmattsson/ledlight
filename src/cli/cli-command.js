@@ -31,9 +31,9 @@ module.exports = ({
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(options), parsed.output);
     }
-    if (command === 'tags') return formatTags(journal.tags(), parsed.output);
+    if (command === 'tags') return formatTags(journal.tags(options), parsed.output);
     if (command === 'commodities') {
-      return formatCommodities(journal.commodities(), parsed.output);
+      return formatCommodities(journal.commodities(options), parsed.output);
     }
     if (command === 'prices') {
       const descriptions = parsed.output.format === 'text'
