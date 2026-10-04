@@ -14,7 +14,7 @@ const { apiCommands, ledgerCommand, parseArguments, usage } = argumentsModule;
 
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
-    accountBalances: 'account-balances',
+    accountBalances: 'balance',
     accountPostings: 'account-postings',
     aggregateReport: 'aggregate',
     balanceHistoryReport: 'balance-history',
@@ -60,6 +60,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
+  assert.deepEqual(argumentsModule.apiInputCoverage.accountBalances.outputInputs, ['format']);
 });
 
 test('parses account output options without adding API options', () => {
@@ -288,10 +289,24 @@ test('maps every remaining API parameter to CLI arguments', () => {
     },
     output: { csv: false, json: true },
   });
-  assert.deepEqual(parseArguments(['account-balances', '--file', '/journal', '--account', 'Assets:Cash', '--to', '2024-12-31']), {
-    command: 'account-balances', journalPath: '/journal',
+  assert.deepEqual(parseArguments(['balance', '--file', '/journal', '--account', 'Assets:Cash', '--to', '2024-12-31']), {
+    command: 'balance', journalPath: '/journal',
     options: { account: 'Assets:Cash', to: '2024-12-31' },
+    output: { format: 'text' },
   });
+  assert.deepEqual(parseArguments([
+    'balance', '--file', '/journal', '--account', 'Assets:Cash', '--format', 'csv',
+  ]), {
+    command: 'balance', journalPath: '/journal',
+    options: { account: 'Assets:Cash' },
+    output: { format: 'csv' },
+  });
+  assert.throws(
+    () => parseArguments([
+      'balance', '--file', '/journal', '--account', 'Assets:Cash', '--format', 'yaml',
+    ]),
+    /Allowed choices are text, json, csv/u,
+  );
   assert.deepEqual(parseArguments(['account-postings', '--file', '/journal', '--account', 'Assets:Cash', '--after', '2024-01-01']), {
     command: 'account-postings', journalPath: '/journal',
     options: { account: 'Assets:Cash', after: '2024-01-01' },
@@ -337,7 +352,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
 test('rejects missing commands, values, duplicate dates, and unknown options', () => {
   const invalidArguments = [
     [],
-    ['balance'],
+    ['account-balances'],
     ['ledger-transactions', '--file', '/journal'],
     ['aggregate', '--from'],
     ['aggregate', '--from', '--value'],
@@ -364,7 +379,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage(),
-    /misc:\n {2}account-balances\s+show balances for matching accounts[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /misc:\n {2}balance\s+show balances for matching accounts[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\|print\s+show a page of transactions/u);
@@ -379,12 +394,12 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
   assert.match(usage('aggregate'), /--accounts <pattern>.*repeatable/u);
   assert.match(
-    usage('account-balances'),
-    /^Usage: ledlight account-balances --file <path> --account <pattern> \[options\]/u,
+    usage('balance'),
+    /^Usage: ledlight balance --file <path> --account <pattern> \[options\]/u,
   );
   assert.match(
-    usage('account-balances'),
-    /--account <pattern>\s+\(REQUIRED\) select matching accounts[\s\S]*--to <date>[\s\S]*--help/u,
+    usage('balance'),
+    /--account <pattern>\s+\(REQUIRED\) select matching accounts[\s\S]*--to <date>[\s\S]*--format <format>[\s\S]*--help/u,
   );
   assert.match(usage('aggregate'), /--help\s+show command help/u);
   assert.match(

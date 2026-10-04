@@ -65,8 +65,8 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.doesNotMatch(topLevelHelp, /Usage: ledlight aggregate/u);
   assert.equal(runReportCommand([]), topLevelHelp);
   assert.match(
-    runReportCommand(['account-balances', '--help']),
-    /^Usage: ledlight account-balances[\s\S]*--account <pattern>/u,
+    runReportCommand(['balance', '--help']),
+    /^Usage: ledlight balance[\s\S]*--account <pattern>/u,
   );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
   assert.throws(() => runReportCommand(['-V']), /unknown option '-V'/u);
@@ -133,10 +133,16 @@ test('delegates report behavior to the public Node API and only formats results'
 test('delegates non-report commands to the corresponding journal operations', () => {
   const calls = [];
   const journal = {
-    accountBalances(options) { calls.push(['accountBalances', options]); return ['balances']; },
+    accountBalances(options) {
+      calls.push(['accountBalances', options]);
+      return [{ commodity: 'SEK', quantity: '1234.5' }];
+    },
     accountPostings(options) { calls.push(['accountPostings', options]); return ['postings']; },
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
-    commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
+    commodityDescriptions() {
+      calls.push(['commodityDescriptions']);
+      return [{ commodity: 'SEK', comment: null, format: '1,000.00 SEK' }];
+    },
     accounts() {
       calls.push(['accounts']);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
@@ -189,10 +195,24 @@ test('delegates non-report commands to the corresponding journal operations', ()
   });
   const run = (arguments_) => JSON.parse(runReportCommand(arguments_));
 
-  assert.deepEqual(run(['account-balances', '--file', '/journal', '--account', 'Assets:Cash']), ['balances']);
+  assert.equal(
+    runReportCommand(['balance', '--file', '/journal', '--account', 'Assets:Cash']),
+    '1,234.50 SEK\n',
+  );
+  assert.equal(
+    runReportCommand([
+      'balance', '--file', '/journal', '--account', 'Assets:Cash', '--format', 'csv',
+    ]),
+    'quantity,commodity\n1234.5,SEK\n',
+  );
+  assert.deepEqual(run([
+    'balance', '--file', '/journal', '--account', 'Assets:Cash', '--format', 'json',
+  ]), [{ commodity: 'SEK', quantity: '1234.5' }]);
   assert.deepEqual(run(['account-postings', '--file', '/journal', '--account', 'Assets:Cash']), ['postings']);
   assert.deepEqual(run(['account-transactions', '--file', '/journal', '--account', 'Assets:Cash']), ['transactions']);
-  assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), ['commodities']);
+  assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), [
+    { commodity: 'SEK', comment: null, format: '1,000.00 SEK' },
+  ]);
   assert.equal(runReportCommand(['accounts', '--file', '/journal']), 'Assets:Cash\n');
   assert.deepEqual(run([
     'accounts', '--file', '/journal', '--details', '--format', 'json',
@@ -225,7 +245,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
   });
   assert.equal(
     runReportCommand(['transactions', '--file', '/journal']),
-    '2024/01/03 Shop\n    Assets:Cash                               -5 SEK\n',
+    '2024/01/03 Shop\n    Assets:Cash                            -5.00 SEK\n',
   );
   assert.deepEqual(run([
     'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',
@@ -235,6 +255,9 @@ test('delegates non-report commands to the corresponding journal operations', ()
   ]), '10.5');
 
   assert.deepEqual(calls, [
+    ['openJournal', '/journal'], ['commodityDescriptions'],
+    ['accountBalances', { account: 'Assets:Cash' }],
+    ['openJournal', '/journal'], ['accountBalances', { account: 'Assets:Cash' }],
     ['openJournal', '/journal'], ['accountBalances', { account: 'Assets:Cash' }],
     ['openJournal', '/journal'], ['accountPostings', { account: 'Assets:Cash' }],
     ['openJournal', '/journal'], ['accountTransactions', { account: 'Assets:Cash' }],
@@ -293,7 +316,7 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['tags'],
     ['commodities'],
     ['prices'],
-    ['account-balances', '--account', 'Assets:Cash'],
+    ['balance', '--account', 'Assets:Cash'],
     ['account-postings', '--account', 'Assets:Cash'],
     ['account-transactions', '--account', 'Assets:Cash'],
     ['commodity-descriptions'],

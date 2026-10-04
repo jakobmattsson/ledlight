@@ -110,7 +110,7 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `account-balances --file PATH` | `openJournal(journalPath).accountBalances(options)` | Matching-account balances |
+| `balance --file PATH` | `openJournal(journalPath).accountBalances(options)` | Matching-account balances |
 | `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
 | `aggregate --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |

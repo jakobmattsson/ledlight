@@ -12,6 +12,7 @@ module.exports = ({
     formatInvestmentPerformance,
     formatTransactions,
     formatJson,
+    formatAccountBalances,
     formatAccounts,
     formatCommodities,
     formatPrices,
@@ -25,7 +26,14 @@ module.exports = ({
     const { command, journalPath, options } = parsed;
     const journal = project.openJournal(journalPath);
     lastWarnings = journal.warnings || [];
-    if (command === 'account-balances') return formatJson(journal.accountBalances(options));
+    if (command === 'balance') {
+      const descriptions = parsed.output.format === 'text'
+        ? journal.commodityDescriptions()
+        : undefined;
+      return formatAccountBalances(
+        journal.accountBalances(options), parsed.output, descriptions,
+      );
+    }
     if (command === 'account-postings') return formatJson(journal.accountPostings(options));
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
     if (command === 'commodity-descriptions') return formatJson(journal.commodityDescriptions());

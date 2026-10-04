@@ -142,6 +142,19 @@ module.exports = ({
     return `${JSON.stringify(value, null, 2)}\n`;
   }
 
+  function formatAccountBalances(rows, { format }, descriptions) {
+    if (format === 'json') return formatJson(rows);
+    if (format === 'csv') {
+      const lines = ['quantity,commodity'];
+      for (const row of rows) lines.push([row.quantity, row.commodity].map(csvField).join(','));
+      return `${lines.join('\n')}\n`;
+    }
+    const formats = commodityFormats(descriptions);
+    const lines = rows.map((row) =>
+      `${displayQuantity(row.quantity, row.commodity, formats, null)} ${row.commodity}`);
+    return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
+  }
+
   function formatWarnings(warnings) {
     if (warnings.length === 0) return '';
     const lines = [];
@@ -359,6 +372,7 @@ module.exports = ({
     formatInvestmentPerformanceJson,
     formatTransactions,
     formatJson,
+    formatAccountBalances,
     formatWarnings,
     formatAccounts,
     formatCommodities,

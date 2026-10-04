@@ -147,7 +147,7 @@ module.exports = ({
       });
     }
     const accountBalances = registerCommand(
-      program.command('account-balances').description('show balances for matching accounts'),
+      program.command('balance').description('show balances for matching accounts'),
       'accountBalances',
       'misc',
     );
@@ -156,6 +156,9 @@ module.exports = ({
       required: true, apiInput: 'account',
     });
     addDateOption(accountBalances, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
+    addOutputValueOption(accountBalances, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
     const accountPostings = registerCommand(
       program.command('account-postings').description('show postings for matching accounts'),
       'accountPostings',
@@ -364,7 +367,13 @@ module.exports = ({
     if (['tags', 'commodities', 'prices'].includes(commandName)) {
       return { ...common, output: { format: options.format } };
     }
-    if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
+    if (commandName === 'balance') {
+      return {
+        ...common,
+        options: compact({ account: options.account, to: options.to }),
+        output: { format: options.format },
+      };
+    }
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };
     if (commandName === 'transactions') {
