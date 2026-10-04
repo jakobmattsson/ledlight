@@ -79,6 +79,44 @@ test('creates the current schema in an empty database', (t) => {
   );
 });
 
+test('enforces unique account, commodity, and tag declaration names', (t) => {
+  const database = temporaryDatabase(t);
+  migrateDatabase(database);
+  database.exec(`
+    INSERT INTO source_files (id, traversal_index, path, sha256, size)
+    VALUES (1, 0, 'fixture.ledger', '${'0'.repeat(64)}', 0);
+    INSERT INTO journal_entries (id, sequence, source_file_id, type, line, column) VALUES
+      (1, 0, 1, 'account', 1, 1),
+      (2, 1, 1, 'account', 2, 1),
+      (3, 2, 1, 'commodity', 3, 1),
+      (4, 3, 1, 'commodity', 4, 1),
+      (5, 4, 1, 'tag', 5, 1),
+      (6, 5, 1, 'tag', 6, 1);
+    INSERT INTO account_declarations (entry_id, name) VALUES (1, 'Assets:Cash');
+    INSERT INTO commodity_declarations (entry_id, symbol) VALUES (3, 'SEK');
+    INSERT INTO tag_declarations (entry_id, name) VALUES (5, 'Reviewed');
+  `);
+
+  assert.throws(
+    () => database.prepare(`
+      INSERT INTO account_declarations (entry_id, name) VALUES (2, 'Assets:Cash')
+    `).run(),
+    /UNIQUE constraint failed: account_declarations\.name/u,
+  );
+  assert.throws(
+    () => database.prepare(`
+      INSERT INTO commodity_declarations (entry_id, symbol) VALUES (4, 'SEK')
+    `).run(),
+    /UNIQUE constraint failed: commodity_declarations\.symbol/u,
+  );
+  assert.throws(
+    () => database.prepare(`
+      INSERT INTO tag_declarations (entry_id, name) VALUES (6, 'Reviewed')
+    `).run(),
+    /UNIQUE constraint failed: tag_declarations\.name/u,
+  );
+});
+
 test('recreates a supported legacy cache with the current schema', (t) => {
   const database = temporaryDatabase(t);
   database.exec(`

@@ -13,6 +13,9 @@ module.exports = ({
     formatLedgerTransactions,
     formatJson,
     formatAccounts,
+    formatCommodities,
+    formatPrices,
+    formatTags,
   },
 }) => {
 
@@ -29,6 +32,11 @@ module.exports = ({
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(), parsed.output);
     }
+    if (command === 'tags') return formatTags(journal.tags(), parsed.output);
+    if (command === 'commodities') {
+      return formatCommodities(journal.commodities(), parsed.output);
+    }
+    if (command === 'prices') return formatPrices(journal.prices(), parsed.output);
     if (command === 'ledger-transactions') {
       const descriptions = parsed.output.format === 'text'
         ? journal.commodityDescriptions()

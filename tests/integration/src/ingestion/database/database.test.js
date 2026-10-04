@@ -297,6 +297,9 @@ test('stores non-default commodity trades and reports invalid annotations as war
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity SEK
   default
+commodity FUND
+account Assets:Fund
+account Assets:Cash
 2024-01-01 Invalid purchase
   Assets:Fund  1 FUND @ 10 SEK
   Assets:Cash  -10 SEK
@@ -379,6 +382,8 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
   const cliPath = path.resolve(__dirname, '../../../../../src/cli/run.js');
   fs.writeFileSync(journalPath, `commodity SEK
   default
+account Assets:Cash,Main
+account Equity:Opening
 2024-01-01 Opening
   Assets:Cash,Main  1 SEK
   Equity:Opening
@@ -393,6 +398,9 @@ test('aggregate CLI builds stale databases but reuses current databases', (t) =>
 
   fs.writeFileSync(journalPath, `commodity SEK
   default
+account Assets:Cash,Main
+account Assets:LongAccount
+account Equity:Opening
 2024-01-01 Opening
   Assets:Cash,Main  2.005 SEK
   Assets:LongAccount  10000 SEK

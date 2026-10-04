@@ -195,9 +195,10 @@ Returns one row per declared commodity, sorted by commodity symbol:
 }
 ```
 
-`comment` and `format` are strings or `null`; `isDefault` is a boolean. When a
-commodity has several declarations, later comments and format properties take
-precedence. Other commodity properties are not currently exposed.
+`comment` and `format` are strings or `null`; `isDefault` is a boolean. A later
+duplicate commodity declaration produces a warning and is not stored, so the
+first declaration supplies these values. Other commodity properties are not
+currently exposed.
 
 ### `journal.accountTransactions({ account })`
 
@@ -208,7 +209,8 @@ Each posting contains `postingDate` and exact amount rows with the running
 
 ### `journal.accounts()`
 
-Returns declared and used accounts sorted by name:
+Returns one row per declared account, sorted by name. Later duplicate
+declarations produce warnings and are not stored:
 
 ```js
 {
@@ -217,6 +219,32 @@ Returns declared and used accounts sorted by name:
   transactionCount,
 }
 ```
+
+### `journal.tags()`
+
+Returns one row per declared tag, sorted by name. Later duplicate declarations
+produce warnings and are not stored. Each row is `{ tag }`.
+
+### `journal.commodities()`
+
+Returns one row per declared commodity, sorted by symbol. Later duplicate
+declarations produce warnings and are not stored. Each row is `{ commodity }`.
+
+### `journal.prices()`
+
+Returns every price directive, ordered by date and then journal position:
+
+```js
+{
+  date,
+  baseCommodity,
+  quoteQuantity,
+  quoteCommodity,
+  comment,
+}
+```
+
+`comment` is a string or `null`. Quantities remain exact decimal strings.
 
 ### `journal.ledgerTransactions({ account, id, order, page, pageSize })`
 
@@ -281,6 +309,12 @@ includes comments and transaction counts; detailed text uses a table with the
 right-aligned transaction count first, followed by account and comment. The
 `--format json` and `--format csv` alternatives encode either the account names
 or, with `--details`, all fields returned by `journal.accounts()`.
+
+`tags`, `commodities`, and `prices` likewise require no query parameters.
+They default to `--format text` and also accept `--format json` and `--format
+csv`. Text tag and commodity output contains one name per line. Text price
+output contains one price per line with a Ledger-style slash-separated date.
+JSON and CSV retain every field returned by `journal.prices()`.
 
 CLI commands preserve the query result on stdout and emit the journal's
 `warnings` array as JSON on stderr when it is non-empty. No warning output is

@@ -141,6 +141,15 @@ test('delegates non-report commands to the corresponding journal operations', ()
       calls.push(['accounts']);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
+    tags() { calls.push(['tags']); return [{ tag: 'Imported' }]; },
+    commodities() { calls.push(['commodities']); return [{ commodity: 'USD' }]; },
+    prices() {
+      calls.push(['prices']);
+      return [{
+        date: '2024-01-01', baseCommodity: 'EUR', quoteQuantity: '1.1',
+        quoteCommodity: 'USD', comment: null,
+      }];
+    },
     ledgerTransactions(options) {
       calls.push(['ledgerTransactions', options]);
       return {
@@ -188,6 +197,12 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(run([
     'accounts', '--file', '/journal', '--details', '--format', 'json',
   ]), [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }]);
+  assert.equal(runReportCommand(['tags', '--file', '/journal']), 'Imported\n');
+  assert.equal(runReportCommand(['commodities', '--file', '/journal']), 'USD\n');
+  assert.deepEqual(run(['prices', '--file', '/journal', '--format', 'json']), [{
+    date: '2024-01-01', baseCommodity: 'EUR', quoteQuantity: '1.1',
+    quoteCommodity: 'USD', comment: null,
+  }]);
   assert.deepEqual(run([
     'ledger-transactions', '--file', '/journal', '--account', 'Assets:Cash',
     '--id', '7', '--order', 'newest', '--page', '2', '--page-size', '10',
@@ -226,6 +241,9 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['commodityDescriptions'],
     ['openJournal', '/journal'], ['accounts'],
     ['openJournal', '/journal'], ['accounts'],
+    ['openJournal', '/journal'], ['tags'],
+    ['openJournal', '/journal'], ['commodities'],
+    ['openJournal', '/journal'], ['prices'],
     ['openJournal', '/journal'], ['ledgerTransactions', {
       account: 'Assets:Cash', id: '7', order: 'newest', page: '2', pageSize: '10',
     }],

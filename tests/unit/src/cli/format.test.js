@@ -14,6 +14,9 @@ const {
   formatLedgerTransactions,
   formatJson,
   formatAccounts,
+  formatCommodities,
+  formatPrices,
+  formatTags,
 } = resolveRepositoryModule("src/cli/cli-format.js");
 
 const rows = [
@@ -193,6 +196,42 @@ test('formats detailed accounts as text, JSON, and CSV', () => {
     '"Assets:Cash, Main","Everyday ""account""",3\n' +
     'Equity:Opening,,1\n',
   );
+});
+
+test('formats tag and commodity listings as text, JSON, and CSV', () => {
+  const tags = [{ tag: 'Imported' }, { tag: 'Reviewed, manually' }];
+  const commodities = [{ commodity: 'SEK' }, { commodity: 'US, Dollar' }];
+
+  assert.equal(formatTags(tags, { format: 'text' }), 'Imported\nReviewed, manually\n');
+  assert.equal(formatTags(tags, { format: 'json' }), `${JSON.stringify([
+    'Imported', 'Reviewed, manually',
+  ], null, 2)}\n`);
+  assert.equal(formatTags(tags, { format: 'csv' }), 'tag\nImported\n"Reviewed, manually"\n');
+  assert.equal(formatCommodities(commodities, { format: 'text' }), 'SEK\nUS, Dollar\n');
+  assert.equal(
+    formatCommodities(commodities, { format: 'csv' }),
+    'commodity\nSEK\n"US, Dollar"\n',
+  );
+  assert.equal(formatCommodities([], { format: 'text' }), '');
+});
+
+test('formats prices as text, JSON, and CSV', () => {
+  const prices = [{
+    date: '2024-01-02',
+    baseCommodity: 'FUND',
+    quoteQuantity: '12.5',
+    quoteCommodity: 'SEK',
+    comment: 'Closing, official',
+  }];
+
+  assert.equal(formatPrices(prices, { format: 'text' }), '2024/01/02 FUND 12.5 SEK\n');
+  assert.equal(formatPrices(prices, { format: 'json' }), `${JSON.stringify(prices, null, 2)}\n`);
+  assert.equal(
+    formatPrices(prices, { format: 'csv' }),
+    'date,baseCommodity,quoteQuantity,quoteCommodity,comment\n' +
+    '2024-01-02,FUND,12.5,SEK,"Closing, official"\n',
+  );
+  assert.equal(formatPrices([], { format: 'text' }), '');
 });
 
 test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', () => {

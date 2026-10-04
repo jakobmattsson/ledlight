@@ -1,5 +1,9 @@
 commodity USD
   default
+commodity AAPL
+account Assets:Broker
+account Assets:Bank
+account Income:Capital Gains
 
 P 2024-02-01 AAPL 120 USD
 

@@ -94,6 +94,13 @@ than a second implementation.
 right-aligned transaction count followed by account and comment. `--format
 json` and `--format csv` encode the selected basic or detailed representation.
 
+`tags`, `commodities`, and `prices` follow the same listing convention. They
+have no required query parameters beyond `--file`, default to text, and accept
+`--format text`, `--format json`, or `--format csv`. Tags and commodities list
+sorted declaration rows; prices include every price directive in date and
+journal order. Later duplicate declarations produce warnings and are not
+stored, so listings contain each declared name once.
+
 ### CLI to API parity
 
 The following table is the required mapping between CLI behavior and the
@@ -112,6 +119,9 @@ underlying result.
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Exact-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
+| `tags --file PATH` | `openJournal(journalPath).tags()` | Declared tags |
+| `commodities --file PATH` | `openJournal(journalPath).commodities()` | Declared commodities |
+| `prices --file PATH` | `openJournal(journalPath).prices()` | Price directives |
 | `ledger-transactions --file PATH` (`print` alias) | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
 | `ledger-transactions --account NAME` | `options.account` | Select transactions containing the exact account |
 | `ledger-transactions --id ID` | `options.id` | Select one transaction ID |
@@ -134,6 +144,9 @@ underlying result.
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `tags --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `commodities --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `prices --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |
@@ -234,6 +247,18 @@ still be represented is retained; an entry with unresolved amounts is skipped
 without preventing valid entries from being queried. The public API exposes
 the warnings on the opened journal, while the CLI writes the same structured
 list to stderr and keeps query output on stdout.
+
+Accounts, commodities, and tags must be declared before their first use in
+journal traversal order. Each use before its declaration produces an
+`UNDECLARED_ACCOUNT`, `UNDECLARED_COMMODITY`, or `UNDECLARED_TAG` warning at
+the use location. These warnings do not discard the containing transaction or
+price, but the `accounts`, `commodities`, and `tags` queries intentionally list
+only declarations so the journal remains responsible for correcting them.
+Declaring the same name again produces a `DUPLICATE_ACCOUNT_DECLARATION`,
+`DUPLICATE_COMMODITY_DECLARATION`, or `DUPLICATE_TAG_DECLARATION` warning at
+the later declaration. The later declaration is not stored; the first
+declaration and its metadata remain authoritative. Unique database constraints
+on declaration names enforce the same invariant independently of validation.
 
 Explicit non-zero postings in commodities other than the journal default must
 also describe their trade direction unambiguously. A positive quantity must
