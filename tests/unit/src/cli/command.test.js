@@ -69,7 +69,8 @@ test('delegates report behavior to the public Node API and only formats results'
     /^Usage: ledlight account-balances[\s\S]*--account <name>/u,
   );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
-  assert.equal(runReportCommand(['-V']), '1.2.3\n');
+  assert.throws(() => runReportCommand(['-V']), /unknown option '-V'/u);
+  assert.throws(() => runReportCommand(['-h']), /unknown option '-h'/u);
   assert.throws(
     () => runReportCommand(['help']),
     /unknown command 'help'/u,
