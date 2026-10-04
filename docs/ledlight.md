@@ -137,7 +137,6 @@ underlying result.
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
-| `--account-factor PATTERN=FACTOR` | `options.accountFactors` | Pattern-based balance-history factors |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `reconciliation-entries --account PATTERN` | `options.accounts` | Repeated account-pattern selection |
@@ -148,10 +147,10 @@ underlying result.
 | `commodities --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `prices --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `balance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `balance-history --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --total` | None | Append a presentation-only sum of all gain rows |
-| `--csv` | None | Output formatting only |
-| `--json` | None | Output encoding only |
+| `investment-performance --json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |
 | `--help` | None | Top-level command list |
 | `<command> --help` | None | Detailed usage for one command |
@@ -162,9 +161,10 @@ Commands without a specialized human-readable representation emit JSON.
 select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction, and all pagination options are optional and default to
 `--order oldest --page 1 --page-size 100`.
-The `balance` and `unrealized-gains` commands use `--format json` when the
-complete API result is needed. Other report commands use `--json`; this is
-required to retain fields such as `valuationValue` and `factoredAmount`.
+The `balance`, `balance-history`, and `unrealized-gains` commands use `--format
+json` when the complete API result is needed. `investment-performance` uses
+`--json`. JSON is required to retain fields such as `valuationValue` and
+other API-only metadata.
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
@@ -179,8 +179,8 @@ verified equivalent, print `No ledger equivalent command exists` instead.
 Compatibility tests run every advertised Ledger command and its Ledlight
 counterpart against the same fixture and require byte-for-byte identical output.
 
-The CLI reads the first `.ledlightrc` found at `~/.ledlightrc` or
-`./.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
+The CLI reads the first `.ledlightrc` found at `./.ledlightrc` or
+`~/.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
 using the same form as Ledger's initialization file; blank lines and lines
 beginning with `;` are ignored. An explicit command-line `--file` takes
 precedence. This is CLI-only configuration: `openJournal(journalPath)` always
@@ -537,33 +537,16 @@ const history = journal.balanceHistoryReport({
 });
 ```
 
-Code callers can also provide `accountFactors`, keyed by account pattern.
-The report then includes a `factoredAmount` beside each unmodified `amount`.
-This supports views such as after-tax balances without losing the single daily
-query for an account group:
-
-```js
-const history = journal.balanceHistoryReport({
-  accounts: ['^Assets:', '^Liabilities:'],
-  accountFactors: {
-    'Assets:Pension': '0.7',
-    'Liabilities:DeferredTax': '0.75',
-  },
-});
-```
-
-Accounts without a matching factor use `1`. If patterns overlap, the first
-matching factor applies.
-
-The command prints the complete history by default. `--from`, `--to`,
-`--accounts` and `--invert` work as for the balance report; `--csv` selects CSV:
+The command prints the complete history by default. `--from`, `--to`, and
+`--invert` work as for the balance report. Repeated `--accounts PATTERN` values
+select accounts, while `--format` selects `text`, `json`, or `csv` output:
 
 ```console
 ledlight balance-history --file main.ledger \
   --accounts "^Assets:" --accounts "^Liabilities:"
 ledlight balance-history --file main.ledger --date-basis transaction \
   --accounts "^Assets:" --accounts "^Liabilities:"
-ledlight balance-history --file main.ledger --accounts "^Assets:" --csv
+ledlight balance-history --file main.ledger --accounts "^Assets:" --format csv
 ```
 
 Human-readable amounts use the default commodity's declared format. CSV

@@ -135,23 +135,6 @@ test('values holdings daily and applies date filters to the output', (t) => {
   ]);
 });
 
-test('also returns balances with per-pattern account factors when requested', (t) => {
-  const databasePath = buildFixture(t);
-
-  assert.deepEqual(balanceHistoryReport(databasePath, {
-    to: '2024-01-03',
-    accounts: ['^Assets:', '^Liabilities:'],
-    accountFactors: {
-      'Fund$': '0.5',
-      '^Liabilities': '0.25',
-    },
-  }), [
-    { date: '2024-01-01', amount: '20', commodity: 'SEK', factoredAmount: '10' },
-    { date: '2024-01-02', amount: '38', commodity: 'SEK', factoredAmount: '21.5' },
-    { date: '2024-01-03', amount: '44.6', commodity: 'SEK', factoredAmount: '32.3' },
-  ]);
-});
-
 test('rejects invalid intervals and missing historical prices', (t) => {
   const databasePath = buildFixture(t);
   assert.throws(
@@ -163,12 +146,12 @@ test('rejects invalid intervals and missing historical prices', (t) => {
     /--from date .* is after --to date/u,
   );
   assert.throws(
-    () => balanceHistoryReport(databasePath, { accountFactors: { 'Assets:Fund': 'many' } }),
-    /Invalid account factor/u,
-  );
-  assert.throws(
     () => balanceHistoryReport(databasePath, { dateBasis: 'actual' }),
     /Invalid dateBasis/u,
+  );
+  assert.throws(
+    () => balanceHistoryReport(databasePath, { accountFactors: { 'Assets:': '1' } }),
+    /Unknown balanceHistoryReport option: accountFactors/u,
   );
 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-daily-unpriced-'));

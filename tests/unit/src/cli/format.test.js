@@ -139,12 +139,6 @@ test('formats balance history', () => {
     '2024-01-01       2.01 USD\n2024-01-02  10,000.00 USD\n',
   );
   assert.deepEqual(balanceRows.map((row) => row.amount), ['2.005', '10000']);
-  assert.equal(
-    formatBalanceHistoryCsv([{
-      date: '2024-01-01', amount: '10', factoredAmount: '7', commodity: 'USD',
-    }]),
-    'date,amount,factoredAmount\n2024-01-01,10.00,7\n',
-  );
 });
 
 test('uses the valuation commodity format for human-readable valuation reports', () => {

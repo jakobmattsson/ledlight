@@ -248,18 +248,16 @@ module.exports = ({
     const balanceHistory = registerCommand(
       program.command('balance-history').description('show balances over time'),
       'balanceHistoryReport',
-      'misc',
+      'reports',
     );
     addJournal(balanceHistory);
     addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPatterns(balanceHistory); addDateBasisOption(balanceHistory);
-    addValueOption(balanceHistory, '--account-factor <pattern=factor>', 'factor matching accounts (repeatable)', {
-      repeatable: true, apiInput: 'accountFactors',
-    });
-    addJson(balanceHistory);
     addBooleanOption(balanceHistory, '--invert', 'invert the sign of report amounts', 'invert');
-    addOutputBooleanOption(balanceHistory, '--csv', 'write CSV output', 'csv');
+    addOutputValueOption(balanceHistory, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
 
     const unrealizedGains = registerCommand(
       program.command('unrealized-gains').description('show unrealized investment gains'),
@@ -357,16 +355,6 @@ module.exports = ({
       }];
     }));
   }
-  function accountFactors(values) {
-    if (values === undefined) return undefined;
-    return Object.fromEntries(values.map((value) => {
-      const separator = value.indexOf('=');
-      if (separator <= 0 || separator === value.length - 1) {
-        throw new InvalidArgumentError('--account-factor expects ACCOUNT=FACTOR');
-      }
-      return [value.slice(0, separator), value.slice(separator + 1)];
-    }));
-  }
   const compact = (object) => Object.fromEntries(
     Object.entries(object).filter(([, value]) => value !== undefined),
   );
@@ -426,8 +414,7 @@ module.exports = ({
       };
     }
     if (commandName === 'balance-history') {
-      const factors = accountFactors(options.accountFactor);
-      if (factors !== undefined) reportOptions.accountFactors = factors;
+      return { ...common, reportOptions, output: { format: options.format } };
     }
     if (commandName === 'investment-performance') {
       reportOptions.commodities = options.commodities || [];

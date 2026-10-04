@@ -167,11 +167,9 @@ module.exports = ({
   }
 
   function formatBalanceHistoryCsv(rows) {
-    const hasFactoredAmount = rows.some((row) => row.factoredAmount !== undefined);
-    const lines = [hasFactoredAmount ? 'date,amount,factoredAmount' : 'date,amount'];
+    const lines = ['date,amount'];
     for (const row of displayBalanceHistory(rows)) {
       const fields = [row.date, row.amount];
-      if (hasFactoredAmount) fields.push(row.factoredAmount ?? '');
       lines.push(fields.map(csvField).join(','));
     }
     return `${lines.join('\n')}\n`;
