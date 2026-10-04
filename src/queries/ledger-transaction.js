@@ -21,8 +21,6 @@ module.exports = ({
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
         transactions.description,
-        transactions.payee,
-        transactions.narration,
         transactions.comment AS transactionComment,
         postings.id AS postingId,
         postings.position AS postingPosition,
@@ -43,8 +41,6 @@ module.exports = ({
       transactionId: first.transactionId,
       transactionDate: first.transactionDate,
       description: first.description,
-      payee: first.payee,
-      narration: first.narration,
       comment: first.transactionComment,
       postings: [],
     };

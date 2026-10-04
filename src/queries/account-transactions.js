@@ -16,8 +16,6 @@ module.exports = ({
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
         transactions.description,
-        transactions.payee,
-        transactions.narration,
         entries.sequence AS transactionSequence,
         postings.id AS postingId,
         postings.position AS postingPosition,
@@ -48,8 +46,6 @@ module.exports = ({
           transactionId: row.transactionId,
           transactionDate: row.transactionDate,
           description: row.description,
-          payee: row.payee,
-          narration: row.narration,
           sequence: row.transactionSequence,
           postings: [],
         };
@@ -75,8 +71,6 @@ module.exports = ({
         transactionId: transaction.transactionId,
         transactionDate: transaction.transactionDate,
         description: transaction.description,
-        payee: transaction.payee,
-        narration: transaction.narration,
         postings: transaction.postings
           .sort((left, right) =>
             right.postingDate.localeCompare(left.postingDate) || left.id - right.id)

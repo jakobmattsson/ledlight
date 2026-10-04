@@ -53,7 +53,6 @@ module.exports = ({
     topLevel_transaction(date, _space, description, comment, _lineEnd, body) {
       const source = this.args.source;
       const text = description.sourceString.trim();
-      const pipe = text.indexOf('|');
       const items = values(body, source).filter((item) => item !== null);
       const postings = items.filter((item) => item.type === 'posting');
       const transactionComment = optionalValue(comment, source);
@@ -65,8 +64,6 @@ module.exports = ({
         type: 'transaction',
         date: date.ast(source),
         description: text,
-        payee: pipe < 0 ? null : text.slice(0, pipe).trim(),
-        narration: pipe < 0 ? text : text.slice(pipe + 1).trim(),
         comment: transactionComment ? transactionComment.comment : null,
         location: location(date, source),
       };

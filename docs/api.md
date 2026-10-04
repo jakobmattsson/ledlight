@@ -221,7 +221,7 @@ Returns declared and used accounts sorted by name:
 ### `journal.ledgerTransaction({ transactionId })`
 
 Returns one transaction or `null`. The transaction contains
-`transactionId`, `transactionDate`, description, payee, narration, comment,
+`transactionId`, `transactionDate`, description, comment,
 and postings. Each posting contains its date, account,
 comment, and exact `{ quantity, commodity }` amounts.
 

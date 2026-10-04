@@ -32,7 +32,7 @@ module.exports = ({
       SELECT
         t.entry_id AS transactionId,
         p.report_date AS date,
-        COALESCE(t.payee, t.description) AS description,
+        t.description,
         p.account AS postingAccount,
         r.commodity,
         r.quantity AS amount,

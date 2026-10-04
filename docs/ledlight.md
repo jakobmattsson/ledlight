@@ -198,7 +198,7 @@ Awilix `loadModules` converts each basename to its camel-case dependency name.
 ## Supported grammar
 
 The parser currently supports account, tag, commodity, price, and include
-directives; commodity properties; transaction descriptions, payee/narration,
+directives; commodity properties; transaction descriptions,
 tags, and comments; postings with omitted or explicit amounts; unit and total lot
 costs (`{}` and `{{}}`); unit and total transaction costs (`@` and `@@`);
 balance assignments; and balance assertions.

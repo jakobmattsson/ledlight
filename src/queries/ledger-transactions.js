@@ -31,8 +31,6 @@ module.exports = ({
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
         transactions.description,
-        transactions.payee,
-        transactions.narration,
         transactions.comment
       FROM transactions
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id

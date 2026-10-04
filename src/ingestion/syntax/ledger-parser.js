@@ -90,14 +90,11 @@ module.exports = ({
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
 
     const parts = splitComment(text.slice(cursor));
-    const pipe = parts.text.indexOf('|');
     const description = parts.text.trim();
     if (!description) throw syntaxError('Expected a transaction description', source, line, cursor + 1);
     const tags = parseCommentTags(parts.comment);
     return {
       type: 'transaction', date, description,
-      payee: pipe < 0 ? null : parts.text.slice(0, pipe).trim(),
-      narration: pipe < 0 ? description : parts.text.slice(pipe + 1).trim(),
       comment: parts.comment, ...(tags.length > 0 ? { tags } : {}), postings: [], notes: [], location: sourceLocation(source, line, 1),
     };
   }

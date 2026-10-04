@@ -31,8 +31,8 @@ module.exports = ({
     `),
       transaction: database.prepare(`
       INSERT INTO transactions
-        (entry_id, date, description, payee, narration, comment)
-      VALUES (?, ?, ?, ?, ?, ?)
+        (entry_id, date, description, comment)
+      VALUES (?, ?, ?, ?)
     `),
       posting: database.prepare(`
       INSERT INTO postings
@@ -86,7 +86,7 @@ module.exports = ({
 
   function insertTransaction(statements, entryId, entry, counters, resolvedPostings) {
     statements.transaction.run(
-      entryId, entry.date, entry.description, entry.payee, entry.narration, entry.comment,
+      entryId, entry.date, entry.description, entry.comment,
     );
 
     entry.postings.forEach((posting, position) => {
