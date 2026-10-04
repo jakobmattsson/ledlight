@@ -72,6 +72,8 @@ test('parses ledger account output options without adding API options', () => {
     () => parseArguments(['ledger-accounts', '--file', '/journal', '--format', 'yaml']),
     /Allowed choices are text, json, csv/u,
   );
+  assert.match(usage('ledger-accounts'), /--details\s+include comments and transaction counts/u);
+  assert.match(usage('ledger-accounts'), /--format <format>\s+select the output format/u);
 });
 
 test('parses aggregate report options and output flags', () => {
@@ -311,7 +313,5 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage('aggregate'), /--help\s+show command help/u);
   assert.doesNotMatch(usage('aggregate'), /-h, --help/u);
   assert.doesNotMatch(usage(), /-V, --version/u);
-  assert.match(usage('ledger-accounts'), /--details\s+include comments and transaction counts/u);
-  assert.match(usage('ledger-accounts'), /--format <format>\s+select the output format/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
 });

@@ -89,6 +89,11 @@ output-only options may exist only in the CLI. This dependency direction keeps
 the two interfaces consistent and makes the CLI an example consumer rather
 than a second implementation.
 
+`ledger-accounts` defaults to the same newline-separated account names as
+`ledger accounts`. With `--details`, text output is a table containing account,
+comment, and transaction count. `--format json` and `--format csv` encode the
+selected basic or detailed representation.
+
 ### CLI to API parity
 
 The following table is the required mapping between CLI behavior and the
@@ -133,20 +138,12 @@ underlying result.
 | `--help` | None | Top-level command list |
 | `<command> --help` | None | Detailed usage for one command |
 
-`ledger-accounts` defaults to the same newline-separated account names as
-`ledger accounts`. With `--details`, text output is a table containing account,
-comment, and transaction count. `--format json` and `--format csv` encode the
-selected basic or detailed representation.
-
-Commands without another specialized human-readable representation emit JSON.
-Report commands accept `--json` when the complete API result is needed; this is
-required to retain fields such as `valuationValue` and `factoredAmount`. Tests
-compare the journal method inventory with the CLI command inventory and derive
-API-input and output-input inventories separately from the registered options.
-Every API input must have exactly one CLI mapping. CLI-only options must be
-classified as output inputs and may only select a formatter or presentation;
-they are never passed to a journal operation. Adapter tests verify that all
-calculations remain delegated to the API before formatting.
+Commands without a specialized human-readable representation emit JSON.
+Report commands accept `--json` when the complete API result is needed; this
+is required to retain fields such as `valuationValue` and `factoredAmount`.
+Tests compare the journal method inventory with the CLI command inventory,
+verify every parameter mapping, and verify that the command adapter delegates
+calculations to the API before formatting.
 
 The CLI reads the first `.ledlightrc` found at `~/.ledlightrc` or
 `./.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
@@ -163,6 +160,11 @@ registered with Commander. API inputs and CLI-only output inputs have separate
 metadata. Adding a field to a local operation schema without attaching a CLI
 argument to that input therefore fails during CLI composition and in the
 parity test without preventing formatter-only CLI options.
+
+Tests derive API-input and output-input inventories separately from the
+registered options. Every API input must have exactly one CLI mapping.
+CLI-only options must be classified as output inputs and may only select a
+formatter or presentation; they are never passed to a journal operation.
 
 ## Architecture
 
