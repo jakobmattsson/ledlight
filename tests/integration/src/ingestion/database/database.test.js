@@ -9,7 +9,6 @@ const path = require('node:path');
 const test = require('node:test');
 const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
-const { openJournal } = resolveRepositoryModule("src/core/project.js");
 const { pathsForJournal } = resolveRepositoryModule("src/core/cache-paths.js");
 const {
   ensureDatabaseCurrent,
@@ -165,24 +164,7 @@ test('stores lot costs separately from transaction costs', (t) => {
   );
 });
 
-test('loads the Ledger-compatible price history once per journal', (t) => {
-  const directory = temporaryDirectory(t);
-  const journalPath = path.join(directory, 'journal.ledger');
-  fs.writeFileSync(journalPath, `commodity SEK
-  default
-P 2024-01-01 FUND 10 SEK
-2024-01-01 Opening
-  Assets:Fund  1 FUND {10 SEK}
-  Equity:Opening  -10 SEK
-`);
-
-  const journal = openJournal(journalPath);
-  const resolver = journal.ledgerValuationRateResolver();
-  assert.equal(resolver('FUND', '2024-01-01'), '10');
-  assert.equal(journal.ledgerValuationRateResolver(), resolver);
-});
-
-test('materializes the same resolvable price choice used by the public resolver', (t) => {
+test('materializes Ledger-compatible resolvable price choices', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');

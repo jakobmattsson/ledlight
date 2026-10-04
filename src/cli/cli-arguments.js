@@ -212,17 +212,6 @@ module.exports = ({
       'show other postings from the selected accounts\' transactions',
       'related',
     );
-    const valuationRate = registerCommand(
-      program.command('valuation-rate').description('resolve a valuation rate'),
-      'ledgerValuationRateResolver',
-      'misc',
-    );
-    addJournal(valuationRate);
-    addValueOption(valuationRate, '--commodity <name>', 'select the source commodity', {
-      required: true, apiInput: 'commodity',
-    });
-    addDateOption(valuationRate, '--through-date <date>', 'use prices on or before YYYY-MM-DD', 'throughDate');
-
     const aggregate = registerCommand(
       program.command('balance').description('show account balances'),
       'aggregateReport',
@@ -374,7 +363,6 @@ module.exports = ({
     if (commandName === 'reconciliation-entries') {
       return { ...common, options: compact({ accounts: options.account, related: options.related || undefined }) };
     }
-    if (commandName === 'valuation-rate') return { ...common, options: compact({ commodity: options.commodity, throughDate: options.throughDate }) };
     const reportOptions = compact({
       from: options.from, to: options.to, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,

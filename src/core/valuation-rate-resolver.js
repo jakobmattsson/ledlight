@@ -15,7 +15,6 @@ module.exports = ({
     z.string().min(1),
     z.string().optional(),
   ]);
-  const resolverInputNames = Object.freeze(['commodity', 'throughDate']);
 
   function createLedgerValuationRateResolver(priceRows, valuationCommodity) {
     const histories = new Map();
@@ -79,7 +78,5 @@ module.exports = ({
 
   return {
     createLedgerValuationRateResolver,
-    resolverArgumentsSchema,
-    resolverInputNames,
   };
 };

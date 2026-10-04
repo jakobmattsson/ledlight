@@ -5,7 +5,6 @@ module.exports = ({
   fs,
   path,
   queries,
-  valuationRates: { queryLedgerValuationRateResolver, resolverInputNames },
   database: { ensureDatabaseCurrent },
   databaseReader: { readDatabase },
   ingestionWarning: { groupWarnings },
@@ -83,9 +82,6 @@ module.exports = ({
     prices: { inputs: journalInputs(pricesOptionsSchema) },
     transactions: { inputs: journalInputs(transactionsOptionsSchema) },
     reconciliationEntries: { inputs: journalInputs(reconciliationEntriesOptionsSchema) },
-    ledgerValuationRateResolver: {
-      inputs: ['journalPath', ...resolverInputNames],
-    },
   });
   const projectConfigurationError = (message) =>
     createError(errorCodes.PROJECT_CONFIGURATION, message);
@@ -131,7 +127,6 @@ module.exports = ({
       `).all(),
     ));
     const caches = Object.freeze({ valuationPriceCache: new Map() });
-    let ledgerValuationRateResolver;
     const runQuery = (queryFunction, options) => queryDatabase(
       current.databasePath,
       (database) => queryFunction(database, options, caches),
@@ -159,10 +154,6 @@ module.exports = ({
       },
       investmentPerformance(options) {
         return runQuery(queryInvestmentPerformance, options);
-      },
-      ledgerValuationRateResolver() {
-        ledgerValuationRateResolver ??= runQuery(queryLedgerValuationRateResolver, {});
-        return ledgerValuationRateResolver;
       },
       accounts(options) {
         return runQuery(queryAccounts, options);
