@@ -8,6 +8,7 @@ module.exports = ({
   valuationRates: { queryLedgerValuationRateResolver, resolverInputNames },
   database: { ensureDatabaseCurrent },
   databaseReader: { readDatabase },
+  ingestionWarning: { groupWarnings },
   publicErrors: { createError, databaseError, errorCodes },
 }) => {
 
@@ -125,12 +126,15 @@ module.exports = ({
 
   function openJournal(journalPath) {
     const current = ensureCurrent(journalPath);
-    const warnings = queryDatabase(current.databasePath, (database) => database.prepare(`
-      SELECT code, message, source, line, column,
-        start_line AS startLine, end_line AS endLine
-      FROM ingestion_warnings
-      ORDER BY position
-    `).all().map((warning) => Object.freeze(warning)));
+    const warnings = groupWarnings(queryDatabase(
+      current.databasePath,
+      (database) => database.prepare(`
+        SELECT code, message, source, line, column,
+          start_line AS startLine, end_line AS endLine
+        FROM ingestion_warnings
+        ORDER BY position
+      `).all(),
+    ));
     const caches = Object.freeze({ valuationPriceCache: new Map() });
     let ledgerValuationRateResolver;
     const runQuery = (queryFunction, options) => queryDatabase(
@@ -139,7 +143,7 @@ module.exports = ({
     );
     return {
       ...current,
-      warnings: Object.freeze(warnings),
+      warnings,
       accountBalances(options) {
         return runQuery(queryAccountBalances, options);
       },
