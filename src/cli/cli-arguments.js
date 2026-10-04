@@ -276,6 +276,7 @@ module.exports = ({
     addOutputValueOption(gain, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
+    addOutputBooleanOption(gain, '--total', 'append the total gain', 'total');
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
@@ -404,7 +405,11 @@ module.exports = ({
       reportOptions.excludeCommodities = options.excludeCommodities || [];
     }
     if (commandName === 'gain') {
-      return { ...common, reportOptions, output: { format: options.format } };
+      return {
+        ...common,
+        reportOptions,
+        output: { format: options.format, total: options.total || false },
+      };
     }
     return { ...common, reportOptions, output: { csv: options.csv || false, json: options.json || false } };
   }

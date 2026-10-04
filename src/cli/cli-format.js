@@ -2,10 +2,26 @@
 
 module.exports = ({
   decimal: {
+    addDecimals,
+    formatDecimal,
     formatDecimalFixed,
     parseDecimal,
   },
 }) => {
+
+  function appendTotal(rows) {
+    if (rows.length === 0) return rows;
+    const quantity = rows.reduce(
+      (sum, row) => addDecimals(sum, parseDecimal(row.quantity)),
+      parseDecimal('0'),
+    );
+    return [...rows, {
+      account: 'Total',
+      quantity: formatDecimal(quantity),
+      commodity: rows[0].commodity,
+      isTotal: true,
+    }];
+  }
 
   function csvField(value) {
     const text = String(value);
@@ -351,6 +367,7 @@ module.exports = ({
   }
 
   return {
+    appendTotal,
     formatCsv,
     formatBalanceHistoryCsv,
     formatBalanceHistoryHumanReadable,

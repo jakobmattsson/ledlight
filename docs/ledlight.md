@@ -127,6 +127,7 @@ underlying result.
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `gain --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `gain --total` | None | Append a CLI-calculated total gain row |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
@@ -487,7 +488,7 @@ gains. Losses are returned as negative quantities.
 ```console
 ledlight gain --file main.ledger
 ledlight gain --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "^Assets:Broker"
-ledlight gain --file main.ledger --format csv
+ledlight gain --file main.ledger --format csv --total
 ```
 
 The report accepts `from`, `to`, repeated `accounts`, and `date-basis`. The
@@ -495,7 +496,8 @@ date range inclusively selects the entries used to construct open positions.
 It uses the latest valuation price on or before `to`, or the latest available
 price when `to` is omitted. Realized quantities and their lot costs cancel
 when a lot is sold, leaving only unrealized gains or losses on the remaining
-position.
+position. The CLI-only `--total` option appends an exact sum of all returned
+gain rows in text, JSON, or CSV output without changing the `gainReport` API.
 
 ## Balance history
 

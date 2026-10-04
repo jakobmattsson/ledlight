@@ -60,7 +60,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
-  assert.deepEqual(argumentsModule.apiInputCoverage.gainReport.outputInputs, ['format']);
+  assert.deepEqual(argumentsModule.apiInputCoverage.gainReport.outputInputs, ['format', 'total']);
 });
 
 test('parses account output options without adding API options', () => {
@@ -219,6 +219,7 @@ test('parses gain report options and output flags', () => {
     '--accounts', 'Assets:',
     '--date-basis', 'transaction',
     '--format', 'csv',
+    '--total',
   ]), {
     command: 'gain',
     journalPath: '/journal',
@@ -228,17 +229,17 @@ test('parses gain report options and output flags', () => {
       accounts: ['Assets:'],
       dateBasis: 'transaction',
     },
-    output: { format: 'csv' },
+    output: { format: 'csv', total: true },
   });
   assert.deepEqual(parseArguments(['gain', '--file', '/journal']), {
     command: 'gain',
     journalPath: '/journal',
     reportOptions: { accounts: [] },
-    output: { format: 'text' },
+    output: { format: 'text', total: false },
   });
   assert.deepEqual(parseArguments([
     'gain', '--file', '/journal', '--format', 'json',
-  ]).output, { format: 'json' });
+  ]).output, { format: 'json', total: false });
   assert.throws(
     () => parseArguments(['gain', '--file', '/journal', '--format', 'yaml']),
     /Allowed choices are text, json, csv/u,

@@ -5,6 +5,7 @@ module.exports = ({
   packageMetadata: { version },
   cliArguments: { ledgerCommand, parseArguments, usage },
   cliFormat: {
+    appendTotal,
     formatCsv,
     formatBalanceHistoryCsv,
     formatBalanceHistoryHumanReadable,
@@ -65,7 +66,8 @@ module.exports = ({
         : formatInvestmentPerformance(report, journal.commodityDescriptions());
     }
     if (command === 'gain') {
-      const rows = journal.gainReport(reportOptions);
+      const reportRows = journal.gainReport(reportOptions);
+      const rows = output.total ? appendTotal(reportRows) : reportRows;
       if (output.format === 'json') return formatJson(rows);
       return output.format === 'csv'
         ? formatCsv(rows, true)

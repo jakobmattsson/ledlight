@@ -5,6 +5,7 @@ const { resolveRepositoryModule } = require("../../../support/repository-contain
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
+  appendTotal,
   formatCsv,
   formatBalanceHistoryCsv,
   formatBalanceHistoryHumanReadable,
@@ -33,6 +34,18 @@ const rowsWithTotal = [
     isTotal: true,
   },
 ];
+
+test('appends an exact CLI total without changing empty results', () => {
+  assert.deepEqual(appendTotal([
+    { account: 'Assets:One', quantity: '0.1', commodity: 'SEK' },
+    { account: 'Assets:Two', quantity: '0.2', commodity: 'SEK' },
+  ]), [
+    { account: 'Assets:One', quantity: '0.1', commodity: 'SEK' },
+    { account: 'Assets:Two', quantity: '0.2', commodity: 'SEK' },
+    { account: 'Total', quantity: '0.3', commodity: 'SEK', isTotal: true },
+  ]);
+  assert.deepEqual(appendTotal([]), []);
+});
 
 test('formats grouped warnings for a terminal', () => {
   assert.equal(formatWarnings([]), '');
