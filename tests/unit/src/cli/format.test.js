@@ -13,7 +13,6 @@ const {
   formatInvestmentPerformanceJson,
   formatTransactions,
   formatJson,
-  formatAccountBalances,
   formatWarnings,
   formatAccounts,
   formatCommodities,
@@ -68,29 +67,6 @@ test('formats RFC-style CSV and exact valuation rounding', () => {
   assert.equal(formatCsv([], false), 'account,amount,commodity\n');
 });
 
-test('formats account balances as text, CSV, or JSON', () => {
-  const balances = [
-    { commodity: 'SEK', quantity: '1234.5' },
-    { commodity: 'FUND', quantity: '2' },
-  ];
-  const descriptions = [{ commodity: 'SEK', format: '1,000.00 SEK' }];
-
-  assert.equal(
-    formatAccountBalances(balances, { format: 'text' }, descriptions),
-    '1,234.50 SEK\n2 FUND\n',
-  );
-  assert.equal(
-    formatAccountBalances(balances, { format: 'csv' }),
-    'quantity,commodity\n1234.5,SEK\n2,FUND\n',
-  );
-  assert.equal(
-    formatAccountBalances(balances, { format: 'json' }),
-    '[\n  {\n    "commodity": "SEK",\n    "quantity": "1234.5"\n  },\n' +
-      '  {\n    "commodity": "FUND",\n    "quantity": "2"\n  }\n]\n',
-  );
-  assert.equal(formatAccountBalances([], { format: 'text' }), '');
-});
-
 test('aligns human-readable output and uses an English total label', () => {
   assert.equal(
     formatHumanReadable(rowsWithTotal, true),
@@ -100,6 +76,17 @@ test('aligns human-readable output and uses an English total label', () => {
     '             Total  10,002.01 SEK\n',
   );
   assert.equal(formatHumanReadable([], true), '');
+  assert.equal(
+    formatHumanReadable([
+      { quantity: '1234.5', commodity: 'SEK' },
+      { quantity: '2', commodity: 'FUND' },
+    ], false, [{ commodity: 'SEK', format: '1,000.00 SEK' }], 'commodity'),
+    '1,234.50 SEK\n    2    FUND\n',
+  );
+  assert.equal(
+    formatCsv([{ quantity: '1234.5', commodity: 'SEK' }], false, 'commodity'),
+    'amount,commodity\n1234.5,SEK\n',
+  );
 });
 
 test('applies declared commodity precision and separators only to human-readable output', () => {

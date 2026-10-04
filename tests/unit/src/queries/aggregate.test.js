@@ -97,6 +97,27 @@ test('combines literal account patterns with OR and supports anchors', (t) => {
   assert.deepEqual(aggregateReport(databasePath, { accounts: ['Assets:%'] }), []);
 });
 
+test('can group matching accounts by commodity', (t) => {
+  const databasePath = buildFixture(t);
+
+  assert.deepEqual(aggregateReport(databasePath, {
+    to: '2024-01-02',
+    accounts: ['Assets:'],
+    groupBy: 'commodity',
+  }), [
+    { commodity: 'FUND', quantity: '2' },
+    { commodity: 'SEK', quantity: '150' },
+  ]);
+  assert.deepEqual(aggregateReport(databasePath, {
+    to: '2024-01-02',
+    accounts: ['Assets:'],
+    groupBy: 'commodity',
+    inValuationCommodity: true,
+  }), [
+    { commodity: 'SEK', quantity: '170' },
+  ]);
+});
+
 test('values every commodity in the journal default using prices at the upper date', (t) => {
   const databasePath = buildFixture(t);
 
@@ -224,6 +245,16 @@ test('rejects invalid intervals and missing valuation price chains', (t) => {
   assert.throws(
     () => aggregateReport(databasePath, { invert: 'true' }),
     /invert must be a boolean/u,
+  );
+  assert.throws(
+    () => aggregateReport(databasePath, { groupBy: 'currency' }),
+    /Invalid groupBy/u,
+  );
+  assert.throws(
+    () => aggregateReport(databasePath, {
+      groupBy: 'commodity', inValuationCommodity: true, includeTotal: true,
+    }),
+    /includeTotal cannot be used when grouping by commodity/u,
   );
   assert.throws(
     () => aggregateReport(databasePath, { account: 'Assets:' }),

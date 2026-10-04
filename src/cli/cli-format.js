@@ -66,15 +66,19 @@ module.exports = ({
     return groupThousands(fallback);
   }
 
-  function formatCsv(rows, inValuationCommodity) {
-    const lines = ['account,amount,commodity'];
+  function formatCsv(rows, inValuationCommodity, groupBy) {
+    const hasAccounts = groupBy !== 'commodity';
+    const lines = [hasAccounts ? 'account,amount,commodity' : 'amount,commodity'];
     for (const row of displayRows(rows, inValuationCommodity)) {
-      lines.push([row.account, row.quantity, row.commodity].map(csvField).join(','));
+      const fields = hasAccounts
+        ? [row.account, row.quantity, row.commodity]
+        : [row.quantity, row.commodity];
+      lines.push(fields.map(csvField).join(','));
     }
     return `${lines.join('\n')}\n`;
   }
 
-  function formatHumanReadable(rows, inValuationCommodity, descriptions) {
+  function formatHumanReadable(rows, inValuationCommodity, descriptions, groupBy) {
     const formats = commodityFormats(descriptions);
     const reportRows = rows.map((row) => ({
       ...row,
@@ -85,7 +89,8 @@ module.exports = ({
         inValuationCommodity ? 2 : null,
       ),
     }));
-    const accountWidth = Math.max(0, ...reportRows.map((row) => row.account.length));
+    const hasAccounts = groupBy !== 'commodity';
+    const accountWidth = Math.max(0, ...reportRows.map((row) => row.account?.length ?? 0));
     const amounts = reportRows.map((row) => {
       const declaredFormat = formats.get(row.commodity);
       const separator = declaredFormat
@@ -108,8 +113,8 @@ module.exports = ({
         : fraction === undefined
           ? ' '.repeat(fractionWidth + 1)
           : `${separator}${fraction.padEnd(fractionWidth)}`;
-      const line = `${row.account.padStart(accountWidth)}  ` +
-      `${integerColumn}${fractionColumn} ${row.commodity}`;
+      const amount = `${integerColumn}${fractionColumn} ${row.commodity}`;
+      const line = hasAccounts ? `${row.account.padStart(accountWidth)}  ${amount}` : amount;
       if (row.isTotal) {
         const separatorIndent = accountWidth - row.account.length;
         lines.push(`${' '.repeat(separatorIndent)}${'-'.repeat(line.length - separatorIndent)}`);
@@ -140,19 +145,6 @@ module.exports = ({
 
   function formatJson(value) {
     return `${JSON.stringify(value, null, 2)}\n`;
-  }
-
-  function formatAccountBalances(rows, { format }, descriptions) {
-    if (format === 'json') return formatJson(rows);
-    if (format === 'csv') {
-      const lines = ['quantity,commodity'];
-      for (const row of rows) lines.push([row.quantity, row.commodity].map(csvField).join(','));
-      return `${lines.join('\n')}\n`;
-    }
-    const formats = commodityFormats(descriptions);
-    const lines = rows.map((row) =>
-      `${displayQuantity(row.quantity, row.commodity, formats, null)} ${row.commodity}`);
-    return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
   }
 
   function formatWarnings(warnings) {
@@ -372,7 +364,6 @@ module.exports = ({
     formatInvestmentPerformanceJson,
     formatTransactions,
     formatJson,
-    formatAccountBalances,
     formatWarnings,
     formatAccounts,
     formatCommodities,

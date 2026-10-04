@@ -47,20 +47,20 @@ account Equity:Opening
   return openJournal(journalPath);
 }
 
-test('returns matching-account balances by commodity through an inclusive date', (t) => {
+test('groups matching account balances by commodity and retains zero balances', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.accountBalances({ account: '^Assets:Closed$' }), [
-    { commodity: 'FUND', quantity: '0' },
-    { commodity: 'SEK', quantity: '1' },
-  ]);
-  assert.deepEqual(project.accountBalances({ account: '^Assets:Closed$', to: '2023-01-02' }), [
-    { commodity: 'FUND', quantity: '0' },
-    { commodity: 'SEK', quantity: '0' },
-  ]);
-  assert.deepEqual(project.accountBalances({ account: 'Closed' }), [
+  assert.deepEqual(project.aggregateReport({
+    accounts: ['Closed'], groupBy: 'commodity',
+  }), [
     { commodity: 'FUND', quantity: '0' },
     { commodity: 'SEK', quantity: '2' },
+  ]);
+  assert.deepEqual(project.aggregateReport({
+    accounts: ['^Assets:Closed$'], groupBy: 'commodity', to: '2023-01-02',
+  }), [
+    { commodity: 'FUND', quantity: '0' },
+    { commodity: 'SEK', quantity: '0' },
   ]);
 });
 
@@ -84,10 +84,6 @@ test('rejects invalid account-detail options', (t) => {
 
   assert.throws(() => project.accountPostings({ account: '', after: '2023-01-02' }),
     /account must be a non-empty string/u);
-  assert.throws(() => project.accountBalances({ account: 'Assets:Closed', to: '2023-02-30' }),
-    /Invalid to date/u);
-  assert.throws(() => project.accountBalances({ account: 'Assets:Closed', unknown: true }),
-    /Unknown accountBalances option: unknown/u);
   assert.throws(() => project.accountTransactions({ account: 'Assets:Closed', unknown: true }),
     /Unknown accountTransactions option: unknown/u);
 });

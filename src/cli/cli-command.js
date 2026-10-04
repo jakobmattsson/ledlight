@@ -12,7 +12,6 @@ module.exports = ({
     formatInvestmentPerformance,
     formatTransactions,
     formatJson,
-    formatAccountBalances,
     formatAccounts,
     formatCommodities,
     formatPrices,
@@ -26,14 +25,6 @@ module.exports = ({
     const { command, journalPath, options } = parsed;
     const journal = project.openJournal(journalPath);
     lastWarnings = journal.warnings || [];
-    if (command === 'balance') {
-      const descriptions = parsed.output.format === 'text'
-        ? journal.commodityDescriptions()
-        : undefined;
-      return formatAccountBalances(
-        journal.accountBalances(options), parsed.output, descriptions,
-      );
-    }
     if (command === 'account-postings') return formatJson(journal.accountPostings(options));
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
     if (command === 'commodity-descriptions') return formatJson(journal.commodityDescriptions());
@@ -89,16 +80,18 @@ module.exports = ({
     const aggregateOptions = {
       ...reportOptions,
       includeTotal: reportOptions.includeTotal ??
-        (!output.csv && !output.json && reportOptions.inValuationCommodity),
+        (output.format === 'text' && reportOptions.groupBy !== 'commodity' &&
+          reportOptions.inValuationCommodity),
     };
     const rows = journal.aggregateReport(aggregateOptions);
-    if (output.json) return formatJson(rows);
-    return output.csv
-      ? formatCsv(rows, reportOptions.inValuationCommodity)
+    if (output.format === 'json') return formatJson(rows);
+    return output.format === 'csv'
+      ? formatCsv(rows, reportOptions.inValuationCommodity, reportOptions.groupBy)
       : formatHumanReadable(
         rows,
         reportOptions.inValuationCommodity,
         journal.commodityDescriptions(),
+        reportOptions.groupBy,
       );
   }
 
@@ -115,7 +108,7 @@ module.exports = ({
     }
     const parsed = parseArguments(arguments_);
     if (parsed.ledger) return `${ledgerCommand(parsed)}\n`;
-    return ['aggregate', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
+    return ['balance', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
       ? runReport(parsed)
       : runJsonCommand(parsed);
   }

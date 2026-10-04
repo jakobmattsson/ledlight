@@ -19,6 +19,7 @@ module.exports = ({
     accounts: z.array(z.string().min(1)).default([]),
     dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
     from: z.iso.date({ error: 'Invalid --from date' }).optional(),
+    groupBy: z.enum(['account', 'commodity'], { error: 'Invalid groupBy' }).default('account'),
     includeTotal: z.boolean({ error: 'must be a boolean' }).default(false),
     inValuationCommodity: z.boolean({ error: 'must be a boolean' }).default(false),
     invert: z.boolean({ error: 'must be a boolean' }).default(false),
@@ -44,6 +45,12 @@ module.exports = ({
         message: 'includeTotal requires inValuationCommodity',
       });
     }
+    if (input.includeTotal && input.groupBy === 'commodity') {
+      context.addIssue({
+        code: 'custom',
+        message: 'includeTotal cannot be used when grouping by commodity',
+      });
+    }
   });
 
   function reportFilter(options) {
@@ -66,18 +73,24 @@ module.exports = ({
 
   function queryCommodityTotals(database, options) {
     const filter = reportFilter(options);
+    const accountColumn = options.groupBy === 'account' ? 'p.account,\n      ' : '';
+    const groupBy = options.groupBy === 'account'
+      ? 'p.account, r.commodity'
+      : 'r.commodity';
+    const nonZero = options.groupBy === 'account'
+      ? "\n    HAVING decimal_cmp(decimal_sum(r.quantity), '0') != 0"
+      : '';
+    const orderBy = options.groupBy === 'account' ? 'p.account, r.commodity' : 'r.commodity';
     return database.prepare(`
     SELECT
-      p.account,
-      r.commodity,
+      ${accountColumn}r.commodity,
       decimal_sum(r.quantity) AS quantity
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     JOIN transactions AS t ON t.entry_id = p.transaction_id
     ${filter.sql}
-    GROUP BY p.account, r.commodity
-    HAVING decimal_cmp(decimal_sum(r.quantity), '0') != 0
-    ORDER BY p.account, r.commodity
+    GROUP BY ${groupBy}${nonZero}
+    ORDER BY ${orderBy}
   `).all(...filter.parameters);
   }
 
@@ -91,21 +104,26 @@ module.exports = ({
     const valuationCommodity = valuationCommodityFromDatabase(database);
     database.function('valuation_rate', { deterministic: true }, (commodity) => rates.get(commodity));
     const filter = reportFilter(options);
+    const accountColumn = options.groupBy === 'account' ? 'p.account,\n      ' : '';
+    const groupBy = options.groupBy === 'account' ? 'p.account' : '1';
+    const nonZero = options.groupBy === 'account'
+      ? `
+    HAVING decimal_cmp(
+      decimal_sum(decimal_mul(r.quantity, valuation_rate(r.commodity))),
+      '0'
+    ) != 0`
+      : '';
+    const orderBy = options.groupBy === 'account' ? 'p.account' : '1';
     return database.prepare(`
     SELECT
-      p.account,
-      ? AS commodity,
+      ${accountColumn}? AS commodity,
       decimal_sum(decimal_mul(r.quantity, valuation_rate(r.commodity))) AS quantity
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     JOIN transactions AS t ON t.entry_id = p.transaction_id
     ${filter.sql}
-    GROUP BY p.account
-    HAVING decimal_cmp(
-      decimal_sum(decimal_mul(r.quantity, valuation_rate(r.commodity))),
-      '0'
-    ) != 0
-    ORDER BY p.account
+    GROUP BY ${groupBy}${nonZero}
+    ORDER BY ${orderBy}
   `).all(valuationCommodity, ...filter.parameters);
   }
 
