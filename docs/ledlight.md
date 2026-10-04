@@ -90,9 +90,9 @@ the two interfaces consistent and makes the CLI an example consumer rather
 than a second implementation.
 
 `ledger-accounts` defaults to the same newline-separated account names as
-`ledger accounts`. With `--details`, text output is a table containing account,
-comment, and transaction count. `--format json` and `--format csv` encode the
-selected basic or detailed representation.
+`ledger accounts`. With `--details`, text output is a table containing a
+right-aligned transaction count followed by account and comment. `--format
+json` and `--format csv` encode the selected basic or detailed representation.
 
 ### CLI to API parity
 

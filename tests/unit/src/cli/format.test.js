@@ -177,10 +177,10 @@ test('formats detailed ledger accounts as text, JSON, and CSV', () => {
   ];
   assert.equal(
     formatLedgerAccounts(accounts, { details: true, format: 'text' }),
-    'Account            Comment             Transactions\n' +
-    '-----------------  ------------------  ------------\n' +
-    'Assets:Cash, Main  Everyday "account"             3\n' +
-    'Equity:Opening                                    1\n',
+    'Transactions  Account            Comment\n' +
+    '------------  -----------------  ------------------\n' +
+    '           3  Assets:Cash, Main  Everyday "account"\n' +
+    '           1  Equity:Opening\n',
   );
   assert.equal(
     formatLedgerAccounts(accounts, { details: true, format: 'json' }),

@@ -176,9 +176,9 @@ module.exports = ({
     }
     if (!details) return accountNames.length === 0 ? '' : `${accountNames.join('\n')}\n`;
     return formatTextTable(rows, [
+      { heading: 'Transactions', value: (row) => row.transactionCount, align: 'right' },
       { heading: 'Account', value: (row) => row.account },
       { heading: 'Comment', value: (row) => row.comment ?? '' },
-      { heading: 'Transactions', value: (row) => row.transactionCount, align: 'right' },
     ]);
   }
 

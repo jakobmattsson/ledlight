@@ -270,7 +270,8 @@ on the command line; for example, `withValuationValue` is
 
 `ledger-accounts` defaults to `--format text` and prints the same
 newline-separated account names as `ledger accounts`. Its `--details` flag
-includes comments and transaction counts; detailed text uses a table. The
+includes comments and transaction counts; detailed text uses a table with the
+right-aligned transaction count first, followed by account and comment. The
 `--format json` and `--format csv` alternatives encode either the account names
 or, with `--details`, all fields returned by `journal.ledgerAccounts()`.
 
