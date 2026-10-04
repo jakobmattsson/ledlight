@@ -34,10 +34,6 @@ module.exports = ({
     execute: queryBalanceHistory,
   } = query('balanceHistoryReport');
   const {
-    inputSchema: commodityDescriptionsOptionsSchema,
-    execute: queryCommodityDescriptions,
-  } = query('commodityDescriptions');
-  const {
     inputSchema: unrealizedGainsOptionsSchema,
     execute: queryUnrealizedGains,
   } = query('unrealizedGains');
@@ -78,7 +74,6 @@ module.exports = ({
     unrealizedGains: { inputs: journalInputs(unrealizedGainsOptionsSchema) },
     investmentPerformance: { inputs: journalInputs(investmentPerformanceOptionsSchema) },
     accountTransactions: { inputs: journalInputs(accountTransactionsOptionsSchema) },
-    commodityDescriptions: { inputs: journalInputs(commodityDescriptionsOptionsSchema) },
     accounts: { inputs: journalInputs(accountsOptionsSchema) },
     tags: { inputs: journalInputs(tagsOptionsSchema) },
     commodities: { inputs: journalInputs(commoditiesOptionsSchema) },
@@ -148,9 +143,6 @@ module.exports = ({
       },
       balanceHistoryReport(options) {
         return runQuery(queryBalanceHistory, options);
-      },
-      commodityDescriptions() {
-        return runQuery(queryCommodityDescriptions, {});
       },
       unrealizedGains(options) {
         return runQuery(queryUnrealizedGains, options);

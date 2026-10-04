@@ -67,8 +67,8 @@ different.
 
 Formatting remains a CLI responsibility, but the CLI must not query internal
 database modules. The project API exposes the metadata through
-`commodityDescriptions()`, allowing the CLI to apply declared formats without
-acquiring accounting logic of its own.
+`commodities({ usage: 'all' })`, allowing the CLI to apply declared formats
+without acquiring accounting logic of its own.
 
 Tests should cover zero-, two-, and multi-decimal commodities as well as a
 format without digit grouping. Declared formats apply only to human-readable

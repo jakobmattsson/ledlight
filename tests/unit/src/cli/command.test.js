@@ -51,7 +51,7 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
           moneyWeightedReturnTotal: null,
           moneyWeightedReturn: null,
         }),
-        commodityDescriptions: () => [],
+        commodities: () => [],
       };
     },
   };
@@ -103,9 +103,12 @@ test('delegates report behavior to the public Node API and only formats results'
         moneyWeightedReturn: null,
       };
     },
-    commodityDescriptions() {
-      calls.push({ operation: 'commodityDescriptions' });
-      return [{ commodity: 'USD', comment: null, format: '1,000.00 USD', isDefault: true }];
+    commodities(options) {
+      calls.push({ operation: 'commodities', options });
+      return [{
+        commodity: 'USD', comment: null, format: '1,000.00 USD',
+        isDefault: true, used: true,
+      }];
     },
   };
   const project = {
@@ -180,7 +183,7 @@ test('delegates report behavior to the public Node API and only formats results'
         includeTotal: true,
       },
     },
-    { operation: 'commodityDescriptions' },
+    { operation: 'commodities', options: { usage: 'all' } },
     { operation: 'openJournal', journalPath: '/journal' },
     {
       operation: 'aggregateReport',
@@ -199,7 +202,7 @@ test('delegates report behavior to the public Node API and only formats results'
       operation: 'investmentPerformance',
       options: { accounts: [], commodities: [], excludeCommodities: [] },
     },
-    { operation: 'commodityDescriptions' },
+    { operation: 'commodities', options: { usage: 'all' } },
     { operation: 'openJournal', journalPath: '/journal' },
     { operation: 'unrealizedGains', options: { accounts: [] } },
   ]);
@@ -210,17 +213,22 @@ test('delegates non-report commands to the corresponding journal operations', ()
   const journal = {
     accountPostings(options) { calls.push(['accountPostings', options]); return ['postings']; },
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
-    commodityDescriptions() {
-      calls.push(['commodityDescriptions']);
-      return [{ commodity: 'SEK', comment: null, format: '1,000.00 SEK' }];
-    },
     accounts(options) {
       calls.push(['accounts', options]);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
     tags(options) { calls.push(['tags', options]); return [{ tag: 'Imported' }]; },
     commodities(options) {
-      calls.push(['commodities', options]); return [{ commodity: 'USD' }];
+      calls.push(['commodities', options]);
+      const usd = {
+        commodity: 'USD', comment: null, format: '1,000.00 USD',
+        isDefault: true, used: true,
+      };
+      if (options.usage === 'used') return [usd];
+      return [{
+        commodity: 'SEK', comment: null, format: '1,000.00 SEK',
+        isDefault: false, used: false,
+      }, usd];
     },
     prices() {
       calls.push(['prices']);
@@ -263,15 +271,21 @@ test('delegates non-report commands to the corresponding journal operations', ()
 
   assert.deepEqual(run(['account-postings', '--file', '/journal', '--accounts', 'Assets:Cash']), ['postings']);
   assert.deepEqual(run(['account-transactions', '--file', '/journal', '--accounts', 'Assets:Cash']), ['transactions']);
-  assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), [
-    { commodity: 'SEK', comment: null, format: '1,000.00 SEK' },
-  ]);
   assert.equal(runReportCommand(['accounts', '--file', '/journal']), 'Assets:Cash\n');
   assert.deepEqual(run([
     'accounts', '--file', '/journal', '--accounts', 'Assets:Cash', '--details', '--format', 'json',
   ]), [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }]);
   assert.equal(runReportCommand(['tags', '--file', '/journal']), 'Imported\n');
   assert.equal(runReportCommand(['commodities', '--file', '/journal']), 'USD\n');
+  assert.deepEqual(run([
+    'commodities', '--file', '/journal', '--usage', 'all', '--details', '--format', 'json',
+  ]), [{
+    commodity: 'SEK', comment: null, format: '1,000.00 SEK',
+    isDefault: false, used: false,
+  }, {
+    commodity: 'USD', comment: null, format: '1,000.00 USD',
+    isDefault: true, used: true,
+  }]);
   assert.deepEqual(run(['prices', '--file', '/journal', '--format', 'json']), [{
     date: '2024-01-01', baseCommodity: 'EUR', quoteQuantity: '1.1',
     quoteCommodity: 'USD', comment: null,
@@ -306,18 +320,18 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(calls, [
     ['openJournal', '/journal'], ['accountPostings', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['accountTransactions', { accounts: ['Assets:Cash'] }],
-    ['openJournal', '/journal'], ['commodityDescriptions'],
     ['openJournal', '/journal'], ['accounts', { accounts: [], usage: 'used' }],
     ['openJournal', '/journal'], ['accounts', {
       accounts: ['Assets:Cash'], usage: 'used',
     }],
     ['openJournal', '/journal'], ['tags', { usage: 'used' }],
     ['openJournal', '/journal'], ['commodities', { usage: 'used' }],
+    ['openJournal', '/journal'], ['commodities', { usage: 'all' }],
     ['openJournal', '/journal'], ['prices'],
     ['openJournal', '/journal'], ['transactions', {
       accounts: ['Assets:Cash'], id: '7', order: 'newest', page: '2', pageSize: '10',
     }],
-    ['openJournal', '/journal'], ['commodityDescriptions'], ['transactions', { accounts: [] }],
+    ['openJournal', '/journal'], ['commodities', { usage: 'all' }], ['transactions', { accounts: [] }],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
   ]);
 });
@@ -364,7 +378,6 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['balance'],
     ['account-postings', '--accounts', 'Assets:Cash'],
     ['account-transactions', '--accounts', 'Assets:Cash'],
-    ['commodity-descriptions'],
     ['transactions'],
     ['print'],
     ['reconciliation-entries', '--account', 'Assets:Cash'],

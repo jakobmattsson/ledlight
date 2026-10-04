@@ -97,9 +97,10 @@ json` and `--format csv` encode the selected basic or detailed representation.
 `tags`, `commodities`, and `prices` follow the same listing convention. They
 have no required query parameters beyond `--file`, default to text, and accept
 `--format text`, `--format json`, or `--format csv`. Tags and commodities list
-used names and omit unused declarations. Prices expose the effective market
-price database, including inferred transaction prices and last-price-wins
-deduplication for a commodity and date.
+used names and omit unused declarations. `commodities --details` includes each
+selected declaration's comment, format, default status, and usage status.
+Prices expose the effective market price database, including inferred
+transaction prices and last-price-wins deduplication for a commodity and date.
 
 ### CLI to API parity
 
@@ -116,7 +117,6 @@ underlying result.
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
-| `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
 | `tags --file PATH` | `openJournal(journalPath).tags()` | Used tags |
 | `commodities --file PATH` | `openJournal(journalPath).commodities()` | Used commodities |
@@ -142,6 +142,7 @@ underlying result.
 | `reconciliation-entries --account PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
+| `commodities --details` | None | Include API-provided declaration metadata in the output |
 | `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `tags --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `commodities --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |

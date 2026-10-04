@@ -28,7 +28,6 @@ module.exports = ({
     lastWarnings = journal.warnings || [];
     if (command === 'account-postings') return formatJson(journal.accountPostings(options));
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
-    if (command === 'commodity-descriptions') return formatJson(journal.commodityDescriptions());
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(options), parsed.output);
     }
@@ -38,13 +37,13 @@ module.exports = ({
     }
     if (command === 'prices') {
       const descriptions = parsed.output.format === 'text'
-        ? journal.commodityDescriptions()
+        ? journal.commodities({ usage: 'all' })
         : undefined;
       return formatPrices(journal.prices(), parsed.output, descriptions);
     }
     if (command === 'transactions') {
       const descriptions = parsed.output.format === 'text'
-        ? journal.commodityDescriptions()
+        ? journal.commodities({ usage: 'all' })
         : undefined;
       if (parsed.output.format === 'text' &&
           options.page === undefined && options.pageSize === undefined) {
@@ -75,7 +74,7 @@ module.exports = ({
       const report = journal.investmentPerformance(reportOptions);
       return output.json
         ? formatJson(report)
-        : formatInvestmentPerformance(report, journal.commodityDescriptions());
+        : formatInvestmentPerformance(report, journal.commodities({ usage: 'all' }));
     }
     if (command === 'unrealized-gains') {
       const reportRows = journal.unrealizedGains(reportOptions);
@@ -83,14 +82,14 @@ module.exports = ({
       if (output.format === 'json') return formatJson(rows);
       return output.format === 'csv'
         ? formatCsv(rows, true)
-        : formatHumanReadable(rows, true, journal.commodityDescriptions());
+        : formatHumanReadable(rows, true, journal.commodities({ usage: 'all' }));
     }
     if (command === 'balance-history') {
       const rows = journal.balanceHistoryReport(reportOptions);
       if (output.format === 'json') return formatJson(rows);
       return output.format === 'csv'
         ? formatBalanceHistoryCsv(rows)
-        : formatBalanceHistoryHumanReadable(rows, journal.commodityDescriptions());
+        : formatBalanceHistoryHumanReadable(rows, journal.commodities({ usage: 'all' }));
     }
     const aggregateOptions = {
       ...reportOptions,
@@ -105,7 +104,7 @@ module.exports = ({
       : formatHumanReadable(
         rows,
         reportOptions.inValuationCommodity,
-        journal.commodityDescriptions(),
+        journal.commodities({ usage: 'all' }),
         reportOptions.groupBy,
       );
   }

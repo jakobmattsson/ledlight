@@ -248,7 +248,30 @@ module.exports = ({
   }
 
   const formatTags = (rows, output) => formatNameRows(rows, output, 'tag');
-  const formatCommodities = (rows, output) => formatNameRows(rows, output, 'commodity');
+  function formatCommodities(rows, { details, format }) {
+    if (!details) return formatNameRows(rows, { format }, 'commodity');
+    if (format === 'json') return formatJson(rows);
+    if (format === 'csv') {
+      const lines = ['commodity,comment,format,isDefault,used'];
+      for (const row of rows) {
+        lines.push([
+          row.commodity,
+          row.comment ?? '',
+          row.format ?? '',
+          row.isDefault,
+          row.used,
+        ].map(csvField).join(','));
+      }
+      return `${lines.join('\n')}\n`;
+    }
+    return formatTextTable(rows, [
+      { heading: 'Commodity', value: (row) => row.commodity },
+      { heading: 'Default', value: (row) => row.isDefault ? 'yes' : '' },
+      { heading: 'Used', value: (row) => row.used ? 'yes' : '' },
+      { heading: 'Format', value: (row) => row.format ?? '' },
+      { heading: 'Comment', value: (row) => row.comment ?? '' },
+    ]);
+  }
 
   function formatPrices(rows, { format }, descriptions) {
     if (format === 'json') return formatJson(rows);

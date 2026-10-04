@@ -156,6 +156,11 @@ module.exports = ({
       if (name !== 'prices') {
         addUsageSelection(command, `${name} declarations`);
       }
+      if (name === 'commodities') {
+        addOutputBooleanOption(
+          command, '--details', 'include comments, formats, and usage', 'details',
+        );
+      }
       addOutputValueOption(command, '--format <format>', 'select the output format', {
         choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
       });
@@ -179,13 +184,6 @@ module.exports = ({
     addValueOption(accountTransactions, '--accounts <pattern>', 'select matching accounts (repeatable)', {
       repeatable: true, required: true, apiInput: 'accounts',
     });
-    const commodityDescriptions = registerCommand(
-      program.command('commodity-descriptions').description('show declared commodities'),
-      'commodityDescriptions',
-      'misc',
-    );
-    addJournal(commodityDescriptions);
-
     const transactions = registerCommand(
       program.command('transactions').alias('print')
         .description('show transactions'),
@@ -360,7 +358,6 @@ module.exports = ({
   );
   function parsedResult(commandName, options) {
     const common = { command: commandName, journalPath: options.file };
-    if (commandName === 'commodity-descriptions') return common;
     if (commandName === 'accounts') {
       return {
         ...common,
@@ -372,7 +369,10 @@ module.exports = ({
       return {
         ...common,
         options: { usage: options.usage || 'used' },
-        output: { format: options.format },
+        output: {
+          ...(commandName === 'commodities' ? { details: options.details || false } : {}),
+          format: options.format,
+        },
       };
     }
     if (commandName === 'prices') {
