@@ -60,6 +60,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
+  assert.deepEqual(argumentsModule.apiInputCoverage.gainReport.outputInputs, ['format']);
 });
 
 test('parses account output options without adding API options', () => {
@@ -213,27 +214,37 @@ test('parses gain report options and output flags', () => {
   assert.deepEqual(parseArguments([
     'gain',
     '--file', '/journal',
+    '--from', '2024-01-01',
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
     '--date-basis', 'transaction',
-    '--csv',
+    '--format', 'csv',
   ]), {
     command: 'gain',
     journalPath: '/journal',
     reportOptions: {
+      from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction',
     },
-    output: { csv: true, json: false },
+    output: { format: 'csv' },
   });
   assert.deepEqual(parseArguments(['gain', '--file', '/journal']), {
     command: 'gain',
     journalPath: '/journal',
     reportOptions: { accounts: [] },
-    output: { csv: false, json: false },
+    output: { format: 'text' },
   });
-  assert.throws(() => parseArguments(['gain', '--from', '2024-01-01']), /Usage:/u);
+  assert.deepEqual(parseArguments([
+    'gain', '--file', '/journal', '--format', 'json',
+  ]).output, { format: 'json' });
+  assert.throws(
+    () => parseArguments(['gain', '--file', '/journal', '--format', 'yaml']),
+    /Allowed choices are text, json, csv/u,
+  );
+  assert.throws(() => parseArguments(['gain', '--file', '/journal', '--csv']), /unknown option '--csv'/u);
+  assert.throws(() => parseArguments(['gain', '--file', '/journal', '--json']), /unknown option '--json'/u);
 });
 
 test('parses investment performance selections and JSON output', () => {

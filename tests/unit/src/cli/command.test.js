@@ -95,7 +95,7 @@ test('delegates report behavior to the public Node API and only formats results'
     /Opening value: 0\.00 USD/u,
   );
   assert.equal(
-    runReportCommand(['gain', '--file', '/journal', '--csv']),
+    runReportCommand(['gain', '--file', '/journal', '--format', 'csv']),
     'account,amount,commodity\nAssets:Broker,12.50,USD\n',
   );
 

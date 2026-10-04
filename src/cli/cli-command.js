@@ -66,8 +66,8 @@ module.exports = ({
     }
     if (command === 'gain') {
       const rows = journal.gainReport(reportOptions);
-      if (output.json) return formatJson(rows);
-      return output.csv
+      if (output.format === 'json') return formatJson(rows);
+      return output.format === 'csv'
         ? formatCsv(rows, true)
         : formatHumanReadable(rows, true, journal.commodityDescriptions());
     }

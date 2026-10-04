@@ -270,9 +270,12 @@ module.exports = ({
       'misc',
     );
     addJournal(gain);
+    addDateOption(gain, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPatterns(gain); addDateBasisOption(gain); addJson(gain);
-    addOutputBooleanOption(gain, '--csv', 'write CSV output', 'csv');
+    addAccountPatterns(gain); addDateBasisOption(gain);
+    addOutputValueOption(gain, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
@@ -399,6 +402,9 @@ module.exports = ({
     if (commandName === 'investment-performance') {
       reportOptions.commodities = options.commodities || [];
       reportOptions.excludeCommodities = options.excludeCommodities || [];
+    }
+    if (commandName === 'gain') {
+      return { ...common, reportOptions, output: { format: options.format } };
     }
     return { ...common, reportOptions, output: { csv: options.csv || false, json: options.json || false } };
   }

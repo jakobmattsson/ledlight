@@ -126,6 +126,7 @@ underlying result.
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `gain --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
@@ -485,14 +486,16 @@ gains. Losses are returned as negative quantities.
 
 ```console
 ledlight gain --file main.ledger
-ledlight gain --file main.ledger --to 2024-12-31 --accounts "^Assets:Broker"
-ledlight gain --file main.ledger --csv
+ledlight gain --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "^Assets:Broker"
+ledlight gain --file main.ledger --format csv
 ```
 
-The report accepts `to`, repeated `accounts`, and `date-basis`. It uses the
-latest valuation price on or before `to`, or the latest available price when
-`to` is omitted. Realized quantities and their lot costs cancel when a lot is
-sold, leaving only unrealized gains or losses on the remaining position.
+The report accepts `from`, `to`, repeated `accounts`, and `date-basis`. The
+date range inclusively selects the entries used to construct open positions.
+It uses the latest valuation price on or before `to`, or the latest available
+price when `to` is omitted. Realized quantities and their lot costs cancel
+when a lot is sold, leaving only unrealized gains or losses on the remaining
+position.
 
 ## Balance history
 

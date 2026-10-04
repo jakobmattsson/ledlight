@@ -65,15 +65,22 @@ test('returns unrealized gains and losses by account in the default commodity', 
 test('uses the report date for positions, prices, and account selection', (t) => {
   const databasePath = buildFixture(t);
   assert.deepEqual(gainReport(databasePath, { to: '2024-01-31' }), []);
+  assert.deepEqual(gainReport(databasePath, { from: '2024-02-01' }), [
+    { account: 'Assets:Broker', quantity: '-80', commodity: 'USD' },
+  ]);
   assert.deepEqual(gainReport(databasePath, { accounts: ['Assets:Bonds'] }), [
     { account: 'Assets:Bonds', quantity: '-20', commodity: 'USD' },
   ]);
 });
 
-test('rejects unsupported gain report options and invalid dates', (t) => {
+test('rejects unsupported gain report options and invalid date ranges', (t) => {
   const databasePath = buildFixture(t);
-  assert.throws(() => gainReport(databasePath, { from: '2024-01-01' }),
-    /Unknown gainReport option: from/u);
+  assert.throws(() => gainReport(databasePath, { unknown: true }),
+    /Unknown gainReport option: unknown/u);
+  assert.throws(() => gainReport(databasePath, { from: '2024-02-30' }),
+    /Invalid --from date/u);
   assert.throws(() => gainReport(databasePath, { to: '2024-02-30' }),
     /Invalid --to date/u);
+  assert.throws(() => gainReport(databasePath, { from: '2024-02-02', to: '2024-02-01' }),
+    /--from date 2024-02-02 is after --to date 2024-02-01/u);
 });

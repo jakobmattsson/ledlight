@@ -20,16 +20,26 @@ module.exports = ({
   const optionsSchema = z.strictObject({
     accounts: z.array(z.string().min(1)).default([]),
     dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
+    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
     to: z.iso.date({ error: 'Invalid --to date' }).optional(),
+  }).superRefine((input, context) => {
+    if (input.from && input.to && input.from > input.to) {
+      context.addIssue({
+        code: 'custom',
+        message: `--from date ${input.from} is after --to date ${input.to}`,
+        path: ['from'],
+      });
+    }
   });
 
   function reportFilter(options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
     const clauses = [
       'r.commodity != ?',
+      `${dateExpression} >= COALESCE(?, '0000-01-01')`,
       `${dateExpression} <= COALESCE(?, '9999-12-31')`,
     ];
-    const parameters = [valuationCommodity, options.to ?? null];
+    const parameters = [valuationCommodity, options.from ?? null, options.to ?? null];
     if (options.accounts.length > 0) {
       const filter = accountFilter('p.account', options.accounts);
       clauses.push(filter.sql);

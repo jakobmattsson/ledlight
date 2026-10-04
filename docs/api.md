@@ -131,10 +131,11 @@ grouped by account and expressed as exact decimal strings in the journal
 default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
-Options are `to`, `accounts`, and `dateBasis`. `to` is the inclusive position
-and valuation date, `accounts` contains account patterns, and
-`dateBasis` is `posting` (the default) or `transaction`. When `to` is omitted,
-the latest available journal price is used.
+Options are `from`, `to`, `accounts`, and `dateBasis`. `from` and `to` are the
+inclusive entry range, with `to` also serving as the valuation date. `accounts`
+contains account patterns, and `dateBasis` is `posting` (the default) or
+`transaction`. When `to` is omitted, the latest available journal price is
+used.
 
 ### `journal.investmentPerformance(options)`
 
