@@ -1,15 +1,13 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../../support/repository-container");
+const { resolveRepositoryModule } = require('../../../support/repository-container');
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { loadReconciliationEntries } = resolveRepositoryModule(
-  "src/queries/support/reconciliation-entries.js",
-).$$private;
+const { openJournal } = resolveRepositoryModule('src/core/project.js');
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-reconciliation-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
@@ -38,12 +36,13 @@ function reconciliationFields(entry) {
   return fields;
 }
 
-test('reads direct and related reconciliation entries from one current database', (t) => {
+test('reads direct and related reconciliation entries from the open journal', (t) => {
   const journalPath = createProject(t);
-  const first = loadReconciliationEntries(journalPath);
+  const journal = openJournal(journalPath);
 
-  assert.equal(first.rebuilt, true);
-  assert.deepEqual(first.readEntries(['Assets:Cash']).map(reconciliationFields), [{
+  assert.deepEqual(journal.reconciliationEntries({
+    accounts: ['Assets:Cash'],
+  }).map(reconciliationFields), [{
     date: '2024-01-01',
     amount: '-10',
     description: 'Shop',
@@ -51,7 +50,9 @@ test('reads direct and related reconciliation entries from one current database'
     account: 'Assets:Cash',
   }]);
   assert.deepEqual(
-    first.readEntries(['Assets:Cash'], { related: true }).map(reconciliationFields),
+    journal.reconciliationEntries({
+      accounts: ['Assets:Cash'], related: true,
+    }).map(reconciliationFields),
     [{
       date: '2024-01-01',
       amount: '10',
@@ -61,7 +62,17 @@ test('reads direct and related reconciliation entries from one current database'
       postingAccount: 'Expenses:Food',
     }],
   );
+});
 
-  const second = loadReconciliationEntries(journalPath);
-  assert.equal(second.rebuilt, false);
+test('validates reconciliation options through the public API', (t) => {
+  const journal = openJournal(createProject(t));
+
+  assert.throws(() => journal.reconciliationEntries(),
+    /accounts Invalid input: expected array/u);
+  assert.throws(() => journal.reconciliationEntries({ accounts: [] }),
+    /accounts must contain at least one account/u);
+  assert.throws(() => journal.reconciliationEntries({ accounts: [''] }),
+    /accounts\.0 must be a non-empty string/u);
+  assert.throws(() => journal.reconciliationEntries({ accounts: ['Assets:Cash'], unknown: true }),
+    /Unknown reconciliationEntries option: unknown/u);
 });

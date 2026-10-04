@@ -9,7 +9,7 @@ module.exports = ({
     account: z.string().min(1, { error: 'must be a non-empty string' }),
   });
 
-  function queryAccountTransactions(database, options) {
+  function queryAccountTransactions(database, options, _caches) {
     const { account } = parseOptions(optionsSchema, options, 'accountTransactions');
     const rows = database.prepare(`
       SELECT

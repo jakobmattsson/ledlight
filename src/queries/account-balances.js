@@ -9,7 +9,7 @@ module.exports = ({
     to: z.iso.date({ error: 'Invalid to date' }).optional(),
   });
 
-  function queryAccountBalances(database, options) {
+  function queryAccountBalances(database, options, _caches) {
     const { account, to } = parseOptions(optionsSchema, options, 'accountBalances');
     return database.prepare(`
       SELECT r.commodity, decimal_sum(r.quantity) AS quantity

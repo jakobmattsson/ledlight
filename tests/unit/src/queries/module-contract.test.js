@@ -15,7 +15,7 @@ test('registers all queries as one immutable dependency', () => {
   const queries = container.resolve('queries');
 
   assert.ok(Object.isFrozen(queries));
-  assert.equal(queries.length, 11);
+  assert.equal(queries.length, 12);
   for (const registrationName of [
     'accountBalancesQuery',
     'accountPostingsQuery',
@@ -28,6 +28,7 @@ test('registers all queries as one immutable dependency', () => {
     'ledgerAccountsQuery',
     'ledgerTransactionQuery',
     'ledgerTransactionsQuery',
+    'reconciliationEntriesQuery',
   ]) {
     assert.equal(container.hasRegistration(registrationName), false);
   }
@@ -51,6 +52,8 @@ test('each query module is exposed through the query collection', () => {
     assert.equal(typeof query.inputSchema?.safeParse, 'function',
       `${fileName} must expose inputSchema`);
     assert.equal(typeof query.execute, 'function', `${fileName} must expose execute`);
+    assert.equal(query.execute.length, 3,
+      `${fileName} execute must accept database, options, and caches`);
     assert.ok(Object.isFrozen(query), `${fileName} must be immutable`);
   }
 });

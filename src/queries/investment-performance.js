@@ -183,7 +183,7 @@ module.exports = ({
     });
   }
 
-  function queryInvestmentPerformance(database, options) {
+  function queryInvestmentPerformance(database, options, _caches) {
     const reportOptions = parseOptions(optionsSchema, options, 'investmentPerformance');
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const commodities = selectedCommodities(database, reportOptions);

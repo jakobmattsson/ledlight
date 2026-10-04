@@ -203,6 +203,19 @@ Returns a paginated transaction collection. `order` is `newest` or `oldest`;
 The result contains `order`, the selected `page`, `pageSize`,
 `totalTransactions`, `totalPages`, and `transactions`.
 
+### `journal.reconciliationEntries({ accounts, related })`
+
+Returns resolved posting amounts for one or more exact account names, ordered
+by posting date and journal position. `accounts` must be a non-empty array of
+non-empty strings. `related` defaults to `false`; when true, the result instead
+contains the other postings from transactions involving each selected account.
+
+Each row contains `date`, `amount`, `description`, `commodity`, `account`,
+`filename`, `sourceLine`, and `row`. Related rows also contain
+`postingAccount`, which identifies the other posting's account. `amount` is an
+exact decimal string, `account` is the selected account, and `row` is the
+one-based position in the complete ordered posting-amount result.
+
 ### `journal.ledgerValuationRateResolver()`
 
 Returns a cached function `resolve(commodity, throughDate)`. The function
