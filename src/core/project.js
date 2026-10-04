@@ -164,8 +164,8 @@ module.exports = ({
         ledgerValuationRateResolver ??= runQuery(queryLedgerValuationRateResolver, {});
         return ledgerValuationRateResolver;
       },
-      accounts() {
-        return runQuery(queryAccounts, {});
+      accounts(options) {
+        return runQuery(queryAccounts, options);
       },
       tags() {
         return runQuery(queryTags, {});

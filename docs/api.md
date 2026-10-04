@@ -174,7 +174,7 @@ improvement backlog.
 
 ## Account operations
 
-### `journal.accountPostings({ account, after })`
+### `journal.accountPostings({ accounts, after })`
 
 Returns resolved amounts for matching accounts after the optional exclusive
 date. A row is:
@@ -211,17 +211,19 @@ duplicate commodity declaration produces a warning and is not stored, so the
 first declaration supplies these values. Other commodity properties are not
 currently exposed.
 
-### `journal.accountTransactions({ account })`
+### `journal.accountTransactions({ accounts })`
 
 Returns newest-first transactions containing postings to matching accounts.
+`accounts` is a non-empty array and matches any supplied pattern.
 Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
 `balance` for that commodity.
 
-### `journal.accounts()`
+### `journal.accounts({ accounts })`
 
 Returns one row per declared account, sorted by name. Later duplicate
-declarations produce warnings and are not stored:
+declarations produce warnings and are not stored. The optional `accounts`
+array selects names matching any supplied pattern and defaults to `[]`:
 
 ```js
 {
@@ -257,11 +259,11 @@ Returns every price directive, ordered by date and then journal position:
 
 `comment` is a string or `null`. Quantities remain exact decimal strings.
 
-### `journal.transactions({ account, id, order, page, pageSize })`
+### `journal.transactions({ accounts, id, order, page, pageSize })`
 
-Returns a paginated transaction collection. All options are optional. `account`
-selects transactions containing a posting to a matching account while retaining
-all postings in each selected transaction. `id` selects the transaction with
+Returns a paginated transaction collection. All options are optional. `accounts`
+is an array that selects transactions containing a posting matching any pattern
+while retaining all postings in each selected transaction. `id` selects the transaction with
 that positive integer ID. `order` is `newest` or `oldest` and defaults to
 `oldest`; `page` defaults to `1`, while `pageSize` defaults to `100`. Page values
 are positive integers, and `pageSize` cannot exceed 100.
@@ -272,8 +274,8 @@ cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
 The `transactions` CLI command, also available as `print`, defaults to
-`--format text`. Its `--account PATTERN` option selects transactions by account
-pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
+`--format text`. Its repeatable `--accounts PATTERN` option selects transactions
+by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the transactions on the selected page.
 `--format json` returns the complete paginated API result, while `--format csv`
 returns one row per posting amount with transaction and posting fields.
@@ -316,11 +318,13 @@ on the command line; for example, `withValuationValue` is
 `--account-factor ACCOUNT=FACTOR` values form the `accountFactors` object.
 
 `accounts` defaults to `--format text` and prints the same
-newline-separated account names as `ledger accounts`. Its `--details` flag
+newline-separated account names as `ledger accounts`. Repeating `--accounts
+PATTERN` selects names matching any supplied pattern. In `--ledger` mode these
+filters are emitted as Ledger's positional report-query arguments. Its `--details` flag
 includes comments and transaction counts; detailed text uses a table with the
 right-aligned transaction count first, followed by account and comment. The
 `--format json` and `--format csv` alternatives encode either the account names
-or, with `--details`, all fields returned by `journal.accounts()`.
+or, with `--details`, all fields returned by `journal.accounts(options)`.
 
 `tags`, `commodities`, and `prices` likewise require no query parameters.
 They default to `--format text` and also accept `--format json` and `--format

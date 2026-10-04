@@ -50,12 +50,12 @@ test('fails when a locally declared API input has no actual CLI option', () => {
 test('tracks API inputs separately from CLI-only output inputs', () => {
   assert.deepEqual(argumentsModule.apiInputCoverage.accounts, {
     command: 'accounts',
-    inputs: ['journalPath'],
+    inputs: ['journalPath', 'accounts'],
     outputInputs: ['details', 'format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.transactions, {
     command: 'transactions',
-    inputs: ['journalPath', 'account', 'id', 'order', 'page', 'pageSize'],
+    inputs: ['journalPath', 'accounts', 'id', 'order', 'page', 'pageSize'],
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['format']);
@@ -65,13 +65,16 @@ test('parses account output options without adding API options', () => {
   assert.deepEqual(parseArguments(['accounts', '--file', '/journal']), {
     command: 'accounts',
     journalPath: '/journal',
+    options: { accounts: [] },
     output: { details: false, format: 'text' },
   });
   assert.deepEqual(parseArguments([
-    'accounts', '--file', '/journal', '--details', '--format', 'csv',
+    'accounts', '--file', '/journal', '--accounts', '^Assets:',
+    '--accounts', '^Expenses:', '--details', '--format', 'csv',
   ]), {
     command: 'accounts',
     journalPath: '/journal',
+    options: { accounts: ['^Assets:', '^Expenses:'] },
     output: { details: true, format: 'csv' },
   });
   assert.throws(
@@ -145,6 +148,7 @@ test('parses --ledger as a CLI-only mode and renders supported base commands', (
   assert.deepEqual(accounts, {
     command: 'accounts',
     journalPath: "/journals/O'Brien books.ledger",
+    options: { accounts: [] },
     output: { details: false, format: 'text' },
     ledger: true,
   });
@@ -155,12 +159,14 @@ test('parses --ledger as a CLI-only mode and renders supported base commands', (
 
   const print = parseArguments(['print', '--file', '/journal', '--ledger']);
   assert.equal(ledgerCommand(print), 'ledger --args-only --no-pager --file /journal print');
-  assert.equal(
-    ledgerCommand(parseArguments([
-      'transactions', '--file', '/journal', '--account', 'Assets:Cash', '--ledger',
-    ])),
-    'No ledger equivalent command exists',
-  );
+  assert.equal(ledgerCommand(parseArguments([
+    'accounts', '--file', '/journal', '--accounts', '^Assets:Cash$',
+    '--accounts', "Expenses:O'Brien", '--ledger',
+  ])), "ledger --args-only --no-pager --file /journal accounts '^Assets:Cash$' 'Expenses:O'\\''Brien'");
+  assert.equal(ledgerCommand(parseArguments([
+    'transactions', '--file', '/journal', '--accounts', 'Assets:Cash',
+    '--accounts', 'Expenses:Food', '--ledger',
+  ])), 'ledger --args-only --no-pager --file /journal print Assets:Cash Expenses:Food');
 });
 
 test('uses the CLI configuration file argument when --file is omitted', () => {
@@ -295,32 +301,33 @@ test('maps every remaining API parameter to CLI arguments', () => {
     ]),
     /Allowed choices are text, json, csv/u,
   );
-  assert.deepEqual(parseArguments(['account-postings', '--file', '/journal', '--account', 'Assets:Cash', '--after', '2024-01-01']), {
+  assert.deepEqual(parseArguments(['account-postings', '--file', '/journal', '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank', '--after', '2024-01-01']), {
     command: 'account-postings', journalPath: '/journal',
-    options: { account: 'Assets:Cash', after: '2024-01-01' },
+    options: { accounts: ['Assets:Cash', 'Assets:Bank'], after: '2024-01-01' },
   });
-  assert.deepEqual(parseArguments(['account-transactions', '--file', '/journal', '--account', 'Assets:Cash']), {
+  assert.deepEqual(parseArguments(['account-transactions', '--file', '/journal', '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank']), {
     command: 'account-transactions', journalPath: '/journal',
-    options: { account: 'Assets:Cash' },
+    options: { accounts: ['Assets:Cash', 'Assets:Bank'] },
   });
   assert.deepEqual(parseArguments([
-    'transactions', '--file', '/journal', '--account', 'Assets:Cash',
+    'transactions', '--file', '/journal', '--accounts', 'Assets:Cash',
+    '--accounts', 'Assets:Bank',
     '--id', '42', '--order', 'oldest', '--page', '2',
     '--page-size', '25', '--format', 'csv',
   ]), {
     command: 'transactions', journalPath: '/journal',
     options: {
-      account: 'Assets:Cash', id: '42', order: 'oldest', page: '2', pageSize: '25',
+      accounts: ['Assets:Cash', 'Assets:Bank'], id: '42', order: 'oldest', page: '2', pageSize: '25',
     },
     output: { format: 'csv' },
   });
   assert.deepEqual(parseArguments(['transactions', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',
-    options: {}, output: { format: 'text' },
+    options: { accounts: [] }, output: { format: 'text' },
   });
   assert.deepEqual(parseArguments(['print', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',
-    options: {}, output: { format: 'text' },
+    options: { accounts: [] }, output: { format: 'text' },
   });
   assert.deepEqual(parseArguments([
     'reconciliation-entries', '--file', '/journal',
@@ -380,7 +387,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('balance'), /^Usage: ledlight balance --file <path> \[options\]/u);
   assert.match(usage('print'), /^Usage: ledlight transactions\|print --file <path> \[options\]/u);
-  assert.match(usage('print'), /--account <pattern>\s+select transactions for matching accounts/u);
+  assert.match(usage('print'), /--accounts <pattern>.*repeatable/u);
   assert.match(usage('balance'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
   assert.match(usage('balance'), /--accounts <pattern>.*repeatable/u);
   assert.match(

@@ -29,7 +29,7 @@ module.exports = ({
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
     if (command === 'commodity-descriptions') return formatJson(journal.commodityDescriptions());
     if (command === 'accounts') {
-      return formatAccounts(journal.accounts(), parsed.output);
+      return formatAccounts(journal.accounts(options), parsed.output);
     }
     if (command === 'tags') return formatTags(journal.tags(), parsed.output);
     if (command === 'commodities') {

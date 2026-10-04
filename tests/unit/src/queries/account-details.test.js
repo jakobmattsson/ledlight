@@ -51,7 +51,7 @@ test('groups matching account balances by commodity and retains zero balances', 
   const project = createProject(t);
 
   assert.deepEqual(project.aggregateReport({
-    accounts: ['Closed'], groupBy: 'commodity',
+    accounts: ['Closed', '^Assets:Unused$'], groupBy: 'commodity',
   }), [
     { commodity: 'FUND', quantity: '0' },
     { commodity: 'SEK', quantity: '2' },
@@ -67,9 +67,9 @@ test('groups matching account balances by commodity and retains zero balances', 
 test('returns matching-account activity after either its transaction or posting date', (t) => {
   const project = createProject(t);
 
-  assert.equal(project.accountPostings({ account: '^Assets:Closed$' }).length, 5);
-  assert.equal(project.accountPostings({ account: 'Closed' }).length, 6);
-  assert.deepEqual(project.accountPostings({ account: '^Assets:Closed$', after: '2023-01-02' }), [
+  assert.equal(project.accountPostings({ accounts: ['^Assets:Closed$'] }).length, 5);
+  assert.equal(project.accountPostings({ accounts: ['^Assets:Closed$', '^Assets:Closed:Child$'] }).length, 6);
+  assert.deepEqual(project.accountPostings({ accounts: ['^Assets:Closed$'], after: '2023-01-02' }), [
     {
       transactionDate: '2023-01-02',
       postingDate: '2023-01-04',
@@ -82,9 +82,11 @@ test('returns matching-account activity after either its transaction or posting 
 test('rejects invalid account-detail options', (t) => {
   const project = createProject(t);
 
-  assert.throws(() => project.accountPostings({ account: '', after: '2023-01-02' }),
-    /account must be a non-empty string/u);
-  assert.throws(() => project.accountTransactions({ account: 'Assets:Closed', unknown: true }),
+  assert.throws(() => project.accountPostings({ accounts: [''], after: '2023-01-02' }),
+    /accounts\.0 must be a non-empty string/u);
+  assert.throws(() => project.accountPostings({ accounts: [] }),
+    /accounts must contain at least one account/u);
+  assert.throws(() => project.accountTransactions({ accounts: ['Assets:Closed'], unknown: true }),
     /Unknown accountTransactions option: unknown/u);
 });
 
@@ -97,12 +99,16 @@ test('lists declared accounts with transaction counts', (t) => {
     { account: 'Assets:Unused', comment: 'Kept for future use', transactionCount: 0 },
     { account: 'Equity:Opening', comment: null, transactionCount: 4 },
   ]);
+  assert.deepEqual(project.accounts({ accounts: ['Closed$', '^Equity:'] }), [
+    { account: 'Assets:Closed', comment: null, transactionCount: 3 },
+    { account: 'Equity:Opening', comment: null, transactionCount: 4 },
+  ]);
 });
 
 test('returns newest-first transactions and groups amounts by posting', (t) => {
   const project = createProject(t);
 
-  const transactions = project.accountTransactions({ account: '^Assets:Closed$' });
+  const transactions = project.accountTransactions({ accounts: ['^Assets:Closed$'] });
   assert.equal(transactions.length, 3);
   assert.deepEqual(transactions[0], {
     transactionId: 10,
@@ -124,5 +130,7 @@ test('returns newest-first transactions and groups amounts by posting', (t) => {
       { quantity: '2', commodity: 'FUND', balance: '2' },
     ],
   }]);
-  assert.equal(project.accountTransactions({ account: 'Closed' }).length, 4);
+  assert.equal(project.accountTransactions({
+    accounts: ['^Assets:Closed$', '^Assets:Closed:Child$'],
+  }).length, 4);
 });
