@@ -112,7 +112,7 @@ test('delegates report behavior to the public Node API and only formats results'
     'amount,commodity\n-10,USD\n',
   );
   assert.equal(
-    runReportCommand(['balance-history', '--file', '/journal', '--invert', '--csv']),
+    runReportCommand(['balance-history', '--file', '/journal', '--invert', '--format', 'csv']),
     'date,amount\n2024-01-01,-10.00\n',
   );
   assert.match(
@@ -147,7 +147,6 @@ test('delegates report behavior to the public Node API and only formats results'
     {
       operation: 'balanceHistoryReport',
       options: {
-        accounts: [],
         invert: true,
       },
     },

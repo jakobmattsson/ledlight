@@ -35,7 +35,6 @@ module.exports = ({
     });
   const optionsSchema = z.strictObject({
     accountFactors: accountFactorsSchema,
-    accounts: z.array(z.string().min(1)).default([]),
     dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
     from: z.iso.date({ error: 'Invalid --from date' }).optional(),
     invert: z.boolean({ error: 'must be a boolean' }).default(false),
@@ -60,18 +59,16 @@ module.exports = ({
           ELSE '1'
         END`
       : undefined;
-    const postingClauses = [];
+    const selectionFilter = factorEntries.length > 0
+      ? accountFilter('p.account', factorEntries.map(([pattern]) => pattern))
+      : undefined;
     const parameters = factorEntries.flatMap(([, factor], index) => [
       ...factorFilters[index].parameters,
       factor,
     ]);
-    if (options.accounts.length > 0) {
-      const filter = accountFilter('p.account', options.accounts);
-      postingClauses.push(filter.sql);
-      parameters.push(...filter.parameters);
-    }
-    const postingWhere = postingClauses.length > 0
-      ? `WHERE ${postingClauses.join('\n        AND ')}`
+    parameters.push(...(selectionFilter?.parameters ?? []));
+    const postingWhere = selectionFilter
+      ? `WHERE ${selectionFilter.sql}`
       : '';
     const latestSelectedDate = options.dateBasis === 'transaction'
       ? 'SELECT MAX(date) AS date FROM transactions'

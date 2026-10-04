@@ -59,13 +59,13 @@ P 2024-01-06 NOK 1.2 SEK
 test('returns the exact valuation value for each calendar day', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(balanceHistoryReport(databasePath, { accounts: ['Assets:'] }), [
-    { date: '2024-01-01', amount: '20', commodity: 'SEK' },
-    { date: '2024-01-02', amount: '38', commodity: 'SEK' },
-    { date: '2024-01-03', amount: '54.6', commodity: 'SEK' },
-    { date: '2024-01-04', amount: '54.6', commodity: 'SEK' },
-    { date: '2024-01-05', amount: '41.4', commodity: 'SEK' },
-    { date: '2024-01-06', amount: '43.8', commodity: 'SEK' },
+  assert.deepEqual(balanceHistoryReport(databasePath, { accountFactors: { 'Assets:': '1' } }), [
+    { date: '2024-01-01', amount: '20', commodity: 'SEK', factoredAmount: '20' },
+    { date: '2024-01-02', amount: '38', commodity: 'SEK', factoredAmount: '38' },
+    { date: '2024-01-03', amount: '54.6', commodity: 'SEK', factoredAmount: '54.6' },
+    { date: '2024-01-04', amount: '54.6', commodity: 'SEK', factoredAmount: '54.6' },
+    { date: '2024-01-05', amount: '41.4', commodity: 'SEK', factoredAmount: '41.4' },
+    { date: '2024-01-06', amount: '43.8', commodity: 'SEK', factoredAmount: '43.8' },
   ]);
 });
 
@@ -75,8 +75,8 @@ test('nets internal transfers in the daily balance', (t) => {
   assert.deepEqual(balanceHistoryReport(databasePath, {
     from: '2024-01-03',
     to: '2024-01-03',
-    accounts: ['Assets:', 'Liabilities:'],
-  }), [{ date: '2024-01-03', amount: '44.6', commodity: 'SEK' }]);
+    accountFactors: { 'Assets:': '1', 'Liabilities:': '1' },
+  }), [{ date: '2024-01-03', amount: '44.6', commodity: 'SEK', factoredAmount: '44.6' }]);
 });
 
 test('applies inversion as a public report option', (t) => {
@@ -85,9 +85,11 @@ test('applies inversion as a public report option', (t) => {
   assert.deepEqual(balanceHistoryReport(databasePath, {
     from: '2024-01-01',
     to: '2024-01-01',
-    accounts: ['Assets:'],
+    accountFactors: { 'Assets:': '1' },
     invert: true,
-  }), [{ date: '2024-01-01', amount: '-20', commodity: 'SEK' }]);
+  }), [{
+    date: '2024-01-01', amount: '-20', commodity: 'SEK', factoredAmount: '-20',
+  }]);
 });
 
 test('keeps an internal transfer atomic when a posting has another date', (t) => {
@@ -104,20 +106,20 @@ test('keeps an internal transfer atomic when a posting has another date', (t) =>
   buildDatabase(databasePath, journalPath);
 
   assert.deepEqual(balanceHistoryReport(databasePath, {
-    accounts: ['Assets:'],
+    accountFactors: { 'Assets:': '1' },
     dateBasis: 'transaction',
-  }), [{ date: '2024-01-02', amount: '0', commodity: 'SEK' }]);
+  }), [{ date: '2024-01-02', amount: '0', commodity: 'SEK', factoredAmount: '0' }]);
 });
 
 test('can use transaction dates instead of posting dates', (t) => {
   const databasePath = buildFixture(t);
 
   assert.deepEqual(balanceHistoryReport(databasePath, {
-    accounts: ['Assets:Fund'],
+    accountFactors: { 'Assets:Fund': '1' },
     dateBasis: 'transaction',
     from: '2024-01-04',
     to: '2024-01-04',
-  }), [{ date: '2024-01-04', amount: '26.4', commodity: 'SEK' }]);
+  }), [{ date: '2024-01-04', amount: '26.4', commodity: 'SEK', factoredAmount: '26.4' }]);
 });
 
 test('values holdings daily and applies date filters to the output', (t) => {
@@ -125,13 +127,13 @@ test('values holdings daily and applies date filters to the output', (t) => {
 
   assert.deepEqual(balanceHistoryReport(databasePath, {
     from: '2024-01-02',
-    accounts: ['Assets:Fund'],
+    accountFactors: { 'Assets:Fund': '1' },
   }), [
-    { date: '2024-01-02', amount: '33', commodity: 'SEK' },
-    { date: '2024-01-03', amount: '39.6', commodity: 'SEK' },
-    { date: '2024-01-04', amount: '39.6', commodity: 'SEK' },
-    { date: '2024-01-05', amount: '26.4', commodity: 'SEK' },
-    { date: '2024-01-06', amount: '28.8', commodity: 'SEK' },
+    { date: '2024-01-02', amount: '33', commodity: 'SEK', factoredAmount: '33' },
+    { date: '2024-01-03', amount: '39.6', commodity: 'SEK', factoredAmount: '39.6' },
+    { date: '2024-01-04', amount: '39.6', commodity: 'SEK', factoredAmount: '39.6' },
+    { date: '2024-01-05', amount: '26.4', commodity: 'SEK', factoredAmount: '26.4' },
+    { date: '2024-01-06', amount: '28.8', commodity: 'SEK', factoredAmount: '28.8' },
   ]);
 });
 
@@ -140,9 +142,9 @@ test('also returns balances with per-pattern account factors when requested', (t
 
   assert.deepEqual(balanceHistoryReport(databasePath, {
     to: '2024-01-03',
-    accounts: ['^Assets:', '^Liabilities:'],
     accountFactors: {
-      'Fund$': '0.5',
+      '^Assets:Fund$': '0.5',
+      '^Assets:Cash$': '1',
       '^Liabilities': '0.25',
     },
   }), [
@@ -170,6 +172,10 @@ test('rejects invalid intervals and missing historical prices', (t) => {
     () => balanceHistoryReport(databasePath, { dateBasis: 'actual' }),
     /Invalid dateBasis/u,
   );
+  assert.throws(
+    () => balanceHistoryReport(databasePath, { accounts: ['Assets:'] }),
+    /Unknown balanceHistoryReport option: accounts/u,
+  );
 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-daily-unpriced-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -183,7 +189,7 @@ test('rejects invalid intervals and missing historical prices', (t) => {
 `);
   buildDatabase(unpricedDatabasePath, journalPath);
   assert.throws(
-    () => balanceHistoryReport(unpricedDatabasePath, { accounts: ['Assets:'] }),
+    () => balanceHistoryReport(unpricedDatabasePath, { accountFactors: { 'Assets:': '1' } }),
     /No price for OTHER on or before 2024-01-01/u,
   );
 });

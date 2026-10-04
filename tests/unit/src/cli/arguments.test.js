@@ -62,6 +62,11 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
     ['format', 'total'],
   );
+  assert.deepEqual(argumentsModule.apiInputCoverage.balanceHistoryReport, {
+    command: 'balance-history',
+    inputs: ['journalPath', 'from', 'to', 'dateBasis', 'accountFactors', 'invert'],
+    outputInputs: ['format'],
+  });
 });
 
 test('parses account output options without adding API options', () => {
@@ -194,23 +199,26 @@ test('parses balance history options', () => {
     '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
-    '--accounts', 'Assets:',
+    '--account-factor', 'Assets:=1',
     '--date-basis', 'transaction',
     '--invert',
-    '--csv',
+    '--format', 'csv',
   ]), {
     command: 'balance-history',
     journalPath: '/journal',
     reportOptions: {
       from: '2024-01-01',
       to: '2024-12-31',
-      accounts: ['Assets:'],
+      accountFactors: { 'Assets:': '1' },
       dateBasis: 'transaction',
       invert: true,
     },
-    output: { csv: true, json: false },
+    output: { format: 'csv' },
   });
   assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
+  assert.throws(() => parseArguments(['balance-history', '--accounts', 'Assets:']), /Usage:/u);
+  assert.throws(() => parseArguments(['balance-history', '--csv']), /Usage:/u);
+  assert.throws(() => parseArguments(['balance-history', '--json']), /Usage:/u);
 });
 
 test('parses unrealized gains options and CLI-only output controls', () => {
@@ -302,15 +310,14 @@ test('maps every remaining API parameter to CLI arguments', () => {
   });
   assert.deepEqual(parseArguments([
     'balance-history', '--file', '/journal', '--account-factor', 'Assets:Fund=0.7',
-    '--account-factor', 'Assets:Cash=1', '--json',
+    '--account-factor', 'Assets:Cash=1', '--format', 'json',
   ]), {
     command: 'balance-history',
     journalPath: '/journal',
     reportOptions: {
-      accounts: [],
       accountFactors: { 'Assets:Fund': '0.7', 'Assets:Cash': '1' },
     },
-    output: { csv: false, json: true },
+    output: { format: 'json' },
   });
   assert.throws(
     () => parseArguments([
@@ -387,11 +394,11 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage(),
-    /reports:\n {2}unrealized-gains\s+show unrealized investment gains/u,
+    /reports:\n {2}balance-history\s+show balances over time[\s\S]* {2}unrealized-gains\s+show unrealized investment gains/u,
   );
   assert.match(
     usage(),
-    /misc:[\s\S]* {2}balance\s+show account balances[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /misc:[\s\S]* {2}balance\s+show account balances[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\|print\s+show a page of transactions/u);

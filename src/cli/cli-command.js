@@ -71,8 +71,8 @@ module.exports = ({
     }
     if (command === 'balance-history') {
       const rows = journal.balanceHistoryReport(reportOptions);
-      if (output.json) return formatJson(rows);
-      return output.csv
+      if (output.format === 'json') return formatJson(rows);
+      return output.format === 'csv'
         ? formatBalanceHistoryCsv(rows)
         : formatBalanceHistoryHumanReadable(rows, journal.commodityDescriptions());
     }

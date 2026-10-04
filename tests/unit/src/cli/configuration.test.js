@@ -39,10 +39,20 @@ test('supplies --file from the project .ledlightrc', (t) => {
   );
 });
 
-test('prefers the user .ledlightrc and expands its home directory', (t) => {
+test('prefers the project .ledlightrc over the user configuration', (t) => {
   const { home, workingDirectory } = temporaryDirectories(t);
   fs.writeFileSync(path.join(home, '.ledlightrc'), '--file ~/books/main.ledger\n');
   fs.writeFileSync(path.join(workingDirectory, '.ledlightrc'), '--file project.ledger\n');
+
+  assert.deepEqual(
+    configuration(home, workingDirectory).apply(['unrealized-gains']),
+    ['unrealized-gains', '--file', 'project.ledger'],
+  );
+});
+
+test('falls back to the user .ledlightrc and expands its home directory', (t) => {
+  const { home, workingDirectory } = temporaryDirectories(t);
+  fs.writeFileSync(path.join(home, '.ledlightrc'), '--file ~/books/main.ledger\n');
 
   assert.deepEqual(
     configuration(home, workingDirectory).apply(['unrealized-gains']),

@@ -2,11 +2,10 @@
 
 module.exports = ({ fs, path, processEnvironment, currentWorkingDirectory }) => {
   function configurationPaths() {
-    const candidates = [];
+    const candidates = [path.join(currentWorkingDirectory(), '.ledlightrc')];
     if (processEnvironment.HOME) {
       candidates.push(path.join(processEnvironment.HOME, '.ledlightrc'));
     }
-    candidates.push(path.join(currentWorkingDirectory(), '.ledlightrc'));
     return [...new Set(candidates)];
   }
 

@@ -236,18 +236,19 @@ module.exports = ({
     const balanceHistory = registerCommand(
       program.command('balance-history').description('show balances over time'),
       'balanceHistoryReport',
-      'misc',
+      'reports',
     );
     addJournal(balanceHistory);
     addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPatterns(balanceHistory); addDateBasisOption(balanceHistory);
-    addValueOption(balanceHistory, '--account-factor <pattern=factor>', 'factor matching accounts (repeatable)', {
+    addDateBasisOption(balanceHistory);
+    addValueOption(balanceHistory, '--account-factor <pattern=factor>', 'include and factor matching accounts (repeatable)', {
       repeatable: true, apiInput: 'accountFactors',
     });
-    addJson(balanceHistory);
     addBooleanOption(balanceHistory, '--invert', 'invert the sign of report amounts', 'invert');
-    addOutputBooleanOption(balanceHistory, '--csv', 'write CSV output', 'csv');
+    addOutputValueOption(balanceHistory, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
 
     const unrealizedGains = registerCommand(
       program.command('unrealized-gains').description('show unrealized investment gains'),
@@ -387,9 +388,10 @@ module.exports = ({
       return { ...common, options: compact({ accounts: options.account, related: options.related || undefined }) };
     }
     const reportOptions = compact({
-      from: options.from, to: options.to, at: options.at, accounts: options.accounts || [],
+      from: options.from, to: options.to, at: options.at,
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
+    if (commandName !== 'balance-history') reportOptions.accounts = options.accounts || [];
     if (commandName === 'balance') {
       Object.assign(reportOptions, compact({
         inValuationCommodity: options.value || undefined,
@@ -409,6 +411,7 @@ module.exports = ({
     if (commandName === 'balance-history') {
       const factors = accountFactors(options.accountFactor);
       if (factors !== undefined) reportOptions.accountFactors = factors;
+      return { ...common, reportOptions, output: { format: options.format } };
     }
     if (commandName === 'investment-performance') {
       reportOptions.commodities = options.commodities || [];
