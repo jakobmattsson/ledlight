@@ -8,6 +8,57 @@ module.exports = ({
 
   const ZERO = parseDecimal('0');
 
+  function warnUnlessDeclared(kind, name, declarations, location, warnings) {
+    if (name === null || name === undefined || declarations.has(name)) return;
+    const label = kind[0].toUpperCase() + kind.slice(1);
+    warnings.push(createWarning(
+      warningCodes[`UNDECLARED_${kind.toUpperCase()}`],
+      `${label} ${name} must be declared before use`,
+      location,
+    ));
+  }
+
+  function validatePostingDeclarations(posting, declarations, warnings) {
+    warnUnlessDeclared(
+      'account', posting.account, declarations.accounts, posting.location, warnings,
+    );
+    for (const amount of [
+      posting.amount,
+      posting.lotCost?.amount,
+      posting.cost?.amount,
+      posting.balanceAssignment,
+      posting.balanceAssertion,
+    ]) {
+      warnUnlessDeclared(
+        'commodity', amount?.commodity, declarations.commodities, posting.location, warnings,
+      );
+    }
+    for (const tag of posting.tags || []) {
+      warnUnlessDeclared('tag', tag.name, declarations.tags, posting.location, warnings);
+    }
+  }
+
+  function validateTransactionDeclarations(transaction, declarations, warnings) {
+    const noteTagCount = transaction.notes.reduce(
+      (count, note) => count + (note.tags || []).length,
+      0,
+    );
+    const headerTags = (transaction.tags || []).slice(
+      0, (transaction.tags || []).length - noteTagCount,
+    );
+    for (const tag of headerTags) {
+      warnUnlessDeclared('tag', tag.name, declarations.tags, transaction.location, warnings);
+    }
+    for (const note of transaction.notes) {
+      for (const tag of note.tags || []) {
+        warnUnlessDeclared('tag', tag.name, declarations.tags, note.location, warnings);
+      }
+    }
+    for (const posting of transaction.postings) {
+      validatePostingDeclarations(posting, declarations, warnings);
+    }
+  }
+
   function requireCommodity(amount, label, location, warnings) {
     if (!amount || typeof amount.commodity !== 'string' || amount.commodity.length === 0) {
       warnings.push(createWarning(
@@ -77,13 +128,31 @@ module.exports = ({
     const effectiveDefaultCommodity = defaultCommodity === undefined
       ? valuationCommodityFromJournal(journal, warnings)
       : defaultCommodity;
+    const declarations = {
+      accounts: new Set(),
+      commodities: new Set(),
+      tags: new Set(),
+    };
     for (const entry of journal.entries) {
-      if (entry.type === 'transaction') {
+      if (entry.type === 'account') {
+        declarations.accounts.add(entry.name);
+      } else if (entry.type === 'commodity') {
+        declarations.commodities.add(entry.symbol);
+      } else if (entry.type === 'tag') {
+        declarations.tags.add(entry.name);
+      } else if (entry.type === 'transaction') {
+        validateTransactionDeclarations(entry, declarations, warnings);
         const postingResults = entry.postings.map((posting) => validatePosting(
           posting, effectiveDefaultCommodity, warnings,
         ));
         if (!postingResults.every(Boolean)) invalidEntries.add(entry);
       } else if (entry.type === 'price') {
+        warnUnlessDeclared(
+          'commodity', entry.commodity, declarations.commodities, entry.location, warnings,
+        );
+        warnUnlessDeclared(
+          'commodity', entry.price?.commodity, declarations.commodities, entry.location, warnings,
+        );
         if (!requireCommodity(entry.price, 'Price', entry.location, warnings)) {
           invalidEntries.add(entry);
         }

@@ -6,6 +6,9 @@ commodity FUND
 commodity NOK
 commodity GBP
 commodity BOND
+account Assets:Investments
+account Assets:Bonds
+account Equity:Opening
 
 P 2023-12-31 GBP 1.25 USD
 P 2024-01-01 FUND 10 USD

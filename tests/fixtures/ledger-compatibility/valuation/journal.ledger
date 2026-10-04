@@ -3,6 +3,8 @@ commodity USD
   format 1,000.00 USD
 
 commodity FUND
+account Assets:Investments
+account Assets:Cash
 
 P 2024-01-01 FUND 10 USD
 P 2024-02-01 FUND 12.5 USD

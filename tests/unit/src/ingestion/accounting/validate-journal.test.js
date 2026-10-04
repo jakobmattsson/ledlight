@@ -59,7 +59,7 @@ for (const fixture of invalidAmounts) {
     const journal = parse(fixture.source, { source: 'fixture.ledger' });
     fixture.invalidate(journal);
     const result = validateJournal(journal);
-    assert.deepEqual(result.warnings, [{
+    assert.deepEqual(result.warnings.filter(({ code }) => code === 'MISSING_COMMODITY'), [{
       code: 'MISSING_COMMODITY',
       message: fixture.message,
       source: 'fixture.ledger',
@@ -72,8 +72,81 @@ for (const fixture of invalidAmounts) {
   });
 }
 
+test('warns when accounts, commodities, and tags are used before declaration', () => {
+  const journal = parse(`2024-01-01 Before declarations ; :Header:
+  ; Note: value
+  Assets:Fund  1 FUND ; Posting: value
+  Equity:Opening
+account Assets:Fund
+account Equity:Opening
+commodity FUND
+tag Header
+tag Note
+tag Posting
+2024-01-02 After declarations ; :Header:
+  ; Note: value
+  Assets:Fund  1 FUND ; Posting: value
+  Equity:Opening
+`, { source: 'fixture.ledger' });
+
+  const result = validateJournal(journal);
+  assert.deepEqual(result.warnings.map(({ code, message, line }) => ({ code, message, line })), [{
+    code: 'UNDECLARED_TAG',
+    message: 'Tag Header must be declared before use',
+    line: 1,
+  }, {
+    code: 'UNDECLARED_TAG',
+    message: 'Tag Note must be declared before use',
+    line: 2,
+  }, {
+    code: 'UNDECLARED_ACCOUNT',
+    message: 'Account Assets:Fund must be declared before use',
+    line: 3,
+  }, {
+    code: 'UNDECLARED_COMMODITY',
+    message: 'Commodity FUND must be declared before use',
+    line: 3,
+  }, {
+    code: 'UNDECLARED_TAG',
+    message: 'Tag Posting must be declared before use',
+    line: 3,
+  }, {
+    code: 'UNDECLARED_ACCOUNT',
+    message: 'Account Equity:Opening must be declared before use',
+    line: 4,
+  }]);
+  assert.deepEqual([...result.invalidEntries], []);
+});
+
+test('checks every commodity role in prices and postings', () => {
+  const journal = parse(`account Assets:Fund
+P 2024-01-01 FUND 10 SEK
+2024-01-02 Trade
+  Assets:Fund  1 FUND {10 LOT} @ 11 PRICE = 1 ASSERTION
+`, { source: 'fixture.ledger' });
+
+  const warnings = validateJournal(journal).warnings
+    .filter(({ code }) => code === 'UNDECLARED_COMMODITY');
+  assert.deepEqual(warnings.map(({ message, line }) => ({ message, line })), [{
+    message: 'Commodity FUND must be declared before use', line: 2,
+  }, {
+    message: 'Commodity SEK must be declared before use', line: 2,
+  }, {
+    message: 'Commodity FUND must be declared before use', line: 4,
+  }, {
+    message: 'Commodity LOT must be declared before use', line: 4,
+  }, {
+    message: 'Commodity PRICE must be declared before use', line: 4,
+  }, {
+    message: 'Commodity ASSERTION must be declared before use', line: 4,
+  }]);
+});
+
 test('allows implicit postings and balance assignments', () => {
-  const journal = parse(`2024-01-01 Opening
+  const journal = parse(`commodity SEK
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Opening
   Assets:Cash  1 SEK
   Equity:Opening
 2024-01-02 Assignment
@@ -90,6 +163,9 @@ test('allows implicit postings and balance assignments', () => {
 function parseTrade(posting) {
   return parse(`commodity SEK
   default
+commodity FUND
+account Assets:Fund
+account Equity:Opening
 2024-01-01 Trade
   Assets:Fund  ${posting}
   Equity:Opening

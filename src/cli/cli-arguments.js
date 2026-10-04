@@ -79,7 +79,7 @@ module.exports = ({
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
     const accounts = registerCommand(
-      program.command('accounts').description('show declared and used accounts'),
+      program.command('accounts').description('show declared accounts'),
       'accounts',
     );
     addJournal(accounts);
@@ -90,8 +90,8 @@ module.exports = ({
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
     for (const [name, operation, description] of [
-      ['tags', 'tags', 'show declared and used tags'],
-      ['commodities', 'commodities', 'show declared and used commodities'],
+      ['tags', 'tags', 'show declared tags'],
+      ['commodities', 'commodities', 'show declared commodities'],
       ['prices', 'prices', 'show price directives'],
     ]) {
       const command = registerCommand(program.command(name).description(description), operation);

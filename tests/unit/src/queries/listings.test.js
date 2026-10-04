@@ -33,24 +33,17 @@ P 2024-01-02 FUND 13 SEK ; corrected
   return openJournal(journalPath);
 }
 
-test('lists declared and used tags in name order without duplicates', (t) => {
+test('lists declared tags in name order without duplicates', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.tags(), [
-    { tag: 'Declared' },
-    { tag: 'Receipt' },
-    { tag: 'Reviewed' },
-    { tag: 'Source' },
-  ]);
+  assert.deepEqual(project.tags(), [{ tag: 'Declared' }]);
 });
 
-test('lists commodities from declarations, postings, annotations, and prices', (t) => {
+test('lists declared commodities even when other symbols are used', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.commodities(), [
-    { commodity: 'EUR' },
     { commodity: 'FUND' },
-    { commodity: 'NOK' },
     { commodity: 'SEK' },
     { commodity: 'UNUSED' },
   ]);

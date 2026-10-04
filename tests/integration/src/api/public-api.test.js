@@ -121,6 +121,8 @@ test('returns query data while exposing ingestion warnings through the API and C
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(journalPath, `commodity SEK
   default
+account Assets:Cash
+account Equity:Opening
 2024-02-30 Invalid date
   Assets:Ignored  100 SEK
   Equity:Opening
@@ -144,7 +146,7 @@ test('returns query data while exposing ingestion warnings through the API and C
       startLine: journal.warnings[0].startLine,
       endLine: journal.warnings[0].endLine,
     },
-    { source: fs.realpathSync.native(journalPath), startLine: 3, endLine: 5 },
+    { source: fs.realpathSync.native(journalPath), startLine: 5, endLine: 7 },
   );
   assert.equal(Object.isFrozen(journal.warnings), true);
   assert.deepEqual(

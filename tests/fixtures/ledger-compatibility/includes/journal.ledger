@@ -1,5 +1,10 @@
 commodity EUR
   default
   format 1,000.00 EUR
+account Assets:Bank
+account Equity:Opening
+account Expenses:Food
+account Income:Salary
+account Expenses:Utilities
 
 include entries/*.ledger

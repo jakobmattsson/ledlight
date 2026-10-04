@@ -75,6 +75,8 @@ test('the published archive installs and exposes the module and CLI', () => {
     const journalPath = path.join(projectDirectory, 'journal.ledger');
     fs.writeFileSync(journalPath, `commodity USD
   default
+account Assets:Cash
+account Equity:Opening
 
 2024-01-01 Opening balance
   Assets:Cash  10 USD

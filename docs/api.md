@@ -208,7 +208,7 @@ Each posting contains `postingDate` and exact amount rows with the running
 
 ### `journal.accounts()`
 
-Returns declared and used accounts sorted by name:
+Returns declared accounts sorted by name:
 
 ```js
 {
@@ -220,14 +220,12 @@ Returns declared and used accounts sorted by name:
 
 ### `journal.tags()`
 
-Returns every declared or used tag once, sorted by name. Each row is
-`{ tag }`.
+Returns every declared tag once, sorted by name. Each row is `{ tag }`.
 
 ### `journal.commodities()`
 
-Returns every declared or used commodity once, sorted by symbol. Commodity
-uses include posting amounts, cost annotations, balance assignments and
-assertions, and both sides of price directives. Each row is `{ commodity }`.
+Returns every declared commodity once, sorted by symbol. Each row is
+`{ commodity }`.
 
 ### `journal.prices()`
 

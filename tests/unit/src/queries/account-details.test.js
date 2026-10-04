@@ -87,7 +87,7 @@ test('rejects invalid account-detail options', (t) => {
     /Unknown accountTransactions option: unknown/u);
 });
 
-test('lists declared and used accounts with transaction counts', (t) => {
+test('lists declared accounts with transaction counts', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.accounts(), [
