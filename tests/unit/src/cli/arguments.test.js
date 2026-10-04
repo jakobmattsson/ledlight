@@ -270,7 +270,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /--accounts <prefix>/u);
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
-  assert.match(usage('aggregate'), /--file <path>\s+\(required\) read the journal rooted at this file/u);
+  assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
   assert.match(usage('aggregate'), /--accounts <prefix>.*repeatable/u);
   assert.match(
     usage('account-balances'),
@@ -278,7 +278,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage('account-balances'),
-    /--account <name>\s+\(required\) select an exact account[\s\S]*--to <date>[\s\S]*--help/u,
+    /--account <name>\s+\(REQUIRED\) select an exact account[\s\S]*--to <date>[\s\S]*--help/u,
   );
   assert.match(usage('aggregate'), /--help\s+show command help/u);
   assert.doesNotMatch(usage('aggregate'), /-h, --help/u);
