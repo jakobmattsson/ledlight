@@ -125,9 +125,9 @@ underlying result.
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
-| `--version`, `-V` | None | CLI package metadata |
-| `--help`, `-h` | None | Top-level command list |
-| `<command> --help`, `<command> -h` | None | Detailed usage for one command |
+| `--version` | None | CLI package metadata |
+| `--help` | None | Top-level command list |
+| `<command> --help` | None | Detailed usage for one command |
 
 Commands without a specialized human-readable representation emit JSON.
 Report commands accept `--json` when the complete API result is needed; this

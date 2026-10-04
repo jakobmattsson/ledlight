@@ -195,10 +195,10 @@ module.exports = ({
         .filter((option) => option.mandatory)
         .map((option) => option.flags);
       command.usage(`${mandatoryOptions.join(' ')} [options]`);
-      command.addOption(new Option('-h, --help', 'show command help'));
+      command.addOption(new Option('--help', 'show command help'));
     }
-    program.addOption(new Option('-V, --version', 'show the package version'));
-    program.addOption(new Option('-h, --help', 'show help'));
+    program.addOption(new Option('--version', 'show the package version'));
+    program.addOption(new Option('--help', 'show help'));
     return program;
   }
 

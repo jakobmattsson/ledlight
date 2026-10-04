@@ -262,13 +262,13 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     assert.throws(() => parseArguments(arguments_), /Usage:|may only be specified once/u);
   }
   assert.match(usage(), /^Usage: ledlight/u);
-  assert.match(usage(), /-V, --version\s+show the package version/u);
-  assert.match(usage(), /-h, --help\s+show help/u);
+  assert.match(usage(), /--version\s+show the package version/u);
+  assert.match(usage(), /--help\s+show help/u);
   assert.match(usage(), /ledlight <command> --help/u);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <prefix>/u);
-  assert.match(usage(), /-V, --version[\s\S]*-h, --help/u);
+  assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
   assert.match(usage('aggregate'), /--file <path>\s+\(required\) read the journal rooted at this file/u);
   assert.match(usage('aggregate'), /--accounts <prefix>.*repeatable/u);
@@ -278,8 +278,10 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage('account-balances'),
-    /--account <name>\s+\(required\) select an exact account[\s\S]*--to <date>[\s\S]*-h, --help/u,
+    /--account <name>\s+\(required\) select an exact account[\s\S]*--to <date>[\s\S]*--help/u,
   );
-  assert.match(usage('aggregate'), /-h, --help\s+show command help/u);
+  assert.match(usage('aggregate'), /--help\s+show command help/u);
+  assert.doesNotMatch(usage('aggregate'), /-h, --help/u);
+  assert.doesNotMatch(usage(), /-V, --version/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
 });

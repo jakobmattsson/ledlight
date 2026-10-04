@@ -74,13 +74,13 @@ module.exports = ({
 
   function runReportCommand(arguments_) {
     if (arguments_.length === 0 ||
-        (arguments_.length === 1 && ['--help', '-h'].includes(arguments_[0]))) {
+        (arguments_.length === 1 && arguments_[0] === '--help')) {
       return `${usage()}\n`;
     }
-    if (arguments_.length === 1 && ['--version', '-V'].includes(arguments_[0])) {
+    if (arguments_.length === 1 && arguments_[0] === '--version') {
       return `${version}\n`;
     }
-    if (arguments_.length >= 2 && arguments_.slice(1).some((argument) => ['--help', '-h'].includes(argument))) {
+    if (arguments_.length >= 2 && arguments_.slice(1).includes('--help')) {
       return `${usage(arguments_[0])}\n`;
     }
     const parsed = parseArguments(arguments_);
