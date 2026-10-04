@@ -6,13 +6,14 @@ module.exports = ({
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({
-    account: z.string().min(1, { error: 'must be a non-empty string' }),
+    accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' }))
+      .min(1, { error: 'must contain at least one account' }),
     to: z.iso.date({ error: 'Invalid to date' }).optional(),
   });
 
   function queryAccountBalances(database, options, _caches) {
-    const { account, to } = parseOptions(optionsSchema, options, 'accountBalances');
-    const filter = accountFilter('p.account', [account]);
+    const { accounts, to } = parseOptions(optionsSchema, options, 'accountBalances');
+    const filter = accountFilter('p.account', accounts);
     return database.prepare(`
       SELECT r.commodity, decimal_sum(r.quantity) AS quantity
       FROM resolved_posting_amounts AS r

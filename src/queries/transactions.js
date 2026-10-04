@@ -13,7 +13,7 @@ module.exports = ({
     }, { error: 'must be a positive integer' })
     .transform(Number);
   const optionsSchema = z.strictObject({
-    account: z.string().min(1, { error: 'must be a non-empty string' }).optional(),
+    accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' })).default([]),
     id: positiveInteger.optional(),
     order: z.enum(['newest', 'oldest'], { error: 'must be newest or oldest' })
       .default('oldest'),
@@ -24,7 +24,7 @@ module.exports = ({
   });
 
   function queryTransactions(database, options, _caches) {
-    const { account, id, order, page, pageSize } = parseOptions(
+    const { accounts, id, order, page, pageSize } = parseOptions(
       optionsSchema, options, 'transactions',
     );
     const filters = [];
@@ -33,8 +33,8 @@ module.exports = ({
       filters.push('transactions.entry_id = ?');
       filterParameters.push(id);
     }
-    if (account !== undefined) {
-      const accountMatch = accountFilter('matching_postings.account', [account]);
+    if (accounts.length > 0) {
+      const accountMatch = accountFilter('matching_postings.account', accounts);
       filters.push(`EXISTS (
         SELECT 1
         FROM postings AS matching_postings

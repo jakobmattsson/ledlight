@@ -7,12 +7,13 @@ module.exports = ({
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({
-    account: z.string().min(1, { error: 'must be a non-empty string' }),
+    accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' }))
+      .min(1, { error: 'must contain at least one account' }),
   });
 
   function queryAccountTransactions(database, options, _caches) {
-    const { account } = parseOptions(optionsSchema, options, 'accountTransactions');
-    const filter = accountFilter('postings.account', [account]);
+    const { accounts } = parseOptions(optionsSchema, options, 'accountTransactions');
+    const filter = accountFilter('postings.account', accounts);
     const rows = database.prepare(`
       SELECT
         transactions.entry_id AS transactionId,

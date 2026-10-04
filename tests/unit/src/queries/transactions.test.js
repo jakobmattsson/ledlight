@@ -106,7 +106,7 @@ test('filters the transaction collection by ID', (t) => {
 test('filters complete transactions with literal substrings and optional anchors', (t) => {
   const project = createProject(t);
 
-  const result = project.transactions({ account: '^Expenses:Shop$' });
+  const result = project.transactions({ accounts: ['^Expenses:Shop$', '^Missing:'] });
 
   assert.equal(result.totalTransactions, 1);
   assert.equal(result.totalPages, 1);
@@ -115,10 +115,10 @@ test('filters complete transactions with literal substrings and optional anchors
     result.transactions[0].postings.map((posting) => posting.account),
     ['Assets:Cash', 'Expenses:Shop'],
   );
-  assert.equal(project.transactions({ account: 'Expenses' }).totalTransactions, 1);
-  assert.equal(project.transactions({ account: '^Assets' }).totalTransactions, 3);
-  assert.equal(project.transactions({ account: 'Shop$' }).totalTransactions, 1);
-  assert.equal(project.transactions({ account: '^Expenses$' }).totalTransactions, 0);
+  assert.equal(project.transactions({ accounts: ['Expenses'] }).totalTransactions, 1);
+  assert.equal(project.transactions({ accounts: ['^Assets'] }).totalTransactions, 3);
+  assert.equal(project.transactions({ accounts: ['Shop$'] }).totalTransactions, 1);
+  assert.equal(project.transactions({ accounts: ['^Expenses$'] }).totalTransactions, 0);
 });
 
 test('clamps pages and rejects invalid list options', (t) => {
@@ -133,8 +133,8 @@ test('clamps pages and rejects invalid list options', (t) => {
     /pageSize must not exceed 100/u);
   assert.throws(() => project.transactions({ id: 'invalid' }),
     /id must be a positive integer/u);
-  assert.throws(() => project.transactions({ account: '' }),
-    /account must be a non-empty string/u);
+  assert.throws(() => project.transactions({ accounts: [''] }),
+    /accounts\.0 must be a non-empty string/u);
   assert.throws(() => project.transactions({
     order: 'newest', page: 1, pageSize: 2, unknown: true,
   }), /Unknown transactions option: unknown/u);

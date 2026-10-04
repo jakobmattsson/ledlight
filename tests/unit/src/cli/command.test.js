@@ -66,7 +66,7 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.equal(runReportCommand([]), topLevelHelp);
   assert.match(
     runReportCommand(['account-balances', '--help']),
-    /^Usage: ledlight account-balances[\s\S]*--account <pattern>/u,
+    /^Usage: ledlight account-balances[\s\S]*--accounts <pattern>/u,
   );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
   assert.throws(() => runReportCommand(['-V']), /unknown option '-V'/u);
@@ -137,8 +137,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
     accountPostings(options) { calls.push(['accountPostings', options]); return ['postings']; },
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
     commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
-    accounts() {
-      calls.push(['accounts']);
+    accounts(options) {
+      calls.push(['accounts', options]);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
     tags() { calls.push(['tags']); return [{ tag: 'Imported' }]; },
@@ -189,13 +189,13 @@ test('delegates non-report commands to the corresponding journal operations', ()
   });
   const run = (arguments_) => JSON.parse(runReportCommand(arguments_));
 
-  assert.deepEqual(run(['account-balances', '--file', '/journal', '--account', 'Assets:Cash']), ['balances']);
-  assert.deepEqual(run(['account-postings', '--file', '/journal', '--account', 'Assets:Cash']), ['postings']);
-  assert.deepEqual(run(['account-transactions', '--file', '/journal', '--account', 'Assets:Cash']), ['transactions']);
+  assert.deepEqual(run(['account-balances', '--file', '/journal', '--accounts', 'Assets:Cash']), ['balances']);
+  assert.deepEqual(run(['account-postings', '--file', '/journal', '--accounts', 'Assets:Cash']), ['postings']);
+  assert.deepEqual(run(['account-transactions', '--file', '/journal', '--accounts', 'Assets:Cash']), ['transactions']);
   assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), ['commodities']);
   assert.equal(runReportCommand(['accounts', '--file', '/journal']), 'Assets:Cash\n');
   assert.deepEqual(run([
-    'accounts', '--file', '/journal', '--details', '--format', 'json',
+    'accounts', '--file', '/journal', '--accounts', 'Assets:Cash', '--details', '--format', 'json',
   ]), [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }]);
   assert.equal(runReportCommand(['tags', '--file', '/journal']), 'Imported\n');
   assert.equal(runReportCommand(['commodities', '--file', '/journal']), 'USD\n');
@@ -204,7 +204,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     quoteCommodity: 'USD', comment: null,
   }]);
   assert.deepEqual(run([
-    'transactions', '--file', '/journal', '--account', 'Assets:Cash',
+    'transactions', '--file', '/journal', '--accounts', 'Assets:Cash',
     '--id', '7', '--order', 'newest', '--page', '2', '--page-size', '10',
     '--format', 'json',
   ]), {
@@ -235,19 +235,19 @@ test('delegates non-report commands to the corresponding journal operations', ()
   ]), '10.5');
 
   assert.deepEqual(calls, [
-    ['openJournal', '/journal'], ['accountBalances', { account: 'Assets:Cash' }],
-    ['openJournal', '/journal'], ['accountPostings', { account: 'Assets:Cash' }],
-    ['openJournal', '/journal'], ['accountTransactions', { account: 'Assets:Cash' }],
+    ['openJournal', '/journal'], ['accountBalances', { accounts: ['Assets:Cash'] }],
+    ['openJournal', '/journal'], ['accountPostings', { accounts: ['Assets:Cash'] }],
+    ['openJournal', '/journal'], ['accountTransactions', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['commodityDescriptions'],
-    ['openJournal', '/journal'], ['accounts'],
-    ['openJournal', '/journal'], ['accounts'],
+    ['openJournal', '/journal'], ['accounts', { accounts: [] }],
+    ['openJournal', '/journal'], ['accounts', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['tags'],
     ['openJournal', '/journal'], ['commodities'],
     ['openJournal', '/journal'], ['prices'],
     ['openJournal', '/journal'], ['transactions', {
-      account: 'Assets:Cash', id: '7', order: 'newest', page: '2', pageSize: '10',
+      accounts: ['Assets:Cash'], id: '7', order: 'newest', page: '2', pageSize: '10',
     }],
-    ['openJournal', '/journal'], ['commodityDescriptions'], ['transactions', {}],
+    ['openJournal', '/journal'], ['commodityDescriptions'], ['transactions', { accounts: [] }],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
     ['openJournal', '/journal'], ['ledgerValuationRateResolver'],
     ['resolveRate', 'EUR', '2024-12-31'],
@@ -262,7 +262,7 @@ test('collects ingestion warnings before invoking a query', () => {
       calls.push('warnings');
       return [warning];
     },
-    accounts() {
+    accounts(_options) {
       calls.push('query');
       return [];
     },
@@ -293,9 +293,9 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['tags'],
     ['commodities'],
     ['prices'],
-    ['account-balances', '--account', 'Assets:Cash'],
-    ['account-postings', '--account', 'Assets:Cash'],
-    ['account-transactions', '--account', 'Assets:Cash'],
+    ['account-balances', '--accounts', 'Assets:Cash'],
+    ['account-postings', '--accounts', 'Assets:Cash'],
+    ['account-transactions', '--accounts', 'Assets:Cash'],
     ['commodity-descriptions'],
     ['transactions'],
     ['print'],

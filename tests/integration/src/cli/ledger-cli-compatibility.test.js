@@ -219,6 +219,31 @@ test('accounts defaults to the exact Ledger accounts output', (t) => {
   assert.equal(ledlightOutput, ledgerOutput);
 });
 
+test('accounts accepts multiple filters and --ledger preserves their Ledger syntax', (t) => {
+  const projectDirectory = temporaryProject(t, 'basic');
+  const journalPath = path.join(projectDirectory, 'journal.ledger');
+  const commonOptions = {
+    cwd: projectDirectory,
+    encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
+  };
+  const arguments_ = [
+    'accounts', '--file', journalPath,
+    '--accounts', '^Assets:', '--accounts', '^Expenses:',
+  ];
+  const expectedOutput = execFileSync(ledgerBinary, [
+    '--args-only', '--no-pager', '--file', journalPath,
+    'accounts', '^Assets:', '^Expenses:',
+  ], commonOptions);
+  const ledlightOutput = execFileSync(process.execPath, [cliPath, ...arguments_], commonOptions);
+  const ledgerCommand = execFileSync(process.execPath, [
+    cliPath, ...arguments_, '--ledger',
+  ], commonOptions).trimEnd();
+
+  assert.equal(ledlightOutput, expectedOutput);
+  assert.equal(execSync(ledgerCommand, commonOptions), expectedOutput);
+});
+
 for (const command of ['accounts', 'print']) {
   test(`${command} --ledger prints a standalone command with identical output`, (t) => {
     const projectDirectory = temporaryProject(t, 'basic');
