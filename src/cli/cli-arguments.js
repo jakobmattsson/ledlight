@@ -72,7 +72,7 @@ module.exports = ({
   );
 
   function createProgram() {
-    const program = new Command().name('ledlight')
+    const program = new Command().name('ledlight').usage('<command> [options]')
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
       .configureHelp({ subcommandTerm: (command) => command.name() })

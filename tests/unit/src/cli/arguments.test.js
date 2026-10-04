@@ -291,7 +291,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   for (const arguments_ of invalidArguments) {
     assert.throws(() => parseArguments(arguments_), /Usage:|may only be specified once/u);
   }
-  assert.match(usage(), /^Usage: ledlight/u);
+  assert.match(usage(), /^Usage: ledlight <command> \[options\]/u);
   assert.match(usage(), /--version\s+show the package version/u);
   assert.match(usage(), /--help\s+show help/u);
   assert.match(usage(), /ledlight <command> --help/u);
