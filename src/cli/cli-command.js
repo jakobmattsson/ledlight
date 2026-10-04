@@ -32,15 +32,31 @@ module.exports = ({
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(options), parsed.output);
     }
-    if (command === 'tags') return formatTags(journal.tags(), parsed.output);
+    if (command === 'tags') return formatTags(journal.tags(options), parsed.output);
     if (command === 'commodities') {
-      return formatCommodities(journal.commodities(), parsed.output);
+      return formatCommodities(journal.commodities(options), parsed.output);
     }
-    if (command === 'prices') return formatPrices(journal.prices(), parsed.output);
+    if (command === 'prices') {
+      const descriptions = parsed.output.format === 'text'
+        ? journal.commodityDescriptions()
+        : undefined;
+      return formatPrices(journal.prices(), parsed.output, descriptions);
+    }
     if (command === 'transactions') {
       const descriptions = parsed.output.format === 'text'
         ? journal.commodityDescriptions()
         : undefined;
+      if (parsed.output.format === 'text' &&
+          options.page === undefined && options.pageSize === undefined) {
+        const firstPage = journal.transactions(options);
+        const transactions = [...firstPage.transactions];
+        for (let page = 2; page <= firstPage.totalPages; page += 1) {
+          transactions.push(...journal.transactions({
+            ...options, page, pageSize: 100,
+          }).transactions);
+        }
+        return formatTransactions({ ...firstPage, transactions }, parsed.output, descriptions);
+      }
       return formatTransactions(
         journal.transactions(options), parsed.output, descriptions,
       );

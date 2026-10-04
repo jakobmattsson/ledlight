@@ -19,6 +19,21 @@ function temporaryProject(t, fixture) {
   return directory;
 }
 
+function temporaryJournal(t, sourceText) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-ledger-compatibility-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(directory, 'journal.ledger'), sourceText);
+  return directory;
+}
+
+function exactCommandOutput(projectDirectory, executable, arguments_) {
+  return execFileSync(executable, arguments_, {
+    cwd: projectDirectory,
+    encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
+  });
+}
+
 function parseCsvLine(line) {
   const fields = [];
   let field = '';
@@ -215,6 +230,83 @@ test('accounts defaults to the exact Ledger accounts output', (t) => {
     encoding: 'utf8',
     env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
   });
+
+  assert.equal(ledlightOutput, ledgerOutput);
+});
+
+test('raw listings and print match Ledger for used declarations and market prices', (t) => {
+  const projectDirectory = temporaryJournal(t, `commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1000.000 FUND
+commodity UNUSED
+tag Used
+tag Unused
+account Assets Fund
+account Assets:Fund
+account Assets:Unused
+account Equity:Opening
+P 2024-01-01 FUND 9 USD
+P 2024-01-01 FUND 10 USD
+
+2024-01-02 Buy
+  ; Used: yes
+  Assets:Fund  2 FUND {{20 USD}}
+  Assets Fund  -20 USD
+
+2024-01-03 No change
+  Assets:Fund  0 FUND
+  Equity:Opening  0 FUND
+`);
+  const journalPath = path.join(projectDirectory, 'journal.ledger');
+
+  for (const [ledlightCommand, ledgerCommandName] of [
+    ['accounts', 'accounts'],
+    ['tags', 'tags'],
+    ['commodities', 'commodities'],
+    ['prices', 'prices'],
+    ['transactions', 'print'],
+  ]) {
+    const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
+      '--args-only', '--no-pager', '--file', journalPath, ledgerCommandName,
+    ]);
+    const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
+      cliPath, ledlightCommand, '--file', journalPath,
+    ]);
+    assert.equal(ledlightOutput, ledgerOutput, `${ledlightCommand} output differs`);
+  }
+
+  assert.equal(exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'accounts', '--file', journalPath, '--usage', 'unused',
+  ]), 'Assets:Unused\nEquity:Opening\n');
+  assert.equal(exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'tags', '--file', journalPath, '--usage', 'unused',
+  ]), 'Unused\n');
+  assert.equal(exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'commodities', '--file', journalPath, '--usage', 'unused',
+  ]), 'UNUSED\n');
+});
+
+test('transactions does not apply the API page limit to default text output', (t) => {
+  const transactions = Array.from({ length: 101 }, (_, index) => `
+2024-01-01 Entry ${index + 1}
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+`).join('');
+  const projectDirectory = temporaryJournal(t, `commodity USD
+  default
+  format 1,000.00 USD
+account Assets:Cash
+account Equity:Opening
+${transactions}`);
+  const journalPath = path.join(projectDirectory, 'journal.ledger');
+  const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
+    '--args-only', '--no-pager', '--file', journalPath, 'print',
+  ]);
+  const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'transactions', '--file', journalPath,
+  ]);
 
   assert.equal(ledlightOutput, ledgerOutput);
 });

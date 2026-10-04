@@ -33,6 +33,14 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(tables.includes('posting_tags'));
   assert.ok(tables.includes('resolved_posting_amounts'));
   assert.ok(tables.includes('valuation_prices'));
+  for (const table of [
+    'account_declarations', 'tag_declarations', 'commodity_declarations',
+  ]) {
+    const used = database.pragma(`table_info(${table})`)
+      .find((column) => column.name === 'used');
+    assert.equal(used.notnull, 1);
+    assert.equal(used.dflt_value, '0');
+  }
   const reportDate = database.pragma('table_info(postings)')
     .find((column) => column.name === 'report_date');
   assert.equal(reportDate.notnull, 1);

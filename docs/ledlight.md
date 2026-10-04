@@ -97,9 +97,9 @@ json` and `--format csv` encode the selected basic or detailed representation.
 `tags`, `commodities`, and `prices` follow the same listing convention. They
 have no required query parameters beyond `--file`, default to text, and accept
 `--format text`, `--format json`, or `--format csv`. Tags and commodities list
-sorted declaration rows; prices include every price directive in date and
-journal order. Later duplicate declarations produce warnings and are not
-stored, so listings contain each declared name once.
+used names and omit unused declarations. Prices expose the effective market
+price database, including inferred transaction prices and last-price-wins
+deduplication for a commodity and date.
 
 ### CLI to API parity
 
@@ -118,10 +118,10 @@ underlying result.
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
-| `tags --file PATH` | `openJournal(journalPath).tags()` | Declared tags |
-| `commodities --file PATH` | `openJournal(journalPath).commodities()` | Declared commodities |
-| `prices --file PATH` | `openJournal(journalPath).prices()` | Price directives |
-| `transactions --file PATH` (`print` alias) | `openJournal(journalPath).transactions(options)` | Paginated transactions |
+| `tags --file PATH` | `openJournal(journalPath).tags()` | Used tags |
+| `commodities --file PATH` | `openJournal(journalPath).commodities()` | Used commodities |
+| `prices --file PATH` | `openJournal(journalPath).prices()` | Effective market prices |
+| `transactions --file PATH` (`print` alias) | `openJournal(journalPath).transactions(options)` | Transactions (unpaged in default text output) |
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |

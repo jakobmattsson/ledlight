@@ -6,6 +6,9 @@ module.exports = ({
     formatDecimal,
     formatDecimalFixed,
     parseDecimal,
+    compareDecimals,
+    divideDecimals,
+    multiplyDecimals,
   },
 }) => {
 
@@ -71,6 +74,22 @@ module.exports = ({
       : digits.replace(/\B(?=(\d{3})+(?!\d))/gu, parsedFormat.groupingSeparator);
     const decimal = fraction === undefined ? '' : `${parsedFormat.decimalSeparator}${fraction}`;
     return `${negative ? '-' : ''}${grouped}${decimal}`;
+  }
+
+  function formatPriceQuantity(quantity, commodity, formats) {
+    const format = formats.get(commodity);
+    if (!format) return quantity;
+    const parsedFormat = parseCommodityFormat(format);
+    if (!parsedFormat) return quantity;
+    const point = quantity.indexOf('.');
+    const sourceScale = point < 0 ? 0 : quantity.length - point - 1;
+    const scale = Math.max(sourceScale, parsedFormat.scale);
+    const fixed = formatDecimalFixed(parseDecimal(quantity), scale);
+    const [integer, fraction] = fixed.split('.');
+    const grouped = parsedFormat.groupingSeparator === null
+      ? integer
+      : groupThousands(integer);
+    return fraction === undefined ? grouped : `${grouped}.${fraction}`;
   }
 
   function displayQuantity(quantity, commodity, formats, fallbackScale) {
@@ -233,7 +252,7 @@ module.exports = ({
   const formatTags = (rows, output) => formatNameRows(rows, output, 'tag');
   const formatCommodities = (rows, output) => formatNameRows(rows, output, 'commodity');
 
-  function formatPrices(rows, { format }) {
+  function formatPrices(rows, { format }, descriptions) {
     if (format === 'json') return formatJson(rows);
     if (format === 'csv') {
       const lines = ['date,baseCommodity,quoteQuantity,quoteCommodity,comment'];
@@ -248,12 +267,13 @@ module.exports = ({
       }
       return `${lines.join('\n')}\n`;
     }
-    const lines = rows.map((row) => [
-      row.date.replaceAll('-', '/'),
-      row.baseCommodity,
-      row.quoteQuantity,
-      row.quoteCommodity,
-    ].join(' '));
+    const formats = commodityFormats(descriptions);
+    const lines = rows.map((row) => {
+      const quantity = formatPriceQuantity(row.quoteQuantity, row.quoteCommodity, formats);
+      const amount = `${quantity} ${row.quoteCommodity}`;
+      return `${row.date.replaceAll('-', '/')} ${row.baseCommodity.padEnd(8)} ` +
+        amount.padStart(12);
+    });
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
   }
 
@@ -295,8 +315,28 @@ module.exports = ({
     const expressions = [];
     if (posting.amount !== null) expressions.push(formatPostingAmount(posting.amount, formats));
     if (posting.lotCost !== null) {
-      const braces = posting.lotCost.isTotal ? ['{{', '}}'] : ['{', '}'];
-      expressions.push(`${braces[0]}${formatPostingAmount(posting.lotCost, formats)}${braces[1]}`);
+      if (posting.lotCost.isTotal) {
+        const amount = parseDecimal(posting.amount.quantity);
+        const absoluteAmount = amount.coefficient < 0n
+          ? { ...amount, coefficient: -amount.coefficient }
+          : amount;
+        const unitCost = divideDecimals(
+          parseDecimal(posting.lotCost.quantity), absoluteAmount, 10,
+        );
+        const lotCost = {
+          quantity: formatDecimal(unitCost),
+          commodity: posting.lotCost.commodity,
+        };
+        const divisionIsExact = compareDecimals(
+          multiplyDecimals(unitCost, absoluteAmount),
+          parseDecimal(posting.lotCost.quantity),
+        ) === 0;
+        expressions.push(`{${divisionIsExact
+          ? formatPostingAmount(lotCost, formats)
+          : `${lotCost.quantity} ${lotCost.commodity}`}}`);
+      } else {
+        expressions.push(`{${formatPostingAmount(posting.lotCost, formats)}}`);
+      }
     }
     if (posting.cost !== null) {
       expressions.push(`${posting.cost.isTotal ? '@@' : '@'} ${formatPostingAmount(posting.cost, formats)}`);
@@ -315,16 +355,46 @@ module.exports = ({
     const lines = [];
     for (const transaction of report.transactions) {
       const date = transaction.transactionDate.replaceAll('-', '/');
-      const comment = transaction.comment === null ? '' : `  ; ${transaction.comment}`;
+      const comment = transaction.comment === null ? '' : ` ; ${transaction.comment}`;
       lines.push(`${date} ${transaction.description}${comment}`);
-      for (const note of transaction.notes) lines.push(`    ; ${note}`);
-      for (const posting of transaction.postings) {
-        const expression = formatPostingExpression(posting, formats);
-        const postingComment = posting.comment === null ? '' : `  ; ${posting.comment}`;
+      const positionedNotes = transaction.positionedNotes ?? transaction.notes.map((text) => ({
+        line: Number.NEGATIVE_INFINITY, text,
+      }));
+      let noteIndex = 0;
+      const canElideLastAmount = transaction.postings.length === 2 &&
+        transaction.postings.every((posting) =>
+          posting.amounts.length === 1 && posting.lotCost === null && posting.cost === null &&
+          posting.balanceAssignment === null && posting.balanceAssertion === null) &&
+        transaction.postings[0].amounts[0].commodity ===
+          transaction.postings[1].amounts[0].commodity &&
+        compareDecimals(addDecimals(
+          parseDecimal(transaction.postings[0].amounts[0].quantity),
+          parseDecimal(transaction.postings[1].amounts[0].quantity),
+        ), parseDecimal('0')) === 0;
+      transaction.postings.forEach((posting, index) => {
+        while (noteIndex < positionedNotes.length &&
+               positionedNotes[noteIndex].line <
+                 (posting.sourceLine ?? Number.POSITIVE_INFINITY)) {
+          lines.push(`    ; ${positionedNotes[noteIndex].text}`);
+          noteIndex += 1;
+        }
+        const expression = canElideLastAmount && index === 1
+          ? ''
+          : formatPostingExpression(posting, formats);
+        const multilineComment = posting.comment !== null &&
+          (/^[^:;\s][^:]*:\s/u.test(posting.comment) || /^\[/u.test(posting.comment));
+        const postingComment = posting.comment === null || multilineComment
+          ? ''
+          : `  ; ${posting.comment}`;
         const body = expression === ''
           ? posting.account
           : `${posting.account.padEnd(34)}  ${expression.padStart(12)}`;
         lines.push(`    ${body}${postingComment}`);
+        if (multilineComment) lines.push(`    ; ${posting.comment}`);
+      });
+      while (noteIndex < positionedNotes.length) {
+        lines.push(`    ; ${positionedNotes[noteIndex].text}`);
+        noteIndex += 1;
       }
       lines.push('');
     }

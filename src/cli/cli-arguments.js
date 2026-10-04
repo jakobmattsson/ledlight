@@ -104,6 +104,14 @@ module.exports = ({
     command, '--accounts <pattern>', 'include accounts matching a pattern (repeatable)',
     { repeatable: true, apiInput: 'accounts' },
   );
+  const addUsageSelection = (command, noun) => {
+    const option = new Option(
+      '--usage <selection>', `select all, used, or unused ${noun}`,
+    ).choices(['all', 'used', 'unused']);
+    option.argParser(singleValue('--usage'));
+    option.apiInput = 'usage';
+    return command.addOption(option);
+  };
   const addJournal = (command) => addValueOption(
     command, '--file <path>', 'read the journal rooted at this file',
     { required: true, apiInput: 'journalPath' },
@@ -123,12 +131,13 @@ module.exports = ({
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
     const accounts = registerCommand(
-      program.command('accounts').description('show declared accounts'),
+      program.command('accounts').description('show used accounts'),
       'accounts',
       'raw',
     );
     addJournal(accounts);
     addAccountPatterns(accounts);
+    addUsageSelection(accounts, 'account declarations');
     addOutputBooleanOption(
       accounts, '--details', 'include comments and transaction counts', 'details',
     );
@@ -136,14 +145,17 @@ module.exports = ({
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
     for (const [name, operation, description] of [
-      ['tags', 'tags', 'show declared tags'],
-      ['commodities', 'commodities', 'show declared commodities'],
-      ['prices', 'prices', 'show price directives'],
+      ['tags', 'tags', 'show used tags'],
+      ['commodities', 'commodities', 'show used commodities'],
+      ['prices', 'prices', 'show market prices'],
     ]) {
       const command = registerCommand(
         program.command(name).description(description), operation, 'raw',
       );
       addJournal(command);
+      if (name !== 'prices') {
+        addUsageSelection(command, `${name} declarations`);
+      }
       addOutputValueOption(command, '--format <format>', 'select the output format', {
         choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
       });
@@ -176,7 +188,7 @@ module.exports = ({
 
     const transactions = registerCommand(
       program.command('transactions').alias('print')
-        .description('show a page of transactions'),
+        .description('show transactions'),
       'transactions',
       'raw',
     );
@@ -364,11 +376,18 @@ module.exports = ({
     if (commandName === 'accounts') {
       return {
         ...common,
-        options: { accounts: options.accounts || [] },
+        options: { accounts: options.accounts || [], usage: options.usage || 'used' },
         output: { details: options.details || false, format: options.format },
       };
     }
-    if (['tags', 'commodities', 'prices'].includes(commandName)) {
+    if (['tags', 'commodities'].includes(commandName)) {
+      return {
+        ...common,
+        options: { usage: options.usage || 'used' },
+        output: { format: options.format },
+      };
+    }
+    if (commandName === 'prices') {
       return { ...common, output: { format: options.format } };
     }
     if (commandName === 'account-postings') return { ...common, options: compact({ accounts: options.accounts, after: options.after }) };
@@ -446,6 +465,7 @@ module.exports = ({
   function ledgerCommand(parsed) {
     const prefix = `ledger --args-only --no-pager --file ${shellArgument(parsed.journalPath)}`;
     if (parsed.command === 'accounts' &&
+        parsed.options.usage === 'used' &&
         !parsed.output.details && parsed.output.format === 'text') {
       const filters = parsed.options.accounts.map(shellArgument);
       return [prefix, 'accounts', ...filters].join(' ');

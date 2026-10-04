@@ -49,7 +49,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
 test('tracks API inputs separately from CLI-only output inputs', () => {
   assert.deepEqual(argumentsModule.apiInputCoverage.accounts, {
     command: 'accounts',
-    inputs: ['journalPath', 'accounts'],
+    inputs: ['journalPath', 'accounts', 'usage'],
     outputInputs: ['details', 'format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.transactions, {
@@ -68,16 +68,16 @@ test('parses account output options without adding API options', () => {
   assert.deepEqual(parseArguments(['accounts', '--file', '/journal']), {
     command: 'accounts',
     journalPath: '/journal',
-    options: { accounts: [] },
+    options: { accounts: [], usage: 'used' },
     output: { details: false, format: 'text' },
   });
   assert.deepEqual(parseArguments([
     'accounts', '--file', '/journal', '--accounts', '^Assets:',
-    '--accounts', '^Expenses:', '--details', '--format', 'csv',
+    '--accounts', '^Expenses:', '--usage', 'unused', '--details', '--format', 'csv',
   ]), {
     command: 'accounts',
     journalPath: '/journal',
-    options: { accounts: ['^Assets:', '^Expenses:'] },
+    options: { accounts: ['^Assets:', '^Expenses:'], usage: 'unused' },
     output: { details: true, format: 'csv' },
   });
   assert.throws(
@@ -88,16 +88,20 @@ test('parses account output options without adding API options', () => {
   assert.match(usage('accounts'), /--format <format>\s+select the output format/u);
 });
 
-test('parses listing output formats without requiring query parameters', () => {
-  for (const command of ['tags', 'commodities', 'prices']) {
+test('parses listing output formats and unused declaration selection', () => {
+  for (const command of ['tags', 'commodities']) {
     assert.deepEqual(parseArguments([command, '--file', '/journal']), {
       command,
       journalPath: '/journal',
+      options: { usage: 'used' },
       output: { format: 'text' },
     });
-    assert.deepEqual(parseArguments([command, '--file', '/journal', '--format', 'json']), {
+    assert.deepEqual(parseArguments([
+      command, '--file', '/journal', '--usage', 'all', '--format', 'json',
+    ]), {
       command,
       journalPath: '/journal',
+      options: { usage: 'all' },
       output: { format: 'json' },
     });
     assert.throws(
@@ -108,6 +112,11 @@ test('parses listing output formats without requiring query parameters', () => {
       `^Usage: ledlight ${command} --file <path> \\[options\\]`, 'u',
     ));
   }
+  assert.deepEqual(parseArguments(['prices', '--file', '/journal']), {
+    command: 'prices',
+    journalPath: '/journal',
+    output: { format: 'text' },
+  });
 });
 
 test('parses balance report options and output format', () => {
@@ -151,7 +160,7 @@ test('parses --ledger as a CLI-only mode and renders supported base commands', (
   assert.deepEqual(accounts, {
     command: 'accounts',
     journalPath: "/journals/O'Brien books.ledger",
-    options: { accounts: [] },
+    options: { accounts: [], usage: 'used' },
     output: { details: false, format: 'text' },
     ledger: true,
   });
@@ -383,7 +392,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /ledlight <command> --help/u);
   assert.match(
     usage(),
-    /raw:\n {2}accounts\s+show declared accounts[\s\S]* {2}tags\s+show declared tags[\s\S]* {2}commodities\s+show declared commodities[\s\S]* {2}prices\s+show price directives[\s\S]* {2}transactions\|print\s+show a page of transactions/u,
+    /raw:\n {2}accounts\s+show used accounts[\s\S]* {2}tags\s+show used tags[\s\S]* {2}commodities\s+show used commodities[\s\S]* {2}prices\s+show market prices[\s\S]* {2}transactions\|print\s+show transactions/u,
   );
   assert.match(
     usage(),
@@ -394,7 +403,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     /misc:[\s\S]* {2}balance\s+show account balances[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
-  assert.match(usage(), /transactions\|print\s+show a page of transactions/u);
+  assert.match(usage(), /transactions\|print\s+show transactions/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);

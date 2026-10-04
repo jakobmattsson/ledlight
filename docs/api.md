@@ -220,33 +220,40 @@ Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
 `balance` for that commodity.
 
-### `journal.accounts({ accounts })`
+### `journal.accounts({ accounts, usage })`
 
-Returns one row per declared account, sorted by name. Later duplicate
-declarations produce warnings and are not stored. The optional `accounts`
-array selects names matching any supplied pattern and defaults to `[]`:
+Returns one row per declared account in Ledger order. The optional `accounts`
+array selects names matching any supplied pattern and defaults to `[]`.
+`usage` is `all`, `used`, or `unused` and defaults to `all`. Selecting `used`
+returns only accounts used by non-zero postings, matching Ledger's `accounts`
+command; selecting `unused` finds declarations that can be removed:
 
 ```js
 {
   account,
   comment,
+  used,
   transactionCount,
 }
 ```
 
-### `journal.tags()`
+### `journal.tags({ usage })`
 
-Returns one row per declared tag, sorted by name. Later duplicate declarations
-produce warnings and are not stored. Each row is `{ tag }`.
+Returns declared tags sorted by name. `usage` accepts `all`, `used`, or `unused`
+and defaults to `all`; `used` matches Ledger's `tags` command. Each row is
+`{ tag, used }`.
 
-### `journal.commodities()`
+### `journal.commodities({ usage })`
 
-Returns one row per declared commodity, sorted by symbol. Later duplicate
-declarations produce warnings and are not stored. Each row is `{ commodity }`.
+Returns declared commodities sorted by symbol. `usage` accepts `all`, `used`,
+or `unused` and defaults to `all`; `used` matches Ledger's `commodities`
+command. Each row is `{ commodity, used }`.
 
 ### `journal.prices()`
 
-Returns every price directive, ordered by date and then journal position:
+Returns Ledger's effective market prices for used commodities. Explicit prices
+replace inferred prices on the same date, repeated explicit prices use the last
+value, and lot or transaction costs contribute inferred prices:
 
 ```js
 {
@@ -275,7 +282,8 @@ cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
 The `transactions` CLI command, also available as `print`, defaults to
-`--format text`. Its repeatable `--accounts PATTERN` option selects transactions
+`--format text` and prints every matching transaction rather than applying the
+API's 100-row default page size. Its repeatable `--accounts PATTERN` option selects transactions
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the transactions on the selected page.
 `--format json` returns the complete paginated API result, while `--format csv`

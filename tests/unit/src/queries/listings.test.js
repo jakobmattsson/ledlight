@@ -21,10 +21,16 @@ function createProject(t) {
 commodity FUND
 commodity FUND ; duplicate
 commodity UNUSED
+commodity EUR
+commodity NOK
 tag Declared
 tag Declared ; duplicate
+tag Receipt
+tag Reviewed
+tag Source
 account Assets:Fund ; primary
 account Assets:Fund ; duplicate
+account Assets:Unused
 account Equity:Opening
 P 2024-01-02 FUND 12.5 SEK ; closing
 P 2024-01-01 EUR 11 NOK
@@ -38,29 +44,63 @@ P 2024-01-02 FUND 13 SEK ; corrected
   return openJournal(journalPath);
 }
 
-test('lists each declared tag once', (t) => {
+test('lists declared tags with materialized usage', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.tags(), [{ tag: 'Declared' }]);
-});
-
-test('lists each declared commodity once while omitting undeclared symbols', (t) => {
-  const project = createProject(t);
-
-  assert.deepEqual(project.commodities(), [
-    { commodity: 'FUND' },
-    { commodity: 'SEK' },
-    { commodity: 'UNUSED' },
+  assert.deepEqual(project.tags(), [
+    { tag: 'Declared', used: false },
+    { tag: 'Receipt', used: true },
+    { tag: 'Reviewed', used: true },
+    { tag: 'Source', used: true },
+  ]);
+  assert.deepEqual(project.tags({ usage: 'used' }), [
+    { tag: 'Receipt', used: true },
+    { tag: 'Reviewed', used: true },
+    { tag: 'Source', used: true },
+  ]);
+  assert.deepEqual(project.tags({ usage: 'unused' }), [
+    { tag: 'Declared', used: false },
   ]);
 });
 
-test('lists each declared account once with the first declaration metadata', (t) => {
+test('lists declared commodities with materialized usage', (t) => {
+  const project = createProject(t);
+
+  assert.deepEqual(project.commodities(), [
+    { commodity: 'EUR', used: false },
+    { commodity: 'FUND', used: true },
+    { commodity: 'NOK', used: false },
+    { commodity: 'SEK', used: true },
+    { commodity: 'UNUSED', used: false },
+  ]);
+  assert.deepEqual(project.commodities({ usage: 'used' }), [
+    { commodity: 'FUND', used: true },
+    { commodity: 'SEK', used: true },
+  ]);
+  assert.deepEqual(project.commodities({ usage: 'unused' }), [
+    { commodity: 'EUR', used: false },
+    { commodity: 'NOK', used: false },
+    { commodity: 'UNUSED', used: false },
+  ]);
+});
+
+test('lists declared accounts with materialized usage and supports filtering', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.accounts(), [{
-    account: 'Assets:Fund', comment: 'primary', transactionCount: 1,
+    account: 'Assets:Fund', comment: 'primary', used: true, transactionCount: 1,
   }, {
-    account: 'Equity:Opening', comment: null, transactionCount: 1,
+    account: 'Assets:Unused', comment: null, used: false, transactionCount: 0,
+  }, {
+    account: 'Equity:Opening', comment: null, used: true, transactionCount: 1,
+  }]);
+  assert.deepEqual(project.accounts({ usage: 'used' }), [{
+    account: 'Assets:Fund', comment: 'primary', used: true, transactionCount: 1,
+  }, {
+    account: 'Equity:Opening', comment: null, used: true, transactionCount: 1,
+  }]);
+  assert.deepEqual(project.accounts({ usage: 'unused' }), [{
+    account: 'Assets:Unused', comment: null, used: false, transactionCount: 0,
   }]);
 });
 
@@ -81,26 +121,20 @@ test('warns about every duplicate declaration', (t) => {
   }]);
 });
 
-test('lists every price directive in date and journal order', (t) => {
+test('lists the effective explicit and inferred market prices', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.prices(), [{
-    date: '2024-01-01',
-    baseCommodity: 'EUR',
-    quoteQuantity: '11',
-    quoteCommodity: 'NOK',
-    comment: null,
-  }, {
-    date: '2024-01-02',
-    baseCommodity: 'FUND',
-    quoteQuantity: '12.5',
-    quoteCommodity: 'SEK',
-    comment: 'closing',
-  }, {
     date: '2024-01-02',
     baseCommodity: 'FUND',
     quoteQuantity: '13',
     quoteCommodity: 'SEK',
     comment: 'corrected',
+  }, {
+    date: '2024-01-03',
+    baseCommodity: 'FUND',
+    quoteQuantity: '10',
+    quoteCommodity: 'SEK',
+    comment: null,
   }]);
 });
