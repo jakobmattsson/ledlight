@@ -115,6 +115,11 @@ module.exports = ({
 
   function openJournal(journalPath) {
     const current = ensureCurrent(journalPath);
+    const warnings = queryDatabase(current.databasePath, (database) => database.prepare(`
+      SELECT code, message, source, line, column
+      FROM ingestion_warnings
+      ORDER BY position
+    `).all().map((warning) => Object.freeze(warning)));
     const caches = Object.freeze({ valuationPriceCache: new Map() });
     let ledgerValuationRateResolver;
     const runQuery = (queryFunction, options) => queryDatabase(
@@ -123,6 +128,7 @@ module.exports = ({
     );
     return {
       ...current,
+      warnings: Object.freeze(warnings),
       accountBalances(options) {
         return runQuery(queryAccountBalances, options);
       },

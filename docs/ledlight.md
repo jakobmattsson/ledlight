@@ -196,6 +196,14 @@ determines the balancing amount. This requires a realized gain or loss posting
 when disposal proceeds differ from the lot's cost basis, matching Ledger's
 behavior.
 
+Accounting checks are non-blocking ingestion warnings. Failed balance
+assertions, unbalanced transactions, invalid trade annotations, and additional
+default commodity declarations are recorded before queries run. Data that can
+still be represented is retained; an entry with unresolved amounts is skipped
+without preventing valid entries from being queried. The public API exposes
+the warnings on the opened journal, while the CLI writes the same structured
+list to stderr and keeps query output on stdout.
+
 Explicit non-zero postings in commodities other than the journal default must
 also describe their trade direction unambiguously. A positive quantity must
 have a lot cost (`{}` or `{{}}`) and no transaction price. A negative quantity

@@ -11,6 +11,15 @@ CREATE TABLE IF NOT EXISTS source_files (
   size INTEGER NOT NULL CHECK (size >= 0)
 );
 
+CREATE TABLE IF NOT EXISTS ingestion_warnings (
+  position INTEGER PRIMARY KEY,
+  code TEXT NOT NULL,
+  message TEXT NOT NULL,
+  source TEXT NOT NULL,
+  line INTEGER NOT NULL,
+  column INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY,
   sequence INTEGER NOT NULL UNIQUE,

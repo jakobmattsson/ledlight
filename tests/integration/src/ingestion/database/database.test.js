@@ -11,7 +11,6 @@ const { execFileSync } = require('node:child_process');
 const Database = require('better-sqlite3');
 const { openJournal } = resolveRepositoryModule("src/core/project.js");
 const { pathsForJournal } = resolveRepositoryModule("src/core/cache-paths.js");
-const { errorCodes } = resolveRepositoryModule("src/core/public-errors.js");
 const {
   ensureDatabaseCurrent,
 } = resolveRepositoryModule("src/ingestion/database/database.js");
@@ -285,7 +284,7 @@ test('rejects commodity-less resolved amounts before database insertion', (t) =>
   assert.equal(fs.existsSync(databasePath), false);
 });
 
-test('rejects non-default commodity trades without direction-specific annotations', (t) => {
+test('stores non-default commodity trades and reports invalid annotations as warnings', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -296,12 +295,12 @@ test('rejects non-default commodity trades without direction-specific annotation
   Assets:Cash  -10 SEK
 `);
 
-  assert.throws(
-    () => buildDatabase(databasePath, journalPath),
-    (error) => error.code === errorCodes.DATABASE &&
-      /journal\.ledger:4:3: Positive FUND posting must use a lot cost .* and no transaction price .* default commodity is SEK/u.test(error.message),
-  );
-  assert.equal(fs.existsSync(databasePath), false);
+  const result = buildDatabase(databasePath, journalPath);
+  assert.equal(result.transactions, 1);
+  assert.equal(result.warnings.length, 1);
+  assert.equal(result.warnings[0].code, 'INVALID_COMMODITY_TRADE');
+  assert.match(result.warnings[0].message, /Positive FUND posting must use a lot cost/u);
+  assert.equal(fs.existsSync(databasePath), true);
 });
 
 test('stores a zero-value non-default commodity acquisition', (t) => {
@@ -335,23 +334,34 @@ test('stores a zero-value non-default commodity acquisition', (t) => {
   );
 });
 
-test('rejects every second default commodity declaration', (t) => {
+test('uses the first default commodity and warns about every later declaration', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity USD
   default
-commodity USD
+commodity EUR
   default
 `);
 
-  assert.throws(
-    () => buildDatabase(databasePath, journalPath),
-    (error) => error.code === errorCodes.PROJECT_CONFIGURATION &&
-      /journal\.ledger:4:3: Multiple commodity declarations are marked default/u.test(error.message) &&
-      /first is at .*journal\.ledger:2:3/u.test(error.message),
-  );
-  assert.equal(fs.existsSync(databasePath), false);
+  const result = buildDatabase(databasePath, journalPath);
+  assert.equal(result.valuationCommodity, 'USD');
+  assert.deepEqual(result.warnings, [{
+    code: 'MULTIPLE_DEFAULT_COMMODITIES',
+    message: `Multiple commodity declarations are marked default; using the first at ${journalPath}:2:3`,
+    source: journalPath,
+    line: 4,
+    column: 3,
+  }]);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(database.prepare(`
+    SELECT declarations.symbol
+    FROM commodity_declarations AS declarations
+    JOIN commodity_properties AS properties ON properties.commodity_id = declarations.entry_id
+    WHERE properties.name = 'default'
+  `).pluck().all(), ['USD']);
+  assert.equal(fs.existsSync(databasePath), true);
 });
 
 test('aggregate CLI builds stale databases but reuses current databases', (t) => {
