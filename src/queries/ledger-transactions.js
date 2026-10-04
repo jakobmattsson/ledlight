@@ -12,6 +12,7 @@ module.exports = ({
     }, { error: 'must be a positive integer' })
     .transform(Number);
   const optionsSchema = z.strictObject({
+    id: positiveInteger.optional(),
     order: z.enum(['newest', 'oldest'], { error: 'must be newest or oldest' })
       .default('oldest'),
     page: positiveInteger.default(1),
@@ -21,10 +22,16 @@ module.exports = ({
   });
 
   function queryLedgerTransactions(database, options, _caches) {
-    const { order, page, pageSize } = parseOptions(
+    const { id, order, page, pageSize } = parseOptions(
       optionsSchema, options, 'ledgerTransactions',
     );
-    const totalTransactions = database.prepare('SELECT COUNT(*) AS count FROM transactions').get().count;
+    const filter = id === undefined ? '' : 'WHERE transactions.entry_id = ?';
+    const filterParameters = id === undefined ? [] : [id];
+    const totalTransactions = database.prepare(`
+      SELECT COUNT(*) AS count
+      FROM transactions
+      ${filter}
+    `).get(...filterParameters).count;
     const totalPages = Math.ceil(totalTransactions / pageSize);
     const selectedPage = Math.min(page, Math.max(totalPages, 1));
     const direction = order === 'newest' ? 'DESC' : 'ASC';
@@ -36,9 +43,10 @@ module.exports = ({
         transactions.comment
       FROM transactions
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
+      ${filter}
       ORDER BY transactions.date ${direction}, entries.sequence ${direction}
       LIMIT ? OFFSET ?
-    `).all(pageSize, (selectedPage - 1) * pageSize);
+    `).all(...filterParameters, pageSize, (selectedPage - 1) * pageSize);
     const transactions = transactionRows.map((row) => ({ ...row, notes: [], postings: [] }));
     if (transactions.length > 0) {
       const byId = new Map(transactions.map((transaction) =>

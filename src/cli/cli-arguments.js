@@ -121,19 +121,15 @@ module.exports = ({
     );
     addJournal(commodityDescriptions);
 
-    const ledgerTransaction = registerCommand(
-      program.command('ledger-transaction').description('show one transaction'),
-      'ledgerTransaction',
-    );
-    addJournal(ledgerTransaction);
-    addValueOption(ledgerTransaction, '--transaction-id <id>', 'select a transaction ID', {
-      required: true, apiInput: 'transactionId',
-    });
     const ledgerTransactions = registerCommand(
-      program.command('ledger-transactions').description('show a page of transactions'),
+      program.command('ledger-transactions').alias('print')
+        .description('show a page of transactions'),
       'ledgerTransactions',
     );
     addJournal(ledgerTransactions);
+    addValueOption(ledgerTransactions, '--id <id>', 'select one transaction ID', {
+      apiInput: 'id',
+    });
     addValueOption(ledgerTransactions, '--order <order>', 'sort transactions', {
       choices: ['newest', 'oldest'], apiInput: 'order',
     });
@@ -290,11 +286,12 @@ module.exports = ({
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };
-    if (commandName === 'ledger-transaction') return { ...common, options: { transactionId: options.transactionId } };
     if (commandName === 'ledger-transactions') {
       return {
         ...common,
-        options: compact({ order: options.order, page: options.page, pageSize: options.pageSize }),
+        options: compact({
+          id: options.id, order: options.order, page: options.page, pageSize: options.pageSize,
+        }),
         output: { format: options.format },
       };
     }

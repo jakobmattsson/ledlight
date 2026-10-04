@@ -29,7 +29,6 @@ module.exports = ({
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(), parsed.output);
     }
-    if (command === 'ledger-transaction') return formatJson(journal.ledgerTransaction(options));
     if (command === 'ledger-transactions') {
       const descriptions = parsed.output.format === 'text'
         ? journal.commodityDescriptions()

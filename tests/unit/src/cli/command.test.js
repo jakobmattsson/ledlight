@@ -141,7 +141,6 @@ test('delegates non-report commands to the corresponding journal operations', ()
       calls.push(['accounts']);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
-    ledgerTransaction(options) { calls.push(['ledgerTransaction', options]); return { id: 7 }; },
     ledgerTransactions(options) {
       calls.push(['ledgerTransactions', options]);
       return {
@@ -189,9 +188,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(run([
     'accounts', '--file', '/journal', '--details', '--format', 'json',
   ]), [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }]);
-  assert.deepEqual(run(['ledger-transaction', '--file', '/journal', '--transaction-id', '7']), { id: 7 });
   assert.deepEqual(run([
-    'ledger-transactions', '--file', '/journal', '--order', 'newest', '--page', '2', '--page-size', '10',
+    'ledger-transactions', '--file', '/journal', '--id', '7', '--order', 'newest', '--page', '2', '--page-size', '10',
     '--format', 'json',
   ]), {
     order: 'newest', page: 2, pageSize: 10, totalTransactions: 1, totalPages: 1,
@@ -227,8 +225,9 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['commodityDescriptions'],
     ['openJournal', '/journal'], ['accounts'],
     ['openJournal', '/journal'], ['accounts'],
-    ['openJournal', '/journal'], ['ledgerTransaction', { transactionId: '7' }],
-    ['openJournal', '/journal'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
+    ['openJournal', '/journal'], ['ledgerTransactions', {
+      id: '7', order: 'newest', page: '2', pageSize: '10',
+    }],
     ['openJournal', '/journal'], ['commodityDescriptions'], ['ledgerTransactions', {}],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
     ['openJournal', '/journal'], ['ledgerValuationRateResolver'],

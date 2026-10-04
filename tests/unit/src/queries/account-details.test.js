@@ -124,38 +124,3 @@ test('returns newest-first transactions and groups amounts by posting', (t) => {
     ],
   }]);
 });
-
-test('returns every posting in one transaction', (t) => {
-  const project = createProject(t);
-
-  assert.deepEqual(project.ledgerTransaction({ transactionId: 7 }), {
-    transactionId: 7,
-    transactionDate: '2023-01-01',
-    description: 'Open account',
-    comment: null,
-    postings: [{
-      postingDate: '2023-01-01',
-      account: 'Assets:Closed',
-      comment: null,
-      amounts: [{ quantity: '10', commodity: 'SEK' }],
-    }, {
-      postingDate: '2023-01-01',
-      account: 'Equity:Opening',
-      comment: null,
-      amounts: [{ quantity: '-10', commodity: 'SEK' }],
-    }, {
-      postingDate: '2023-01-01',
-      account: 'Assets:Closed',
-      comment: null,
-      amounts: [{ quantity: '2', commodity: 'FUND' }],
-    }, {
-      postingDate: '2023-01-01',
-      account: 'Equity:Opening',
-      comment: null,
-      amounts: [{ quantity: '-2', commodity: 'SEK' }],
-    }],
-  });
-  assert.equal(project.ledgerTransaction({ transactionId: 999 }), null);
-  assert.throws(() => project.ledgerTransaction({ transactionId: 'invalid' }),
-    /transactionId must be a positive integer/u);
-});
