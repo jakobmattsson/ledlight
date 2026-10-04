@@ -124,18 +124,17 @@ Returns daily rows sorted by date:
 
 Amounts are exact decimal strings in the journal default commodity.
 
-### `journal.gainReport(options)`
+### `journal.unrealizedGains(options)`
 
 Returns unrealized gains and losses for open non-default commodity positions,
 grouped by account and expressed as exact decimal strings in the journal
 default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
-Options are `from`, `to`, `accounts`, and `dateBasis`. `from` and `to` are the
-inclusive entry range, with `to` also serving as the valuation date. `accounts`
-contains account patterns, and `dateBasis` is `posting` (the default) or
-`transaction`. When `to` is omitted, the latest available journal price is
-used.
+Options are `at`, `accounts`, and `dateBasis`. `at` is the inclusive position
+and valuation date. `accounts` contains account patterns, and `dateBasis` is
+`posting` (the default) or `transaction`. When `at` is omitted, the latest
+available journal price is used.
 
 ### `journal.investmentPerformance(options)`
 

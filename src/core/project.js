@@ -42,7 +42,10 @@ module.exports = ({
     inputSchema: commodityDescriptionsOptionsSchema,
     execute: queryCommodityDescriptions,
   } = query('commodityDescriptions');
-  const { inputSchema: gainReportOptionsSchema, execute: queryGain } = query('gainReport');
+  const {
+    inputSchema: unrealizedGainsOptionsSchema,
+    execute: queryUnrealizedGains,
+  } = query('unrealizedGains');
   const {
     inputSchema: investmentPerformanceOptionsSchema,
     execute: queryInvestmentPerformance,
@@ -78,7 +81,7 @@ module.exports = ({
     accountPostings: { inputs: journalInputs(accountPostingsOptionsSchema) },
     aggregateReport: { inputs: journalInputs(aggregateReportOptionsSchema) },
     balanceHistoryReport: { inputs: journalInputs(balanceHistoryOptionsSchema) },
-    gainReport: { inputs: journalInputs(gainReportOptionsSchema) },
+    unrealizedGains: { inputs: journalInputs(unrealizedGainsOptionsSchema) },
     investmentPerformance: { inputs: journalInputs(investmentPerformanceOptionsSchema) },
     accountTransactions: { inputs: journalInputs(accountTransactionsOptionsSchema) },
     commodityDescriptions: { inputs: journalInputs(commodityDescriptionsOptionsSchema) },
@@ -162,8 +165,8 @@ module.exports = ({
       commodityDescriptions() {
         return runQuery(queryCommodityDescriptions, {});
       },
-      gainReport(options) {
-        return runQuery(queryGain, options);
+      unrealizedGains(options) {
+        return runQuery(queryUnrealizedGains, options);
       },
       investmentPerformance(options) {
         return runQuery(queryInvestmentPerformance, options);

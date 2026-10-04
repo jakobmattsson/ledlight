@@ -114,7 +114,7 @@ underlying result.
 | `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
 | `aggregate --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
-| `gain --file PATH` | `openJournal(journalPath).gainReport(options)` | Unrealized gain or loss by account |
+| `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account at a point in time |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
@@ -126,13 +126,14 @@ underlying result.
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `gain --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `gain --total` | None | Append a CLI-calculated total gain row |
+| `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `unrealized-gains --total` | None | Append a CLI-calculated total gain row |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
+| `unrealized-gains --at DATE` | `options.at` | Position and valuation date |
 | `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
@@ -209,7 +210,7 @@ The implementation is organized by responsibility directly under `src`:
   journal includes, validates and resolves journal postings, persists the
   normalized database, and materializes query optimizations;
 - `queries` contains one module per public API/CLI query—including aggregate,
-  balance-history, gain, and investment-performance queries—with its Zod schema
+  balance-history, unrealized-gains, and investment-performance queries—with its Zod schema
   beside its execution function;
 - `queries/support` contains internal SQL, valuation, and investment-return
   calculations used by query implementations; and
@@ -480,24 +481,24 @@ never converted to binary floating point during aggregation or valuation.
 
 ## Unrealized gain
 
-`gainReport` and the `gain` CLI command calculate the market value of each
-open non-default commodity position minus its remaining lot cost. Results are
-grouped by account, expressed in the journal default commodity, and omit zero
-gains. Losses are returned as negative quantities.
+`unrealizedGains` and the `unrealized-gains` CLI command calculate the market
+value of each open non-default commodity position minus its remaining lot cost.
+Results are grouped by account, expressed in the journal default commodity,
+and omit zero gains. Losses are returned as negative quantities.
 
 ```console
-ledlight gain --file main.ledger
-ledlight gain --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "^Assets:Broker"
-ledlight gain --file main.ledger --format csv --total
+ledlight unrealized-gains --file main.ledger
+ledlight unrealized-gains --file main.ledger --at 2024-12-31 --accounts "^Assets:Broker"
+ledlight unrealized-gains --file main.ledger --format csv --total
 ```
 
-The report accepts `from`, `to`, repeated `accounts`, and `date-basis`. The
-date range inclusively selects the entries used to construct open positions.
-It uses the latest valuation price on or before `to`, or the latest available
-price when `to` is omitted. Realized quantities and their lot costs cancel
-when a lot is sold, leaving only unrealized gains or losses on the remaining
-position. The CLI-only `--total` option appends an exact sum of all returned
-gain rows in text, JSON, or CSV output without changing the `gainReport` API.
+The report accepts `at`, repeated `accounts`, and `date-basis`. `at` is the
+inclusive position and valuation date. It uses the latest valuation price on
+or before `at`, or the latest available price when `at` is omitted. Realized
+quantities and their lot costs cancel when a lot is sold, leaving only
+unrealized gains or losses on the remaining position. The CLI-only `--total`
+option appends an exact sum of all returned gain rows in text, JSON, or CSV
+output without changing the `unrealizedGains` API.
 
 ## Balance history
 

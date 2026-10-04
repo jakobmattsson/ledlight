@@ -10,7 +10,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { execute: queryGain } = resolveQuery('gainReport');
+const { execute: queryUnrealizedGains } = resolveQuery('unrealizedGains');
 const { buildDatabase } = resolveRepositoryModule('src/ingestion/database/database.js').$$private;
 const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
 
@@ -49,38 +49,35 @@ P 2024-02-01 ETF 60 USD
   return databasePath;
 }
 
-function gainReport(databasePath, options, caches) {
+function unrealizedGains(databasePath, options, caches) {
   const queryCaches = caches ?? { valuationPriceCache: new Map() };
   return readDatabase(databasePath,
-    (database) => queryGain(database, options, queryCaches));
+    (database) => queryUnrealizedGains(database, options, queryCaches));
 }
 
 test('returns unrealized gains and losses by account in the default commodity', (t) => {
-  assert.deepEqual(gainReport(buildFixture(t), {}), [
+  assert.deepEqual(unrealizedGains(buildFixture(t), {}), [
     { account: 'Assets:Bonds', quantity: '-20', commodity: 'USD' },
     { account: 'Assets:Broker', quantity: '130', commodity: 'USD' },
   ]);
 });
 
-test('uses the report date for positions, prices, and account selection', (t) => {
+test('uses the snapshot date for positions, prices, and account selection', (t) => {
   const databasePath = buildFixture(t);
-  assert.deepEqual(gainReport(databasePath, { to: '2024-01-31' }), []);
-  assert.deepEqual(gainReport(databasePath, { from: '2024-02-01' }), [
-    { account: 'Assets:Broker', quantity: '-80', commodity: 'USD' },
-  ]);
-  assert.deepEqual(gainReport(databasePath, { accounts: ['Assets:Bonds'] }), [
+  assert.deepEqual(unrealizedGains(databasePath, { at: '2024-01-31' }), []);
+  assert.deepEqual(unrealizedGains(databasePath, { accounts: ['Assets:Bonds'] }), [
     { account: 'Assets:Bonds', quantity: '-20', commodity: 'USD' },
   ]);
 });
 
-test('rejects unsupported gain report options and invalid date ranges', (t) => {
+test('rejects unsupported unrealized-gain options and invalid dates', (t) => {
   const databasePath = buildFixture(t);
-  assert.throws(() => gainReport(databasePath, { unknown: true }),
-    /Unknown gainReport option: unknown/u);
-  assert.throws(() => gainReport(databasePath, { from: '2024-02-30' }),
-    /Invalid --from date/u);
-  assert.throws(() => gainReport(databasePath, { to: '2024-02-30' }),
-    /Invalid --to date/u);
-  assert.throws(() => gainReport(databasePath, { from: '2024-02-02', to: '2024-02-01' }),
-    /--from date 2024-02-02 is after --to date 2024-02-01/u);
+  assert.throws(() => unrealizedGains(databasePath, { unknown: true }),
+    /Unknown unrealizedGains option: unknown/u);
+  assert.throws(() => unrealizedGains(databasePath, { at: '2024-02-30' }),
+    /Invalid --at date/u);
+  assert.throws(() => unrealizedGains(databasePath, { from: '2024-01-01' }),
+    /Unknown unrealizedGains option: from/u);
+  assert.throws(() => unrealizedGains(databasePath, { to: '2024-01-01' }),
+    /Unknown unrealizedGains option: to/u);
 });

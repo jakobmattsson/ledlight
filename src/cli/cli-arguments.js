@@ -264,19 +264,18 @@ module.exports = ({
     addBooleanOption(balanceHistory, '--invert', 'invert the sign of report amounts', 'invert');
     addOutputBooleanOption(balanceHistory, '--csv', 'write CSV output', 'csv');
 
-    const gain = registerCommand(
-      program.command('gain').description('show investment gains'),
-      'gainReport',
+    const unrealizedGains = registerCommand(
+      program.command('unrealized-gains').description('show unrealized investment gains'),
+      'unrealizedGains',
       'misc',
     );
-    addJournal(gain);
-    addDateOption(gain, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
-    addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPatterns(gain); addDateBasisOption(gain);
-    addOutputValueOption(gain, '--format <format>', 'select the output format', {
+    addJournal(unrealizedGains);
+    addDateOption(unrealizedGains, '--at <date>', 'show gains at YYYY-MM-DD', 'at');
+    addAccountPatterns(unrealizedGains); addDateBasisOption(unrealizedGains);
+    addOutputValueOption(unrealizedGains, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
-    addOutputBooleanOption(gain, '--total', 'append the total gain', 'total');
+    addOutputBooleanOption(unrealizedGains, '--total', 'append the total gain', 'total');
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
@@ -386,7 +385,7 @@ module.exports = ({
     }
     if (commandName === 'valuation-rate') return { ...common, options: compact({ commodity: options.commodity, throughDate: options.throughDate }) };
     const reportOptions = compact({
-      from: options.from, to: options.to, accounts: options.accounts || [],
+      from: options.from, to: options.to, at: options.at, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
     if (commandName === 'aggregate') {
@@ -404,7 +403,7 @@ module.exports = ({
       reportOptions.commodities = options.commodities || [];
       reportOptions.excludeCommodities = options.excludeCommodities || [];
     }
-    if (commandName === 'gain') {
+    if (commandName === 'unrealized-gains') {
       return {
         ...common,
         reportOptions,

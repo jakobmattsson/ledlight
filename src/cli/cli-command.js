@@ -65,8 +65,8 @@ module.exports = ({
         ? formatJson(report)
         : formatInvestmentPerformance(report, journal.commodityDescriptions());
     }
-    if (command === 'gain') {
-      const reportRows = journal.gainReport(reportOptions);
+    if (command === 'unrealized-gains') {
+      const reportRows = journal.unrealizedGains(reportOptions);
       const rows = output.total ? appendTotal(reportRows) : reportRows;
       if (output.format === 'json') return formatJson(rows);
       return output.format === 'csv'
@@ -109,7 +109,12 @@ module.exports = ({
     }
     const parsed = parseArguments(arguments_);
     if (parsed.ledger) return `${ledgerCommand(parsed)}\n`;
-    return ['aggregate', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
+    return [
+      'aggregate',
+      'balance-history',
+      'unrealized-gains',
+      'investment-performance',
+    ].includes(parsed.command)
       ? runReport(parsed)
       : runJsonCommand(parsed);
   }
