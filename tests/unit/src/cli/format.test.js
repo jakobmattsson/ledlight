@@ -52,9 +52,7 @@ test('formats grouped warnings for a terminal', () => {
       startLine: 4,
       endLine: 4,
     }],
-  }]), 'Warnings:\n' +
-    '\n' +
-    '[SYNTAX_ERROR] Expected a posting\n' +
+  }]), '[SYNTAX_ERROR] Expected a posting\n' +
     '  /books/main.ledger:12:3 (affected lines 10-13)\n' +
     '  /books/included.ledger:4\n');
 });

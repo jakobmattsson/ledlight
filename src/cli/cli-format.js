@@ -144,9 +144,10 @@ module.exports = ({
 
   function formatWarnings(warnings) {
     if (warnings.length === 0) return '';
-    const lines = ['Warnings:'];
+    const lines = [];
     for (const warning of warnings) {
-      lines.push('', `[${warning.code}] ${warning.message}`);
+      if (lines.length > 0) lines.push('');
+      lines.push(`[${warning.code}] ${warning.message}`);
       for (const instance of warning.instances) {
         const position = instance.column === null
           ? `${instance.source}:${instance.line}`

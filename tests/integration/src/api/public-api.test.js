@@ -165,7 +165,7 @@ account Equity:Opening
   assert.deepEqual(JSON.parse(cli.stdout), [
     { account: 'Assets:Cash', quantity: '10', commodity: 'SEK' },
   ]);
-  assert.match(cli.stderr, /^Warnings:\n\n\[SYNTAX_ERROR\] /u);
+  assert.match(cli.stderr, /^\[SYNTAX_ERROR\] /u);
   assert.match(cli.stderr, new RegExp(
     `${journalPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&')}:5:1 ` +
     '\\(affected lines 5-7\\)',
