@@ -101,7 +101,7 @@ module.exports = ({
         inValuationCommodity ? 2 : null,
       ),
     }));
-    const accountWidth = Math.max(0, ...reportRows.map((row) => row.account.length));
+    const commodityWidth = Math.max(0, ...reportRows.map((row) => row.commodity.length));
     const amounts = reportRows.map((row) => {
       const declaredFormat = formats.get(row.commodity);
       const separator = declaredFormat
@@ -124,13 +124,12 @@ module.exports = ({
         : fraction === undefined
           ? ' '.repeat(fractionWidth + 1)
           : `${separator}${fraction.padEnd(fractionWidth)}`;
-      const line = `${row.account.padStart(accountWidth)}  ` +
-      `${integerColumn}${fractionColumn} ${row.commodity}`;
+      const amountColumn = `${integerColumn}${fractionColumn} ` +
+        row.commodity.padEnd(commodityWidth);
       if (row.isTotal) {
-        const separatorIndent = accountWidth - row.account.length;
-        lines.push(`${' '.repeat(separatorIndent)}${'-'.repeat(line.length - separatorIndent)}`);
+        lines.push('-'.repeat(amountColumn.length));
       }
-      lines.push(line);
+      lines.push(`${amountColumn}  ${row.account}`);
     });
 
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;

@@ -84,7 +84,7 @@ test('delegates report behavior to the public Node API and only formats results'
     runReportCommand([
       'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
     ]),
-    /Total.*-10\.00 USD/u,
+    /-10\.00 USD {2}Total/u,
   );
   assert.equal(
     runReportCommand(['balance-history', '--file', '/journal', '--invert', '--csv']),

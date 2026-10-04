@@ -162,11 +162,21 @@ Commands without a specialized human-readable representation emit JSON.
 select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction, and all pagination options are optional and default to
 `--order oldest --page 1 --page-size 100`.
-Report commands accept `--json` when the complete API result is needed; this
-is required to retain fields such as `valuationValue` and `factoredAmount`.
+`aggregate`, `balance-history`, and `investment-performance` accept `--json`
+when the complete API result is needed; this is required to retain fields such
+as `valuationValue` and `factoredAmount`. `unrealized-gains` selects the same
+encoding with `--format json`.
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
+
+Human-readable report rows that pair a numeric value with an account hierarchy
+put the value first, right-align it by its decimal position, and then print the
+commodity and a left-aligned account name. This makes magnitudes easy to compare
+while keeping account prefixes aligned for hierarchical scanning. New report
+formatters should follow this amount-first convention when accounts are the
+primary labels. Reports whose primary dimension is different, such as a dated
+balance history, keep that dimension first.
 
 Every command accepts the CLI-only `--ledger` option. It skips journal loading
 and query execution and prints exactly one line. The basic text variants of
@@ -417,8 +427,8 @@ ledlight aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 \
 ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --csv
 ```
 
-By default, the command prints right-aligned account names followed by aligned
-amounts and a left-aligned commodity column. Human-readable output uses each
+By default, the command prints decimal-aligned amounts followed by a commodity
+column and left-aligned account names. Human-readable output uses each
 commodity's declared `format` precision and separators. With `--value`, it
 converts every amount to the journal's default commodity and ends with an exact
 total. `--csv` omits the total and instead prints RFC-style escaped CSV with the
