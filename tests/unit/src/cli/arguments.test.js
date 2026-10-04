@@ -26,7 +26,6 @@ test('defines one CLI command for every journal operation', () => {
     tags: 'tags',
     commodities: 'commodities',
     prices: 'prices',
-    ledgerTransaction: 'ledger-transaction',
     ledgerTransactions: 'ledger-transactions',
     reconciliationEntries: 'reconciliation-entries',
     ledgerValuationRateResolver: 'valuation-rate',
@@ -54,6 +53,11 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     command: 'accounts',
     inputs: ['journalPath'],
     outputInputs: ['details', 'format'],
+  });
+  assert.deepEqual(argumentsModule.apiInputCoverage.ledgerTransactions, {
+    command: 'ledger-transactions',
+    inputs: ['journalPath', 'id', 'order', 'page', 'pageSize'],
+    outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
 });
@@ -274,13 +278,20 @@ test('maps every remaining API parameter to CLI arguments', () => {
     options: { account: 'Assets:Cash' },
   });
   assert.deepEqual(parseArguments([
-    'ledger-transactions', '--file', '/journal', '--order', 'oldest', '--page', '2', '--page-size', '25',
+    'ledger-transactions', '--file', '/journal', '--id', '42', '--order', 'oldest', '--page', '2',
+    '--page-size', '25', '--format', 'csv',
   ]), {
     command: 'ledger-transactions', journalPath: '/journal',
-    options: { order: 'oldest', page: '2', pageSize: '25' },
+    options: { id: '42', order: 'oldest', page: '2', pageSize: '25' },
+    output: { format: 'csv' },
   });
-  assert.deepEqual(parseArguments(['ledger-transaction', '--file', '/journal', '--transaction-id', '42']), {
-    command: 'ledger-transaction', journalPath: '/journal', options: { transactionId: '42' },
+  assert.deepEqual(parseArguments(['ledger-transactions', '--file', '/journal']), {
+    command: 'ledger-transactions', journalPath: '/journal',
+    options: {}, output: { format: 'text' },
+  });
+  assert.deepEqual(parseArguments(['print', '--file', '/journal']), {
+    command: 'ledger-transactions', journalPath: '/journal',
+    options: {}, output: { format: 'text' },
   });
   assert.deepEqual(parseArguments([
     'reconciliation-entries', '--file', '/journal',

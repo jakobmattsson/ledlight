@@ -246,19 +246,24 @@ Returns every price directive, ordered by date and then journal position:
 
 `comment` is a string or `null`. Quantities remain exact decimal strings.
 
-### `journal.ledgerTransaction({ transactionId })`
+### `journal.ledgerTransactions({ id, order, page, pageSize })`
 
-Returns one transaction or `null`. The transaction contains
-`transactionId`, `transactionDate`, description, comment,
-and postings. Each posting contains its date, account,
-comment, and exact `{ quantity, commodity }` amounts.
-
-### `journal.ledgerTransactions({ order, page, pageSize })`
-
-Returns a paginated transaction collection. `order` is `newest` or `oldest`;
-`page` and `pageSize` are positive integers, and `pageSize` cannot exceed 100.
+Returns a paginated transaction collection. All options are optional. `id`
+selects the transaction with that positive integer ID. `order` is `newest` or
+`oldest` and defaults to `oldest`; `page` defaults to `1`, while `pageSize`
+defaults to `100`. Page values are positive integers, and `pageSize` cannot
+exceed 100.
 The result contains `order`, the selected `page`, `pageSize`,
-`totalTransactions`, `totalPages`, and `transactions`.
+`totalTransactions`, `totalPages`, and `transactions`. Transactions include
+their ordered note text. Postings retain their nullable source `amount`, lot
+cost, transaction cost, balance assignment, and balance assertion, as well as
+the existing resolved `amounts` array.
+
+The `ledger-transactions` CLI command, also available as `print`, defaults to
+`--format text`. Its `--id ID` option selects one transaction. Text output is a
+Ledger-style journal containing the transactions on the selected page.
+`--format json` returns the complete paginated API result, while `--format csv`
+returns one row per posting amount with transaction and posting fields.
 
 ### `journal.reconciliationEntries({ accounts, related })`
 

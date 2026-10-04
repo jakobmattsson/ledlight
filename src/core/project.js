@@ -63,10 +63,6 @@ module.exports = ({
     execute: queryPrices,
   } = query('prices');
   const {
-    inputSchema: ledgerTransactionOptionsSchema,
-    execute: queryLedgerTransaction,
-  } = query('ledgerTransaction');
-  const {
     inputSchema: ledgerTransactionsOptionsSchema,
     execute: queryLedgerTransactions,
   } = query('ledgerTransactions');
@@ -89,7 +85,6 @@ module.exports = ({
     tags: { inputs: journalInputs(tagsOptionsSchema) },
     commodities: { inputs: journalInputs(commoditiesOptionsSchema) },
     prices: { inputs: journalInputs(pricesOptionsSchema) },
-    ledgerTransaction: { inputs: journalInputs(ledgerTransactionOptionsSchema) },
     ledgerTransactions: { inputs: journalInputs(ledgerTransactionsOptionsSchema) },
     reconciliationEntries: { inputs: journalInputs(reconciliationEntriesOptionsSchema) },
     ledgerValuationRateResolver: {
@@ -184,9 +179,6 @@ module.exports = ({
       },
       prices() {
         return runQuery(queryPrices, {});
-      },
-      ledgerTransaction(options) {
-        return runQuery(queryLedgerTransaction, options);
       },
       ledgerTransactions(options) {
         return runQuery(queryLedgerTransactions, options);

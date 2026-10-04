@@ -11,6 +11,7 @@ const {
   formatHumanReadable,
   formatInvestmentPerformance,
   formatInvestmentPerformanceJson,
+  formatLedgerTransactions,
   formatJson,
   formatAccounts,
   formatCommodities,
@@ -231,4 +232,65 @@ test('formats prices as text, JSON, and CSV', () => {
     '2024-01-02,FUND,12.5,SEK,"Closing, official"\n',
   );
   assert.equal(formatPrices([], { format: 'text' }), '');
+});
+
+test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', () => {
+  const report = {
+    order: 'oldest',
+    page: 1,
+    pageSize: 100,
+    totalTransactions: 1,
+    totalPages: 1,
+    transactions: [{
+      transactionId: 7,
+      transactionDate: '2024-01-03',
+      description: 'Shop | Groceries',
+      comment: 'imported',
+      notes: ['Project: Home'],
+      postings: [{
+        postingDate: '2024-01-03',
+        account: 'Assets:Cash',
+        comment: 'card',
+        amount: { quantity: '-5', commodity: 'SEK' },
+        lotCost: null,
+        cost: null,
+        balanceAssignment: null,
+        balanceAssertion: null,
+        amounts: [{ quantity: '-5', commodity: 'SEK' }],
+      }, {
+        postingDate: '2024-01-03',
+        account: 'Expenses:Food',
+        comment: null,
+        amount: null,
+        lotCost: null,
+        cost: null,
+        balanceAssignment: null,
+        balanceAssertion: null,
+        amounts: [{ quantity: '5', commodity: 'SEK' }],
+      }],
+    }],
+  };
+
+  assert.equal(
+    formatLedgerTransactions(report, { format: 'text' }),
+    '2024/01/03 Shop | Groceries  ; imported\n' +
+    '    ; Project: Home\n' +
+    '    Assets:Cash                               -5 SEK  ; card\n' +
+    '    Expenses:Food\n',
+  );
+  assert.equal(
+    formatLedgerTransactions(report, { format: 'csv' }),
+    'transactionId,transactionDate,description,transactionComment,postingDate,account,' +
+    'postingComment,quantity,commodity\n' +
+    '7,2024-01-03,Shop | Groceries,imported,2024-01-03,Assets:Cash,card,-5,SEK\n' +
+    '7,2024-01-03,Shop | Groceries,imported,2024-01-03,Expenses:Food,,5,SEK\n',
+  );
+  assert.equal(
+    formatLedgerTransactions(report, { format: 'json' }),
+    `${JSON.stringify(report, null, 2)}\n`,
+  );
+  assert.equal(
+    formatLedgerTransactions({ ...report, transactions: [] }, { format: 'text' }),
+    '',
+  );
 });

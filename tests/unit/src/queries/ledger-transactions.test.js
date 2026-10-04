@@ -30,8 +30,9 @@ account Equity:Opening
   Equity:Opening  -20 SEK
 
 2024-01-03 Shop | Third  ; imported
+  ; Project: Home
   Assets:Cash  -5 SEK  ; card
-  Equity:Opening  5 SEK
+  Equity:Opening
 `);
   return openJournal(journalPath);
 }
@@ -49,18 +50,56 @@ test('paginates complete transactions in either date order', (t) => {
   assert.equal('payee' in newest.transactions[0], false);
   assert.equal('narration' in newest.transactions[0], false);
   assert.equal(newest.transactions[0].comment, 'imported');
+  assert.deepEqual(newest.transactions[0].notes, ['Project: Home']);
   assert.deepEqual(newest.transactions[0].postings[0], {
     postingDate: '2024-01-03',
     account: 'Assets:Cash',
     comment: 'card',
+    amount: { quantity: '-5', commodity: 'SEK' },
+    lotCost: null,
+    cost: null,
+    balanceAssignment: null,
+    balanceAssertion: null,
     amounts: [{ quantity: '-5', commodity: 'SEK' }],
   });
+  assert.equal(newest.transactions[0].postings[1].amount, null);
 
   const oldest = project.ledgerTransactions({ order: 'oldest', page: 2, pageSize: 2 });
   assert.equal(oldest.page, 2);
   assert.deepEqual(oldest.transactions.map((transaction) => transaction.transactionDate), [
     '2024-01-03',
   ]);
+});
+
+test('defaults to the first 100 transactions in journal order', (t) => {
+  const project = createProject(t);
+
+  const result = project.ledgerTransactions();
+
+  assert.equal(result.order, 'oldest');
+  assert.equal(result.page, 1);
+  assert.equal(result.pageSize, 100);
+  assert.deepEqual(result.transactions.map((transaction) => transaction.transactionDate), [
+    '2024-01-01', '2024-01-02', '2024-01-03',
+  ]);
+});
+
+test('filters the transaction collection by ID', (t) => {
+  const project = createProject(t);
+  const id = project.ledgerTransactions().transactions[2].transactionId;
+
+  const result = project.ledgerTransactions({ id });
+
+  assert.equal(result.totalTransactions, 1);
+  assert.equal(result.totalPages, 1);
+  assert.deepEqual(result.transactions.map((transaction) => transaction.transactionId), [id]);
+  assert.equal(result.transactions[0].description, 'Shop | Third');
+  assert.equal(result.transactions[0].postings.length, 2);
+
+  const missing = project.ledgerTransactions({ id: 999 });
+  assert.equal(missing.totalTransactions, 0);
+  assert.equal(missing.totalPages, 0);
+  assert.deepEqual(missing.transactions, []);
 });
 
 test('clamps pages and rejects invalid list options', (t) => {
@@ -73,6 +112,8 @@ test('clamps pages and rejects invalid list options', (t) => {
     /page must be a positive integer/u);
   assert.throws(() => project.ledgerTransactions({ order: 'newest', page: 1, pageSize: 101 }),
     /pageSize must not exceed 100/u);
+  assert.throws(() => project.ledgerTransactions({ id: 'invalid' }),
+    /id must be a positive integer/u);
   assert.throws(() => project.ledgerTransactions({
     order: 'newest', page: 1, pageSize: 2, unknown: true,
   }), /Unknown ledgerTransactions option: unknown/u);
