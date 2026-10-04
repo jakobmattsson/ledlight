@@ -84,6 +84,24 @@ test('defaults to the first 100 transactions in journal order', (t) => {
   ]);
 });
 
+test('filters the transaction collection by ID', (t) => {
+  const project = createProject(t);
+  const id = project.ledgerTransactions().transactions[2].transactionId;
+
+  const result = project.ledgerTransactions({ id });
+
+  assert.equal(result.totalTransactions, 1);
+  assert.equal(result.totalPages, 1);
+  assert.deepEqual(result.transactions.map((transaction) => transaction.transactionId), [id]);
+  assert.equal(result.transactions[0].description, 'Shop | Third');
+  assert.equal(result.transactions[0].postings.length, 2);
+
+  const missing = project.ledgerTransactions({ id: 999 });
+  assert.equal(missing.totalTransactions, 0);
+  assert.equal(missing.totalPages, 0);
+  assert.deepEqual(missing.transactions, []);
+});
+
 test('clamps pages and rejects invalid list options', (t) => {
   const project = createProject(t);
 
@@ -94,6 +112,8 @@ test('clamps pages and rejects invalid list options', (t) => {
     /page must be a positive integer/u);
   assert.throws(() => project.ledgerTransactions({ order: 'newest', page: 1, pageSize: 101 }),
     /pageSize must not exceed 100/u);
+  assert.throws(() => project.ledgerTransactions({ id: 'invalid' }),
+    /id must be a positive integer/u);
   assert.throws(() => project.ledgerTransactions({
     order: 'newest', page: 1, pageSize: 2, unknown: true,
   }), /Unknown ledgerTransactions option: unknown/u);

@@ -112,8 +112,8 @@ underlying result.
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Exact-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
-| `ledger-transaction --file PATH` | `openJournal(journalPath).ledgerTransaction(options)` | One transaction |
 | `ledger-transactions --file PATH` (`print` alias) | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
+| `ledger-transactions --id ID` | `options.id` | Select one transaction ID |
 | `ledger-transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for exact accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
@@ -140,8 +140,9 @@ underlying result.
 | `<command> --help` | None | Detailed usage for one command |
 
 Commands without a specialized human-readable representation emit JSON.
-`ledger-transactions` defaults to Ledger-style text; all pagination options
-are optional and default to `--order oldest --page 1 --page-size 100`.
+`ledger-transactions` defaults to Ledger-style text; `--id` optionally selects
+one transaction, and all pagination options are optional and default to
+`--order oldest --page 1 --page-size 100`.
 Report commands accept `--json` when the complete API result is needed; this
 is required to retain fields such as `valuationValue` and `factoredAmount`.
 Tests compare the journal method inventory with the CLI command inventory,
