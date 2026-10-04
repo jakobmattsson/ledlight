@@ -26,7 +26,7 @@ test('registers all queries as one immutable dependency', () => {
     'gainQuery',
     'investmentPerformanceQuery',
     'accountsQuery',
-    'ledgerTransactionsQuery',
+    'transactionsQuery',
     'reconciliationEntriesQuery',
   ]) {
     assert.equal(container.hasRegistration(registrationName), false);

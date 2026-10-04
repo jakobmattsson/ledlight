@@ -10,6 +10,11 @@ Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
 API option objects reject unknown properties and values of the wrong type.
 
+All account selections use literal substring patterns. A leading `^` anchors a
+pattern to the start of the account name and a trailing `$` anchors it to the
+end. Using both selects one exact account. No other regular-expression syntax
+is recognized; all other characters are matched literally.
+
 ## Errors
 
 Public failures expose a stable string through `error.code`:
@@ -82,7 +87,7 @@ Options:
 | --- | --- | --- | --- |
 | `from` | string | unbounded | Inclusive start date |
 | `to` | string | unbounded | Inclusive end date and valuation date |
-| `accounts` | string[] | `[]` | Literal account prefixes combined with OR |
+| `accounts` | string[] | `[]` | Account patterns combined with OR |
 | `dateBasis` | `posting` or `transaction` | `posting` | Date used for filtering |
 | `inValuationCommodity` | boolean | `false` | Convert and combine rows in the journal default commodity |
 | `withValuationValue` | boolean | `false` | Preserve commodity rows and add `valuationValue` |
@@ -98,7 +103,8 @@ commodity. `withValuationValue` adds an exact `valuationValue`. A total row is
 
 Options are `from`, `to`, `accounts`, `dateBasis`, `invert`, and optional
 `accountFactors`. The first five have the same meanings as in
-`aggregateReport`. `accountFactors` maps exact account names to decimal factors.
+`aggregateReport`. `accountFactors` maps account patterns to decimal factors.
+When patterns overlap, the first matching entry supplies the factor.
 
 Returns daily rows sorted by date:
 
@@ -121,7 +127,7 @@ default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
 Options are `to`, `accounts`, and `dateBasis`. `to` is the inclusive position
-and valuation date, `accounts` contains literal account prefixes, and
+and valuation date, `accounts` contains account patterns, and
 `dateBasis` is `posting` (the default) or `transaction`. When `to` is omitted,
 the latest available journal price is used.
 
@@ -129,8 +135,8 @@ the latest available journal price is used.
 
 Options are `from`, `to`, `accounts`, `commodities`, and
 `excludeCommodities`. The three selections are arrays of non-empty strings.
-Account values are literal prefixes. Commodity inclusion and exclusion cannot
-overlap.
+Account values use the shared account-pattern syntax. Commodity inclusion and
+exclusion cannot overlap.
 
 The result contains:
 
@@ -160,12 +166,12 @@ improvement backlog.
 
 ### `journal.accountBalances({ account, to })`
 
-Returns `{ quantity, commodity }` rows for one exact account through the
+Returns `{ quantity, commodity }` rows for matching accounts through the
 optional inclusive date. Rows are sorted by commodity.
 
 ### `journal.accountPostings({ account, after })`
 
-Returns resolved amounts for one exact account after the optional exclusive
+Returns resolved amounts for matching accounts after the optional exclusive
 date. A row is:
 
 ```js
@@ -202,7 +208,7 @@ currently exposed.
 
 ### `journal.accountTransactions({ account })`
 
-Returns newest-first transactions containing postings to one exact account.
+Returns newest-first transactions containing postings to matching accounts.
 Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
 `balance` for that commodity.
@@ -246,10 +252,10 @@ Returns every price directive, ordered by date and then journal position:
 
 `comment` is a string or `null`. Quantities remain exact decimal strings.
 
-### `journal.ledgerTransactions({ account, id, order, page, pageSize })`
+### `journal.transactions({ account, id, order, page, pageSize })`
 
 Returns a paginated transaction collection. All options are optional. `account`
-selects transactions containing a posting to that exact account while retaining
+selects transactions containing a posting to a matching account while retaining
 all postings in each selected transaction. `id` selects the transaction with
 that positive integer ID. `order` is `newest` or `oldest` and defaults to
 `oldest`; `page` defaults to `1`, while `pageSize` defaults to `100`. Page values
@@ -260,24 +266,24 @@ their ordered note text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
-The `ledger-transactions` CLI command, also available as `print`, defaults to
-`--format text`. Its `--account NAME` option selects transactions for one exact
-account, and `--id ID` selects one transaction. Text output is a Ledger-style
+The `transactions` CLI command, also available as `print`, defaults to
+`--format text`. Its `--account PATTERN` option selects transactions by account
+pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the transactions on the selected page.
 `--format json` returns the complete paginated API result, while `--format csv`
 returns one row per posting amount with transaction and posting fields.
 
 ### `journal.reconciliationEntries({ accounts, related })`
 
-Returns resolved posting amounts for one or more exact account names, ordered
+Returns resolved posting amounts for one or more account patterns, ordered
 by posting date and journal position. `accounts` must be a non-empty array of
 non-empty strings. `related` defaults to `false`; when true, the result instead
-contains the other postings from transactions involving each selected account.
+contains the other postings from transactions involving each selected pattern.
 
 Each row contains `date`, `amount`, `description`, `commodity`, `account`,
 `filename`, `sourceLine`, and `row`. Related rows also contain
 `postingAccount`, which identifies the other posting's account. `amount` is an
-exact decimal string, `account` is the selected account, and `row` is the
+exact decimal string, `account` is the selected pattern, and `row` is the
 one-based position in the complete ordered posting-amount result.
 
 ### `journal.ledgerValuationRateResolver()`

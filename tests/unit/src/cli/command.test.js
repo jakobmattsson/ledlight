@@ -66,7 +66,7 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.equal(runReportCommand([]), topLevelHelp);
   assert.match(
     runReportCommand(['account-balances', '--help']),
-    /^Usage: ledlight account-balances[\s\S]*--account <name>/u,
+    /^Usage: ledlight account-balances[\s\S]*--account <pattern>/u,
   );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
   assert.throws(() => runReportCommand(['-V']), /unknown option '-V'/u);
@@ -150,8 +150,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
         quoteCommodity: 'USD', comment: null,
       }];
     },
-    ledgerTransactions(options) {
-      calls.push(['ledgerTransactions', options]);
+    transactions(options) {
+      calls.push(['transactions', options]);
       return {
         order: 'newest', page: 2, pageSize: 10, totalTransactions: 1, totalPages: 1,
         transactions: [{
@@ -204,7 +204,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     quoteCommodity: 'USD', comment: null,
   }]);
   assert.deepEqual(run([
-    'ledger-transactions', '--file', '/journal', '--account', 'Assets:Cash',
+    'transactions', '--file', '/journal', '--account', 'Assets:Cash',
     '--id', '7', '--order', 'newest', '--page', '2', '--page-size', '10',
     '--format', 'json',
   ]), {
@@ -224,7 +224,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     }],
   });
   assert.equal(
-    runReportCommand(['ledger-transactions', '--file', '/journal']),
+    runReportCommand(['transactions', '--file', '/journal']),
     '2024/01/03 Shop\n    Assets:Cash                               -5 SEK\n',
   );
   assert.deepEqual(run([
@@ -244,10 +244,10 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['tags'],
     ['openJournal', '/journal'], ['commodities'],
     ['openJournal', '/journal'], ['prices'],
-    ['openJournal', '/journal'], ['ledgerTransactions', {
+    ['openJournal', '/journal'], ['transactions', {
       account: 'Assets:Cash', id: '7', order: 'newest', page: '2', pageSize: '10',
     }],
-    ['openJournal', '/journal'], ['commodityDescriptions'], ['ledgerTransactions', {}],
+    ['openJournal', '/journal'], ['commodityDescriptions'], ['transactions', {}],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
     ['openJournal', '/journal'], ['ledgerValuationRateResolver'],
     ['resolveRate', 'EUR', '2024-12-31'],
@@ -297,7 +297,7 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['account-postings', '--account', 'Assets:Cash'],
     ['account-transactions', '--account', 'Assets:Cash'],
     ['commodity-descriptions'],
-    ['ledger-transactions'],
+    ['transactions'],
     ['print'],
     ['reconciliation-entries', '--account', 'Assets:Cash'],
     ['valuation-rate', '--commodity', 'USD'],
@@ -309,7 +309,7 @@ test('--ledger never opens a journal and is available on every command', () => {
 
   for (const arguments_ of commands) {
     const output = runReportCommand([...arguments_, '--file', '/journal', '--ledger']);
-    if (['accounts', 'ledger-transactions', 'print'].includes(arguments_[0])) {
+    if (['accounts', 'transactions', 'print'].includes(arguments_[0])) {
       assert.match(output, /^ledger --args-only --file \/journal (?:accounts|print)\n$/u);
     } else {
       assert.equal(output, 'No ledger equivalent command exists\n');

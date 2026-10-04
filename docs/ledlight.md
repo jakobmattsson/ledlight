@@ -110,37 +110,37 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `account-balances --file PATH` | `openJournal(journalPath).accountBalances(options)` | Exact-account balances |
-| `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Exact-account postings |
+| `account-balances --file PATH` | `openJournal(journalPath).accountBalances(options)` | Matching-account balances |
+| `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
 | `aggregate --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
 | `gain --file PATH` | `openJournal(journalPath).gainReport(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
-| `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Exact-account transactions |
+| `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
 | `tags --file PATH` | `openJournal(journalPath).tags()` | Declared tags |
 | `commodities --file PATH` | `openJournal(journalPath).commodities()` | Declared commodities |
 | `prices --file PATH` | `openJournal(journalPath).prices()` | Price directives |
-| `ledger-transactions --file PATH` (`print` alias) | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
-| `ledger-transactions --account NAME` | `options.account` | Select transactions containing the exact account |
-| `ledger-transactions --id ID` | `options.id` | Select one transaction ID |
-| `ledger-transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for exact accounts |
+| `transactions --file PATH` (`print` alias) | `openJournal(journalPath).transactions(options)` | Paginated transactions |
+| `transactions --account PATTERN` | `options.account` | Select transactions containing matching accounts |
+| `transactions --id ID` | `options.id` | Select one transaction ID |
+| `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
-| `--accounts PREFIX` | `options.accounts` | Repeated account-prefix selection |
+| `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
-| `--account-factor ACCOUNT=FACTOR` | `options.accountFactors` | Exact-account balance-history factors |
+| `--account-factor PATTERN=FACTOR` | `options.accountFactors` | Pattern-based balance-history factors |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
-| `reconciliation-entries --account NAME` | `options.accounts` | Repeated exact-account selection |
+| `reconciliation-entries --account PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
@@ -155,8 +155,8 @@ underlying result.
 | `<command> --ledger` | None | Print an equivalent standalone Ledger command when one exists |
 
 Commands without a specialized human-readable representation emit JSON.
-`ledger-transactions` defaults to Ledger-style text; `--account` optionally
-selects transactions containing one exact account while retaining every posting
+`transactions` defaults to Ledger-style text; `--account` optionally
+selects transactions containing a matching account while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction, and all pagination options are optional and default to
 `--order oldest --page 1 --page-size 100`.
 Report commands accept `--json` when the complete API result is needed; this
@@ -167,7 +167,7 @@ calculations to the API before formatting.
 
 Every command accepts the CLI-only `--ledger` option. It skips journal loading
 and query execution and prints exactly one line. The basic text variants of
-`accounts` and `ledger-transactions` (including its `print` alias) produce a
+`accounts` and `transactions` (including its `print` alias) produce a
 complete Ledger invocation with `--args-only`, so neither `.ledgerrc` nor
 Ledger environment defaults affect it. Variants with Ledlight-specific filters
 or output formats, and commands without a verified equivalent, print `No
@@ -380,10 +380,11 @@ query time.
 `aggregateReport` returns every non-zero account total in an optional inclusive
 date interval. Omit `from` to include all earlier postings, omit `to` to include
 all later postings, and omit both to aggregate the complete journal. Repeated
-account prefixes are combined with OR and matched literally. Prefixes are
-translated into lexicographic ranges so SQLite can use the account index rather
-than evaluate a string function for every posting. By default there is one row
-per account and commodity:
+account patterns are combined with OR. Patterns match literal substrings by
+default; a leading `^` anchors the start and a trailing `$` anchors the end.
+Both anchors request an exact account. These are not regular expressions, so
+every other character is literal. By default there is one row per account and
+commodity:
 
 ```js
 const { openJournal } = require('ledlight');
@@ -391,13 +392,13 @@ const journal = openJournal('/path/to/books/main.ledger');
 
 const balanceSheet = journal.aggregateReport({
   to: '2024-12-31',
-  accounts: ['Assets:', 'Liabilities:'],
+  accounts: ['^Assets:', '^Liabilities:'],
   dateBasis: 'transaction',
 });
 const valuedIncomeStatement = journal.aggregateReport({
   from: '2024-01-01',
   to: '2024-12-31',
-  accounts: ['Income:', 'Expenses:'],
+  accounts: ['^Income:', '^Expenses:'],
   inValuationCommodity: true,
 });
 ```
@@ -408,8 +409,8 @@ The command-line equivalent is:
 ledlight aggregate --file main.ledger --to 2024-12-31
 ledlight aggregate --file main.ledger --to 2024-12-31 --date-basis transaction
 ledlight aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 \
-  --accounts "Income:" --accounts "Expenses:" --value --invert
-ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:" --csv
+  --accounts "^Income:" --accounts "^Expenses:" --value --invert
+ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --csv
 ```
 
 By default, the command prints right-aligned account names followed by aligned
@@ -483,7 +484,7 @@ gains. Losses are returned as negative quantities.
 
 ```console
 ledlight gain --file main.ledger
-ledlight gain --file main.ledger --to 2024-12-31 --accounts "Assets:Broker"
+ledlight gain --file main.ledger --to 2024-12-31 --accounts "^Assets:Broker"
 ledlight gain --file main.ledger --csv
 ```
 
@@ -507,18 +508,18 @@ const { openJournal } = require('ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
 const history = journal.balanceHistoryReport({
-  accounts: ['Assets:', 'Liabilities:'],
+  accounts: ['^Assets:', '^Liabilities:'],
 });
 ```
 
-Code callers can also provide `accountFactors`, keyed by exact account name.
+Code callers can also provide `accountFactors`, keyed by account pattern.
 The report then includes a `factoredAmount` beside each unmodified `amount`.
 This supports views such as after-tax balances without losing the single daily
 query for an account group:
 
 ```js
 const history = journal.balanceHistoryReport({
-  accounts: ['Assets:', 'Liabilities:'],
+  accounts: ['^Assets:', '^Liabilities:'],
   accountFactors: {
     'Assets:Pension': '0.7',
     'Liabilities:DeferredTax': '0.75',
@@ -526,18 +527,18 @@ const history = journal.balanceHistoryReport({
 });
 ```
 
-Accounts without an explicit factor use `1`. Factors apply only to exact
-account names even though `accounts` continues to select by prefix.
+Accounts without a matching factor use `1`. If patterns overlap, the first
+matching factor applies.
 
 The command prints the complete history by default. `--from`, `--to`,
 `--accounts`, `--invert`, and `--csv` work as for the aggregate report:
 
 ```console
 ledlight balance-history --file main.ledger \
-  --accounts "Assets:" --accounts "Liabilities:"
+  --accounts "^Assets:" --accounts "^Liabilities:"
 ledlight balance-history --file main.ledger --date-basis transaction \
-  --accounts "Assets:" --accounts "Liabilities:"
-ledlight balance-history --file main.ledger --accounts "Assets:" --csv
+  --accounts "^Assets:" --accounts "^Liabilities:"
+ledlight balance-history --file main.ledger --accounts "^Assets:" --csv
 ```
 
 Human-readable amounts use the default commodity's declared format. CSV

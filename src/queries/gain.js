@@ -9,7 +9,7 @@ module.exports = ({
     parseDecimal,
     subtractDecimals,
   },
-  accountPrefixFilter: { accountPrefixFilter },
+  accountFilter: { accountFilter },
   apiOptions: { parseOptions },
   valuationRates: { queryValuationRates },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
@@ -31,9 +31,9 @@ module.exports = ({
     ];
     const parameters = [valuationCommodity, options.to ?? null];
     if (options.accounts.length > 0) {
-      const accountFilter = accountPrefixFilter('p.account', options.accounts);
-      clauses.push(accountFilter.sql);
-      parameters.push(...accountFilter.parameters);
+      const filter = accountFilter('p.account', options.accounts);
+      clauses.push(filter.sql);
+      parameters.push(...filter.parameters);
     }
     return { sql: `WHERE ${clauses.join('\n      AND ')}`, parameters };
   }

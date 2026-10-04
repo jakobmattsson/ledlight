@@ -233,7 +233,7 @@ module.exports = ({
       }))));
   }
 
-  function formatLedgerTransactionsCsv(report) {
+  function formatTransactionsCsv(report) {
     const fields = [
       'transactionId', 'transactionDate', 'description', 'transactionComment',
       'postingDate', 'account', 'postingComment', 'quantity', 'commodity',
@@ -271,7 +271,7 @@ module.exports = ({
     return expressions.join(' ');
   }
 
-  function formatLedgerTransactionsText(report, descriptions) {
+  function formatTransactionsText(report, descriptions) {
     const formats = commodityFormats(descriptions);
     const lines = [];
     for (const transaction of report.transactions) {
@@ -294,10 +294,10 @@ module.exports = ({
     return `${lines.join('\n')}\n`;
   }
 
-  function formatLedgerTransactions(report, { format }, descriptions) {
+  function formatTransactions(report, { format }, descriptions) {
     if (format === 'json') return formatJson(report);
-    if (format === 'csv') return formatLedgerTransactionsCsv(report);
-    return formatLedgerTransactionsText(report, descriptions);
+    if (format === 'csv') return formatTransactionsCsv(report);
+    return formatTransactionsText(report, descriptions);
   }
 
   function formatBalanceHistoryHumanReadable(rows, descriptions) {
@@ -338,7 +338,7 @@ module.exports = ({
     formatHumanReadable,
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
-    formatLedgerTransactions,
+    formatTransactions,
     formatJson,
     formatAccounts,
     formatCommodities,

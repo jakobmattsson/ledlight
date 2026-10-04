@@ -26,7 +26,7 @@ test('defines one CLI command for every journal operation', () => {
     tags: 'tags',
     commodities: 'commodities',
     prices: 'prices',
-    ledgerTransactions: 'ledger-transactions',
+    transactions: 'transactions',
     reconciliationEntries: 'reconciliation-entries',
     ledgerValuationRateResolver: 'valuation-rate',
   });
@@ -54,8 +54,8 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     inputs: ['journalPath'],
     outputInputs: ['details', 'format'],
   });
-  assert.deepEqual(argumentsModule.apiInputCoverage.ledgerTransactions, {
-    command: 'ledger-transactions',
+  assert.deepEqual(argumentsModule.apiInputCoverage.transactions, {
+    command: 'transactions',
     inputs: ['journalPath', 'account', 'id', 'order', 'page', 'pageSize'],
     outputInputs: ['format'],
   });
@@ -156,7 +156,7 @@ test('parses --ledger as a CLI-only mode and renders supported base commands', (
   assert.equal(ledgerCommand(print), 'ledger --args-only --file /journal print');
   assert.equal(
     ledgerCommand(parseArguments([
-      'ledger-transactions', '--file', '/journal', '--account', 'Assets:Cash', '--ledger',
+      'transactions', '--file', '/journal', '--account', 'Assets:Cash', '--ledger',
     ])),
     'No ledger equivalent command exists',
   );
@@ -301,22 +301,22 @@ test('maps every remaining API parameter to CLI arguments', () => {
     options: { account: 'Assets:Cash' },
   });
   assert.deepEqual(parseArguments([
-    'ledger-transactions', '--file', '/journal', '--account', 'Assets:Cash',
+    'transactions', '--file', '/journal', '--account', 'Assets:Cash',
     '--id', '42', '--order', 'oldest', '--page', '2',
     '--page-size', '25', '--format', 'csv',
   ]), {
-    command: 'ledger-transactions', journalPath: '/journal',
+    command: 'transactions', journalPath: '/journal',
     options: {
       account: 'Assets:Cash', id: '42', order: 'oldest', page: '2', pageSize: '25',
     },
     output: { format: 'csv' },
   });
-  assert.deepEqual(parseArguments(['ledger-transactions', '--file', '/journal']), {
-    command: 'ledger-transactions', journalPath: '/journal',
+  assert.deepEqual(parseArguments(['transactions', '--file', '/journal']), {
+    command: 'transactions', journalPath: '/journal',
     options: {}, output: { format: 'text' },
   });
   assert.deepEqual(parseArguments(['print', '--file', '/journal']), {
-    command: 'ledger-transactions', journalPath: '/journal',
+    command: 'transactions', journalPath: '/journal',
     options: {}, output: { format: 'text' },
   });
   assert.deepEqual(parseArguments([
@@ -338,6 +338,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   const invalidArguments = [
     [],
     ['balance'],
+    ['ledger-transactions', '--file', '/journal'],
     ['aggregate', '--from'],
     ['aggregate', '--from', '--value'],
     ['aggregate', '--to', '2024-01-01', '--to', '2024-02-01'],
@@ -359,31 +360,31 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /ledlight <command> --help/u);
   assert.match(
     usage(),
-    /raw:\n {2}accounts\s+show declared accounts[\s\S]* {2}tags\s+show declared tags[\s\S]* {2}commodities\s+show declared commodities[\s\S]* {2}prices\s+show price directives[\s\S]* {2}ledger-transactions\|print\s+show a page of transactions/u,
+    /raw:\n {2}accounts\s+show declared accounts[\s\S]* {2}tags\s+show declared tags[\s\S]* {2}commodities\s+show declared commodities[\s\S]* {2}prices\s+show price directives[\s\S]* {2}transactions\|print\s+show a page of transactions/u,
   );
   assert.match(
     usage(),
-    /misc:\n {2}account-balances\s+show balances for one exact account[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /misc:\n {2}account-balances\s+show balances for matching accounts[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
-  assert.match(usage(), /ledger-transactions\|print\s+show a page of transactions/u);
+  assert.match(usage(), /transactions\|print\s+show a page of transactions/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
-  assert.doesNotMatch(usage(), /--accounts <prefix>/u);
+  assert.doesNotMatch(usage(), /--accounts <pattern>/u);
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
-  assert.match(usage('print'), /^Usage: ledlight ledger-transactions\|print --file <path> \[options\]/u);
-  assert.match(usage('print'), /--account <name>\s+select transactions for an exact account/u);
+  assert.match(usage('print'), /^Usage: ledlight transactions\|print --file <path> \[options\]/u);
+  assert.match(usage('print'), /--account <pattern>\s+select transactions for matching accounts/u);
   assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
-  assert.match(usage('aggregate'), /--accounts <prefix>.*repeatable/u);
+  assert.match(usage('aggregate'), /--accounts <pattern>.*repeatable/u);
   assert.match(
     usage('account-balances'),
-    /^Usage: ledlight account-balances --file <path> --account <name> \[options\]/u,
+    /^Usage: ledlight account-balances --file <path> --account <pattern> \[options\]/u,
   );
   assert.match(
     usage('account-balances'),
-    /--account <name>\s+\(REQUIRED\) select an exact account[\s\S]*--to <date>[\s\S]*--help/u,
+    /--account <pattern>\s+\(REQUIRED\) select matching accounts[\s\S]*--to <date>[\s\S]*--help/u,
   );
   assert.match(usage('aggregate'), /--help\s+show command help/u);
   assert.match(

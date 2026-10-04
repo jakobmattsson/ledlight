@@ -10,7 +10,7 @@ module.exports = ({
     formatBalanceHistoryHumanReadable,
     formatHumanReadable,
     formatInvestmentPerformance,
-    formatLedgerTransactions,
+    formatTransactions,
     formatJson,
     formatAccounts,
     formatCommodities,
@@ -37,12 +37,12 @@ module.exports = ({
       return formatCommodities(journal.commodities(), parsed.output);
     }
     if (command === 'prices') return formatPrices(journal.prices(), parsed.output);
-    if (command === 'ledger-transactions') {
+    if (command === 'transactions') {
       const descriptions = parsed.output.format === 'text'
         ? journal.commodityDescriptions()
         : undefined;
-      return formatLedgerTransactions(
-        journal.ledgerTransactions(options), parsed.output, descriptions,
+      return formatTransactions(
+        journal.transactions(options), parsed.output, descriptions,
       );
     }
     if (command === 'reconciliation-entries') {
