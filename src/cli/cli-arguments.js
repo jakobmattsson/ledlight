@@ -72,11 +72,23 @@ module.exports = ({
   );
 
   function createProgram() {
-    const program = new Command().name('ledlight')
+    const program = new Command().name('ledlight').usage('<command> [options]')
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
+      .configureHelp({ subcommandTerm: (command) => command.name() })
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
+    const accounts = registerCommand(
+      program.command('accounts').description('show declared and used accounts'),
+      'accounts',
+    );
+    addJournal(accounts);
+    addOutputBooleanOption(
+      accounts, '--details', 'include comments and transaction counts', 'details',
+    );
+    addOutputValueOption(accounts, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
     const accountBalances = registerCommand(
       program.command('account-balances').description('show balances for one exact account'),
       'accountBalances',
@@ -108,18 +120,6 @@ module.exports = ({
       'commodityDescriptions',
     );
     addJournal(commodityDescriptions);
-    const accounts = registerCommand(
-      program.command('accounts').description('show declared and used accounts'),
-      'accounts',
-    );
-    addJournal(accounts);
-    addOutputBooleanOption(
-      accounts, '--details', 'include comments and transaction counts', 'details',
-    );
-    addOutputValueOption(accounts, '--format <format>', 'select the output format', {
-      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
-    });
-
     const ledgerTransaction = registerCommand(
       program.command('ledger-transaction').description('show one transaction'),
       'ledgerTransaction',
