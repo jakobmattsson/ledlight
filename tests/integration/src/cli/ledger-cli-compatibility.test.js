@@ -239,7 +239,7 @@ for (const command of ['accounts', 'print']) {
 
     assert.match(
       ledgerCommand,
-      new RegExp(`^ledger --args-only --file .+ ${command}$`, 'u'),
+      new RegExp(`^ledger --args-only --no-pager --file .+ ${command}$`, 'u'),
     );
     assert.equal(execSync(ledgerCommand, commonOptions), expectedOutput);
   });

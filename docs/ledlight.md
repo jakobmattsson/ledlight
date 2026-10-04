@@ -168,12 +168,12 @@ calculations to the API before formatting.
 Every command accepts the CLI-only `--ledger` option. It skips journal loading
 and query execution and prints exactly one line. The basic text variants of
 `accounts` and `transactions` (including its `print` alias) produce a
-complete Ledger invocation with `--args-only`, so neither `.ledgerrc` nor
-Ledger environment defaults affect it. Variants with Ledlight-specific filters
-or output formats, and commands without a verified equivalent, print `No
-ledger equivalent command exists` instead. Compatibility tests run every
-advertised Ledger command and its Ledlight counterpart against the same
-fixture and require byte-for-byte identical output.
+complete Ledger invocation with `--args-only` and `--no-pager`, so neither
+`.ledgerrc`, Ledger environment defaults, nor pager behavior affect it. Variants
+with Ledlight-specific filters or output formats, and commands without a
+verified equivalent, print `No ledger equivalent command exists` instead.
+Compatibility tests run every advertised Ledger command and its Ledlight
+counterpart against the same fixture and require byte-for-byte identical output.
 
 The CLI reads the first `.ledlightrc` found at `~/.ledlightrc` or
 `./.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
