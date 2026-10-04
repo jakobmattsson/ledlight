@@ -22,7 +22,7 @@ test('defines one CLI command for every journal operation', () => {
     investmentPerformance: 'investment-performance',
     accountTransactions: 'account-transactions',
     commodityDescriptions: 'commodity-descriptions',
-    ledgerAccounts: 'ledger-accounts',
+    accounts: 'accounts',
     ledgerTransaction: 'ledger-transaction',
     ledgerTransactions: 'ledger-transactions',
     reconciliationEntries: 'reconciliation-entries',
@@ -47,8 +47,8 @@ test('fails when a locally declared API input has no actual CLI option', () => {
 });
 
 test('tracks API inputs separately from CLI-only output inputs', () => {
-  assert.deepEqual(argumentsModule.apiInputCoverage.ledgerAccounts, {
-    command: 'ledger-accounts',
+  assert.deepEqual(argumentsModule.apiInputCoverage.accounts, {
+    command: 'accounts',
     inputs: ['journalPath'],
     outputInputs: ['details', 'format'],
   });
@@ -60,25 +60,25 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
 });
 
-test('parses ledger account output options without adding API options', () => {
-  assert.deepEqual(parseArguments(['ledger-accounts', '--file', '/journal']), {
-    command: 'ledger-accounts',
+test('parses account output options without adding API options', () => {
+  assert.deepEqual(parseArguments(['accounts', '--file', '/journal']), {
+    command: 'accounts',
     journalPath: '/journal',
     output: { details: false, format: 'text' },
   });
   assert.deepEqual(parseArguments([
-    'ledger-accounts', '--file', '/journal', '--details', '--format', 'csv',
+    'accounts', '--file', '/journal', '--details', '--format', 'csv',
   ]), {
-    command: 'ledger-accounts',
+    command: 'accounts',
     journalPath: '/journal',
     output: { details: true, format: 'csv' },
   });
   assert.throws(
-    () => parseArguments(['ledger-accounts', '--file', '/journal', '--format', 'yaml']),
+    () => parseArguments(['accounts', '--file', '/journal', '--format', 'yaml']),
     /Allowed choices are text, json, csv/u,
   );
-  assert.match(usage('ledger-accounts'), /--details\s+include comments and transaction counts/u);
-  assert.match(usage('ledger-accounts'), /--format <format>\s+select the output format/u);
+  assert.match(usage('accounts'), /--details\s+include comments and transaction counts/u);
+  assert.match(usage('accounts'), /--format <format>\s+select the output format/u);
 });
 
 test('parses aggregate report options and output flags', () => {

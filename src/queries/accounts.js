@@ -6,8 +6,8 @@ module.exports = ({
 }) => {
   const optionsSchema = z.strictObject({});
 
-  function queryLedgerAccounts(database, options, _caches) {
-    parseOptions(optionsSchema, options, 'ledgerAccounts');
+  function queryAccounts(database, options, _caches) {
+    parseOptions(optionsSchema, options, 'accounts');
     return database.prepare(`
       WITH account_names AS (
         SELECT name AS account FROM account_declarations
@@ -32,5 +32,5 @@ module.exports = ({
     `).all();
   }
 
-  return { name: 'ledgerAccounts', inputSchema: optionsSchema, execute: queryLedgerAccounts };
+  return { name: 'accounts', inputSchema: optionsSchema, execute: queryAccounts };
 };

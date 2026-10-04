@@ -167,14 +167,14 @@ test('the configured Ledger CLI is available', () => {
   assert.match(execFileSync(ledgerBinary, ['--version'], { encoding: 'utf8' }), /^Ledger 3\./u);
 });
 
-test('ledger-accounts defaults to the exact Ledger accounts output', (t) => {
+test('accounts defaults to the exact Ledger accounts output', (t) => {
   const projectDirectory = temporaryProject(t, 'basic');
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const ledgerOutput = execFileSync(ledgerBinary, [
     '--args-only', '--file', journalPath, 'accounts',
   ], { cwd: projectDirectory, encoding: 'utf8' });
   const ledlightOutput = execFileSync(process.execPath, [
-    cliPath, 'ledger-accounts', '--file', journalPath,
+    cliPath, 'accounts', '--file', journalPath,
   ], {
     cwd: projectDirectory,
     encoding: 'utf8',

@@ -160,7 +160,7 @@ module.exports = ({
     ].join('\n')}\n`;
   }
 
-  function formatLedgerAccounts(rows, { details, format }) {
+  function formatAccounts(rows, { details, format }) {
     const accountNames = rows.map(({ account }) => account);
     const selectedRows = details ? rows : accountNames;
     if (format === 'json') return formatJson(selectedRows);
@@ -176,9 +176,9 @@ module.exports = ({
     }
     if (!details) return accountNames.length === 0 ? '' : `${accountNames.join('\n')}\n`;
     return formatTextTable(rows, [
+      { heading: 'Transactions', value: (row) => row.transactionCount, align: 'right' },
       { heading: 'Account', value: (row) => row.account },
       { heading: 'Comment', value: (row) => row.comment ?? '' },
-      { heading: 'Transactions', value: (row) => row.transactionCount, align: 'right' },
     ]);
   }
 
@@ -303,7 +303,7 @@ module.exports = ({
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
     formatJson,
-    formatLedgerAccounts,
+    formatAccounts,
     formatLedgerTransactions,
     $$private: { parseCommodityFormat },
   };

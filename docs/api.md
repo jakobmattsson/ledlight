@@ -206,7 +206,7 @@ Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
 `balance` for that commodity.
 
-### `journal.ledgerAccounts()`
+### `journal.accounts()`
 
 Returns declared and used accounts sorted by name:
 
@@ -273,11 +273,12 @@ on the command line; for example, `withValuationValue` is
 `--with-valuation-value`, `includeTotal` is `--include-total`, and repeated
 `--account-factor ACCOUNT=FACTOR` values form the `accountFactors` object.
 
-`ledger-accounts` defaults to `--format text` and prints the same
+`accounts` defaults to `--format text` and prints the same
 newline-separated account names as `ledger accounts`. Its `--details` flag
-includes comments and transaction counts; detailed text uses a table. The
+includes comments and transaction counts; detailed text uses a table with the
+right-aligned transaction count first, followed by account and comment. The
 `--format json` and `--format csv` alternatives encode either the account names
-or, with `--details`, all fields returned by `journal.ledgerAccounts()`.
+or, with `--details`, all fields returned by `journal.accounts()`.
 
 `ledger-transactions` also defaults to `--format text`. Its text output is a
 Ledger-style journal containing the transactions on the selected page.
