@@ -295,6 +295,8 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /--version\s+show the package version/u);
   assert.match(usage(), /--help\s+show help/u);
   assert.match(usage(), /ledlight <command> --help/u);
+  assert.match(usage(), /Commands:\n {2}accounts\s+show declared and used accounts/u);
+  assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <prefix>/u);
