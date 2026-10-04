@@ -47,7 +47,7 @@ test('exposes stable error code strings instead of public error classes', (t) =>
   );
   fs.rmSync(journal.databasePath);
   assert.throws(
-    () => journal.ledgerAccounts(),
+    () => journal.accounts(),
     (error) => error.code === 'LEDLIGHT_DATABASE',
   );
 });

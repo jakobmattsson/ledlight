@@ -89,10 +89,10 @@ output-only options may exist only in the CLI. This dependency direction keeps
 the two interfaces consistent and makes the CLI an example consumer rather
 than a second implementation.
 
-`ledger-accounts` defaults to the same newline-separated account names as
-`ledger accounts`. With `--details`, text output is a table containing account,
-comment, and transaction count. `--format json` and `--format csv` encode the
-selected basic or detailed representation.
+`accounts` defaults to the same newline-separated account names as
+`ledger accounts`. With `--details`, text output is a table containing a
+right-aligned transaction count followed by account and comment. `--format
+json` and `--format csv` encode the selected basic or detailed representation.
 
 ### CLI to API parity
 
@@ -111,7 +111,7 @@ underlying result.
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Exact-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
-| `ledger-accounts --file PATH` | `openJournal(journalPath).ledgerAccounts()` | Account metadata |
+| `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
 | `ledger-transaction --file PATH` | `openJournal(journalPath).ledgerTransaction(options)` | One transaction |
 | `ledger-transactions --file PATH` | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for exact accounts |
@@ -130,8 +130,8 @@ underlying result.
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `reconciliation-entries --account NAME` | `options.accounts` | Repeated exact-account selection |
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
-| `ledger-accounts --details` | None | Include API-provided comments and transaction counts in the output |
-| `ledger-accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `accounts --details` | None | Include API-provided comments and transaction counts in the output |
+| `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |
