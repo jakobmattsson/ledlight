@@ -12,6 +12,7 @@ module.exports = ({
     }, { error: 'must be a positive integer' })
     .transform(Number);
   const optionsSchema = z.strictObject({
+    account: z.string().min(1, { error: 'must be a non-empty string' }).optional(),
     id: positiveInteger.optional(),
     order: z.enum(['newest', 'oldest'], { error: 'must be newest or oldest' })
       .default('oldest'),
@@ -22,11 +23,25 @@ module.exports = ({
   });
 
   function queryLedgerTransactions(database, options, _caches) {
-    const { id, order, page, pageSize } = parseOptions(
+    const { account, id, order, page, pageSize } = parseOptions(
       optionsSchema, options, 'ledgerTransactions',
     );
-    const filter = id === undefined ? '' : 'WHERE transactions.entry_id = ?';
-    const filterParameters = id === undefined ? [] : [id];
+    const filters = [];
+    const filterParameters = [];
+    if (id !== undefined) {
+      filters.push('transactions.entry_id = ?');
+      filterParameters.push(id);
+    }
+    if (account !== undefined) {
+      filters.push(`EXISTS (
+        SELECT 1
+        FROM postings AS matching_postings
+        WHERE matching_postings.transaction_id = transactions.entry_id
+          AND matching_postings.account = ?
+      )`);
+      filterParameters.push(account);
+    }
+    const filter = filters.length === 0 ? '' : `WHERE ${filters.join(' AND ')}`;
     const totalTransactions = database.prepare(`
       SELECT COUNT(*) AS count
       FROM transactions
