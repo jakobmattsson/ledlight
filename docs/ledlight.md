@@ -62,7 +62,7 @@ runs once:
 const { openJournal } = require('ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
-const balance = journal.aggregateReport({ to: '2024-12-31' });
+const summary = journal.summary({ to: '2024-12-31' });
 const history = journal.balanceHistoryReport({ from: '2024-01-01' });
 ```
 
@@ -112,7 +112,7 @@ underlying result.
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
 | `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
-| `balance --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
+| `summary --file PATH` | `openJournal(journalPath).summary(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
@@ -211,7 +211,7 @@ The implementation is organized by responsibility directly under `src`:
 - `ingestion` owns the optimized parser and normative Ohm grammar, traverses
   journal includes, validates and resolves journal postings, persists the
   normalized database, and materializes query optimizations;
-- `queries` contains one module per public API/CLI query—including aggregate,
+- `queries` contains one module per public API/CLI query—including summary,
   balance-history, unrealized-gains, and investment-performance queries—with its Zod schema
   beside its execution function;
 - `queries/support` contains internal SQL, valuation, and investment-return
@@ -372,7 +372,7 @@ quote of `10 SEK`.
 
 Each posting has a non-null `report_date`: its explicit posting date when one
 is present, otherwise the transaction's primary date. This preserves source
-timing for reconciliation. Balance reports use this posting date by default.
+timing for reconciliation. Summary reports use this posting date by default.
 Callers can instead select the transaction's primary date so all postings in a
 transaction take effect atomically.
 
@@ -381,9 +381,9 @@ database build and stored in `resolved_posting_amounts`. This makes aggregate
 reports a direct SQL operation rather than a replay of Ledger semantics at
 query time.
 
-## Aggregate report
+## Summary report
 
-`aggregateReport` returns every non-zero account total in an optional inclusive
+`summary` returns every non-zero account total in an optional inclusive
 date interval. Omit `from` to include all earlier postings, omit `to` to include
 all later postings, and omit both to aggregate the complete journal. Repeated
 account patterns are combined with OR. Patterns match literal substrings by
@@ -396,12 +396,12 @@ commodity:
 const { openJournal } = require('ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
-const balanceSheet = journal.aggregateReport({
+const balanceSheet = journal.summary({
   to: '2024-12-31',
   accounts: ['^Assets:', '^Liabilities:'],
   dateBasis: 'transaction',
 });
-const valuedIncomeStatement = journal.aggregateReport({
+const valuedIncomeStatement = journal.summary({
   from: '2024-01-01',
   to: '2024-12-31',
   accounts: ['^Income:', '^Expenses:'],
@@ -416,12 +416,12 @@ the former dedicated `accountBalances` query.
 The command-line equivalent is:
 
 ```console
-ledlight balance --file main.ledger --to 2024-12-31
-ledlight balance --file main.ledger --to 2024-12-31 --date-basis transaction
-ledlight balance --file main.ledger --from 2024-01-01 --to 2024-12-31 \
+ledlight summary --file main.ledger --to 2024-12-31
+ledlight summary --file main.ledger --to 2024-12-31 --date-basis transaction
+ledlight summary --file main.ledger --from 2024-01-01 --to 2024-12-31 \
   --accounts "^Income:" --accounts "^Expenses:" --value --invert
-ledlight balance --file main.ledger --to 2024-12-31 --accounts "^Assets:" --format csv
-ledlight balance --file main.ledger --accounts "^Assets:" \
+ledlight summary --file main.ledger --to 2024-12-31 --accounts "^Assets:" --format csv
+ledlight summary --file main.ledger --accounts "^Assets:" \
   --group-by commodity --format json
 ```
 
@@ -436,7 +436,7 @@ apply commodity display separators. With `--value`, CSV amounts retain the
 existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the human-readable total.
 
-The same behavior is available directly through `journal.aggregateReport`: set
+The same behavior is available directly through `journal.summary`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append the total row. `includeTotal` requires `inValuationCommodity: true`, so
 the quantities have one common commodity. The CLI requests this total for
@@ -449,7 +449,7 @@ and left-align it. This makes magnitudes easy to compare while preserving the
 natural reading order of account hierarchies. New reports should follow this
 layout when they have the same shape.
 
-Before every CLI balance report, Ledlight compares the current source manifest
+Before every CLI summary report, Ledlight compares the current source manifest
 with `source_files`. This scan follows include directives and computes file
 hashes, but does not parse transactions. If the manifest has changed, Ledlight
 parses the journal and rebuilds the database before running the report. If it
@@ -539,7 +539,7 @@ const history = journal.balanceHistoryReport({
 ```
 
 The command prints the complete history by default. `--from`, `--to`, and
-`--invert` work as for the balance report. Repeated `--accounts PATTERN` values
+`--invert` work as for the summary report. Repeated `--accounts PATTERN` values
 select accounts, while `--format` selects `text`, `json`, or `csv` output:
 
 ```console

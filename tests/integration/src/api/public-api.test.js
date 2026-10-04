@@ -38,11 +38,11 @@ test('exposes stable error code strings instead of public error classes', (t) =>
   fs.writeFileSync(journalPath, 'account Assets:Cash\n');
   const journal = ledlight.openJournal(journalPath);
   assert.throws(
-    () => journal.aggregateReport({ unknown: true }),
+    () => journal.summary({ unknown: true }),
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
-    () => journal.aggregateReport({ inValuationCommodity: true }),
+    () => journal.summary({ inValuationCommodity: true }),
     (error) => error.code === 'LEDLIGHT_MISSING_VALUATION_DATA',
   );
   fs.rmSync(journal.databasePath);
@@ -87,7 +87,7 @@ test('loads SQLite only when a journal is opened', (t) => {
   );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
   assert.deepEqual(journal.accountPostings({ accounts: ['Assets:Cash'] }), []);
-  assert.deepEqual(journal.aggregateReport(), []);
+  assert.deepEqual(journal.summary(), []);
   assert.deepEqual(journal.balanceHistoryReport(), []);
   assert.deepEqual(journal.unrealizedGains(), []);
   assert.deepEqual(journal.reconciliationEntries({ accounts: ['Assets:Cash'] }), []);
@@ -132,7 +132,7 @@ account Equity:Opening
 `);
 
   const journal = ledlight.openJournal(journalPath);
-  assert.deepEqual(journal.aggregateReport({ accounts: ['Assets:'] }), [
+  assert.deepEqual(journal.summary({ accounts: ['Assets:'] }), [
     { account: 'Assets:Cash', quantity: '10', commodity: 'SEK' },
   ]);
   assert.deepEqual(journal.warnings.map(({ code }) => code), [
@@ -159,7 +159,7 @@ account Equity:Opening
   );
 
   const cli = spawnSync(process.execPath, [
-    cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--format', 'json',
+    cliPath, 'summary', '--file', journalPath, '--accounts', 'Assets:', '--format', 'json',
   ], { cwd: directory, encoding: 'utf8', env: process.env });
   assert.equal(cli.status, 0);
   assert.deepEqual(JSON.parse(cli.stdout), [

@@ -223,23 +223,23 @@ module.exports = ({
       'show other postings from the selected accounts\' transactions',
       'related',
     );
-    const aggregate = registerCommand(
-      program.command('balance').description('show account balances'),
-      'aggregateReport',
-      'misc',
+    const summary = registerCommand(
+      program.command('summary').description('summarize postings'),
+      'summary',
+      'reports',
     );
-    addJournal(aggregate);
-    addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
-    addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPatterns(aggregate); addDateBasisOption(aggregate);
-    addValueOption(aggregate, '--group-by <dimension>', 'group balances by account or commodity', {
+    addJournal(summary);
+    addDateOption(summary, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
+    addDateOption(summary, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
+    addAccountPatterns(summary); addDateBasisOption(summary);
+    addValueOption(summary, '--group-by <dimension>', 'group totals by account or commodity', {
       choices: ['account', 'commodity'], apiInput: 'groupBy',
     });
-    addBooleanOption(aggregate, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
-    addBooleanOption(aggregate, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
-    addBooleanOption(aggregate, '--invert', 'invert the sign of report amounts', 'invert');
-    addBooleanOption(aggregate, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
-    addOutputValueOption(aggregate, '--format <format>', 'select the output format', {
+    addBooleanOption(summary, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
+    addBooleanOption(summary, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
+    addBooleanOption(summary, '--invert', 'invert the sign of report amounts', 'invert');
+    addBooleanOption(summary, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
+    addOutputValueOption(summary, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
 
@@ -397,7 +397,7 @@ module.exports = ({
       from: options.from, to: options.to, at: options.at, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
-    if (commandName === 'balance') {
+    if (commandName === 'summary') {
       Object.assign(reportOptions, compact({
         inValuationCommodity: options.value || undefined,
         withValuationValue: options.withValuationValue || undefined,

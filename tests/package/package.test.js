@@ -93,7 +93,7 @@ account Equity:Opening
       const ledlight = require('ledlight');
       assert.equal(typeof ledlight.openJournal, 'function');
       assert.deepEqual(Object.keys(ledlight), ['openJournal']);
-      assert.deepEqual(ledlight.openJournal(${JSON.stringify(journalPath)}).aggregateReport({}), [
+      assert.deepEqual(ledlight.openJournal(${JSON.stringify(journalPath)}).summary({}), [
         { account: 'Assets:Cash', quantity: '10', commodity: 'USD' },
         { account: 'Equity:Opening', quantity: '-10', commodity: 'USD' },
       ]);
@@ -116,7 +116,7 @@ account Equity:Opening
       env: consumerEnvironment,
     }).trim(), packageMetadata.version);
     assert.equal(run(executableCommand, [
-      ...executableArguments, 'balance', '--file', journalPath, '--format', 'csv',
+      ...executableArguments, 'summary', '--file', journalPath, '--format', 'csv',
     ], {
       cwd: projectDirectory,
       env: consumerEnvironment,

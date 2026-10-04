@@ -19,7 +19,7 @@ test('registers all queries as one immutable dependency', () => {
   for (const registrationName of [
     'accountPostingsQuery',
     'accountTransactionsQuery',
-    'aggregateQuery',
+    'summaryQuery',
     'balanceHistoryQuery',
     'unrealizedGainsQuery',
     'investmentPerformanceQuery',
@@ -38,7 +38,7 @@ test('each query module is exposed through the query collection', () => {
 
   for (const fileName of queryFiles) {
     const expectedName = {
-      'aggregate.js': 'aggregateReport',
+      'summary.js': 'summary',
       'balance-history.js': 'balanceHistoryReport',
       'unrealized-gains.js': 'unrealizedGains',
     }[fileName] ?? fileName.replace(/-([a-z])/gu, (_match, letter) => letter.toUpperCase())

@@ -69,8 +69,8 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
   const journal = {
-    aggregateReport(options) {
-      calls.push({ operation: 'aggregateReport', options });
+    summary(options) {
+      calls.push({ operation: 'summary', options });
       if (options.groupBy === 'commodity') {
         return [{ quantity: '-10', commodity: 'USD' }];
       }
@@ -129,8 +129,8 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.doesNotMatch(topLevelHelp, /Usage: ledlight aggregate/u);
   assert.equal(runReportCommand([]), topLevelHelp);
   assert.match(
-    runReportCommand(['balance', '--help']),
-    /^Usage: ledlight balance[\s\S]*--accounts <pattern>/u,
+    runReportCommand(['summary', '--help']),
+    /^Usage: ledlight summary[\s\S]*--accounts <pattern>/u,
   );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
   assert.throws(() => runReportCommand(['-V']), /unknown option '-V'/u);
@@ -146,13 +146,13 @@ test('delegates report behavior to the public Node API and only formats results'
 
   assert.match(
     runReportCommand([
-      'balance', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
+      'summary', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
     ]),
     /-10\.00 USD.*Total/u,
   );
   assert.equal(
     runReportCommand([
-      'balance', '--file', '/journal', '--accounts', 'Assets:',
+      'summary', '--file', '/journal', '--accounts', 'Assets:',
       '--group-by', 'commodity', '--format', 'csv',
     ]),
     'amount,commodity\n-10,USD\n',
@@ -175,7 +175,7 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.deepEqual(calls, [
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'aggregateReport',
+      operation: 'summary',
       options: {
         accounts: ['Assets:'],
         inValuationCommodity: true,
@@ -186,7 +186,7 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'commodities', options: { usage: 'all' } },
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'aggregateReport',
+      operation: 'summary',
       options: { accounts: ['Assets:'], groupBy: 'commodity', includeTotal: false },
     },
     { operation: 'openJournal', journalPath: '/journal' },
@@ -375,7 +375,7 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['tags'],
     ['commodities'],
     ['prices'],
-    ['balance'],
+    ['summary'],
     ['account-postings', '--accounts', 'Assets:Cash'],
     ['account-transactions', '--accounts', 'Assets:Cash'],
     ['transactions'],

@@ -50,13 +50,13 @@ account Equity:Opening
 test('groups matching account balances by commodity and retains zero balances', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.aggregateReport({
+  assert.deepEqual(project.summary({
     accounts: ['Closed', '^Assets:Unused$'], groupBy: 'commodity',
   }), [
     { commodity: 'FUND', quantity: '0' },
     { commodity: 'SEK', quantity: '2' },
   ]);
-  assert.deepEqual(project.aggregateReport({
+  assert.deepEqual(project.summary({
     accounts: ['^Assets:Closed$'], groupBy: 'commodity', to: '2023-01-02',
   }), [
     { commodity: 'FUND', quantity: '0' },
