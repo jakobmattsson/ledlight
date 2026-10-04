@@ -20,7 +20,6 @@ test('defines one CLI command for every journal operation', () => {
     unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
     accountTransactions: 'account-transactions',
-    commodityDescriptions: 'commodity-descriptions',
     accounts: 'accounts',
     tags: 'tags',
     commodities: 'commodities',
@@ -95,19 +94,25 @@ test('parses account output options without adding API options', () => {
 
 test('parses listing output formats and unused declaration selection', () => {
   for (const command of ['tags', 'commodities']) {
+    const output = command === 'commodities'
+      ? { details: false, format: 'text' }
+      : { format: 'text' };
     assert.deepEqual(parseArguments([command, '--file', '/journal']), {
       command,
       journalPath: '/journal',
       options: { usage: 'used' },
-      output: { format: 'text' },
+      output,
     });
+    const jsonOutput = command === 'commodities'
+      ? { details: false, format: 'json' }
+      : { format: 'json' };
     assert.deepEqual(parseArguments([
       command, '--file', '/journal', '--usage', 'all', '--format', 'json',
     ]), {
       command,
       journalPath: '/journal',
       options: { usage: 'all' },
-      output: { format: 'json' },
+      output: jsonOutput,
     });
     assert.throws(
       () => parseArguments([command, '--file', '/journal', '--format', 'yaml']),
@@ -117,6 +122,15 @@ test('parses listing output formats and unused declaration selection', () => {
       `^Usage: ledlight ${command} --file <path> \\[options\\]`, 'u',
     ));
   }
+  assert.deepEqual(parseArguments([
+    'commodities', '--file', '/journal', '--usage', 'all', '--details', '--format', 'csv',
+  ]), {
+    command: 'commodities',
+    journalPath: '/journal',
+    options: { usage: 'all' },
+    output: { details: true, format: 'csv' },
+  });
+  assert.match(usage('commodities'), /--details\s+include comments, formats, and usage/u);
   assert.deepEqual(parseArguments(['prices', '--file', '/journal']), {
     command: 'prices',
     journalPath: '/journal',

@@ -243,19 +243,45 @@ test('formats detailed accounts as text, JSON, and CSV', () => {
 
 test('formats tag and commodity listings as text, JSON, and CSV', () => {
   const tags = [{ tag: 'Imported' }, { tag: 'Reviewed, manually' }];
-  const commodities = [{ commodity: 'SEK' }, { commodity: 'US, Dollar' }];
+  const commodities = [{
+    commodity: 'SEK', comment: 'Swedish krona', format: '1,000.00 SEK',
+    isDefault: true, used: true,
+  }, {
+    commodity: 'US, Dollar', comment: null, format: null,
+    isDefault: false, used: false,
+  }];
 
   assert.equal(formatTags(tags, { format: 'text' }), 'Imported\nReviewed, manually\n');
   assert.equal(formatTags(tags, { format: 'json' }), `${JSON.stringify([
     'Imported', 'Reviewed, manually',
   ], null, 2)}\n`);
   assert.equal(formatTags(tags, { format: 'csv' }), 'tag\nImported\n"Reviewed, manually"\n');
-  assert.equal(formatCommodities(commodities, { format: 'text' }), 'SEK\nUS, Dollar\n');
   assert.equal(
-    formatCommodities(commodities, { format: 'csv' }),
+    formatCommodities(commodities, { details: false, format: 'text' }),
+    'SEK\nUS, Dollar\n',
+  );
+  assert.equal(
+    formatCommodities(commodities, { details: false, format: 'csv' }),
     'commodity\nSEK\n"US, Dollar"\n',
   );
-  assert.equal(formatCommodities([], { format: 'text' }), '');
+  assert.equal(formatCommodities([], { details: false, format: 'text' }), '');
+  assert.equal(
+    formatCommodities(commodities, { details: true, format: 'json' }),
+    `${JSON.stringify(commodities, null, 2)}\n`,
+  );
+  assert.equal(
+    formatCommodities(commodities, { details: true, format: 'csv' }),
+    'commodity,comment,format,isDefault,used\n' +
+    'SEK,Swedish krona,"1,000.00 SEK",true,true\n' +
+    '"US, Dollar",,,false,false\n',
+  );
+  assert.equal(
+    formatCommodities(commodities, { details: true, format: 'text' }),
+    'Commodity   Default  Used  Format        Comment\n' +
+    '----------  -------  ----  ------------  -------------\n' +
+    'SEK         yes      yes   1,000.00 SEK  Swedish krona\n' +
+    'US, Dollar\n',
+  );
 });
 
 test('formats prices as text, JSON, and CSV', () => {

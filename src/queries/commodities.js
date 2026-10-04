@@ -10,13 +10,29 @@ module.exports = ({
 
   function queryCommodities(database, options, _caches) {
     const { usage } = parseOptions(optionsSchema, options, 'commodities');
-    return database.prepare(`
-      SELECT symbol AS commodity, used
-      FROM commodity_declarations
-      WHERE ? = 'all' OR used = (? = 'used')
-      ORDER BY commodity, entry_id
-    `).all(usage, usage)
-      .map((row) => ({ ...row, used: Boolean(row.used) }));
+    const rows = database.prepare(`
+      SELECT declarations.symbol AS commodity, declarations.comment,
+        declarations.used, properties.name, properties.value
+      FROM commodity_declarations AS declarations
+      LEFT JOIN commodity_properties AS properties
+        ON properties.commodity_id = declarations.entry_id
+      WHERE ? = 'all' OR declarations.used = (? = 'used')
+      ORDER BY declarations.symbol, declarations.entry_id, properties.position
+    `).all(usage, usage);
+    const commodities = new Map();
+    for (const row of rows) {
+      const commodity = commodities.get(row.commodity) ?? {
+        commodity: row.commodity,
+        comment: row.comment,
+        format: null,
+        isDefault: false,
+        used: Boolean(row.used),
+      };
+      if (row.name === 'format') commodity.format = row.value;
+      if (row.name === 'default') commodity.isDefault = true;
+      commodities.set(row.commodity, commodity);
+    }
+    return [...commodities.values()];
   }
 
   return { name: 'commodities', inputSchema: optionsSchema, execute: queryCommodities };

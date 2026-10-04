@@ -18,7 +18,8 @@ function createProject(t) {
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(journalPath, `commodity SEK
   default
-commodity FUND
+commodity FUND ; fund
+  format 1,000.0000 FUND
 commodity FUND ; duplicate
 commodity UNUSED
 commodity EUR
@@ -67,20 +68,26 @@ test('lists declared commodities with materialized usage', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.commodities(), [
-    { commodity: 'EUR', used: false },
-    { commodity: 'FUND', used: true },
-    { commodity: 'NOK', used: false },
-    { commodity: 'SEK', used: true },
-    { commodity: 'UNUSED', used: false },
+    { commodity: 'EUR', comment: null, format: null, isDefault: false, used: false },
+    {
+      commodity: 'FUND', comment: 'fund', format: '1,000.0000 FUND',
+      isDefault: false, used: true,
+    },
+    { commodity: 'NOK', comment: null, format: null, isDefault: false, used: false },
+    { commodity: 'SEK', comment: null, format: null, isDefault: true, used: true },
+    { commodity: 'UNUSED', comment: null, format: null, isDefault: false, used: false },
   ]);
   assert.deepEqual(project.commodities({ usage: 'used' }), [
-    { commodity: 'FUND', used: true },
-    { commodity: 'SEK', used: true },
+    {
+      commodity: 'FUND', comment: 'fund', format: '1,000.0000 FUND',
+      isDefault: false, used: true,
+    },
+    { commodity: 'SEK', comment: null, format: null, isDefault: true, used: true },
   ]);
   assert.deepEqual(project.commodities({ usage: 'unused' }), [
-    { commodity: 'EUR', used: false },
-    { commodity: 'NOK', used: false },
-    { commodity: 'UNUSED', used: false },
+    { commodity: 'EUR', comment: null, format: null, isDefault: false, used: false },
+    { commodity: 'NOK', comment: null, format: null, isDefault: false, used: false },
+    { commodity: 'UNUSED', comment: null, format: null, isDefault: false, used: false },
   ]);
 });
 

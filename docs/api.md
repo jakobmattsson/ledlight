@@ -191,24 +191,6 @@ Activity qualifies when either its transaction date or posting date is after
 
 ## Additional journal queries
 
-### `journal.commodityDescriptions()`
-
-Returns one row per declared commodity, sorted by commodity symbol:
-
-```js
-{
-  commodity,
-  comment,
-  format,
-  isDefault,
-}
-```
-
-`comment` and `format` are strings or `null`; `isDefault` is a boolean. A later
-duplicate commodity declaration produces a warning and is not stored, so the
-first declaration supplies these values. Other commodity properties are not
-currently exposed.
-
 ### `journal.accountTransactions({ accounts })`
 
 Returns newest-first transactions containing postings to matching accounts.
@@ -244,7 +226,22 @@ and defaults to `all`; `used` matches Ledger's `tags` command. Each row is
 
 Returns declared commodities sorted by symbol. `usage` accepts `all`, `used`,
 or `unused` and defaults to `all`; `used` matches Ledger's `commodities`
-command. Each row is `{ commodity, used }`.
+command. Each row is:
+
+```js
+{
+  commodity,
+  comment,
+  format,
+  isDefault,
+  used,
+}
+```
+
+`comment` and `format` are strings or `null`; `isDefault` and `used` are
+booleans. A later duplicate commodity declaration produces a warning and is
+not stored, so the first declaration supplies the metadata. Other commodity
+properties are not currently exposed.
 
 ### `journal.prices()`
 
@@ -326,9 +323,11 @@ or, with `--details`, all fields returned by `journal.accounts(options)`.
 
 `tags`, `commodities`, and `prices` likewise require no query parameters.
 They default to `--format text` and also accept `--format json` and `--format
-csv`. Text tag and commodity output contains one name per line. Text price
-output contains one price per line with a Ledger-style slash-separated date.
-JSON and CSV retain every field returned by `journal.prices()`.
+csv`. Text tag and commodity output contains one name per line. With
+`commodities --details`, text uses a metadata table and JSON or CSV includes
+every field returned by `journal.commodities(options)`. Text price output
+contains one price per line with a Ledger-style slash-separated date. JSON and
+CSV retain every field returned by `journal.prices()`.
 
 CLI commands preserve the query result on stdout and emit a human-readable
 summary of the journal's warnings on stderr when it is non-empty. No warning
