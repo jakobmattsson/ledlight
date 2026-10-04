@@ -102,7 +102,7 @@ module.exports = ({
         FROM selected_changes
         GROUP BY commodity
       ),
-      report_end(value) AS (
+      report_end(value) AS MATERIALIZED (
         ${reportEnd}
       ),
       positions(commodity, date, quantity) AS (

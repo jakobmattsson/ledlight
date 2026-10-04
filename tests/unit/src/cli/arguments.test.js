@@ -398,6 +398,10 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     usage('balance'),
     /--accounts <pattern>[\s\S]*--group-by <dimension>[\s\S]*--format <format>[\s\S]*--help/u,
   );
+  assert.match(
+    usage('investment-performance'),
+    /Return measures:[\s\S]*Time-weighted return[\s\S]*end of the day[\s\S]*Money-weighted return \(total\)[\s\S]*first to the last[\s\S]*Money-weighted return \(annualized\)[\s\S]*present value/u,
+  );
   assert.match(usage('balance'), /--help\s+show command help/u);
   assert.match(
     usage('balance'),

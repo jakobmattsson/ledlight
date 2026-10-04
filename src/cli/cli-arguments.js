@@ -5,6 +5,7 @@ const {
 } = require('commander');
 
 const HELP_GROUP = Symbol('helpGroup');
+const HELP_DETAILS = Symbol('helpDetails');
 
 function formatGroupedHelp(command, helper) {
   const help = Help.prototype.formatHelp.call(helper, command, helper);
@@ -273,6 +274,23 @@ module.exports = ({
       'investmentPerformance',
       'misc',
     );
+    performance[HELP_DETAILS] = `Return measures:
+  Time-weighted return
+    The compounded daily investment return after removing each day's net
+    external cash flow from its closing value. Cash flows are treated as
+    occurring at the end of the day, so their amount and timing do not affect
+    the measured investment performance.
+
+  Money-weighted return (total)
+    The cumulative investor return accounting for the amount and date of the
+    opening value, contributions, withdrawals, and ending value. It is the
+    annualized XIRR compounded over the interval from the first to the last
+    non-zero investor cash flow.
+
+  Money-weighted return (annualized)
+    The yearly compound rate (XIRR) that makes the present value of the dated
+    opening value, contributions, withdrawals, and ending value equal zero.
+    It allows periods of different lengths to be compared.`;
     addJournal(performance);
     addDateOption(performance, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(performance, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
@@ -310,7 +328,9 @@ module.exports = ({
     const command = program.commands.find((candidate) =>
       candidate.name() === commandName || candidate.aliases().includes(commandName));
     if (!command) throw new Error(`Unknown command: ${commandName}`);
-    return command.helpInformation().trimEnd();
+    return [command.helpInformation().trimEnd(), command[HELP_DETAILS]]
+      .filter(Boolean)
+      .join('\n\n');
   }
   function commandCoverage() {
     return Object.fromEntries(createProgram().commands.map((command) => {
