@@ -10,7 +10,7 @@ const argumentsModule = createArguments({
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
 });
-const { apiCommands, parseArguments, usage } = argumentsModule;
+const { apiCommands, ledgerCommand, parseArguments, usage } = argumentsModule;
 
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
@@ -137,6 +137,29 @@ test('uses aggregate defaults when no options are supplied', () => {
     reportOptions: { accounts: [] },
     output: { csv: false, json: false },
   });
+});
+
+test('parses --ledger as a CLI-only mode and renders supported base commands', () => {
+  const accounts = parseArguments(['accounts', '--file', "/journals/O'Brien books.ledger", '--ledger']);
+  assert.deepEqual(accounts, {
+    command: 'accounts',
+    journalPath: "/journals/O'Brien books.ledger",
+    output: { details: false, format: 'text' },
+    ledger: true,
+  });
+  assert.equal(
+    ledgerCommand(accounts),
+    "ledger --args-only --file '/journals/O'\\''Brien books.ledger' accounts",
+  );
+
+  const print = parseArguments(['print', '--file', '/journal', '--ledger']);
+  assert.equal(ledgerCommand(print), 'ledger --args-only --file /journal print');
+  assert.equal(
+    ledgerCommand(parseArguments([
+      'ledger-transactions', '--file', '/journal', '--account', 'Assets:Cash', '--ledger',
+    ])),
+    'No ledger equivalent command exists',
+  );
 });
 
 test('uses the CLI configuration file argument when --file is omitted', () => {
@@ -355,6 +378,10 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     /--account <name>\s+\(REQUIRED\) select an exact account[\s\S]*--to <date>[\s\S]*--help/u,
   );
   assert.match(usage('aggregate'), /--help\s+show command help/u);
+  assert.match(
+    usage('aggregate'),
+    /--ledger\s+show the equivalent standalone Ledger command/u,
+  );
   assert.doesNotMatch(usage('aggregate'), /-h, --help/u);
   assert.doesNotMatch(usage(), /-V, --version/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);

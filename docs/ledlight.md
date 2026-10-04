@@ -152,6 +152,7 @@ underlying result.
 | `--version` | None | CLI package metadata |
 | `--help` | None | Top-level command list |
 | `<command> --help` | None | Detailed usage for one command |
+| `<command> --ledger` | None | Print an equivalent standalone Ledger command when one exists |
 
 Commands without a specialized human-readable representation emit JSON.
 `ledger-transactions` defaults to Ledger-style text; `--account` optionally
@@ -163,6 +164,16 @@ is required to retain fields such as `valuationValue` and `factoredAmount`.
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
+
+Every command accepts the CLI-only `--ledger` option. It skips journal loading
+and query execution and prints exactly one line. The basic text variants of
+`accounts` and `ledger-transactions` (including its `print` alias) produce a
+complete Ledger invocation with `--args-only`, so neither `.ledgerrc` nor
+Ledger environment defaults affect it. Variants with Ledlight-specific filters
+or output formats, and commands without a verified equivalent, print `No
+ledger equivalent command exists` instead. Compatibility tests run every
+advertised Ledger command and its Ledlight counterpart against the same
+fixture and require byte-for-byte identical output.
 
 The CLI reads the first `.ledlightrc` found at `~/.ledlightrc` or
 `./.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
