@@ -114,6 +114,7 @@ underlying result.
 | `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
 | `ledger-transaction --file PATH` | `openJournal(journalPath).ledgerTransaction(options)` | One transaction |
 | `ledger-transactions --file PATH` | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
+| `ledger-transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for exact accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
@@ -132,7 +133,6 @@ underlying result.
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `ledger-transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |

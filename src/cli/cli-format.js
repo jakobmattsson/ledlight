@@ -302,9 +302,9 @@ module.exports = ({
     formatHumanReadable,
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
+    formatLedgerTransactions,
     formatJson,
     formatAccounts,
-    formatLedgerTransactions,
     $$private: { parseCommodityFormat },
   };
 };

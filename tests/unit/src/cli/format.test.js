@@ -11,9 +11,9 @@ const {
   formatHumanReadable,
   formatInvestmentPerformance,
   formatInvestmentPerformanceJson,
+  formatLedgerTransactions,
   formatJson,
   formatAccounts,
-  formatLedgerTransactions,
 } = resolveRepositoryModule("src/cli/cli-format.js");
 
 const rows = [

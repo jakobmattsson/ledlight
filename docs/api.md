@@ -237,6 +237,12 @@ their ordered note text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
+The `ledger-transactions` CLI command defaults to `--format text`. Its text
+output is a Ledger-style journal containing the transactions on the selected
+page. `--format json` returns the complete paginated API result, while
+`--format csv` returns one row per posting amount with transaction and posting
+fields.
+
 ### `journal.reconciliationEntries({ accounts, related })`
 
 Returns resolved posting amounts for one or more exact account names, ordered
@@ -279,11 +285,6 @@ includes comments and transaction counts; detailed text uses a table with the
 right-aligned transaction count first, followed by account and comment. The
 `--format json` and `--format csv` alternatives encode either the account names
 or, with `--details`, all fields returned by `journal.accounts()`.
-
-`ledger-transactions` also defaults to `--format text`. Its text output is a
-Ledger-style journal containing the transactions on the selected page.
-`--format json` returns the complete paginated API result, while `--format csv`
-returns one row per posting amount with transaction and posting fields.
 
 CLI commands preserve the query result on stdout and emit the journal's
 `warnings` array as JSON on stderr when it is non-empty. No warning output is

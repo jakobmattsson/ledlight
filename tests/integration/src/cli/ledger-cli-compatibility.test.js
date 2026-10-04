@@ -102,6 +102,23 @@ function runLedger(projectDirectory, { options, queries }) {
   }));
 }
 
+test('ledger-transactions defaults to the exact Ledger print output', (t) => {
+  const projectDirectory = temporaryProject(t, 'basic');
+  const journalPath = path.join(projectDirectory, 'journal.ledger');
+  const ledgerOutput = execFileSync(ledgerBinary, [
+    '--args-only', '--file', journalPath, 'print',
+  ], { cwd: projectDirectory, encoding: 'utf8' });
+  const ledlightOutput = execFileSync(process.execPath, [
+    cliPath, 'ledger-transactions', '--file', journalPath,
+  ], {
+    cwd: projectDirectory,
+    encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
+  });
+
+  assert.equal(ledlightOutput, ledgerOutput);
+});
+
 const scenarios = [
   {
     name: 'plain balances with implicit postings',
@@ -175,23 +192,6 @@ test('accounts defaults to the exact Ledger accounts output', (t) => {
   ], { cwd: projectDirectory, encoding: 'utf8' });
   const ledlightOutput = execFileSync(process.execPath, [
     cliPath, 'accounts', '--file', journalPath,
-  ], {
-    cwd: projectDirectory,
-    encoding: 'utf8',
-    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
-  });
-
-  assert.equal(ledlightOutput, ledgerOutput);
-});
-
-test('ledger-transactions defaults to the exact Ledger print output', (t) => {
-  const projectDirectory = temporaryProject(t, 'basic');
-  const journalPath = path.join(projectDirectory, 'journal.ledger');
-  const ledgerOutput = execFileSync(ledgerBinary, [
-    '--args-only', '--file', journalPath, 'print',
-  ], { cwd: projectDirectory, encoding: 'utf8' });
-  const ledlightOutput = execFileSync(process.execPath, [
-    cliPath, 'ledger-transactions', '--file', journalPath,
   ], {
     cwd: projectDirectory,
     encoding: 'utf8',

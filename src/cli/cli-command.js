@@ -10,9 +10,9 @@ module.exports = ({
     formatBalanceHistoryHumanReadable,
     formatHumanReadable,
     formatInvestmentPerformance,
+    formatLedgerTransactions,
     formatJson,
     formatAccounts,
-    formatLedgerTransactions,
   },
 }) => {
 
