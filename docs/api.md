@@ -208,7 +208,7 @@ Each posting contains `postingDate` and exact amount rows with the running
 
 ### `journal.accounts()`
 
-Returns declared accounts sorted by name:
+Returns one row per account declaration, sorted by name and journal position:
 
 ```js
 {
@@ -220,12 +220,13 @@ Returns declared accounts sorted by name:
 
 ### `journal.tags()`
 
-Returns every declared tag once, sorted by name. Each row is `{ tag }`.
+Returns one row per tag declaration, sorted by name and journal position. Each
+row is `{ tag }`.
 
 ### `journal.commodities()`
 
-Returns every declared commodity once, sorted by symbol. Each row is
-`{ commodity }`.
+Returns one row per commodity declaration, sorted by symbol and journal
+position. Each row is `{ commodity }`.
 
 ### `journal.prices()`
 

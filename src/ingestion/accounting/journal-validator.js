@@ -18,6 +18,18 @@ module.exports = ({
     ));
   }
 
+  function declare(kind, name, declarations, location, warnings) {
+    const label = kind[0].toUpperCase() + kind.slice(1);
+    if (declarations.has(name)) {
+      warnings.push(createWarning(
+        warningCodes[`DUPLICATE_${kind.toUpperCase()}_DECLARATION`],
+        `${label} ${name} has already been declared`,
+        location,
+      ));
+    }
+    declarations.add(name);
+  }
+
   function validatePostingDeclarations(posting, declarations, warnings) {
     warnUnlessDeclared(
       'account', posting.account, declarations.accounts, posting.location, warnings,
@@ -135,11 +147,11 @@ module.exports = ({
     };
     for (const entry of journal.entries) {
       if (entry.type === 'account') {
-        declarations.accounts.add(entry.name);
+        declare('account', entry.name, declarations.accounts, entry.location, warnings);
       } else if (entry.type === 'commodity') {
-        declarations.commodities.add(entry.symbol);
+        declare('commodity', entry.symbol, declarations.commodities, entry.location, warnings);
       } else if (entry.type === 'tag') {
-        declarations.tags.add(entry.name);
+        declare('tag', entry.name, declarations.tags, entry.location, warnings);
       } else if (entry.type === 'transaction') {
         validateTransactionDeclarations(entry, declarations, warnings);
         const postingResults = entry.postings.map((posting) => validatePosting(

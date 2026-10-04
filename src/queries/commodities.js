@@ -9,9 +9,9 @@ module.exports = ({
   function queryCommodities(database, options, _caches) {
     parseOptions(optionsSchema, options, 'commodities');
     return database.prepare(`
-      SELECT DISTINCT symbol AS commodity
+      SELECT symbol AS commodity
       FROM commodity_declarations
-      ORDER BY commodity
+      ORDER BY commodity, entry_id
     `).all();
   }
 

@@ -19,8 +19,13 @@ function createProject(t) {
   fs.writeFileSync(journalPath, `commodity SEK
   default
 commodity FUND
+commodity FUND ; duplicate
 commodity UNUSED
 tag Declared
+tag Declared ; duplicate
+account Assets:Fund ; primary
+account Assets:Fund ; duplicate
+account Equity:Opening
 P 2024-01-02 FUND 12.5 SEK ; closing
 P 2024-01-01 EUR 11 NOK
 P 2024-01-02 FUND 13 SEK ; corrected
@@ -33,20 +38,50 @@ P 2024-01-02 FUND 13 SEK ; corrected
   return openJournal(journalPath);
 }
 
-test('lists declared tags in name order without duplicates', (t) => {
+test('lists every tag declaration in name and journal order', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.tags(), [{ tag: 'Declared' }]);
+  assert.deepEqual(project.tags(), [{ tag: 'Declared' }, { tag: 'Declared' }]);
 });
 
-test('lists declared commodities even when other symbols are used', (t) => {
+test('lists every commodity declaration while omitting undeclared symbols', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.commodities(), [
     { commodity: 'FUND' },
+    { commodity: 'FUND' },
     { commodity: 'SEK' },
     { commodity: 'UNUSED' },
   ]);
+});
+
+test('lists every account declaration with its own metadata', (t) => {
+  const project = createProject(t);
+
+  assert.deepEqual(project.accounts(), [{
+    account: 'Assets:Fund', comment: 'primary', transactionCount: 1,
+  }, {
+    account: 'Assets:Fund', comment: 'duplicate', transactionCount: 1,
+  }, {
+    account: 'Equity:Opening', comment: null, transactionCount: 1,
+  }]);
+});
+
+test('warns about every duplicate declaration', (t) => {
+  const project = createProject(t);
+
+  assert.deepEqual(project.warnings
+    .filter(({ code }) => code.startsWith('DUPLICATE_'))
+    .map(({ code, message }) => ({ code, message })), [{
+    code: 'DUPLICATE_COMMODITY_DECLARATION',
+    message: 'Commodity FUND has already been declared',
+  }, {
+    code: 'DUPLICATE_TAG_DECLARATION',
+    message: 'Tag Declared has already been declared',
+  }, {
+    code: 'DUPLICATE_ACCOUNT_DECLARATION',
+    message: 'Account Assets:Fund has already been declared',
+  }]);
 });
 
 test('lists every price directive in date and journal order', (t) => {
