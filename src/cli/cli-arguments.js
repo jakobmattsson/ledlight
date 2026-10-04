@@ -147,16 +147,6 @@ module.exports = ({
         choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
       });
     }
-    const accountBalances = registerCommand(
-      program.command('account-balances').description('show balances for matching accounts'),
-      'accountBalances',
-      'misc',
-    );
-    addJournal(accountBalances);
-    addValueOption(accountBalances, '--accounts <pattern>', 'select matching accounts (repeatable)', {
-      repeatable: true, required: true, apiInput: 'accounts',
-    });
-    addDateOption(accountBalances, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     const accountPostings = registerCommand(
       program.command('account-postings').description('show postings for matching accounts'),
       'accountPostings',
@@ -234,19 +224,24 @@ module.exports = ({
     addDateOption(valuationRate, '--through-date <date>', 'use prices on or before YYYY-MM-DD', 'throughDate');
 
     const aggregate = registerCommand(
-      program.command('aggregate').description('aggregate account balances'),
+      program.command('balance').description('show account balances'),
       'aggregateReport',
       'misc',
     );
     addJournal(aggregate);
     addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPatterns(aggregate); addDateBasisOption(aggregate); addJson(aggregate);
+    addAccountPatterns(aggregate); addDateBasisOption(aggregate);
+    addValueOption(aggregate, '--group-by <dimension>', 'group balances by account or commodity', {
+      choices: ['account', 'commodity'], apiInput: 'groupBy',
+    });
     addBooleanOption(aggregate, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
     addBooleanOption(aggregate, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
     addBooleanOption(aggregate, '--invert', 'invert the sign of report amounts', 'invert');
     addBooleanOption(aggregate, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
-    addOutputBooleanOption(aggregate, '--csv', 'write CSV output', 'csv');
+    addOutputValueOption(aggregate, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
 
     const balanceHistory = registerCommand(
       program.command('balance-history').description('show balances over time'),
@@ -364,7 +359,6 @@ module.exports = ({
     if (['tags', 'commodities', 'prices'].includes(commandName)) {
       return { ...common, output: { format: options.format } };
     }
-    if (commandName === 'account-balances') return { ...common, options: compact({ accounts: options.accounts, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ accounts: options.accounts, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { accounts: options.accounts } };
     if (commandName === 'transactions') {
@@ -385,12 +379,14 @@ module.exports = ({
       from: options.from, to: options.to, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
-    if (commandName === 'aggregate') {
+    if (commandName === 'balance') {
       Object.assign(reportOptions, compact({
         inValuationCommodity: options.value || undefined,
         withValuationValue: options.withValuationValue || undefined,
         includeTotal: options.includeTotal || undefined,
+        groupBy: options.groupBy,
       }));
+      return { ...common, reportOptions, output: { format: options.format } };
     }
     if (commandName === 'balance-history') {
       const factors = accountFactors(options.accountFactor);

@@ -76,6 +76,17 @@ test('aligns human-readable output and uses an English total label', () => {
     '             Total  10,002.01 SEK\n',
   );
   assert.equal(formatHumanReadable([], true), '');
+  assert.equal(
+    formatHumanReadable([
+      { quantity: '1234.5', commodity: 'SEK' },
+      { quantity: '2', commodity: 'FUND' },
+    ], false, [{ commodity: 'SEK', format: '1,000.00 SEK' }], 'commodity'),
+    '1,234.50 SEK\n    2    FUND\n',
+  );
+  assert.equal(
+    formatCsv([{ quantity: '1234.5', commodity: 'SEK' }], false, 'commodity'),
+    'amount,commodity\n1234.5,SEK\n',
+  );
 });
 
 test('applies declared commodity precision and separators only to human-readable output', () => {

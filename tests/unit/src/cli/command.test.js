@@ -13,6 +13,9 @@ test('delegates report behavior to the public Node API and only formats results'
   const journal = {
     aggregateReport(options) {
       calls.push({ operation: 'aggregateReport', options });
+      if (options.groupBy === 'commodity') {
+        return [{ quantity: '-10', commodity: 'USD' }];
+      }
       return [
         { account: 'Assets:Cash', quantity: '-10', commodity: 'USD' },
         { account: 'Total', quantity: '-10', commodity: 'USD', isTotal: true },
@@ -65,8 +68,8 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.doesNotMatch(topLevelHelp, /Usage: ledlight aggregate/u);
   assert.equal(runReportCommand([]), topLevelHelp);
   assert.match(
-    runReportCommand(['account-balances', '--help']),
-    /^Usage: ledlight account-balances[\s\S]*--accounts <pattern>/u,
+    runReportCommand(['balance', '--help']),
+    /^Usage: ledlight balance[\s\S]*--accounts <pattern>/u,
   );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
   assert.throws(() => runReportCommand(['-V']), /unknown option '-V'/u);
@@ -82,9 +85,16 @@ test('delegates report behavior to the public Node API and only formats results'
 
   assert.match(
     runReportCommand([
-      'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
+      'balance', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
     ]),
     /Total.*-10\.00 USD/u,
+  );
+  assert.equal(
+    runReportCommand([
+      'balance', '--file', '/journal', '--accounts', 'Assets:',
+      '--group-by', 'commodity', '--format', 'csv',
+    ]),
+    'amount,commodity\n-10,USD\n',
   );
   assert.equal(
     runReportCommand(['balance-history', '--file', '/journal', '--invert', '--csv']),
@@ -113,6 +123,11 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'commodityDescriptions' },
     { operation: 'openJournal', journalPath: '/journal' },
     {
+      operation: 'aggregateReport',
+      options: { accounts: ['Assets:'], groupBy: 'commodity', includeTotal: false },
+    },
+    { operation: 'openJournal', journalPath: '/journal' },
+    {
       operation: 'balanceHistoryReport',
       options: {
         accounts: [],
@@ -133,10 +148,12 @@ test('delegates report behavior to the public Node API and only formats results'
 test('delegates non-report commands to the corresponding journal operations', () => {
   const calls = [];
   const journal = {
-    accountBalances(options) { calls.push(['accountBalances', options]); return ['balances']; },
     accountPostings(options) { calls.push(['accountPostings', options]); return ['postings']; },
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
-    commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
+    commodityDescriptions() {
+      calls.push(['commodityDescriptions']);
+      return [{ commodity: 'SEK', comment: null, format: '1,000.00 SEK' }];
+    },
     accounts(options) {
       calls.push(['accounts', options]);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
@@ -189,10 +206,11 @@ test('delegates non-report commands to the corresponding journal operations', ()
   });
   const run = (arguments_) => JSON.parse(runReportCommand(arguments_));
 
-  assert.deepEqual(run(['account-balances', '--file', '/journal', '--accounts', 'Assets:Cash']), ['balances']);
   assert.deepEqual(run(['account-postings', '--file', '/journal', '--accounts', 'Assets:Cash']), ['postings']);
   assert.deepEqual(run(['account-transactions', '--file', '/journal', '--accounts', 'Assets:Cash']), ['transactions']);
-  assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), ['commodities']);
+  assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), [
+    { commodity: 'SEK', comment: null, format: '1,000.00 SEK' },
+  ]);
   assert.equal(runReportCommand(['accounts', '--file', '/journal']), 'Assets:Cash\n');
   assert.deepEqual(run([
     'accounts', '--file', '/journal', '--accounts', 'Assets:Cash', '--details', '--format', 'json',
@@ -225,7 +243,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
   });
   assert.equal(
     runReportCommand(['transactions', '--file', '/journal']),
-    '2024/01/03 Shop\n    Assets:Cash                               -5 SEK\n',
+    '2024/01/03 Shop\n    Assets:Cash                            -5.00 SEK\n',
   );
   assert.deepEqual(run([
     'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',
@@ -235,7 +253,6 @@ test('delegates non-report commands to the corresponding journal operations', ()
   ]), '10.5');
 
   assert.deepEqual(calls, [
-    ['openJournal', '/journal'], ['accountBalances', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['accountPostings', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['accountTransactions', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['commodityDescriptions'],
@@ -293,7 +310,7 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['tags'],
     ['commodities'],
     ['prices'],
-    ['account-balances', '--accounts', 'Assets:Cash'],
+    ['balance'],
     ['account-postings', '--accounts', 'Assets:Cash'],
     ['account-transactions', '--accounts', 'Assets:Cash'],
     ['commodity-descriptions'],
@@ -301,7 +318,6 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['print'],
     ['reconciliation-entries', '--account', 'Assets:Cash'],
     ['valuation-rate', '--commodity', 'USD'],
-    ['aggregate'],
     ['balance-history'],
     ['gain'],
     ['investment-performance'],
