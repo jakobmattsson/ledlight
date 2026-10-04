@@ -2,6 +2,8 @@
 
 module.exports = () => {
 
+  const maximumWarningInstances = 10;
+
   const warningCodes = Object.freeze({
     AMBIGUOUS_BALANCE_ASSIGNMENT: 'AMBIGUOUS_BALANCE_ASSIGNMENT',
     BALANCE_ASSERTION_FAILED: 'BALANCE_ASSERTION_FAILED',
@@ -31,5 +33,30 @@ module.exports = () => {
     });
   }
 
-  return { createWarning, warningCodes };
+  function groupWarnings(warnings) {
+    const groups = new Map();
+    for (const warning of warnings) {
+      const key = JSON.stringify([warning.code, warning.message]);
+      let group = groups.get(key);
+      if (!group) {
+        group = { code: warning.code, message: warning.message, instances: [] };
+        groups.set(key, group);
+      }
+      if (group.instances.length < maximumWarningInstances) {
+        group.instances.push(Object.freeze({
+          source: warning.source,
+          line: warning.line,
+          column: warning.column,
+          startLine: warning.startLine,
+          endLine: warning.endLine,
+        }));
+      }
+    }
+    return Object.freeze([...groups.values()].map((group) => Object.freeze({
+      ...group,
+      instances: Object.freeze(group.instances),
+    })));
+  }
+
+  return { createWarning, groupWarnings, warningCodes };
 };

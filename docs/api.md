@@ -43,19 +43,24 @@ changes.
 The returned object also has a frozen `warnings` array. Ingestion and accounting
 checks finish before the object is returned, so this array is complete before
 any query starts. Query methods keep their documented return values even when
-warnings exist. Each warning is:
+warnings exist. Warnings with the same code and message are grouped. Each
+warning group is:
 
 ```js
 {
   code,    // stable ingestion-warning identifier
   message, // human-readable English description
-  source,  // absolute journal source path
-  line,    // exact warning or syntax-error location
-  column,
-  startLine, // first line of the affected top-level block
-  endLine,   // last line of the affected top-level block
+  instances: [{
+    source,  // absolute journal source path
+    line,    // exact warning or syntax-error location
+    column,
+    startLine, // first line of the affected top-level block
+    endLine,   // last line of the affected top-level block
+  }],
 }
 ```
+
+At most the first ten instances of each warning group are exposed.
 
 Warnings are stored with the database snapshot and therefore remain available
 when a current cache is reused. An entry that cannot be represented safely in
@@ -316,6 +321,6 @@ csv`. Text tag and commodity output contains one name per line. Text price
 output contains one price per line with a Ledger-style slash-separated date.
 JSON and CSV retain every field returned by `journal.prices()`.
 
-CLI commands preserve the query result on stdout and emit the journal's
-`warnings` array as JSON on stderr when it is non-empty. No warning output is
-written for a clean journal.
+CLI commands preserve the query result on stdout and emit a human-readable
+summary of the journal's warnings on stderr when it is non-empty. No warning
+output is written for a clean journal.

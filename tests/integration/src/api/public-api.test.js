@@ -142,13 +142,16 @@ account Equity:Opening
   ]);
   assert.deepEqual(
     {
-      source: journal.warnings[0].source,
-      startLine: journal.warnings[0].startLine,
-      endLine: journal.warnings[0].endLine,
+      source: journal.warnings[0].instances[0].source,
+      startLine: journal.warnings[0].instances[0].startLine,
+      endLine: journal.warnings[0].instances[0].endLine,
     },
     { source: fs.realpathSync.native(journalPath), startLine: 5, endLine: 7 },
   );
   assert.equal(Object.isFrozen(journal.warnings), true);
+  assert.equal(Object.isFrozen(journal.warnings[0]), true);
+  assert.equal(Object.isFrozen(journal.warnings[0].instances), true);
+  assert.equal(Object.isFrozen(journal.warnings[0].instances[0]), true);
   assert.deepEqual(
     ledlight.openJournal(journalPath).warnings,
     journal.warnings,
@@ -162,9 +165,42 @@ account Equity:Opening
   assert.deepEqual(JSON.parse(cli.stdout), [
     { account: 'Assets:Cash', quantity: '10', commodity: 'SEK' },
   ]);
-  assert.deepEqual(JSON.parse(cli.stderr).map(({ code }) => code), [
-    'SYNTAX_ERROR',
-    'BALANCE_ASSERTION_FAILED',
-    'UNBALANCED_TRANSACTION',
+  assert.match(cli.stderr, /^Warnings:\n\n\[SYNTAX_ERROR\] /u);
+  assert.match(cli.stderr, new RegExp(
+    `${journalPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&')}:5:1 ` +
+    '\\(affected lines 5-7\\)',
+    'u',
+  ));
+  assert.match(cli.stderr, /\n\[BALANCE_ASSERTION_FAILED\] /u);
+  assert.match(cli.stderr, /\n\[UNBALANCED_TRANSACTION\] /u);
+  assert.doesNotMatch(cli.stderr, /^\s*\{/u);
+});
+
+test('groups repeated warnings and exposes only their first ten instances', (t) => {
+  const ledlight = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-grouped-warnings-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const prices = Array.from({ length: 12 }, (_value, index) =>
+    `P 2024-01-${String(index + 1).padStart(2, '0')} FUND 1 SEK`);
+  fs.writeFileSync(journalPath, ['commodity SEK', '  default', ...prices, ''].join('\n'));
+
+  const journal = ledlight.openJournal(journalPath);
+  assert.equal(journal.warnings.length, 1);
+  assert.equal(journal.warnings[0].code, 'UNDECLARED_COMMODITY');
+  assert.equal(journal.warnings[0].message, 'Commodity FUND must be declared before use');
+  assert.equal(journal.warnings[0].instances.length, 10);
+  assert.deepEqual(journal.warnings[0].instances.map(({ line }) => line), [
+    3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
   ]);
+
+  const cli = spawnSync(process.execPath, [cliPath, 'accounts', '--file', journalPath], {
+    cwd: directory,
+    encoding: 'utf8',
+    env: process.env,
+  });
+  assert.equal(cli.status, 0);
+  assert.equal(cli.stdout, '');
+  assert.equal(cli.stderr.match(/^ {2}.*journal\.ledger:\d+:\d+$/gmu)?.length, 10);
+  assert.match(cli.stderr, /\[UNDECLARED_COMMODITY\] Commodity FUND must be declared before use/u);
 });

@@ -142,6 +142,24 @@ module.exports = ({
     return `${JSON.stringify(value, null, 2)}\n`;
   }
 
+  function formatWarnings(warnings) {
+    if (warnings.length === 0) return '';
+    const lines = ['Warnings:'];
+    for (const warning of warnings) {
+      lines.push('', `[${warning.code}] ${warning.message}`);
+      for (const instance of warning.instances) {
+        const position = instance.column === null
+          ? `${instance.source}:${instance.line}`
+          : `${instance.source}:${instance.line}:${instance.column}`;
+        const affectedLines = instance.startLine === instance.endLine
+          ? ''
+          : ` (affected lines ${instance.startLine}-${instance.endLine})`;
+        lines.push(`  ${position}${affectedLines}`);
+      }
+    }
+    return `${lines.join('\n')}\n`;
+  }
+
   function formatTextTable(rows, columns) {
     const widths = columns.map(({ heading, value }) => Math.max(
       heading.length,
@@ -340,6 +358,7 @@ module.exports = ({
     formatInvestmentPerformanceJson,
     formatLedgerTransactions,
     formatJson,
+    formatWarnings,
     formatAccounts,
     formatCommodities,
     formatPrices,

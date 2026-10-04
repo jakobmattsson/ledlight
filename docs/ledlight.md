@@ -256,8 +256,9 @@ assertions, unbalanced transactions, invalid trade annotations, and additional
 default commodity declarations are recorded before queries run. Data that can
 still be represented is retained; an entry with unresolved amounts is skipped
 without preventing valid entries from being queried. The public API exposes
-the warnings on the opened journal, while the CLI writes the same structured
-list to stderr and keeps query output on stdout.
+the warnings on the opened journal, grouped by code and message with at most ten
+locations per group. The CLI writes a human-readable version of that list to
+stderr and keeps query output on stdout.
 
 Accounts, commodities, and tags must be declared before their first use in
 journal traversal order. Each use before its declaration produces an
