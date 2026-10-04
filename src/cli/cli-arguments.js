@@ -127,6 +127,7 @@ module.exports = ({
       'raw',
     );
     addJournal(accounts);
+    addAccountPatterns(accounts);
     addOutputBooleanOption(
       accounts, '--details', 'include comments and transaction counts', 'details',
     );
@@ -152,8 +153,8 @@ module.exports = ({
       'misc',
     );
     addJournal(accountBalances);
-    addValueOption(accountBalances, '--account <pattern>', 'select matching accounts', {
-      required: true, apiInput: 'account',
+    addValueOption(accountBalances, '--accounts <pattern>', 'select matching accounts (repeatable)', {
+      repeatable: true, required: true, apiInput: 'accounts',
     });
     addDateOption(accountBalances, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     const accountPostings = registerCommand(
@@ -162,8 +163,8 @@ module.exports = ({
       'misc',
     );
     addJournal(accountPostings);
-    addValueOption(accountPostings, '--account <pattern>', 'select matching accounts', {
-      required: true, apiInput: 'account',
+    addValueOption(accountPostings, '--accounts <pattern>', 'select matching accounts (repeatable)', {
+      repeatable: true, required: true, apiInput: 'accounts',
     });
     addDateOption(accountPostings, '--after <date>', 'include activity after YYYY-MM-DD', 'after');
     const accountTransactions = registerCommand(
@@ -172,8 +173,8 @@ module.exports = ({
       'misc',
     );
     addJournal(accountTransactions);
-    addValueOption(accountTransactions, '--account <pattern>', 'select matching accounts', {
-      required: true, apiInput: 'account',
+    addValueOption(accountTransactions, '--accounts <pattern>', 'select matching accounts (repeatable)', {
+      repeatable: true, required: true, apiInput: 'accounts',
     });
     const commodityDescriptions = registerCommand(
       program.command('commodity-descriptions').description('show declared commodities'),
@@ -189,9 +190,7 @@ module.exports = ({
       'raw',
     );
     addJournal(transactions);
-    addValueOption(transactions, '--account <pattern>', 'select transactions for matching accounts', {
-      apiInput: 'account',
-    });
+    addAccountPatterns(transactions);
     addValueOption(transactions, '--id <id>', 'select one transaction ID', {
       apiInput: 'id',
     });
@@ -358,20 +357,21 @@ module.exports = ({
     if (commandName === 'accounts') {
       return {
         ...common,
+        options: { accounts: options.accounts || [] },
         output: { details: options.details || false, format: options.format },
       };
     }
     if (['tags', 'commodities', 'prices'].includes(commandName)) {
       return { ...common, output: { format: options.format } };
     }
-    if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
-    if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
-    if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };
+    if (commandName === 'account-balances') return { ...common, options: compact({ accounts: options.accounts, to: options.to }) };
+    if (commandName === 'account-postings') return { ...common, options: compact({ accounts: options.accounts, after: options.after }) };
+    if (commandName === 'account-transactions') return { ...common, options: { accounts: options.accounts } };
     if (commandName === 'transactions') {
       return {
         ...common,
         options: compact({
-          account: options.account, id: options.id, order: options.order,
+          accounts: options.accounts || [], id: options.id, order: options.order,
           page: options.page, pageSize: options.pageSize,
         }),
         output: { format: options.format },
@@ -433,11 +433,15 @@ module.exports = ({
     const prefix = `ledger --args-only --no-pager --file ${shellArgument(parsed.journalPath)}`;
     if (parsed.command === 'accounts' &&
         !parsed.output.details && parsed.output.format === 'text') {
-      return `${prefix} accounts`;
+      const filters = parsed.options.accounts.map(shellArgument);
+      return [prefix, 'accounts', ...filters].join(' ');
     }
     if (parsed.command === 'transactions' &&
-        Object.keys(parsed.options).length === 0 && parsed.output.format === 'text') {
-      return `${prefix} print`;
+        parsed.options.id === undefined && parsed.options.order === undefined &&
+        parsed.options.page === undefined && parsed.options.pageSize === undefined &&
+        parsed.output.format === 'text') {
+      const filters = parsed.options.accounts.map(shellArgument);
+      return [prefix, 'print', ...filters].join(' ');
     }
     return 'No ledger equivalent command exists';
   }

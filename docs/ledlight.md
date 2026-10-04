@@ -118,12 +118,12 @@ underlying result.
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
-| `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
+| `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
 | `tags --file PATH` | `openJournal(journalPath).tags()` | Declared tags |
 | `commodities --file PATH` | `openJournal(journalPath).commodities()` | Declared commodities |
 | `prices --file PATH` | `openJournal(journalPath).prices()` | Price directives |
 | `transactions --file PATH` (`print` alias) | `openJournal(journalPath).transactions(options)` | Paginated transactions |
-| `transactions --account PATTERN` | `options.account` | Select transactions containing matching accounts |
+| `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
@@ -155,8 +155,8 @@ underlying result.
 | `<command> --ledger` | None | Print an equivalent standalone Ledger command when one exists |
 
 Commands without a specialized human-readable representation emit JSON.
-`transactions` defaults to Ledger-style text; `--account` optionally
-selects transactions containing a matching account while retaining every posting
+`transactions` defaults to Ledger-style text; repeatable `--accounts` options
+select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction, and all pagination options are optional and default to
 `--order oldest --page 1 --page-size 100`.
 Report commands accept `--json` when the complete API result is needed; this

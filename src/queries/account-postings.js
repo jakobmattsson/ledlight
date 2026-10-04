@@ -6,13 +6,14 @@ module.exports = ({
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({
-    account: z.string().min(1, { error: 'must be a non-empty string' }),
+    accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' }))
+      .min(1, { error: 'must contain at least one account' }),
     after: z.iso.date({ error: 'Invalid after date' }).optional(),
   });
 
   function queryAccountPostings(database, options, _caches) {
-    const { account, after } = parseOptions(optionsSchema, options, 'accountPostings');
-    const filter = accountFilter('p.account', [account]);
+    const { accounts, after } = parseOptions(optionsSchema, options, 'accountPostings');
+    const filter = accountFilter('p.account', accounts);
     return database.prepare(`
       SELECT
         t.date AS transactionDate,
