@@ -1,6 +1,40 @@
 'use strict';
 
-const { Command, InvalidArgumentError, Option } = require('commander');
+const {
+  Command, Help, InvalidArgumentError, Option,
+} = require('commander');
+
+const HELP_GROUP = Symbol('helpGroup');
+
+function formatGroupedHelp(command, helper) {
+  const help = Help.prototype.formatHelp.call(helper, command, helper);
+  if (command.parent || command.commands.length === 0) return help;
+
+  const termWidth = helper.padWidth(command, helper);
+  const commands = helper.visibleCommands(command);
+  const formatCommands = (group) => commands
+    .filter((candidate) => candidate[HELP_GROUP] === group)
+    .map((candidate) => helper.formatItem(
+      helper.styleSubcommandTerm(helper.subcommandTerm(candidate)),
+      termWidth,
+      helper.styleSubcommandDescription(helper.subcommandDescription(candidate)),
+      helper,
+    ));
+  const defaultCommandList = commands.map((candidate) => helper.formatItem(
+    helper.styleSubcommandTerm(helper.subcommandTerm(candidate)),
+    termWidth,
+    helper.styleSubcommandDescription(helper.subcommandDescription(candidate)),
+    helper,
+  ));
+  const defaultSection = [helper.styleTitle('Commands:'), ...defaultCommandList, ''].join('\n');
+  const groupedSection = ['raw', 'misc'].flatMap((group) => [
+    helper.styleTitle(`${group}:`),
+    ...formatCommands(group),
+    '',
+  ]).join('\n');
+
+  return help.replace(defaultSection, groupedSection);
+}
 
 module.exports = ({
   cliConfiguration,
@@ -30,8 +64,9 @@ module.exports = ({
     if (settings.apiInput) option.apiInput = settings.apiInput;
     return command.addOption(option);
   }
-  function registerCommand(command, operation) {
+  function registerCommand(command, operation, helpGroup) {
     command.apiOperation = operation;
+    command[HELP_GROUP] = helpGroup;
     return command;
   }
   const addBooleanOption = (command, flags, description, apiInput) => {
@@ -81,6 +116,7 @@ module.exports = ({
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
       .configureHelp({
+        formatHelp: formatGroupedHelp,
         subcommandTerm: (command) => [command.name(), ...command.aliases()].join('|'),
       })
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
@@ -88,6 +124,7 @@ module.exports = ({
     const accounts = registerCommand(
       program.command('accounts').description('show declared accounts'),
       'accounts',
+      'raw',
     );
     addJournal(accounts);
     addOutputBooleanOption(
@@ -101,7 +138,9 @@ module.exports = ({
       ['commodities', 'commodities', 'show declared commodities'],
       ['prices', 'prices', 'show price directives'],
     ]) {
-      const command = registerCommand(program.command(name).description(description), operation);
+      const command = registerCommand(
+        program.command(name).description(description), operation, 'raw',
+      );
       addJournal(command);
       addOutputValueOption(command, '--format <format>', 'select the output format', {
         choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
@@ -110,6 +149,7 @@ module.exports = ({
     const accountBalances = registerCommand(
       program.command('account-balances').description('show balances for one exact account'),
       'accountBalances',
+      'misc',
     );
     addJournal(accountBalances);
     addValueOption(accountBalances, '--account <name>', 'select an exact account', {
@@ -119,6 +159,7 @@ module.exports = ({
     const accountPostings = registerCommand(
       program.command('account-postings').description('show postings for one exact account'),
       'accountPostings',
+      'misc',
     );
     addJournal(accountPostings);
     addValueOption(accountPostings, '--account <name>', 'select an exact account', {
@@ -128,6 +169,7 @@ module.exports = ({
     const accountTransactions = registerCommand(
       program.command('account-transactions').description('show transactions for one exact account'),
       'accountTransactions',
+      'misc',
     );
     addJournal(accountTransactions);
     addValueOption(accountTransactions, '--account <name>', 'select an exact account', {
@@ -136,6 +178,7 @@ module.exports = ({
     const commodityDescriptions = registerCommand(
       program.command('commodity-descriptions').description('show declared commodities'),
       'commodityDescriptions',
+      'misc',
     );
     addJournal(commodityDescriptions);
 
@@ -143,6 +186,7 @@ module.exports = ({
       program.command('ledger-transactions').alias('print')
         .description('show a page of transactions'),
       'ledgerTransactions',
+      'raw',
     );
     addJournal(ledgerTransactions);
     addValueOption(ledgerTransactions, '--account <name>', 'select transactions for an exact account', {
@@ -167,6 +211,7 @@ module.exports = ({
       program.command('reconciliation-entries')
         .description('show entries for reconciling exact accounts'),
       'reconciliationEntries',
+      'misc',
     );
     addJournal(reconciliationEntries);
     addValueOption(reconciliationEntries, '--account <name>', 'select an exact account (repeatable)', {
@@ -181,6 +226,7 @@ module.exports = ({
     const valuationRate = registerCommand(
       program.command('valuation-rate').description('resolve a valuation rate'),
       'ledgerValuationRateResolver',
+      'misc',
     );
     addJournal(valuationRate);
     addValueOption(valuationRate, '--commodity <name>', 'select the source commodity', {
@@ -191,6 +237,7 @@ module.exports = ({
     const aggregate = registerCommand(
       program.command('aggregate').description('aggregate account balances'),
       'aggregateReport',
+      'misc',
     );
     addJournal(aggregate);
     addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
@@ -205,6 +252,7 @@ module.exports = ({
     const balanceHistory = registerCommand(
       program.command('balance-history').description('show balances over time'),
       'balanceHistoryReport',
+      'misc',
     );
     addJournal(balanceHistory);
     addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
@@ -220,6 +268,7 @@ module.exports = ({
     const gain = registerCommand(
       program.command('gain').description('show investment gains'),
       'gainReport',
+      'misc',
     );
     addJournal(gain);
     addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
@@ -228,6 +277,7 @@ module.exports = ({
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
+      'misc',
     );
     addJournal(performance);
     addDateOption(performance, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');

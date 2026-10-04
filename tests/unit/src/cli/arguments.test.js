@@ -357,7 +357,15 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /--version\s+show the package version/u);
   assert.match(usage(), /--help\s+show help/u);
   assert.match(usage(), /ledlight <command> --help/u);
-  assert.match(usage(), /Commands:\n {2}accounts\s+show declared accounts/u);
+  assert.match(
+    usage(),
+    /raw:\n {2}accounts\s+show declared accounts[\s\S]* {2}tags\s+show declared tags[\s\S]* {2}commodities\s+show declared commodities[\s\S]* {2}prices\s+show price directives[\s\S]* {2}ledger-transactions\|print\s+show a page of transactions/u,
+  );
+  assert.match(
+    usage(),
+    /misc:\n {2}account-balances\s+show balances for one exact account[\s\S]* {2}investment-performance\s+show investment performance/u,
+  );
+  assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /ledger-transactions\|print\s+show a page of transactions/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
