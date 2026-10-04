@@ -5,12 +5,14 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const createCommand = require('../../../../src/cli/cli-command');
+const createArguments = require('../../../../src/cli/cli-arguments');
 const cliArguments = resolveRepositoryModule('src/cli/cli-arguments.js');
 const cliFormat = resolveRepositoryModule('src/cli/cli-format.js');
+const coreProject = resolveRepositoryModule('src/core/project.js');
 
 const commandNames = [...new Set([...Object.values(cliArguments.apiCommands), 'print'])];
 
-test('shows identical command help with or without the explicit help option', () => {
+test('shows command help only with the explicit help option', () => {
   const { runReportCommand } = createCommand({
     project: { openJournal: () => { throw new Error('must not open a journal'); } },
     packageMetadata: { version: '1.2.3' },
@@ -19,8 +21,49 @@ test('shows identical command help with or without the explicit help option', ()
   });
 
   for (const command of commandNames) {
-    assert.equal(runReportCommand([command]), runReportCommand([command, '--help']));
+    assert.equal(runReportCommand([command, '--help']), `${cliArguments.usage(command)}\n`);
   }
+});
+
+test('runs a bare command when CLI configuration supplies the journal path', () => {
+  const configuredArguments = createArguments({
+    cliConfiguration: {
+      apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],
+    },
+    project: coreProject,
+  });
+  const opened = [];
+  const project = {
+    openJournal(journalPath) {
+      opened.push(journalPath);
+      return {
+        warnings: [],
+        investmentPerformance: () => ({
+          from: null,
+          to: null,
+          commodities: [],
+          valuationCommodity: 'USD',
+          openingValue: 0,
+          netContributions: 0,
+          endingValue: 0,
+          profitLoss: 0,
+          timeWeightedReturn: null,
+          moneyWeightedReturnTotal: null,
+          moneyWeightedReturn: null,
+        }),
+        commodityDescriptions: () => [],
+      };
+    },
+  };
+  const { runReportCommand } = createCommand({
+    project,
+    packageMetadata: { version: '1.2.3' },
+    cliArguments: configuredArguments,
+    cliFormat,
+  });
+
+  assert.match(runReportCommand(['investment-performance']), /Opening value: 0\.00 USD/u);
+  assert.deepEqual(opened, ['/configured-journal']);
 });
 
 test('delegates report behavior to the public Node API and only formats results', () => {
