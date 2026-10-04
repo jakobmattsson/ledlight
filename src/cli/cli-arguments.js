@@ -75,7 +75,9 @@ module.exports = ({
     const program = new Command().name('ledlight').usage('<command> [options]')
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
-      .configureHelp({ subcommandTerm: (command) => command.name() })
+      .configureHelp({
+        subcommandTerm: (command) => [command.name(), ...command.aliases()].join('|'),
+      })
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
     const accounts = registerCommand(
@@ -127,6 +129,9 @@ module.exports = ({
       'ledgerTransactions',
     );
     addJournal(ledgerTransactions);
+    addValueOption(ledgerTransactions, '--account <name>', 'select transactions for an exact account', {
+      apiInput: 'account',
+    });
     addValueOption(ledgerTransactions, '--id <id>', 'select one transaction ID', {
       apiInput: 'id',
     });
@@ -237,7 +242,8 @@ module.exports = ({
       return `${program.helpInformation().trimEnd()}\n\n` +
         'Run "ledlight <command> --help" for detailed command usage.';
     }
-    const command = program.commands.find((candidate) => candidate.name() === commandName);
+    const command = program.commands.find((candidate) =>
+      candidate.name() === commandName || candidate.aliases().includes(commandName));
     if (!command) throw new Error(`Unknown command: ${commandName}`);
     return command.helpInformation().trimEnd();
   }
@@ -290,7 +296,8 @@ module.exports = ({
       return {
         ...common,
         options: compact({
-          id: options.id, order: options.order, page: options.page, pageSize: options.pageSize,
+          account: options.account, id: options.id, order: options.order,
+          page: options.page, pageSize: options.pageSize,
         }),
         output: { format: options.format },
       };
