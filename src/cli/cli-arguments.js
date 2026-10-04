@@ -16,7 +16,8 @@ module.exports = ({
   };
   function addValueOption(command, flags, description, settings_) {
     const settings = settings_ ?? {};
-    const option = new Option(flags, description);
+    const optionDescription = settings.required ? `(REQUIRED) ${description}` : description;
+    const option = new Option(flags, optionDescription);
     const parseValue = settings.repeatable ? collect : singleValue(flags.split(' ')[0]);
     if (settings.choices) {
       option.choices(settings.choices);
@@ -31,7 +32,7 @@ module.exports = ({
   }
   function registerCommand(command, operation) {
     command.apiOperation = operation;
-    return command.addOption(new Option('-h, --help', 'show command help'));
+    return command;
   }
   const addBooleanOption = (command, flags, description, apiInput) => {
     const option = new Option(flags, description);
@@ -75,8 +76,6 @@ module.exports = ({
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
-    program.addOption(new Option('-V, --version', 'show the package version'));
-    program.addOption(new Option('-h, --help', 'show help'));
 
     const accountBalances = registerCommand(
       program.command('account-balances').description('show balances for one exact account'),
@@ -220,6 +219,15 @@ module.exports = ({
       repeatable: true, apiInput: 'excludeCommodities',
     });
     addJson(performance);
+    for (const command of program.commands) {
+      const mandatoryOptions = command.options
+        .filter((option) => option.mandatory)
+        .map((option) => option.flags);
+      command.usage(`${mandatoryOptions.join(' ')} [options]`);
+      command.addOption(new Option('--help', 'show command help'));
+    }
+    program.addOption(new Option('--version', 'show the package version'));
+    program.addOption(new Option('--help', 'show help'));
     return program;
   }
 

@@ -129,9 +129,9 @@ underlying result.
 | `ledger-accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
-| `--version`, `-V` | None | CLI package metadata |
-| `--help`, `-h` | None | Top-level command list |
-| `<command> --help`, `<command> -h` | None | Detailed usage for one command |
+| `--version` | None | CLI package metadata |
+| `--help` | None | Top-level command list |
+| `<command> --help` | None | Detailed usage for one command |
 
 `ledger-accounts` defaults to the same newline-separated account names as
 `ledger accounts`. With `--details`, text output is a table containing account,
