@@ -265,6 +265,10 @@ test('maps every remaining API parameter to CLI arguments', () => {
     command: 'ledger-transactions', journalPath: '/journal',
     options: {}, output: { format: 'text' },
   });
+  assert.deepEqual(parseArguments(['print', '--file', '/journal']), {
+    command: 'ledger-transactions', journalPath: '/journal',
+    options: {}, output: { format: 'text' },
+  });
   assert.deepEqual(parseArguments(['ledger-transaction', '--file', '/journal', '--transaction-id', '42']), {
     command: 'ledger-transaction', journalPath: '/journal', options: { transactionId: '42' },
   });

@@ -113,7 +113,7 @@ underlying result.
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
 | `ledger-transaction --file PATH` | `openJournal(journalPath).ledgerTransaction(options)` | One transaction |
-| `ledger-transactions --file PATH` | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
+| `ledger-transactions --file PATH` (`print` alias) | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
 | `ledger-transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for exact accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |

@@ -119,6 +119,24 @@ test('ledger-transactions defaults to the exact Ledger print output', (t) => {
   assert.equal(ledlightOutput, ledgerOutput);
 });
 
+test('print aliases ledger-transactions', (t) => {
+  const projectDirectory = temporaryProject(t, 'basic');
+  const journalPath = path.join(projectDirectory, 'journal.ledger');
+  const commonOptions = {
+    cwd: projectDirectory,
+    encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
+  };
+  const ledgerTransactionsOutput = execFileSync(process.execPath, [
+    cliPath, 'ledger-transactions', '--file', journalPath,
+  ], commonOptions);
+  const printOutput = execFileSync(process.execPath, [
+    cliPath, 'print', '--file', journalPath,
+  ], commonOptions);
+
+  assert.equal(printOutput, ledgerTransactionsOutput);
+});
+
 const scenarios = [
   {
     name: 'plain balances with implicit postings',

@@ -130,7 +130,8 @@ module.exports = ({
       required: true, apiInput: 'transactionId',
     });
     const ledgerTransactions = registerCommand(
-      program.command('ledger-transactions').description('show a page of transactions'),
+      program.command('ledger-transactions').alias('print')
+        .description('show a page of transactions'),
       'ledgerTransactions',
     );
     addJournal(ledgerTransactions);
