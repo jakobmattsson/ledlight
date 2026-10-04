@@ -154,15 +154,15 @@ test('print aliases transactions', (t) => {
 
 const scenarios = [
   {
-    name: 'plain balances with implicit postings',
+    name: 'plain posting summaries with implicit postings',
     fixture: 'basic',
-    ledlightArguments: ['balance', '--format', 'csv'],
+    ledlightArguments: ['summary', '--format', 'csv'],
     ledgerArguments: { options: [], queries: [] },
   },
   {
-    name: 'balances with unit and total lot costs',
+    name: 'posting summaries with unit and total lot costs',
     fixture: 'lot-cost',
-    ledlightArguments: ['balance', '--format', 'csv'],
+    ledlightArguments: ['summary', '--format', 'csv'],
     ledgerArguments: { options: [], queries: [] },
   },
   {
@@ -174,14 +174,14 @@ const scenarios = [
   {
     name: 'inverted account-prefix selection',
     fixture: 'basic',
-    ledlightArguments: ['balance', '--accounts', 'Expenses:', '--invert', '--format', 'csv'],
+    ledlightArguments: ['summary', '--accounts', 'Expenses:', '--invert', '--format', 'csv'],
     ledgerArguments: { options: ['--invert'], queries: ['^Expenses:'] },
   },
   {
     name: 'included files, an inclusive interval, and multiple account prefixes',
     fixture: 'includes',
     ledlightArguments: [
-      'balance',
+      'summary',
       '--from', '2024-01-01',
       '--to', '2024-01-31',
       '--accounts', 'Assets:',
@@ -196,7 +196,7 @@ const scenarios = [
   {
     name: 'latest-price valuation in the journal default commodity',
     fixture: 'valuation',
-    ledlightArguments: ['balance', '--accounts', 'Assets:Investments', '--value', '--format', 'csv'],
+    ledlightArguments: ['summary', '--accounts', 'Assets:Investments', '--value', '--format', 'csv'],
     ledgerArguments: {
       options: ['--exchange', 'USD'],
       queries: ['^Assets:Investments'],
@@ -205,7 +205,7 @@ const scenarios = [
   {
     name: 'older resolvable prices when newer indirect quotes are unusable',
     fixture: 'valuation-selection',
-    ledlightArguments: ['balance', '--accounts', 'Assets:', '--value', '--format', 'csv'],
+    ledlightArguments: ['summary', '--accounts', 'Assets:', '--value', '--format', 'csv'],
     ledgerArguments: {
       options: ['--exchange', 'USD'],
       queries: ['^Assets:'],

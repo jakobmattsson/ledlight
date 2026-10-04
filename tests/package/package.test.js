@@ -116,7 +116,7 @@ account Equity:Opening
       env: consumerEnvironment,
     }).trim(), packageMetadata.version);
     assert.equal(run(executableCommand, [
-      ...executableArguments, 'balance', '--file', journalPath, '--format', 'csv',
+      ...executableArguments, 'summary', '--file', journalPath, '--format', 'csv',
     ], {
       cwd: projectDirectory,
       env: consumerEnvironment,

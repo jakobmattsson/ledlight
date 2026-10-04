@@ -34,8 +34,8 @@ test('supplies --file from the project .ledlightrc', (t) => {
   );
 
   assert.deepEqual(
-    configuration(home, workingDirectory).apply(['balance', '--format', 'csv']),
-    ['balance', '--file', 'books/main ledger.ledger', '--format', 'csv'],
+    configuration(home, workingDirectory).apply(['summary', '--format', 'csv']),
+    ['summary', '--file', 'books/main ledger.ledger', '--format', 'csv'],
   );
 });
 
@@ -65,8 +65,8 @@ test('lets an explicit --file option override configuration', (t) => {
   fs.writeFileSync(path.join(home, '.ledlightrc'), '--unknown value\n');
 
   assert.deepEqual(
-    configuration(home, workingDirectory).apply(['balance', '--file', 'explicit.ledger']),
-    ['balance', '--file', 'explicit.ledger'],
+    configuration(home, workingDirectory).apply(['summary', '--file', 'explicit.ledger']),
+    ['summary', '--file', 'explicit.ledger'],
   );
 });
 
@@ -76,8 +76,8 @@ test('rejects unsupported or repeated configuration settings', (t) => {
   const configuredArguments = configuration(home, workingDirectory);
 
   fs.writeFileSync(configurationPath, '--account Assets:Cash\n');
-  assert.throws(() => configuredArguments.apply(['balance']), /only supports the --file option/u);
+  assert.throws(() => configuredArguments.apply(['summary']), /only supports the --file option/u);
 
   fs.writeFileSync(configurationPath, '--file first.ledger\n--file second.ledger\n');
-  assert.throws(() => configuredArguments.apply(['balance']), /may only contain one --file option/u);
+  assert.throws(() => configuredArguments.apply(['summary']), /may only contain one --file option/u);
 });

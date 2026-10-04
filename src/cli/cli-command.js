@@ -124,7 +124,7 @@ module.exports = ({
     const parsed = parseArguments(arguments_);
     if (parsed.ledger) return `${ledgerCommand(parsed)}\n`;
     return [
-      'balance',
+      'summary',
       'balance-history',
       'unrealized-gains',
       'investment-performance',

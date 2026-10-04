@@ -111,7 +111,7 @@ underlying result.
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
 | `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
-| `balance --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
+| `summary --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
@@ -371,7 +371,7 @@ quote of `10 SEK`.
 
 Each posting has a non-null `report_date`: its explicit posting date when one
 is present, otherwise the transaction's primary date. This preserves source
-timing for reconciliation. Balance reports use this posting date by default.
+timing for reconciliation. Summary reports use this posting date by default.
 Callers can instead select the transaction's primary date so all postings in a
 transaction take effect atomically.
 
@@ -415,12 +415,12 @@ the former dedicated `accountBalances` query.
 The command-line equivalent is:
 
 ```console
-ledlight balance --file main.ledger --to 2024-12-31
-ledlight balance --file main.ledger --to 2024-12-31 --date-basis transaction
-ledlight balance --file main.ledger --from 2024-01-01 --to 2024-12-31 \
+ledlight summary --file main.ledger --to 2024-12-31
+ledlight summary --file main.ledger --to 2024-12-31 --date-basis transaction
+ledlight summary --file main.ledger --from 2024-01-01 --to 2024-12-31 \
   --accounts "^Income:" --accounts "^Expenses:" --value --invert
-ledlight balance --file main.ledger --to 2024-12-31 --accounts "^Assets:" --format csv
-ledlight balance --file main.ledger --accounts "^Assets:" \
+ledlight summary --file main.ledger --to 2024-12-31 --accounts "^Assets:" --format csv
+ledlight summary --file main.ledger --accounts "^Assets:" \
   --group-by commodity --format json
 ```
 
@@ -448,7 +448,7 @@ and left-align it. This makes magnitudes easy to compare while preserving the
 natural reading order of account hierarchies. New reports should follow this
 layout when they have the same shape.
 
-Before every CLI balance report, Ledlight compares the current source manifest
+Before every CLI summary report, Ledlight compares the current source manifest
 with `source_files`. This scan follows include directives and computes file
 hashes, but does not parse transactions. If the manifest has changed, Ledlight
 parses the journal and rebuilds the database before running the report. If it
@@ -538,7 +538,7 @@ const history = journal.balanceHistoryReport({
 ```
 
 The command prints the complete history by default. `--from`, `--to`, and
-`--invert` work as for the balance report. Repeated `--accounts PATTERN` values
+`--invert` work as for the summary report. Repeated `--accounts PATTERN` values
 select accounts, while `--format` selects `text`, `json`, or `csv` output:
 
 ```console

@@ -158,7 +158,7 @@ account Equity:Opening
   );
 
   const cli = spawnSync(process.execPath, [
-    cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--format', 'json',
+    cliPath, 'summary', '--file', journalPath, '--accounts', 'Assets:', '--format', 'json',
   ], { cwd: directory, encoding: 'utf8', env: process.env });
   assert.equal(cli.status, 0);
   assert.deepEqual(JSON.parse(cli.stdout), [
