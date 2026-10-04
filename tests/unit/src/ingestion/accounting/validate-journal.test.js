@@ -65,6 +65,8 @@ for (const fixture of invalidAmounts) {
       source: 'fixture.ledger',
       line: fixture.name === 'prices' ? 1 : 2,
       column: fixture.name === 'prices' ? 1 : 3,
+      startLine: fixture.name === 'prices' ? 1 : 2,
+      endLine: fixture.name === 'prices' ? 1 : 2,
     }]);
     assert.deepEqual([...result.invalidEntries], [journal.entries[0]]);
   });

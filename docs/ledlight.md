@@ -34,7 +34,7 @@ The current implementation provides:
 - an Ohm reference parser plus a faster, dependency-free runtime parser that
   must produce the same syntax tree;
 - exact decimal strings, avoiding binary floating-point loss during import;
-- source locations and syntax errors;
+- source locations and recoverable syntax warnings;
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
@@ -181,8 +181,11 @@ tags, and comments; postings with omitted or explicit amounts; unit and total lo
 costs (`{}` and `{{}}`); unit and total transaction costs (`@` and `@@`);
 balance assignments; and balance assertions.
 
-Unsupported Ledger syntax fails with a source location instead of being
-silently ignored. The runtime parser has no I/O or database dependency;
+Unsupported or malformed Ledger syntax produces a warning with the exact error
+location and the affected top-level line range. The parser omits that complete
+top-level block and continues with the next one, so a bad posting cannot leave
+a partial transaction and multiple bad blocks produce multiple warnings. The
+runtime parser has no I/O or database dependency;
 `loadJournal` is the thin layer responsible for file I/O, include expansion,
 and hashing.
 

@@ -116,7 +116,8 @@ module.exports = ({
   function openJournal(journalPath) {
     const current = ensureCurrent(journalPath);
     const warnings = queryDatabase(current.databasePath, (database) => database.prepare(`
-      SELECT code, message, source, line, column
+      SELECT code, message, source, line, column,
+        start_line AS startLine, end_line AS endLine
       FROM ingestion_warnings
       ORDER BY position
     `).all().map((warning) => Object.freeze(warning)));

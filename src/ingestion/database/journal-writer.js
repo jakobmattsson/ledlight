@@ -175,7 +175,7 @@ module.exports = ({
   }
 
   function writeJournalDatabase(databasePath, journal) {
-    const warnings = [];
+    const warnings = [...(journal.warnings || [])];
     const ignoredProperties = new Set();
     const valuationCommodity = valuationCommodityFromJournal(
       journal, warnings, ignoredProperties,
@@ -200,8 +200,9 @@ module.exports = ({
       migrateDatabase(database);
       const statements = prepareStatements(database);
       const insertWarning = database.prepare(`
-        INSERT INTO ingestion_warnings (position, code, message, source, line, column)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO ingestion_warnings
+          (position, code, message, source, line, column, start_line, end_line)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
       const replaceContents = database.transaction(() => {
         database.exec(`
@@ -251,6 +252,7 @@ module.exports = ({
         validation.warnings.forEach((warning, position) => {
           insertWarning.run(
             position, warning.code, warning.message, warning.source, warning.line, warning.column,
+            warning.startLine, warning.endLine,
           );
         });
 

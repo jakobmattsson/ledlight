@@ -9,6 +9,7 @@ module.exports = () => {
     MISSING_COMMODITY: 'MISSING_COMMODITY',
     MULTIPLE_DEFAULT_COMMODITIES: 'MULTIPLE_DEFAULT_COMMODITIES',
     MULTIPLE_IMPLICIT_POSTINGS: 'MULTIPLE_IMPLICIT_POSTINGS',
+    SYNTAX_ERROR: 'SYNTAX_ERROR',
     UNBALANCED_TRANSACTION: 'UNBALANCED_TRANSACTION',
   });
 
@@ -19,6 +20,8 @@ module.exports = () => {
       source: location.source,
       line: location.line,
       column: location.column,
+      startLine: location.startLine || location.line,
+      endLine: location.endLine || location.line,
     });
   }
 

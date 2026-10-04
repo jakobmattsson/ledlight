@@ -5,16 +5,49 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { errorCodes } = resolveRepositoryModule("src/core/public-errors.js");
-const { parse } = resolveRepositoryModule("src/ingestion/syntax/ledger-parser.js");
-const ohmParser = resolveRepositoryModule(
+const runtimeParser = resolveRepositoryModule("src/ingestion/syntax/ledger-parser.js");
+const parseRecovering = runtimeParser.parse;
+const parse = runtimeParser.$$private.parseStrict;
+const referenceParser = resolveRepositoryModule(
   "src/ingestion/syntax/reference/reference-parser.js",
 ).$$private;
+const ohmParser = { parse: referenceParser.parseStrict };
 
 function parseConformant(sourceText, source) {
-  const document = parse(sourceText, { source });
-  assert.deepEqual(document, ohmParser.parse(sourceText, { source }));
+  const document = parseRecovering(sourceText, { source });
+  assert.deepEqual(document, referenceParser.parse(sourceText, { source }));
   return document;
 }
+
+test('skips every malformed top-level block and continues parsing', () => {
+  const sourceText = `account Assets:Declared
+2024-01-01 Broken amount
+  Assets:Cash  nope SEK
+  Equity:Opening
+commodity SEK
+  format nonsense
+account Equity:Declared
+2024-01-02 Valid
+  Assets:Cash  5 SEK
+  Equity:Opening
+P 2024-99-01 FUND 10 SEK
+tag Imported
+`;
+
+  for (const parseDocument of [parseRecovering, referenceParser.parse]) {
+    const document = parseDocument(sourceText, { source: 'fixture.ledger' });
+    assert.deepEqual(document.entries.map((entry) => entry.type), [
+      'account', 'account', 'transaction', 'tag',
+    ]);
+    assert.deepEqual(document.warnings.map(({ code, source, startLine, endLine }) => ({
+      code, source, startLine, endLine,
+    })), [
+      { code: 'SYNTAX_ERROR', source: 'fixture.ledger', startLine: 2, endLine: 4 },
+      { code: 'SYNTAX_ERROR', source: 'fixture.ledger', startLine: 5, endLine: 6 },
+      { code: 'SYNTAX_ERROR', source: 'fixture.ledger', startLine: 11, endLine: 11 },
+    ]);
+  }
+});
 
 test('parses transactions without losing decimal precision', () => {
   const document = parseConformant(`2024-01-29 Investment ; imported

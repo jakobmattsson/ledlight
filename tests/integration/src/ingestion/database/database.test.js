@@ -267,7 +267,7 @@ test('detects source files added to and removed from an include glob', (t) => {
   assert.deepEqual(status.removed, [firstPath]);
 });
 
-test('rejects commodity-less resolved amounts before database insertion', (t) => {
+test('skips syntax-invalid transactions before database insertion', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -276,12 +276,19 @@ test('rejects commodity-less resolved amounts before database insertion', (t) =>
   Equity:Opening
 `);
 
-  assert.throws(
-    () => buildDatabase(databasePath, journalPath),
-    (error) => /journal\.ledger:2.*commodity/u.test(error.message) &&
-      !/SQLITE_CONSTRAINT/u.test(error.code || ''),
+  const result = buildDatabase(databasePath, journalPath);
+  assert.equal(result.transactions, 0);
+  assert.equal(result.warnings.length, 1);
+  assert.deepEqual(
+    {
+      code: result.warnings[0].code,
+      source: result.warnings[0].source,
+      startLine: result.warnings[0].startLine,
+      endLine: result.warnings[0].endLine,
+    },
+    { code: 'SYNTAX_ERROR', source: journalPath, startLine: 1, endLine: 3 },
   );
-  assert.equal(fs.existsSync(databasePath), false);
+  assert.equal(fs.existsSync(databasePath), true);
 });
 
 test('stores non-default commodity trades and reports invalid annotations as warnings', (t) => {
@@ -352,6 +359,8 @@ commodity EUR
     source: journalPath,
     line: 4,
     column: 3,
+    startLine: 4,
+    endLine: 4,
   }]);
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());

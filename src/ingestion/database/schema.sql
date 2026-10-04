@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS ingestion_warnings (
   message TEXT NOT NULL,
   source TEXT NOT NULL,
   line INTEGER NOT NULL,
-  column INTEGER NOT NULL
+  column INTEGER NOT NULL,
+  start_line INTEGER NOT NULL,
+  end_line INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS journal_entries (

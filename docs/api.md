@@ -50,8 +50,10 @@ warnings exist. Each warning is:
   code,    // stable ingestion-warning identifier
   message, // human-readable English description
   source,  // absolute journal source path
-  line,
+  line,    // exact warning or syntax-error location
   column,
+  startLine, // first line of the affected top-level block
+  endLine,   // last line of the affected top-level block
 }
 ```
 
@@ -60,6 +62,12 @@ when a current cache is reused. An entry that cannot be represented safely in
 the database is omitted while other entries remain queryable. Checks that do
 not prevent representation, including failed balance assertions and unbalanced
 transactions, retain the data and report a warning.
+
+Malformed or unsupported syntax produces a `SYNTAX_ERROR` warning. The parser
+omits the complete affected top-level block and resumes at the next top-level
+line. For example, an invalid posting omits its entire transaction rather than
+leaving a partial transaction in query results. Every omitted block produces
+its own warning, including blocks in included files.
 
 ## Reports
 
