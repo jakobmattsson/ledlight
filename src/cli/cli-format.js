@@ -3,12 +3,12 @@
 module.exports = ({
   decimal: {
     addDecimals,
-    compareDecimals,
-    divideDecimals,
     formatDecimal,
     formatDecimalFixed,
-    multiplyDecimals,
     parseDecimal,
+    compareDecimals,
+    divideDecimals,
+    multiplyDecimals,
   },
 }) => {
 
