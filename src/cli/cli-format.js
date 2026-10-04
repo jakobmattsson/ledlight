@@ -82,15 +82,19 @@ module.exports = ({
     return groupThousands(fallback);
   }
 
-  function formatCsv(rows, inValuationCommodity) {
-    const lines = ['account,amount,commodity'];
+  function formatCsv(rows, inValuationCommodity, groupBy) {
+    const hasAccounts = groupBy !== 'commodity';
+    const lines = [hasAccounts ? 'account,amount,commodity' : 'amount,commodity'];
     for (const row of displayRows(rows, inValuationCommodity)) {
-      lines.push([row.account, row.quantity, row.commodity].map(csvField).join(','));
+      const fields = hasAccounts
+        ? [row.account, row.quantity, row.commodity]
+        : [row.quantity, row.commodity];
+      lines.push(fields.map(csvField).join(','));
     }
     return `${lines.join('\n')}\n`;
   }
 
-  function formatHumanReadable(rows, inValuationCommodity, descriptions) {
+  function formatHumanReadable(rows, inValuationCommodity, descriptions, groupBy) {
     const formats = commodityFormats(descriptions);
     const reportRows = rows.map((row) => ({
       ...row,
@@ -101,6 +105,7 @@ module.exports = ({
         inValuationCommodity ? 2 : null,
       ),
     }));
+    const hasAccounts = groupBy !== 'commodity';
     const commodityWidth = Math.max(0, ...reportRows.map((row) => row.commodity.length));
     const amounts = reportRows.map((row) => {
       const declaredFormat = formats.get(row.commodity);
@@ -124,12 +129,12 @@ module.exports = ({
         : fraction === undefined
           ? ' '.repeat(fractionWidth + 1)
           : `${separator}${fraction.padEnd(fractionWidth)}`;
-      const amountColumn = `${integerColumn}${fractionColumn} ` +
-        row.commodity.padEnd(commodityWidth);
+      const commodity = hasAccounts ? row.commodity.padEnd(commodityWidth) : row.commodity;
+      const amountColumn = `${integerColumn}${fractionColumn} ${commodity}`;
       if (row.isTotal) {
         lines.push('-'.repeat(amountColumn.length));
       }
-      lines.push(`${amountColumn}  ${row.account}`);
+      lines.push(hasAccounts ? `${amountColumn}  ${row.account}` : amountColumn);
     });
 
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;

@@ -376,7 +376,7 @@ commodity EUR
   assert.equal(fs.existsSync(databasePath), true);
 });
 
-test('aggregate CLI builds stale databases but reuses current databases', (t) => {
+test('balance CLI builds stale databases but reuses current databases', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const cliPath = path.resolve(__dirname, '../../../../../src/cli/run.js');
@@ -391,7 +391,7 @@ account Equity:Opening
   const { databasePath } = pathsForJournal(journalPath);
 
   const first = execFileSync(process.execPath, [
-    cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
+    cliPath, 'balance', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
   ], { cwd: directory, encoding: 'utf8', env: process.env });
   assert.equal(first, '1 SEK  Assets:Cash,Main\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
@@ -408,7 +408,7 @@ account Equity:Opening
 `);
   const second = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:'],
+    [cliPath, 'balance', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:'],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(second, '     2.005 SEK  Assets:Cash,Main\n10,000     SEK  Assets:LongAccount\n');
@@ -416,7 +416,7 @@ account Equity:Opening
 
   const csv = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--csv'],
+    [cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--format', 'csv'],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
@@ -426,7 +426,7 @@ account Equity:Opening
 
   const roundedCsv = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--csv'],
+    [cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--value', '--format', 'csv'],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
@@ -436,7 +436,7 @@ account Equity:Opening
 
   const roundedHumanReadable = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value'],
+    [cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--value'],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
@@ -446,7 +446,7 @@ account Equity:Opening
 
   const invertedHumanReadable = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--invert'],
+    [cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--value', '--invert'],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
@@ -456,7 +456,7 @@ account Equity:Opening
 
   const invertedCsv = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--invert', '--csv'],
+    [cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--invert', '--format', 'csv'],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(

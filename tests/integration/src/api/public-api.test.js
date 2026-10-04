@@ -86,7 +86,6 @@ test('loads SQLite only when a journal is opened', (t) => {
     'every journal operation must have a CLI command',
   );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
-  assert.deepEqual(journal.accountBalances({ accounts: ['Assets:Cash'] }), []);
   assert.deepEqual(journal.accountPostings({ accounts: ['Assets:Cash'] }), []);
   assert.deepEqual(journal.aggregateReport(), []);
   assert.deepEqual(journal.balanceHistoryReport(), []);
@@ -159,7 +158,7 @@ account Equity:Opening
   );
 
   const cli = spawnSync(process.execPath, [
-    cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--json',
+    cliPath, 'balance', '--file', journalPath, '--accounts', 'Assets:', '--format', 'json',
   ], { cwd: directory, encoding: 'utf8', env: process.env });
   assert.equal(cli.status, 0);
   assert.deepEqual(JSON.parse(cli.stdout), [

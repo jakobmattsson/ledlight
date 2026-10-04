@@ -110,11 +110,10 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `account-balances --file PATH` | `openJournal(journalPath).accountBalances(options)` | Matching-account balances |
 | `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
-| `aggregate --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
+| `balance --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
-| `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account at a point in time |
+| `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
@@ -126,16 +125,15 @@ underlying result.
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `unrealized-gains --total` | None | Append a CLI-calculated total gain row |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
 | `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
-| `unrealized-gains --at DATE` | `options.at` | Position and valuation date |
+| `unrealized-gains --at DATE` | `options.at` | Inclusive position and valuation snapshot |
 | `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
+| `balance --group-by DIMENSION` | `options.groupBy` | Group by `account` or `commodity` |
 | `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
@@ -150,6 +148,9 @@ underlying result.
 | `tags --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `commodities --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `prices --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `balance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `unrealized-gains --total` | None | Append a presentation-only sum of all gain rows |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |
@@ -162,21 +163,12 @@ Commands without a specialized human-readable representation emit JSON.
 select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction, and all pagination options are optional and default to
 `--order oldest --page 1 --page-size 100`.
-`aggregate`, `balance-history`, and `investment-performance` accept `--json`
-when the complete API result is needed; this is required to retain fields such
-as `valuationValue` and `factoredAmount`. `unrealized-gains` selects the same
-encoding with `--format json`.
+The `balance` and `unrealized-gains` commands use `--format json` when the
+complete API result is needed. Other report commands use `--json`; this is
+required to retain fields such as `valuationValue` and `factoredAmount`.
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
-
-Human-readable report rows that pair a numeric value with an account hierarchy
-put the value first, right-align it by its decimal position, and then print the
-commodity and a left-aligned account name. This makes magnitudes easy to compare
-while keeping account prefixes aligned for hierarchical scanning. New report
-formatters should follow this amount-first convention when accounts are the
-primary labels. Reports whose primary dimension is different, such as a dated
-balance history, keep that dimension first.
 
 Every command accepts the CLI-only `--ledger` option. It skips journal loading
 and query execution and prints exactly one line. The basic text variants of
@@ -417,24 +409,31 @@ const valuedIncomeStatement = journal.aggregateReport({
 });
 ```
 
+Set `groupBy: 'commodity'` to combine all matching accounts into one row per
+commodity. Commodity grouping retains zero balances, matching the behavior of
+the former dedicated `accountBalances` query.
+
 The command-line equivalent is:
 
 ```console
-ledlight aggregate --file main.ledger --to 2024-12-31
-ledlight aggregate --file main.ledger --to 2024-12-31 --date-basis transaction
-ledlight aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 \
+ledlight balance --file main.ledger --to 2024-12-31
+ledlight balance --file main.ledger --to 2024-12-31 --date-basis transaction
+ledlight balance --file main.ledger --from 2024-01-01 --to 2024-12-31 \
   --accounts "^Income:" --accounts "^Expenses:" --value --invert
-ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --csv
+ledlight balance --file main.ledger --to 2024-12-31 --accounts "^Assets:" --format csv
+ledlight balance --file main.ledger --accounts "^Assets:" \
+  --group-by commodity --format json
 ```
 
-By default, the command prints decimal-aligned amounts followed by a commodity
-column and left-aligned account names. Human-readable output uses each
+By default, the command prints right-aligned amounts and commodities followed
+by left-aligned account names. Human-readable output uses each
 commodity's declared `format` precision and separators. With `--value`, it
 converts every amount to the journal's default commodity and ends with an exact
-total. `--csv` omits the total and instead prints RFC-style escaped CSV with the
-columns `account,amount,commodity`. CSV uses canonical, ungrouped decimal values
-and does not apply commodity display separators. With `--value`, CSV amounts
-retain the existing exact two-decimal rounding behavior.
+total. `--format csv` omits the total and instead prints RFC-style escaped CSV
+with the columns `account,amount,commodity`. Commodity grouping omits the
+`account` column. CSV uses canonical, ungrouped decimal values and does not
+apply commodity display separators. With `--value`, CSV amounts retain the
+existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the human-readable total.
 
 The same behavior is available directly through `journal.aggregateReport`: set
@@ -444,7 +443,13 @@ the quantities have one common commodity. The CLI requests this total for
 human-readable `--value` output and formats the row with a separator; CSV output
 uses the account rows only.
 
-Before every CLI aggregate report, Ledlight compares the current source manifest
+Human-readable reports that pair numeric results with hierarchical labels put
+the numeric column first and right-align it, then put the label column second
+and left-align it. This makes magnitudes easy to compare while preserving the
+natural reading order of account hierarchies. New reports should follow this
+layout when they have the same shape.
+
+Before every CLI balance report, Ledlight compares the current source manifest
 with `source_files`. This scan follows include directives and computes file
 hashes, but does not parse transactions. If the manifest has changed, Ledlight
 parses the journal and rebuilds the database before running the report. If it
@@ -489,26 +494,30 @@ The SQLite connection registers `decimal_sum`, `decimal_mul`, and
 `decimal_cmp`. `decimal_sum` is used by both report variants, so values are
 never converted to binary floating point during aggregation or valuation.
 
-## Unrealized gain
+## Unrealized gains
 
 `unrealizedGains` and the `unrealized-gains` CLI command calculate the market
-value of each open non-default commodity position minus its remaining lot cost.
-Results are grouped by account, expressed in the journal default commodity,
-and omit zero gains. Losses are returned as negative quantities.
+value of each open non-default commodity position minus its remaining lot
+cost. Results are grouped by account, expressed in the journal default
+commodity, and omit zero gains. Losses are returned as negative quantities.
 
 ```console
 ledlight unrealized-gains --file main.ledger
 ledlight unrealized-gains --file main.ledger --at 2024-12-31 --accounts "^Assets:Broker"
-ledlight unrealized-gains --file main.ledger --format csv --total
+ledlight unrealized-gains --file main.ledger --format csv
+ledlight unrealized-gains --file main.ledger --total
 ```
 
-The report accepts `at`, repeated `accounts`, and `date-basis`. `at` is the
-inclusive position and valuation date. It uses the latest valuation price on
-or before `at`, or the latest available price when `at` is omitted. Realized
-quantities and their lot costs cancel when a lot is sold, leaving only
-unrealized gains or losses on the remaining position. The CLI-only `--total`
-option appends an exact sum of all returned gain rows in text, JSON, or CSV
-output without changing the `unrealizedGains` API.
+The API accepts `at`, `accounts`, and `dateBasis`. The CLI exposes these as
+`--at`, repeated `--accounts`, and `--date-basis`. It uses positions and the
+latest valuation prices on or before `at`, or the complete journal and latest
+available prices when `at` is omitted. Realized quantities and their lot costs
+cancel when a lot is sold, leaving only unrealized gains or losses on the
+remaining position.
+
+The CLI-only `--format` option replaces the former `--csv` and `--json` flags.
+`--total` appends a presentation row containing the exact sum of all account
+gains; neither option is part of the API contract.
 
 ## Balance history
 
@@ -548,7 +557,7 @@ Accounts without a matching factor use `1`. If patterns overlap, the first
 matching factor applies.
 
 The command prints the complete history by default. `--from`, `--to`,
-`--accounts`, `--invert`, and `--csv` work as for the aggregate report:
+`--accounts` and `--invert` work as for the balance report; `--csv` selects CSV:
 
 ```console
 ledlight balance-history --file main.ledger \
@@ -577,8 +586,8 @@ The CLI's `--invert` option maps directly to the public report option
 
 ## Consumer integration
 
-Ledlight's aggregate command is a general exact-query interface over a journal
-journal. Consumer applications own account selection, derived-account rules,
+Ledlight's balance command is a general exact-query interface over a journal.
+Consumer applications own account selection, derived-account rules,
 presentation, and compatibility with their existing commands. Keeping those
 policies outside Ledlight lets applications such as Fonden use the same parsing,
 storage, and reporting primitives without coupling Ledlight to one accounting

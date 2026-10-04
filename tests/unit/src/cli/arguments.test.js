@@ -14,9 +14,8 @@ const { apiCommands, ledgerCommand, parseArguments, usage } = argumentsModule;
 
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
-    accountBalances: 'account-balances',
     accountPostings: 'account-postings',
-    aggregateReport: 'aggregate',
+    aggregateReport: 'balance',
     balanceHistoryReport: 'balance-history',
     unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
@@ -59,7 +58,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     inputs: ['journalPath', 'accounts', 'id', 'order', 'page', 'pageSize'],
     outputInputs: ['format'],
   });
-  assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
+  assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['format']);
   assert.deepEqual(
     argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
     ['format', 'total'],
@@ -112,9 +111,9 @@ test('parses listing output formats without requiring query parameters', () => {
   }
 });
 
-test('parses aggregate report options and output flags', () => {
+test('parses balance report options and output format', () => {
   assert.deepEqual(parseArguments([
-    'aggregate',
+    'balance',
     '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
@@ -122,9 +121,10 @@ test('parses aggregate report options and output flags', () => {
     '--accounts', 'Liabilities:',
     '--value',
     '--invert',
-    '--csv',
+    '--group-by', 'commodity',
+    '--format', 'csv',
   ]), {
-    command: 'aggregate',
+    command: 'balance',
     journalPath: '/journal',
     reportOptions: {
       from: '2024-01-01',
@@ -132,17 +132,18 @@ test('parses aggregate report options and output flags', () => {
       accounts: ['Assets:', 'Liabilities:'],
       inValuationCommodity: true,
       invert: true,
+      groupBy: 'commodity',
     },
-    output: { csv: true, json: false },
+    output: { format: 'csv' },
   });
 });
 
-test('uses aggregate defaults when no options are supplied', () => {
-  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal']), {
-    command: 'aggregate',
+test('uses balance defaults when no options are supplied', () => {
+  assert.deepEqual(parseArguments(['balance', '--file', '/journal']), {
+    command: 'balance',
     journalPath: '/journal',
     reportOptions: { accounts: [] },
-    output: { csv: false, json: false },
+    output: { format: 'text' },
   });
 });
 
@@ -180,11 +181,11 @@ test('uses the CLI configuration file argument when --file is omitted', () => {
     project,
   });
 
-  assert.deepEqual(configuredArguments.parseArguments(['aggregate']), {
-    command: 'aggregate',
+  assert.deepEqual(configuredArguments.parseArguments(['balance']), {
+    command: 'balance',
     journalPath: '/configured-journal',
     reportOptions: { accounts: [] },
-    output: { csv: false, json: false },
+    output: { format: 'text' },
   });
 });
 
@@ -213,7 +214,7 @@ test('parses balance history options', () => {
   assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
 });
 
-test('parses unrealized gain options and output flags', () => {
+test('parses unrealized gains options and CLI-only output controls', () => {
   assert.deepEqual(parseArguments([
     'unrealized-gains',
     '--file', '/journal',
@@ -238,29 +239,20 @@ test('parses unrealized gain options and output flags', () => {
     reportOptions: { accounts: [] },
     output: { format: 'text', total: false },
   });
-  assert.deepEqual(parseArguments([
-    'unrealized-gains', '--file', '/journal', '--format', 'json',
-  ]).output, { format: 'json', total: false });
+  assert.deepEqual(
+    parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'json']).output,
+    { format: 'json', total: false },
+  );
   assert.throws(
     () => parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'yaml']),
     /Allowed choices are text, json, csv/u,
   );
-  assert.throws(
-    () => parseArguments(['unrealized-gains', '--file', '/journal', '--csv']),
-    /unknown option '--csv'/u,
-  );
-  assert.throws(
-    () => parseArguments(['unrealized-gains', '--file', '/journal', '--json']),
-    /unknown option '--json'/u,
-  );
-  assert.throws(
-    () => parseArguments(['unrealized-gains', '--file', '/journal', '--from', '2024-01-01']),
-    /unknown option '--from'/u,
-  );
-  assert.throws(
-    () => parseArguments(['unrealized-gains', '--file', '/journal', '--to', '2024-01-01']),
-    /unknown option '--to'/u,
-  );
+  for (const option of ['--csv', '--json', '--from', '--to']) {
+    assert.throws(
+      () => parseArguments(['unrealized-gains', '--file', '/journal', option, '2024-01-01']),
+      /Usage:/u,
+    );
+  }
 });
 
 test('parses investment performance selections and JSON output', () => {
@@ -296,18 +288,18 @@ test('parses investment performance selections and JSON output', () => {
 
 test('maps every remaining API parameter to CLI arguments', () => {
   assert.deepEqual(parseArguments([
-    'aggregate', '--file', '/journal', '--with-valuation-value', '--json',
+    'balance', '--file', '/journal', '--with-valuation-value', '--format', 'json',
   ]), {
-    command: 'aggregate',
+    command: 'balance',
     journalPath: '/journal',
     reportOptions: { accounts: [], withValuationValue: true },
-    output: { csv: false, json: true },
+    output: { format: 'json' },
   });
-  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal', '--value', '--include-total']), {
-    command: 'aggregate',
+  assert.deepEqual(parseArguments(['balance', '--file', '/journal', '--value', '--include-total']), {
+    command: 'balance',
     journalPath: '/journal',
     reportOptions: { accounts: [], inValuationCommodity: true, includeTotal: true },
-    output: { csv: false, json: false },
+    output: { format: 'text' },
   });
   assert.deepEqual(parseArguments([
     'balance-history', '--file', '/journal', '--account-factor', 'Assets:Fund=0.7',
@@ -321,10 +313,12 @@ test('maps every remaining API parameter to CLI arguments', () => {
     },
     output: { csv: false, json: true },
   });
-  assert.deepEqual(parseArguments(['account-balances', '--file', '/journal', '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank', '--to', '2024-12-31']), {
-    command: 'account-balances', journalPath: '/journal',
-    options: { accounts: ['Assets:Cash', 'Assets:Bank'], to: '2024-12-31' },
-  });
+  assert.throws(
+    () => parseArguments([
+      'balance', '--file', '/journal', '--format', 'yaml',
+    ]),
+    /Allowed choices are text, json, csv/u,
+  );
   assert.deepEqual(parseArguments(['account-postings', '--file', '/journal', '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank', '--after', '2024-01-01']), {
     command: 'account-postings', journalPath: '/journal',
     options: { accounts: ['Assets:Cash', 'Assets:Bank'], after: '2024-01-01' },
@@ -371,14 +365,16 @@ test('maps every remaining API parameter to CLI arguments', () => {
 test('rejects missing commands, values, duplicate dates, and unknown options', () => {
   const invalidArguments = [
     [],
-    ['balance'],
+    ['account-balances'],
+    ['aggregate'],
     ['ledger-transactions', '--file', '/journal'],
-    ['aggregate', '--from'],
-    ['aggregate', '--from', '--value'],
-    ['aggregate', '--to', '2024-01-01', '--to', '2024-02-01'],
-    ['aggregate', '--date-basis', 'other'],
-    ['aggregate', '--date-basis', 'posting', '--date-basis', 'transaction'],
-    ['aggregate', '--unknown'],
+    ['balance', '--from'],
+    ['balance', '--from', '--value'],
+    ['balance', '--to', '2024-01-01', '--to', '2024-02-01'],
+    ['balance', '--date-basis', 'other'],
+    ['balance', '--date-basis', 'posting', '--date-basis', 'transaction'],
+    ['balance', '--group-by', 'currency'],
+    ['balance', '--unknown'],
     ['investment-performance', '--commodities'],
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
@@ -402,7 +398,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage(),
-    /misc:\n {2}account-balances\s+show balances for matching accounts[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /misc:[\s\S]* {2}balance\s+show account balances[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\|print\s+show a page of transactions/u);
@@ -411,25 +407,25 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <pattern>/u);
   assert.match(usage(), /--version[\s\S]*--help/u);
-  assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
+  assert.match(usage('balance'), /^Usage: ledlight balance --file <path> \[options\]/u);
   assert.match(usage('print'), /^Usage: ledlight transactions\|print --file <path> \[options\]/u);
   assert.match(usage('print'), /--accounts <pattern>.*repeatable/u);
-  assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
-  assert.match(usage('aggregate'), /--accounts <pattern>.*repeatable/u);
+  assert.match(usage('balance'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
+  assert.match(usage('balance'), /--accounts <pattern>.*repeatable/u);
   assert.match(
-    usage('account-balances'),
-    /^Usage: ledlight account-balances --file <path> --accounts <pattern> \[options\]/u,
+    usage('balance'),
+    /^Usage: ledlight balance --file <path> \[options\]/u,
   );
   assert.match(
-    usage('account-balances'),
-    /--accounts <pattern>\s+\(REQUIRED\) select matching accounts \(repeatable\)[\s\S]*--to <date>[\s\S]*--help/u,
+    usage('balance'),
+    /--accounts <pattern>[\s\S]*--group-by <dimension>[\s\S]*--format <format>[\s\S]*--help/u,
   );
-  assert.match(usage('aggregate'), /--help\s+show command help/u);
+  assert.match(usage('balance'), /--help\s+show command help/u);
   assert.match(
-    usage('aggregate'),
+    usage('balance'),
     /--ledger\s+show the equivalent standalone Ledger command/u,
   );
-  assert.doesNotMatch(usage('aggregate'), /-h, --help/u);
+  assert.doesNotMatch(usage('balance'), /-h, --help/u);
   assert.doesNotMatch(usage(), /-V, --version/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
 });

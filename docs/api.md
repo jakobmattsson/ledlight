@@ -94,14 +94,19 @@ Options:
 | `to` | string | unbounded | Inclusive end date and valuation date |
 | `accounts` | string[] | `[]` | Account patterns combined with OR |
 | `dateBasis` | `posting` or `transaction` | `posting` | Date used for filtering |
+| `groupBy` | `account` or `commodity` | `account` | Result grouping dimension |
 | `inValuationCommodity` | boolean | `false` | Convert and combine rows in the journal default commodity |
 | `withValuationValue` | boolean | `false` | Preserve commodity rows and add `valuationValue` |
 | `invert` | boolean | `false` | Negate quantities and valuation values |
 | `includeTotal` | boolean | `false` | Append an exact total; requires `inValuationCommodity` |
 
 `inValuationCommodity` and `withValuationValue` are mutually exclusive.
-Ordinary rows are `{ account, quantity, commodity }`, sorted by account and
-commodity. `withValuationValue` adds an exact `valuationValue`. A total row is
+`includeTotal` is unavailable with commodity grouping because the grouped
+valuation result is already a total.
+Account-grouped rows are `{ account, quantity, commodity }`, sorted by account
+and commodity. Commodity-grouped rows omit `account`, combine all matching
+accounts, and retain exact zero balances. `withValuationValue` adds an exact
+`valuationValue`. A total row is
 `{ account: 'Total', quantity, commodity, isTotal: true }`.
 
 ### `journal.balanceHistoryReport(options)`
@@ -131,10 +136,11 @@ grouped by account and expressed as exact decimal strings in the journal
 default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
-Options are `at`, `accounts`, and `dateBasis`. `at` is the inclusive position
-and valuation date. `accounts` contains account patterns, and `dateBasis` is
-`posting` (the default) or `transaction`. When `at` is omitted, the latest
-available journal price is used.
+Options are `at`, `accounts`, and `dateBasis`. `at` is the inclusive snapshot
+date for both positions and valuation prices, `accounts` contains account
+patterns, and `dateBasis` is `posting` (the default) or `transaction`. When
+`at` is omitted, all positions and the latest available journal prices are
+used.
 
 ### `journal.investmentPerformance(options)`
 
@@ -168,12 +174,6 @@ The precision boundary for these numeric monetary fields is tracked in the
 improvement backlog.
 
 ## Account operations
-
-### `journal.accountBalances({ accounts, to })`
-
-Returns `{ quantity, commodity }` rows for matching accounts through the
-optional inclusive date. `accounts` is a non-empty array of account patterns;
-matching any pattern includes the account. Rows are sorted by commodity.
 
 ### `journal.accountPostings({ accounts, after })`
 
@@ -311,8 +311,9 @@ PATH`, corresponding to the `journalPath` passed to `openJournal()`.
 Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the
 API call or its result. Commands without an established text format return the
-API result as JSON. The report commands preserve their human-readable formats
-and accept `--json` to return every API field. API option names use kebab case
+API result as JSON. The report commands preserve their human-readable formats.
+`balance` and `unrealized-gains` accept `--format json`; the other reports
+accept `--json` to return every API field. API option names use kebab case
 on the command line; for example, `withValuationValue` is
 `--with-valuation-value`, `includeTotal` is `--include-total`, and repeated
 `--account-factor ACCOUNT=FACTOR` values form the `accountFactors` object.

@@ -35,18 +35,6 @@ const rowsWithTotal = [
   },
 ];
 
-test('appends an exact CLI total without changing empty results', () => {
-  assert.deepEqual(appendTotal([
-    { account: 'Assets:One', quantity: '0.1', commodity: 'SEK' },
-    { account: 'Assets:Two', quantity: '0.2', commodity: 'SEK' },
-  ]), [
-    { account: 'Assets:One', quantity: '0.1', commodity: 'SEK' },
-    { account: 'Assets:Two', quantity: '0.2', commodity: 'SEK' },
-    { account: 'Total', quantity: '0.3', commodity: 'SEK', isTotal: true },
-  ]);
-  assert.deepEqual(appendTotal([]), []);
-});
-
 test('formats grouped warnings for a terminal', () => {
   assert.equal(formatWarnings([]), '');
   assert.equal(formatWarnings([{
@@ -80,7 +68,7 @@ test('formats RFC-style CSV and exact valuation rounding', () => {
   assert.equal(formatCsv([], false), 'account,amount,commodity\n');
 });
 
-test('puts aligned amounts before left-aligned accounts and uses an English total label', () => {
+test('puts aligned amounts before left-aligned accounts', () => {
   assert.equal(
     formatHumanReadable(rowsWithTotal, true),
     '     2.01 SEK  Assets:Cash,Main\n' +
@@ -89,6 +77,17 @@ test('puts aligned amounts before left-aligned accounts and uses an English tota
     '10,002.01 SEK  Total\n',
   );
   assert.equal(formatHumanReadable([], true), '');
+  assert.equal(
+    formatHumanReadable([
+      { quantity: '1234.5', commodity: 'SEK' },
+      { quantity: '2', commodity: 'FUND' },
+    ], false, [{ commodity: 'SEK', format: '1,000.00 SEK' }], 'commodity'),
+    '1,234.50 SEK\n    2    FUND\n',
+  );
+  assert.equal(
+    formatCsv([{ quantity: '1234.5', commodity: 'SEK' }], false, 'commodity'),
+    'amount,commodity\n1234.5,SEK\n',
+  );
 });
 
 test('applies declared commodity precision and separators only to human-readable output', () => {
@@ -111,6 +110,19 @@ test('applies declared commodity precision and separators only to human-readable
     formatCsv([{ account: 'Assets:Euros', quantity: '1234.5', commodity: 'EUR' }], false),
     'account,amount,commodity\nAssets:Euros,1234.5,EUR\n',
   );
+});
+
+test('appends an exact total without mutating report rows', () => {
+  const input = [
+    { account: 'Assets:A', quantity: '0.1', commodity: 'SEK' },
+    { account: 'Assets:B', quantity: '0.2', commodity: 'SEK' },
+  ];
+  assert.deepEqual(appendTotal(input), [
+    ...input,
+    { account: 'Total', quantity: '0.3', commodity: 'SEK', isTotal: true },
+  ]);
+  assert.equal(input.length, 2);
+  assert.deepEqual(appendTotal([]), []);
 });
 
 test('formats balance history', () => {
