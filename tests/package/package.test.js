@@ -47,7 +47,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       'index.js',
       'package.json',
       'scripts/compare-ledger.js',
-      'scripts/ledger-compatibility-matrix.js',
+      'scripts/ledger-compatibility-matrix.yaml',
       'src/cli/run.js',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);

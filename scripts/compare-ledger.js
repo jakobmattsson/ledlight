@@ -5,10 +5,20 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const matrix = require('./ledger-compatibility-matrix');
+const YAML = require('yaml');
 
 const repositoryRoot = path.resolve(__dirname, '..');
 const ledlightCli = path.join(repositoryRoot, 'src/cli/run.js');
+const matrixPath = path.join(__dirname, 'ledger-compatibility-matrix.yaml');
+
+function loadMatrix() {
+  const { baseline, commands } = YAML.parse(fs.readFileSync(matrixPath, 'utf8'));
+  return Object.entries(commands).map(([id, command]) => [
+    id,
+    `ledlight ${command.ledlight} ${baseline.ledlight}`,
+    `ledger ${baseline.ledger} ${command.ledger}`,
+  ]);
+}
 
 function usage() {
   return `Usage: npm run compare:ledger -- --file <journal> [options]
@@ -59,7 +69,7 @@ function markdownCell(value) {
 function printMatrix() {
   process.stdout.write('| Case | Ledlight | Ledger |\n');
   process.stdout.write('| --- | --- | --- |\n');
-  for (const [id, ledlightCommand, ledgerCommand] of matrix) {
+  for (const [id, ledlightCommand, ledgerCommand] of loadMatrix()) {
     process.stdout.write(
       `| \`${id}\` | ${markdownCell(ledlightCommand)} | ` +
       `${markdownCell(ledgerCommand)} |\n`,
@@ -87,12 +97,11 @@ function run(command, options) {
 }
 
 function selectedCases(names) {
-  const runnable = matrix.filter(([, , ledgerCommand]) => ledgerCommand !== null);
-  if (names.length === 0) return runnable;
+  const matrix = loadMatrix();
+  if (names.length === 0) return matrix;
   return names.map((name) => {
     const entry = matrix.find(([id]) => id === name);
     if (!entry) throw new Error(`Unknown case ${JSON.stringify(name)}; use --list to see the matrix`);
-    if (entry[2] === null) throw new Error(`Case ${JSON.stringify(name)} has no exact Ledger equivalent`);
     return entry;
   });
 }

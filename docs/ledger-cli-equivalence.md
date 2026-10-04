@@ -34,8 +34,8 @@ Run every verified row against a journal:
 npm run compare:ledger -- --file /path/to/main.ledger
 ```
 
-Run one or more rows, select another Ledger executable, or print the
-machine-readable script's complete matrix as a Markdown table:
+Run one or more rows, select another Ledger executable, or print the runnable
+matrix as a Markdown table:
 
 ```console
 npm run compare:ledger -- --file main.ledger --case accounts --case prices
@@ -50,5 +50,7 @@ balance and unrealized-gain compatibility using normalized result rows; those
 are deliberately not presented as exact CLI equivalents here.
 
 The executable matrix lives in
-`scripts/ledger-compatibility-matrix.js`. Add a row there when another
+`scripts/ledger-compatibility-matrix.yaml`. Its `baseline` values contain the
+arguments shared by every command, while each entry under `commands` contains
+only the command-specific parts. Add a command there when another
 equivalence becomes runnable, and update this overview at the same time.
