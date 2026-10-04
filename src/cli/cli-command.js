@@ -3,7 +3,7 @@
 module.exports = ({
   project,
   packageMetadata: { version },
-  cliArguments: { parseArguments, usage },
+  cliArguments: { ledgerCommand, parseArguments, usage },
   cliFormat: {
     formatCsv,
     formatBalanceHistoryCsv,
@@ -106,6 +106,7 @@ module.exports = ({
       return `${usage(arguments_[0])}\n`;
     }
     const parsed = parseArguments(arguments_);
+    if (parsed.ledger) return `${ledgerCommand(parsed)}\n`;
     return ['aggregate', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
       ? runReport(parsed)
       : runJsonCommand(parsed);

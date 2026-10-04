@@ -280,3 +280,39 @@ test('collects ingestion warnings before invoking a query', () => {
   );
   assert.deepEqual(calls, ['warnings', 'query']);
 });
+
+test('--ledger never opens a journal and is available on every command', () => {
+  const { runReportCommand } = createCommand({
+    project: { openJournal: () => { throw new Error('must not open a journal'); } },
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
+  const commands = [
+    ['accounts'],
+    ['tags'],
+    ['commodities'],
+    ['prices'],
+    ['account-balances', '--account', 'Assets:Cash'],
+    ['account-postings', '--account', 'Assets:Cash'],
+    ['account-transactions', '--account', 'Assets:Cash'],
+    ['commodity-descriptions'],
+    ['ledger-transactions'],
+    ['print'],
+    ['reconciliation-entries', '--account', 'Assets:Cash'],
+    ['valuation-rate', '--commodity', 'USD'],
+    ['aggregate'],
+    ['balance-history'],
+    ['gain'],
+    ['investment-performance'],
+  ];
+
+  for (const arguments_ of commands) {
+    const output = runReportCommand([...arguments_, '--file', '/journal', '--ledger']);
+    if (['accounts', 'ledger-transactions', 'print'].includes(arguments_[0])) {
+      assert.match(output, /^ledger --args-only --file \/journal (?:accounts|print)\n$/u);
+    } else {
+      assert.equal(output, 'No ledger equivalent command exists\n');
+    }
+  }
+});
