@@ -167,6 +167,23 @@ test('the configured Ledger CLI is available', () => {
   assert.match(execFileSync(ledgerBinary, ['--version'], { encoding: 'utf8' }), /^Ledger 3\./u);
 });
 
+test('ledger-accounts defaults to the exact Ledger accounts output', (t) => {
+  const projectDirectory = temporaryProject(t, 'basic');
+  const journalPath = path.join(projectDirectory, 'journal.ledger');
+  const ledgerOutput = execFileSync(ledgerBinary, [
+    '--args-only', '--file', journalPath, 'accounts',
+  ], { cwd: projectDirectory, encoding: 'utf8' });
+  const ledlightOutput = execFileSync(process.execPath, [
+    cliPath, 'ledger-accounts', '--file', journalPath,
+  ], {
+    cwd: projectDirectory,
+    encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
+  });
+
+  assert.equal(ledlightOutput, ledgerOutput);
+});
+
 for (const scenario of scenarios) {
   test(`Ledlight and Ledger produce the same ${scenario.name}`, (t) => {
     const projectDirectory = temporaryProject(t, scenario.fixture);

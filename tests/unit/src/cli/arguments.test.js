@@ -46,6 +46,36 @@ test('fails when a locally declared API input has no actual CLI option', () => {
   );
 });
 
+test('tracks API inputs separately from CLI-only output inputs', () => {
+  assert.deepEqual(argumentsModule.apiInputCoverage.ledgerAccounts, {
+    command: 'ledger-accounts',
+    inputs: ['journalPath'],
+    outputInputs: ['details', 'format'],
+  });
+  assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
+});
+
+test('parses ledger account output options without adding API options', () => {
+  assert.deepEqual(parseArguments(['ledger-accounts', '--file', '/journal']), {
+    command: 'ledger-accounts',
+    journalPath: '/journal',
+    output: { details: false, format: 'text' },
+  });
+  assert.deepEqual(parseArguments([
+    'ledger-accounts', '--file', '/journal', '--details', '--format', 'csv',
+  ]), {
+    command: 'ledger-accounts',
+    journalPath: '/journal',
+    output: { details: true, format: 'csv' },
+  });
+  assert.throws(
+    () => parseArguments(['ledger-accounts', '--file', '/journal', '--format', 'yaml']),
+    /Allowed choices are text, json, csv/u,
+  );
+  assert.match(usage('ledger-accounts'), /--details\s+include comments and transaction counts/u);
+  assert.match(usage('ledger-accounts'), /--format <format>\s+select the output format/u);
+});
+
 test('parses aggregate report options and output flags', () => {
   assert.deepEqual(parseArguments([
     'aggregate',
