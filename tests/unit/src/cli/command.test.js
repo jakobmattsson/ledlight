@@ -310,7 +310,7 @@ test('--ledger never opens a journal and is available on every command', () => {
   for (const arguments_ of commands) {
     const output = runReportCommand([...arguments_, '--file', '/journal', '--ledger']);
     if (['accounts', 'transactions', 'print'].includes(arguments_[0])) {
-      assert.match(output, /^ledger --args-only --file \/journal (?:accounts|print)\n$/u);
+      assert.match(output, /^ledger --args-only --no-pager --file \/journal (?:accounts|print)\n$/u);
     } else {
       assert.equal(output, 'No ledger equivalent command exists\n');
     }

@@ -430,7 +430,7 @@ module.exports = ({
     return `'${value.replaceAll("'", "'\\''")}'`;
   }
   function ledgerCommand(parsed) {
-    const prefix = `ledger --args-only --file ${shellArgument(parsed.journalPath)}`;
+    const prefix = `ledger --args-only --no-pager --file ${shellArgument(parsed.journalPath)}`;
     if (parsed.command === 'accounts' &&
         !parsed.output.details && parsed.output.format === 'text') {
       return `${prefix} accounts`;

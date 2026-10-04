@@ -149,11 +149,11 @@ test('parses --ledger as a CLI-only mode and renders supported base commands', (
   });
   assert.equal(
     ledgerCommand(accounts),
-    "ledger --args-only --file '/journals/O'\\''Brien books.ledger' accounts",
+    "ledger --args-only --no-pager --file '/journals/O'\\''Brien books.ledger' accounts",
   );
 
   const print = parseArguments(['print', '--file', '/journal', '--ledger']);
-  assert.equal(ledgerCommand(print), 'ledger --args-only --file /journal print');
+  assert.equal(ledgerCommand(print), 'ledger --args-only --no-pager --file /journal print');
   assert.equal(
     ledgerCommand(parseArguments([
       'transactions', '--file', '/journal', '--account', 'Assets:Cash', '--ledger',
