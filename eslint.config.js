@@ -17,6 +17,7 @@ module.exports = [
       },
     },
     rules: {
+      curly: ["error", "multi-line"],
       indent: ["error", 2, { SwitchCase: 1 }],
       "no-restricted-syntax": [
         "error",
