@@ -120,6 +120,7 @@ module.exports = ({
       'commodityDescriptions',
     );
     addJournal(commodityDescriptions);
+
     const ledgerTransaction = registerCommand(
       program.command('ledger-transaction').description('show one transaction'),
       'ledgerTransaction',
