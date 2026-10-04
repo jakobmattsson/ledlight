@@ -136,6 +136,13 @@ Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
 
+The CLI reads the first `.ledlightrc` found at `~/.ledlightrc` or
+`./.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
+using the same form as Ledger's initialization file; blank lines and lines
+beginning with `;` are ignored. An explicit command-line `--file` takes
+precedence. This is CLI-only configuration: `openJournal(journalPath)` always
+uses its argument directly and never reads `.ledlightrc`.
+
 Each report and query module owns a strict Zod schema beside its execution
 function and returns both from its module factory. Public calls are parsed by
 that schema before report logic runs. The application layer collects schema keys,
@@ -257,9 +264,10 @@ dependency on Ohm.
 ## SQLite database
 
 SQLite is the default storage engine. The root journal is supplied directly to
-the API or through the CLI's required `--file` option; Ledlight does not read
-`.ledgerrc`. The database lives under the operating system's application cache
-directory as `ledlight/journals/<sha256>/ledger.sqlite`, where the hash is
+the API or through the CLI's `--file` option, either explicitly or from
+`.ledlightrc`; Ledlight does not read `.ledgerrc`. The database lives under the
+operating system's application cache directory as
+`ledlight/journals/<sha256>/ledger.sqlite`, where the hash is
 derived from the canonical absolute journal path. `LEDLIGHT_CACHE_HOME` can
 override the Ledlight cache root. Rebuilding the database replaces its contents
 in one transaction. Because the database is a reproducible cache, an older

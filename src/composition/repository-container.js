@@ -14,6 +14,7 @@ const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const REPOSITORY_MODULE_PATTERNS = Object.freeze([
   'src/cli/cli-arguments.js',
   'src/cli/cli-command.js',
+  'src/cli/cli-configuration.js',
   'src/cli/cli-format.js',
   'src/core/*.js',
   'src/ingestion/**/*.js',
@@ -113,6 +114,7 @@ function loadQueries(dependencies) {
 function registerExternalModules(container) {
   container.register({
     crypto: asValue(require('node:crypto')),
+    currentWorkingDirectory: asValue(() => process.cwd()),
     envPaths: asValue(require('env-paths')),
     fs: asValue(require('node:fs')),
     packageMetadata: asValue(require('../../package.json')),
