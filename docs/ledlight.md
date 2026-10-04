@@ -75,17 +75,19 @@ selection, filtering, transformations such as inversion, and calculated rows
 such as totals.
 
 The CLI is a thin adapter over that public module. It may parse command-line
-arguments, map them to public API options, invoke a journal operation, and
-format the returned value as human-readable text, CSV, or JSON. Formatting may
-round values for display, align columns, add separators, and encode an existing
-result, but it must not calculate or otherwise change report semantics.
+arguments, map semantic inputs to public API options, invoke a journal
+operation, and format the returned value as human-readable text, CSV, or JSON.
+Formatting may select fields already present in the result, round values for
+display, align columns, add separators, and encode an existing result, but it
+must not calculate or otherwise change report semantics.
 
 The CLI command layer must not obtain data or transformations from internal
 report, journal, database, or accounting operations. Pure output code may use
-shared exact-decimal helpers to round values for display. Any behavior offered
-by the CLI must first exist through the public Node.js API. This dependency
-direction keeps the two interfaces consistent and makes the CLI an example
-consumer rather than a second implementation.
+shared exact-decimal helpers to round values for display. Any data or semantic
+behavior offered by the CLI must first exist through the public Node.js API;
+output-only options may exist only in the CLI. This dependency direction keeps
+the two interfaces consistent and makes the CLI an example consumer rather
+than a second implementation.
 
 ### CLI to API parity
 
@@ -123,18 +125,28 @@ underlying result.
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `reconciliation-entries --account NAME` | `options.accounts` | Repeated exact-account selection |
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
+| `ledger-accounts --details` | None | Include API-provided comments and transaction counts in the output |
+| `ledger-accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version`, `-V` | None | CLI package metadata |
 | `--help`, `-h` | None | Top-level command list |
 | `<command> --help`, `<command> -h` | None | Detailed usage for one command |
 
-Commands without a specialized human-readable representation emit JSON.
-Report commands accept `--json` when the complete API result is needed; this
-is required to retain fields such as `valuationValue` and `factoredAmount`.
-Tests compare the journal method inventory with the CLI command inventory,
-verify every parameter mapping, and verify that the command adapter delegates
-calculations to the API before formatting.
+`ledger-accounts` defaults to the same newline-separated account names as
+`ledger accounts`. With `--details`, text output is a table containing account,
+comment, and transaction count. `--format json` and `--format csv` encode the
+selected basic or detailed representation.
+
+Commands without another specialized human-readable representation emit JSON.
+Report commands accept `--json` when the complete API result is needed; this is
+required to retain fields such as `valuationValue` and `factoredAmount`. Tests
+compare the journal method inventory with the CLI command inventory and derive
+API-input and output-input inventories separately from the registered options.
+Every API input must have exactly one CLI mapping. CLI-only options must be
+classified as output inputs and may only select a formatter or presentation;
+they are never passed to a journal operation. Adapter tests verify that all
+calculations remain delegated to the API before formatting.
 
 The CLI reads the first `.ledlightrc` found at `~/.ledlightrc` or
 `./.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
@@ -147,9 +159,10 @@ Each report and query module owns a strict Zod schema beside its execution
 function and returns both from its module factory. Public calls are parsed by
 that schema before report logic runs. The application layer collects schema keys,
 while CLI coverage is derived from the actual positional arguments and options
-registered with Commander. Adding a field to a local operation schema without
-attaching a CLI argument to that input therefore fails during CLI composition
-and in the parity test.
+registered with Commander. API inputs and CLI-only output inputs have separate
+metadata. Adding a field to a local operation schema without attaching a CLI
+argument to that input therefore fails during CLI composition and in the
+parity test without preventing formatter-only CLI options.
 
 ## Architecture
 

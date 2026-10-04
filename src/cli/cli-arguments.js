@@ -38,6 +38,20 @@ module.exports = ({
     option.apiInput = apiInput;
     return command.addOption(option);
   };
+  const addOutputBooleanOption = (command, flags, description, outputInput) => {
+    const option = new Option(flags, description);
+    option.outputInput = outputInput;
+    return command.addOption(option);
+  };
+  const addOutputValueOption = (command, flags, description, settings_) => {
+    const option = new Option(flags, description);
+    const settings = settings_ ?? {};
+    option.argParser(singleValue(flags.split(' ')[0]));
+    if (settings.choices) option.choices(settings.choices);
+    if (settings.defaultValue !== undefined) option.default(settings.defaultValue);
+    option.outputInput = settings.outputInput;
+    return command.addOption(option);
+  };
   const addDateOption = (command, flags, description, apiInput) =>
     addValueOption(command, flags, description, { apiInput });
   const addDateBasisOption = (command) => addValueOption(
@@ -52,7 +66,9 @@ module.exports = ({
     command, '--file <path>', 'read the journal rooted at this file',
     { required: true, apiInput: 'journalPath' },
   );
-  const addJson = (command) => command.option('--json', 'write the complete API result as JSON');
+  const addJson = (command) => addOutputBooleanOption(
+    command, '--json', 'write the complete API result as JSON', 'json',
+  );
 
   function createProgram() {
     const program = new Command().name('ledlight')
@@ -88,10 +104,22 @@ module.exports = ({
     addValueOption(accountTransactions, '--account <name>', 'select an exact account', {
       required: true, apiInput: 'account',
     });
-    for (const [name, operation, description] of [
-      ['commodity-descriptions', 'commodityDescriptions', 'show declared commodities'],
-      ['ledger-accounts', 'ledgerAccounts', 'show declared and used accounts'],
-    ]) addJournal(registerCommand(program.command(name).description(description), operation));
+    const commodityDescriptions = registerCommand(
+      program.command('commodity-descriptions').description('show declared commodities'),
+      'commodityDescriptions',
+    );
+    addJournal(commodityDescriptions);
+    const ledgerAccounts = registerCommand(
+      program.command('ledger-accounts').description('show declared and used accounts'),
+      'ledgerAccounts',
+    );
+    addJournal(ledgerAccounts);
+    addOutputBooleanOption(
+      ledgerAccounts, '--details', 'include comments and transaction counts', 'details',
+    );
+    addOutputValueOption(ledgerAccounts, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
 
     const ledgerTransaction = registerCommand(
       program.command('ledger-transaction').description('show one transaction'),
@@ -152,7 +180,7 @@ module.exports = ({
     addBooleanOption(aggregate, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
     addBooleanOption(aggregate, '--invert', 'invert the sign of report amounts', 'invert');
     addBooleanOption(aggregate, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
-    aggregate.option('--csv', 'write CSV output');
+    addOutputBooleanOption(aggregate, '--csv', 'write CSV output', 'csv');
 
     const balanceHistory = registerCommand(
       program.command('balance-history').description('show balances over time'),
@@ -167,7 +195,7 @@ module.exports = ({
     });
     addJson(balanceHistory);
     addBooleanOption(balanceHistory, '--invert', 'invert the sign of report amounts', 'invert');
-    balanceHistory.option('--csv', 'write CSV output');
+    addOutputBooleanOption(balanceHistory, '--csv', 'write CSV output', 'csv');
 
     const gain = registerCommand(
       program.command('gain').description('show investment gains'),
@@ -175,7 +203,8 @@ module.exports = ({
     );
     addJournal(gain);
     addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPrefixes(gain); addDateBasisOption(gain); addJson(gain); gain.option('--csv', 'write CSV output');
+    addAccountPrefixes(gain); addDateBasisOption(gain); addJson(gain);
+    addOutputBooleanOption(gain, '--csv', 'write CSV output', 'csv');
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
@@ -205,15 +234,24 @@ module.exports = ({
     return command.helpInformation().trimEnd();
   }
   function commandCoverage() {
-    return Object.fromEntries(createProgram().commands.map((command) => [
-      command.apiOperation,
-      {
+    return Object.fromEntries(createProgram().commands.map((command) => {
+      for (const option of command.options.filter((candidate) => candidate.attributeName() !== 'help')) {
+        if (Boolean(option.apiInput) === Boolean(option.outputInput)) {
+          throw new Error(
+            `CLI option ${option.flags} must declare exactly one API or output input`,
+          );
+        }
+      }
+      return [command.apiOperation, {
         command: command.name(),
         inputs: command.options
           .filter((option) => option.apiInput)
           .map((option) => option.apiInput),
-      },
-    ]));
+        outputInputs: command.options
+          .filter((option) => option.outputInput)
+          .map((option) => option.outputInput),
+      }];
+    }));
   }
   function accountFactors(values) {
     if (values === undefined) return undefined;
@@ -230,7 +268,13 @@ module.exports = ({
   );
   function parsedResult(commandName, options) {
     const common = { command: commandName, journalPath: options.file };
-    if (['commodity-descriptions', 'ledger-accounts'].includes(commandName)) return common;
+    if (commandName === 'commodity-descriptions') return common;
+    if (commandName === 'ledger-accounts') {
+      return {
+        ...common,
+        output: { details: options.details || false, format: options.format },
+      };
+    }
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };

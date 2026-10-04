@@ -259,12 +259,20 @@ and every CLI command maps to one such method. Run `ledlight --help` for the
 complete command list and per-command parameters. Commands require `--file
 PATH`, corresponding to the `journalPath` passed to `openJournal()`.
 
-Commands without an established table format return the API result as JSON.
-The report commands preserve their human-readable formats and accept `--json`
-to return every API field. API option names use kebab case on the command line;
-for example, `withValuationValue` is `--with-valuation-value`, `includeTotal`
-is `--include-total`, and repeated `--account-factor ACCOUNT=FACTOR` values
-form the `accountFactors` object.
+Every API input has a corresponding CLI argument. The CLI may additionally
+offer output-only arguments that select a representation without changing the
+API call or its result. Commands without an established text format return the
+API result as JSON. The report commands preserve their human-readable formats
+and accept `--json` to return every API field. API option names use kebab case
+on the command line; for example, `withValuationValue` is
+`--with-valuation-value`, `includeTotal` is `--include-total`, and repeated
+`--account-factor ACCOUNT=FACTOR` values form the `accountFactors` object.
+
+`ledger-accounts` defaults to `--format text` and prints the same
+newline-separated account names as `ledger accounts`. Its `--details` flag
+includes comments and transaction counts; detailed text uses a table. The
+`--format json` and `--format csv` alternatives encode either the account names
+or, with `--details`, all fields returned by `journal.ledgerAccounts()`.
 
 CLI commands preserve the query result on stdout and emit the journal's
 `warnings` array as JSON on stderr when it is non-empty. No warning output is

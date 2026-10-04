@@ -12,6 +12,7 @@ const {
   formatInvestmentPerformance,
   formatInvestmentPerformanceJson,
   formatJson,
+  formatLedgerAccounts,
 } = resolveRepositoryModule("src/cli/cli-format.js");
 
 const rows = [
@@ -147,4 +148,48 @@ test('formats investment performance for people and automation', () => {
 
 test('formats arbitrary API results as readable JSON', () => {
   assert.equal(formatJson({ value: '10' }), '{\n  "value": "10"\n}\n');
+});
+
+test('formats ledger account names like Ledger by default', () => {
+  const accounts = [
+    { account: 'Assets:Cash', comment: 'Everyday account', transactionCount: 3 },
+    { account: 'Equity:Opening', comment: null, transactionCount: 1 },
+  ];
+  assert.equal(
+    formatLedgerAccounts(accounts, { details: false, format: 'text' }),
+    'Assets:Cash\nEquity:Opening\n',
+  );
+  assert.equal(formatLedgerAccounts([], { details: false, format: 'text' }), '');
+  assert.equal(
+    formatLedgerAccounts(accounts, { details: false, format: 'json' }),
+    '[\n  "Assets:Cash",\n  "Equity:Opening"\n]\n',
+  );
+  assert.equal(
+    formatLedgerAccounts(accounts, { details: false, format: 'csv' }),
+    'account\nAssets:Cash\nEquity:Opening\n',
+  );
+});
+
+test('formats detailed ledger accounts as text, JSON, and CSV', () => {
+  const accounts = [
+    { account: 'Assets:Cash, Main', comment: 'Everyday "account"', transactionCount: 3 },
+    { account: 'Equity:Opening', comment: null, transactionCount: 1 },
+  ];
+  assert.equal(
+    formatLedgerAccounts(accounts, { details: true, format: 'text' }),
+    'Account            Comment             Transactions\n' +
+    '-----------------  ------------------  ------------\n' +
+    'Assets:Cash, Main  Everyday "account"             3\n' +
+    'Equity:Opening                                    1\n',
+  );
+  assert.equal(
+    formatLedgerAccounts(accounts, { details: true, format: 'json' }),
+    `${JSON.stringify(accounts, null, 2)}\n`,
+  );
+  assert.equal(
+    formatLedgerAccounts(accounts, { details: true, format: 'csv' }),
+    'account,comment,transactionCount\n' +
+    '"Assets:Cash, Main","Everyday ""account""",3\n' +
+    'Equity:Opening,,1\n',
+  );
 });

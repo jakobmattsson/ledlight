@@ -136,7 +136,10 @@ test('delegates non-report commands to the corresponding journal operations', ()
     accountPostings(options) { calls.push(['accountPostings', options]); return ['postings']; },
     accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
     commodityDescriptions() { calls.push(['commodityDescriptions']); return ['commodities']; },
-    ledgerAccounts() { calls.push(['ledgerAccounts']); return ['accounts']; },
+    ledgerAccounts() {
+      calls.push(['ledgerAccounts']);
+      return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
+    },
     ledgerTransaction(options) { calls.push(['ledgerTransaction', options]); return { id: 7 }; },
     ledgerTransactions(options) { calls.push(['ledgerTransactions', options]); return { page: 2 }; },
     reconciliationEntries(options) { calls.push(['reconciliationEntries', options]); return ['entries']; },
@@ -163,7 +166,10 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(run(['account-postings', '--file', '/journal', '--account', 'Assets:Cash']), ['postings']);
   assert.deepEqual(run(['account-transactions', '--file', '/journal', '--account', 'Assets:Cash']), ['transactions']);
   assert.deepEqual(run(['commodity-descriptions', '--file', '/journal']), ['commodities']);
-  assert.deepEqual(run(['ledger-accounts', '--file', '/journal']), ['accounts']);
+  assert.equal(runReportCommand(['ledger-accounts', '--file', '/journal']), 'Assets:Cash\n');
+  assert.deepEqual(run([
+    'ledger-accounts', '--file', '/journal', '--details', '--format', 'json',
+  ]), [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }]);
   assert.deepEqual(run(['ledger-transaction', '--file', '/journal', '--transaction-id', '7']), { id: 7 });
   assert.deepEqual(run([
     'ledger-transactions', '--file', '/journal', '--order', 'newest', '--page', '2', '--page-size', '10',
@@ -180,6 +186,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['accountPostings', { account: 'Assets:Cash' }],
     ['openJournal', '/journal'], ['accountTransactions', { account: 'Assets:Cash' }],
     ['openJournal', '/journal'], ['commodityDescriptions'],
+    ['openJournal', '/journal'], ['ledgerAccounts'],
     ['openJournal', '/journal'], ['ledgerAccounts'],
     ['openJournal', '/journal'], ['ledgerTransaction', { transactionId: '7' }],
     ['openJournal', '/journal'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
@@ -211,7 +218,7 @@ test('collects ingestion warnings before invoking a query', () => {
 
   assert.deepEqual(
     runReportCommandWithWarnings(['ledger-accounts', '--file', '/journal']),
-    { output: '[]\n', warnings: [warning] },
+    { output: '', warnings: [warning] },
   );
   assert.deepEqual(calls, ['warnings', 'query']);
 });
