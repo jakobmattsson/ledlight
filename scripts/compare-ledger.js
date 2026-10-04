@@ -57,65 +57,22 @@ function markdownCell(value) {
 }
 
 function printMatrix() {
-  process.stdout.write('| Case | Ledlight | Ledger | Comparison |\n');
-  process.stdout.write('| --- | --- | --- | --- |\n');
-  for (const entry of matrix) {
+  process.stdout.write('| Case | Ledlight | Ledger |\n');
+  process.stdout.write('| --- | --- | --- |\n');
+  for (const [id, ledlightCommand, ledgerCommand] of matrix) {
     process.stdout.write(
-      `| \`${entry.id}\` | ${markdownCell(entry.ledlight)} | ` +
-      `${markdownCell(entry.ledger)} | ${entry.comparison} |\n`,
+      `| \`${id}\` | ${markdownCell(ledlightCommand)} | ` +
+      `${markdownCell(ledgerCommand)} |\n`,
     );
   }
 }
 
-function parseCsvLine(line) {
-  const fields = [];
-  let field = '';
-  let quoted = false;
-  for (let index = 0; index < line.length; index += 1) {
-    const character = line[index];
-    if (quoted && character === '"' && line[index + 1] === '"') {
-      field += '"';
-      index += 1;
-    } else if (character === '"') quoted = !quoted;
-    else if (character === ',' && !quoted) {
-      fields.push(field);
-      field = '';
-    } else field += character;
-  }
-  fields.push(field);
-  return fields;
-}
-
-function normalizeDecimal(value) {
-  const match = /^(-?)(\d+)(?:\.(\d*))?$/u.exec(value);
-  if (!match) throw new Error(`Expected a plain decimal, received ${JSON.stringify(value)}`);
-  const integer = match[2].replace(/^0+(?=\d)/u, '');
-  const fraction = (match[3] ?? '').replace(/0+$/u, '');
-  const unsigned = fraction ? `${integer}.${fraction}` : integer;
-  return `${match[1] && unsigned !== '0' ? '-' : ''}${unsigned}`;
-}
-
-function normalizedRows(rows) {
-  return rows.map(([account, amount, commodity]) => ({
-    account,
-    amount: normalizeDecimal(amount),
-    commodity,
-  })).sort((left, right) =>
-    left.account.localeCompare(right.account, 'en') ||
-    left.commodity.localeCompare(right.commodity, 'en'));
-}
-
-function comparableOutput(comparator, ledlightOutput, ledgerOutput) {
-  if (comparator === 'exact') return { ledlight: ledlightOutput, ledger: ledgerOutput };
-  const [, ...ledlightLines] = ledlightOutput.trimEnd().split('\n');
-  const ledgerLines = ledgerOutput.trimEnd().split('\n').filter(Boolean);
-  return {
-    ledlight: normalizedRows(ledlightLines.filter(Boolean).map(parseCsvLine)),
-    ledger: normalizedRows(ledgerLines.map((line) => line.split('\t'))),
-  };
-}
-
-function run(executable, arguments_, options) {
+function run(command, options) {
+  const [commandName, ...commandArguments] = command.split(' ');
+  const executable = commandName === 'ledlight' ? process.execPath : options.ledgerBin;
+  const prefixArguments = commandName === 'ledlight' ? [ledlightCli] : [];
+  const arguments_ = [...prefixArguments, ...commandArguments]
+    .map((argument) => argument === '<journal>' ? options.journal : argument);
   const result = spawnSync(executable, arguments_, {
     cwd: path.dirname(options.journal),
     encoding: 'utf8',
@@ -130,20 +87,20 @@ function run(executable, arguments_, options) {
 }
 
 function selectedCases(names) {
-  const runnable = matrix.filter((entry) => entry.ledger !== null);
+  const runnable = matrix.filter(([, , ledgerCommand]) => ledgerCommand !== null);
   if (names.length === 0) return runnable;
   return names.map((name) => {
-    const entry = matrix.find((candidate) => candidate.id === name);
+    const entry = matrix.find(([id]) => id === name);
     if (!entry) throw new Error(`Unknown case ${JSON.stringify(name)}; use --list to see the matrix`);
-    if (entry.ledger === null) throw new Error(`Case ${JSON.stringify(name)} has no verified Ledger equivalent`);
+    if (entry[2] === null) throw new Error(`Case ${JSON.stringify(name)} has no exact Ledger equivalent`);
     return entry;
   });
 }
 
-function showMismatch(entry, comparable) {
-  process.stdout.write(`FAIL ${entry.id}\n`);
-  process.stdout.write(`  Ledger:   ${JSON.stringify(comparable.ledger, null, 2)}\n`);
-  process.stdout.write(`  Ledlight: ${JSON.stringify(comparable.ledlight, null, 2)}\n`);
+function showMismatch(id, ledlightOutput, ledgerOutput) {
+  process.stdout.write(`FAIL ${id}\n`);
+  process.stdout.write(`  Ledger:   ${JSON.stringify(ledgerOutput)}\n`);
+  process.stdout.write(`  Ledlight: ${JSON.stringify(ledlightOutput)}\n`);
 }
 
 function main(arguments_) {
@@ -165,26 +122,22 @@ function main(arguments_) {
   const ledgerBin = options.ledgerBin ?? process.env.LEDGER_BIN ?? 'ledger';
   let failures = 0;
   try {
-    for (const entry of selectedCases(options.cases)) {
+    for (const [id, ledlightCommand, ledgerCommand] of selectedCases(options.cases)) {
       try {
-        const ledlight = run(process.execPath, [
-          ledlightCli, ...entry.ledlightArguments, '--file', journal,
-        ], { journal, environment });
-        const ledger = run(ledgerBin, [
-          '--args-only', '--no-pager', '--file', journal, ...entry.ledgerArguments,
-        ], { journal, environment });
-        const comparable = comparableOutput(entry.comparator, ledlight.stdout, ledger.stdout);
-        if (JSON.stringify(comparable.ledlight) === JSON.stringify(comparable.ledger)) {
-          process.stdout.write(`PASS ${entry.id}\n`);
+        const commandOptions = { journal, environment, ledgerBin };
+        const ledlight = run(ledlightCommand, commandOptions);
+        const ledger = run(ledgerCommand, commandOptions);
+        if (ledlight.stdout === ledger.stdout) {
+          process.stdout.write(`PASS ${id}\n`);
         } else {
           failures += 1;
-          showMismatch(entry, comparable);
+          showMismatch(id, ledlight.stdout, ledger.stdout);
         }
-        if (ledlight.stderr) process.stderr.write(`[${entry.id}: ledlight]\n${ledlight.stderr}`);
-        if (ledger.stderr) process.stderr.write(`[${entry.id}: ledger]\n${ledger.stderr}`);
+        if (ledlight.stderr) process.stderr.write(`[${id}: ledlight]\n${ledlight.stderr}`);
+        if (ledger.stderr) process.stderr.write(`[${id}: ledger]\n${ledger.stderr}`);
       } catch (error) {
         failures += 1;
-        process.stdout.write(`ERROR ${entry.id}: ${error.message}\n`);
+        process.stdout.write(`ERROR ${id}: ${error.message}\n`);
       }
     }
   } finally {
