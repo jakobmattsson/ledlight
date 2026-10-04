@@ -62,7 +62,7 @@ runs once:
 const { openJournal } = require('ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
-const balance = journal.aggregateReport({ to: '2024-12-31' });
+const summary = journal.summary({ to: '2024-12-31' });
 const history = journal.balanceHistoryReport({ from: '2024-01-01' });
 ```
 
@@ -111,7 +111,7 @@ underlying result.
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
 | `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
-| `summary --file PATH` | `openJournal(journalPath).aggregateReport(options)` | Report selection and calculation |
+| `summary --file PATH` | `openJournal(journalPath).summary(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
@@ -210,7 +210,7 @@ The implementation is organized by responsibility directly under `src`:
 - `ingestion` owns the optimized parser and normative Ohm grammar, traverses
   journal includes, validates and resolves journal postings, persists the
   normalized database, and materializes query optimizations;
-- `queries` contains one module per public API/CLI query—including aggregate,
+- `queries` contains one module per public API/CLI query—including summary,
   balance-history, unrealized-gains, and investment-performance queries—with its Zod schema
   beside its execution function;
 - `queries/support` contains internal SQL, valuation, and investment-return
@@ -380,9 +380,9 @@ database build and stored in `resolved_posting_amounts`. This makes aggregate
 reports a direct SQL operation rather than a replay of Ledger semantics at
 query time.
 
-## Aggregate report
+## Summary report
 
-`aggregateReport` returns every non-zero account total in an optional inclusive
+`summary` returns every non-zero account total in an optional inclusive
 date interval. Omit `from` to include all earlier postings, omit `to` to include
 all later postings, and omit both to aggregate the complete journal. Repeated
 account patterns are combined with OR. Patterns match literal substrings by
@@ -395,12 +395,12 @@ commodity:
 const { openJournal } = require('ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
-const balanceSheet = journal.aggregateReport({
+const balanceSheet = journal.summary({
   to: '2024-12-31',
   accounts: ['^Assets:', '^Liabilities:'],
   dateBasis: 'transaction',
 });
-const valuedIncomeStatement = journal.aggregateReport({
+const valuedIncomeStatement = journal.summary({
   from: '2024-01-01',
   to: '2024-12-31',
   accounts: ['^Income:', '^Expenses:'],
@@ -435,7 +435,7 @@ apply commodity display separators. With `--value`, CSV amounts retain the
 existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the human-readable total.
 
-The same behavior is available directly through `journal.aggregateReport`: set
+The same behavior is available directly through `journal.summary`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append the total row. `includeTotal` requires `inValuationCommodity: true`, so
 the quantities have one common commodity. The CLI requests this total for

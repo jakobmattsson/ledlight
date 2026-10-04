@@ -15,7 +15,7 @@ const { apiCommands, ledgerCommand, parseArguments, usage } = argumentsModule;
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
     accountPostings: 'account-postings',
-    aggregateReport: 'summary',
+    summary: 'summary',
     balanceHistoryReport: 'balance-history',
     unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
@@ -33,8 +33,8 @@ test('defines one CLI command for every journal operation', () => {
 test('fails when a locally declared API input has no actual CLI option', () => {
   const apiDefinitions = {
     ...project.apiDefinitions,
-    aggregateReport: {
-      inputs: [...project.apiDefinitions.aggregateReport.inputs, 'futureOption'],
+    summary: {
+      inputs: [...project.apiDefinitions.summary.inputs, 'futureOption'],
     },
   };
   assert.throws(
@@ -42,7 +42,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
       cliConfiguration: { apply: (arguments_) => arguments_ },
       project: { apiDefinitions },
     }),
-    /CLI inputs do not cover the aggregateReport API contract/u,
+    /CLI inputs do not cover the summary API contract/u,
   );
 });
 
@@ -57,7 +57,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     inputs: ['journalPath', 'accounts', 'id', 'order', 'page', 'pageSize'],
     outputInputs: ['format'],
   });
-  assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['format']);
+  assert.deepEqual(argumentsModule.apiInputCoverage.summary.outputInputs, ['format']);
   assert.deepEqual(
     argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
     ['format', 'total'],

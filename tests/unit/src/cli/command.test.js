@@ -69,8 +69,8 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
   const journal = {
-    aggregateReport(options) {
-      calls.push({ operation: 'aggregateReport', options });
+    summary(options) {
+      calls.push({ operation: 'summary', options });
       if (options.groupBy === 'commodity') {
         return [{ quantity: '-10', commodity: 'USD' }];
       }
@@ -172,7 +172,7 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.deepEqual(calls, [
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'aggregateReport',
+      operation: 'summary',
       options: {
         accounts: ['Assets:'],
         inValuationCommodity: true,
@@ -183,7 +183,7 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'commodityDescriptions' },
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'aggregateReport',
+      operation: 'summary',
       options: { accounts: ['Assets:'], groupBy: 'commodity', includeTotal: false },
     },
     { operation: 'openJournal', journalPath: '/journal' },

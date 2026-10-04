@@ -26,9 +26,9 @@ module.exports = ({
     execute: queryAccountTransactions,
   } = query('accountTransactions');
   const {
-    inputSchema: aggregateReportOptionsSchema,
-    execute: queryAggregate,
-  } = query('aggregateReport');
+    inputSchema: summaryOptionsSchema,
+    execute: querySummary,
+  } = query('summary');
   const {
     inputSchema: balanceHistoryOptionsSchema,
     execute: queryBalanceHistory,
@@ -73,7 +73,7 @@ module.exports = ({
   const journalInputs = (schema) => ['journalPath', ...schemaInputs(schema)];
   const apiDefinitions = Object.freeze({
     accountPostings: { inputs: journalInputs(accountPostingsOptionsSchema) },
-    aggregateReport: { inputs: journalInputs(aggregateReportOptionsSchema) },
+    summary: { inputs: journalInputs(summaryOptionsSchema) },
     balanceHistoryReport: { inputs: journalInputs(balanceHistoryOptionsSchema) },
     unrealizedGains: { inputs: journalInputs(unrealizedGainsOptionsSchema) },
     investmentPerformance: { inputs: journalInputs(investmentPerformanceOptionsSchema) },
@@ -143,8 +143,8 @@ module.exports = ({
       accountTransactions(options) {
         return runQuery(queryAccountTransactions, options);
       },
-      aggregateReport(options) {
-        return runQuery(queryAggregate, options);
+      summary(options) {
+        return runQuery(querySummary, options);
       },
       balanceHistoryReport(options) {
         return runQuery(queryBalanceHistory, options);

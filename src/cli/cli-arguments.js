@@ -227,7 +227,7 @@ module.exports = ({
     );
     const summary = registerCommand(
       program.command('summary').description('summarize postings'),
-      'aggregateReport',
+      'summary',
       'reports',
     );
     addJournal(summary);
