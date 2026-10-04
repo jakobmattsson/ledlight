@@ -129,17 +129,18 @@ Returns daily rows sorted by date:
 
 Amounts are exact decimal strings in the journal default commodity.
 
-### `journal.gainReport(options)`
+### `journal.unrealizedGains(options)`
 
 Returns unrealized gains and losses for open non-default commodity positions,
 grouped by account and expressed as exact decimal strings in the journal
 default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
-Options are `to`, `accounts`, and `dateBasis`. `to` is the inclusive position
-and valuation date, `accounts` contains account patterns, and
-`dateBasis` is `posting` (the default) or `transaction`. When `to` is omitted,
-the latest available journal price is used.
+Options are `at`, `accounts`, and `dateBasis`. `at` is the inclusive snapshot
+date for both positions and valuation prices, `accounts` contains account
+patterns, and `dateBasis` is `posting` (the default) or `transaction`. When
+`at` is omitted, all positions and the latest available journal prices are
+used.
 
 ### `journal.investmentPerformance(options)`
 
@@ -311,8 +312,8 @@ Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the
 API call or its result. Commands without an established text format return the
 API result as JSON. The report commands preserve their human-readable formats.
-`balance` accepts `--format json`; the other reports accept `--json` to return
-every API field. API option names use kebab case
+`balance` and `unrealized-gains` accept `--format json`; the other reports
+accept `--json` to return every API field. API option names use kebab case
 on the command line; for example, `withValuationValue` is
 `--with-valuation-value`, `includeTotal` is `--include-total`, and repeated
 `--account-factor ACCOUNT=FACTOR` values form the `accountFactors` object.

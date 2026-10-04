@@ -5,6 +5,7 @@ module.exports = ({
   packageMetadata: { version },
   cliArguments: { ledgerCommand, parseArguments, usage },
   cliFormat: {
+    appendTotal,
     formatCsv,
     formatBalanceHistoryCsv,
     formatBalanceHistoryHumanReadable,
@@ -63,10 +64,11 @@ module.exports = ({
         ? formatJson(report)
         : formatInvestmentPerformance(report, journal.commodityDescriptions());
     }
-    if (command === 'gain') {
-      const rows = journal.gainReport(reportOptions);
-      if (output.json) return formatJson(rows);
-      return output.csv
+    if (command === 'unrealized-gains') {
+      const reportRows = journal.unrealizedGains(reportOptions);
+      const rows = output.total ? appendTotal(reportRows) : reportRows;
+      if (output.format === 'json') return formatJson(rows);
+      return output.format === 'csv'
         ? formatCsv(rows, true)
         : formatHumanReadable(rows, true, journal.commodityDescriptions());
     }
@@ -108,7 +110,12 @@ module.exports = ({
     }
     const parsed = parseArguments(arguments_);
     if (parsed.ledger) return `${ledgerCommand(parsed)}\n`;
-    return ['balance', 'balance-history', 'gain', 'investment-performance'].includes(parsed.command)
+    return [
+      'balance',
+      'balance-history',
+      'unrealized-gains',
+      'investment-performance',
+    ].includes(parsed.command)
       ? runReport(parsed)
       : runJsonCommand(parsed);
   }

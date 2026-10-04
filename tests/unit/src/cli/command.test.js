@@ -25,8 +25,8 @@ test('delegates report behavior to the public Node API and only formats results'
       calls.push({ operation: 'balanceHistoryReport', options });
       return [{ date: '2024-01-01', amount: '-10', commodity: 'USD' }];
     },
-    gainReport(options) {
-      calls.push({ operation: 'gainReport', options });
+    unrealizedGains(options) {
+      calls.push({ operation: 'unrealizedGains', options });
       return [{ account: 'Assets:Broker', quantity: '12.5', commodity: 'USD' }];
     },
     investmentPerformance(options) {
@@ -87,7 +87,7 @@ test('delegates report behavior to the public Node API and only formats results'
     runReportCommand([
       'balance', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
     ]),
-    /Total.*-10\.00 USD/u,
+    /-10\.00 USD.*Total/u,
   );
   assert.equal(
     runReportCommand([
@@ -105,8 +105,10 @@ test('delegates report behavior to the public Node API and only formats results'
     /Opening value: 0\.00 USD/u,
   );
   assert.equal(
-    runReportCommand(['gain', '--file', '/journal', '--csv']),
-    'account,amount,commodity\nAssets:Broker,12.50,USD\n',
+    runReportCommand([
+      'unrealized-gains', '--file', '/journal', '--format', 'csv', '--total',
+    ]),
+    'account,amount,commodity\nAssets:Broker,12.50,USD\nTotal,12.50,USD\n',
   );
 
   assert.deepEqual(calls, [
@@ -141,7 +143,7 @@ test('delegates report behavior to the public Node API and only formats results'
     },
     { operation: 'commodityDescriptions' },
     { operation: 'openJournal', journalPath: '/journal' },
-    { operation: 'gainReport', options: { accounts: [] } },
+    { operation: 'unrealizedGains', options: { accounts: [] } },
   ]);
 });
 
@@ -319,7 +321,7 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['reconciliation-entries', '--account', 'Assets:Cash'],
     ['valuation-rate', '--commodity', 'USD'],
     ['balance-history'],
-    ['gain'],
+    ['unrealized-gains'],
     ['investment-performance'],
   ];
 

@@ -20,7 +20,7 @@ module.exports = ({
   const optionsSchema = z.strictObject({
     accounts: z.array(z.string().min(1)).default([]),
     dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
-    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
+    at: z.iso.date({ error: 'Invalid --at date' }).optional(),
   });
 
   function reportFilter(options, valuationCommodity) {
@@ -29,7 +29,7 @@ module.exports = ({
       'r.commodity != ?',
       `${dateExpression} <= COALESCE(?, '9999-12-31')`,
     ];
-    const parameters = [valuationCommodity, options.to ?? null];
+    const parameters = [valuationCommodity, options.at ?? null];
     if (options.accounts.length > 0) {
       const filter = accountFilter('p.account', options.accounts);
       clauses.push(filter.sql);
@@ -92,18 +92,22 @@ module.exports = ({
       }));
   }
 
-  function queryGain(database, options, { valuationPriceCache }) {
-    const reportOptions = parseOptions(optionsSchema, options, 'gainReport');
+  function queryUnrealizedGains(database, options, { valuationPriceCache }) {
+    const reportOptions = parseOptions(optionsSchema, options, 'unrealizedGains');
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const positions = queryPositions(database, reportOptions, valuationCommodity);
     const rates = queryValuationRates(
       database,
-      reportOptions.to,
+      reportOptions.at,
       new Set(positions.map((position) => position.commodity)),
       valuationPriceCache,
     );
     return calculateRows(positions, rates, valuationCommodity);
   }
 
-  return { name: 'gainReport', inputSchema: optionsSchema, execute: queryGain };
+  return {
+    name: 'unrealizedGains',
+    inputSchema: optionsSchema,
+    execute: queryUnrealizedGains,
+  };
 };

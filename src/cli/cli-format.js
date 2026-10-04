@@ -2,10 +2,26 @@
 
 module.exports = ({
   decimal: {
+    addDecimals,
+    formatDecimal,
     formatDecimalFixed,
     parseDecimal,
   },
 }) => {
+
+  function appendTotal(rows) {
+    if (rows.length === 0) return rows;
+    const quantity = rows.reduce(
+      (sum, row) => addDecimals(sum, parseDecimal(row.quantity)),
+      parseDecimal('0'),
+    );
+    return [...rows, {
+      account: 'Total',
+      quantity: formatDecimal(quantity),
+      commodity: rows[0].commodity,
+      isTotal: true,
+    }];
+  }
 
   function csvField(value) {
     const text = String(value);
@@ -90,7 +106,7 @@ module.exports = ({
       ),
     }));
     const hasAccounts = groupBy !== 'commodity';
-    const accountWidth = Math.max(0, ...reportRows.map((row) => row.account?.length ?? 0));
+    const commodityWidth = Math.max(0, ...reportRows.map((row) => row.commodity.length));
     const amounts = reportRows.map((row) => {
       const declaredFormat = formats.get(row.commodity);
       const separator = declaredFormat
@@ -113,13 +129,12 @@ module.exports = ({
         : fraction === undefined
           ? ' '.repeat(fractionWidth + 1)
           : `${separator}${fraction.padEnd(fractionWidth)}`;
-      const amount = `${integerColumn}${fractionColumn} ${row.commodity}`;
-      const line = hasAccounts ? `${row.account.padStart(accountWidth)}  ${amount}` : amount;
+      const commodity = hasAccounts ? row.commodity.padEnd(commodityWidth) : row.commodity;
+      const amountColumn = `${integerColumn}${fractionColumn} ${commodity}`;
       if (row.isTotal) {
-        const separatorIndent = accountWidth - row.account.length;
-        lines.push(`${' '.repeat(separatorIndent)}${'-'.repeat(line.length - separatorIndent)}`);
+        lines.push('-'.repeat(amountColumn.length));
       }
-      lines.push(line);
+      lines.push(hasAccounts ? `${amountColumn}  ${row.account}` : amountColumn);
     });
 
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
@@ -356,6 +371,7 @@ module.exports = ({
   }
 
   return {
+    appendTotal,
     formatCsv,
     formatBalanceHistoryCsv,
     formatBalanceHistoryHumanReadable,

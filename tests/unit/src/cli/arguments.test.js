@@ -17,7 +17,7 @@ test('defines one CLI command for every journal operation', () => {
     accountPostings: 'account-postings',
     aggregateReport: 'balance',
     balanceHistoryReport: 'balance-history',
-    gainReport: 'gain',
+    unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
     accountTransactions: 'account-transactions',
     commodityDescriptions: 'commodity-descriptions',
@@ -59,6 +59,10 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['format']);
+  assert.deepEqual(
+    argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
+    ['format', 'total'],
+  );
 });
 
 test('parses account output options without adding API options', () => {
@@ -210,31 +214,45 @@ test('parses balance history options', () => {
   assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
 });
 
-test('parses gain report options and output flags', () => {
+test('parses unrealized gains options and CLI-only output controls', () => {
   assert.deepEqual(parseArguments([
-    'gain',
+    'unrealized-gains',
     '--file', '/journal',
-    '--to', '2024-12-31',
+    '--at', '2024-12-31',
     '--accounts', 'Assets:',
     '--date-basis', 'transaction',
-    '--csv',
+    '--format', 'csv',
+    '--total',
   ]), {
-    command: 'gain',
+    command: 'unrealized-gains',
     journalPath: '/journal',
     reportOptions: {
-      to: '2024-12-31',
+      at: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction',
     },
-    output: { csv: true, json: false },
+    output: { format: 'csv', total: true },
   });
-  assert.deepEqual(parseArguments(['gain', '--file', '/journal']), {
-    command: 'gain',
+  assert.deepEqual(parseArguments(['unrealized-gains', '--file', '/journal']), {
+    command: 'unrealized-gains',
     journalPath: '/journal',
     reportOptions: { accounts: [] },
-    output: { csv: false, json: false },
+    output: { format: 'text', total: false },
   });
-  assert.throws(() => parseArguments(['gain', '--from', '2024-01-01']), /Usage:/u);
+  assert.deepEqual(
+    parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'json']).output,
+    { format: 'json', total: false },
+  );
+  assert.throws(
+    () => parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'yaml']),
+    /Allowed choices are text, json, csv/u,
+  );
+  for (const option of ['--csv', '--json', '--from', '--to']) {
+    assert.throws(
+      () => parseArguments(['unrealized-gains', '--file', '/journal', option, '2024-01-01']),
+      /Usage:/u,
+    );
+  }
 });
 
 test('parses investment performance selections and JSON output', () => {
@@ -360,7 +378,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['investment-performance', '--commodities'],
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
-    ['gain', '--value'],
+    ['unrealized-gains', '--value'],
     ['reconciliation-entries', '--file', '/journal'],
   ];
   for (const arguments_ of invalidArguments) {
@@ -376,7 +394,11 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage(),
-    /misc:[\s\S]* {2}balance\s+show account balances[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /reports:\n {2}unrealized-gains\s+show unrealized investment gains/u,
+  );
+  assert.match(
+    usage(),
+    /misc:[\s\S]* {2}balance\s+show account balances[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\|print\s+show a page of transactions/u);

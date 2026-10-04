@@ -393,7 +393,7 @@ account Equity:Opening
   const first = execFileSync(process.execPath, [
     cliPath, 'balance', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
   ], { cwd: directory, encoding: 'utf8', env: process.env });
-  assert.equal(first, 'Assets:Cash,Main  1 SEK\n');
+  assert.equal(first, '1 SEK  Assets:Cash,Main\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
   fs.writeFileSync(journalPath, `commodity SEK
@@ -411,7 +411,7 @@ account Equity:Opening
     [cliPath, 'balance', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:'],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
-  assert.equal(second, '  Assets:Cash,Main       2.005 SEK\nAssets:LongAccount  10,000     SEK\n');
+  assert.equal(second, '     2.005 SEK  Assets:Cash,Main\n10,000     SEK  Assets:LongAccount\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
   const csv = execFileSync(
@@ -441,7 +441,7 @@ account Equity:Opening
   );
   assert.equal(
     roundedHumanReadable,
-    '  Assets:Cash,Main       2.01 SEK\nAssets:LongAccount  10,000.00 SEK\n             --------------------\n             Total  10,002.01 SEK\n',
+    '     2.01 SEK  Assets:Cash,Main\n10,000.00 SEK  Assets:LongAccount\n-------------\n10,002.01 SEK  Total\n',
   );
 
   const invertedHumanReadable = execFileSync(
@@ -451,7 +451,7 @@ account Equity:Opening
   );
   assert.equal(
     invertedHumanReadable,
-    '  Assets:Cash,Main       -2.01 SEK\nAssets:LongAccount  -10,000.00 SEK\n             ---------------------\n             Total  -10,002.01 SEK\n',
+    '     -2.01 SEK  Assets:Cash,Main\n-10,000.00 SEK  Assets:LongAccount\n--------------\n-10,002.01 SEK  Total\n',
   );
 
   const invertedCsv = execFileSync(

@@ -153,7 +153,7 @@ const scenarios = [
   {
     name: 'unrealized gains on open lots',
     fixture: 'lot-cost',
-    ledlightArguments: ['gain', '--csv'],
+    ledlightArguments: ['unrealized-gains', '--format', 'csv'],
     ledgerArguments: { options: ['--gain'], queries: [] },
   },
   {

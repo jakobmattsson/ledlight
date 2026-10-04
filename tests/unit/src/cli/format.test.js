@@ -5,6 +5,7 @@ const { resolveRepositoryModule } = require("../../../support/repository-contain
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
+  appendTotal,
   formatCsv,
   formatBalanceHistoryCsv,
   formatBalanceHistoryHumanReadable,
@@ -67,13 +68,13 @@ test('formats RFC-style CSV and exact valuation rounding', () => {
   assert.equal(formatCsv([], false), 'account,amount,commodity\n');
 });
 
-test('aligns human-readable output and uses an English total label', () => {
+test('puts aligned amounts before left-aligned accounts', () => {
   assert.equal(
     formatHumanReadable(rowsWithTotal, true),
-    '  Assets:Cash,Main       2.01 SEK\n' +
-    'Assets:LongAccount  10,000.00 SEK\n' +
-    '             --------------------\n' +
-    '             Total  10,002.01 SEK\n',
+    '     2.01 SEK  Assets:Cash,Main\n' +
+    '10,000.00 SEK  Assets:LongAccount\n' +
+    '-------------\n' +
+    '10,002.01 SEK  Total\n',
   );
   assert.equal(formatHumanReadable([], true), '');
   assert.equal(
@@ -101,14 +102,27 @@ test('applies declared commodity precision and separators only to human-readable
       { account: 'Assets:Euros', quantity: '1234.5', commodity: 'EUR' },
       { account: 'Assets:Yen', quantity: '1234.5', commodity: 'JPY' },
     ], false, descriptions),
-    'Assets:Bitcoin   1234.50000000 BTC\n' +
-    '  Assets:Euros  1,234.50       EUR\n' +
-    '    Assets:Yen  1,235          JPY\n',
+    ' 1234.50000000 BTC  Assets:Bitcoin\n' +
+    '1,234.50       EUR  Assets:Euros\n' +
+    '1,235          JPY  Assets:Yen\n',
   );
   assert.equal(
     formatCsv([{ account: 'Assets:Euros', quantity: '1234.5', commodity: 'EUR' }], false),
     'account,amount,commodity\nAssets:Euros,1234.5,EUR\n',
   );
+});
+
+test('appends an exact total without mutating report rows', () => {
+  const input = [
+    { account: 'Assets:A', quantity: '0.1', commodity: 'SEK' },
+    { account: 'Assets:B', quantity: '0.2', commodity: 'SEK' },
+  ];
+  assert.deepEqual(appendTotal(input), [
+    ...input,
+    { account: 'Total', quantity: '0.3', commodity: 'SEK', isTotal: true },
+  ]);
+  assert.equal(input.length, 2);
+  assert.deepEqual(appendTotal([]), []);
 });
 
 test('formats balance history', () => {

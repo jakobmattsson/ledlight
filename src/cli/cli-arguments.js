@@ -27,7 +27,7 @@ function formatGroupedHelp(command, helper) {
     helper,
   ));
   const defaultSection = [helper.styleTitle('Commands:'), ...defaultCommandList, ''].join('\n');
-  const groupedSection = ['raw', 'misc'].flatMap((group) => [
+  const groupedSection = ['raw', 'reports', 'misc'].flatMap((group) => [
     helper.styleTitle(`${group}:`),
     ...formatCommands(group),
     '',
@@ -259,15 +259,18 @@ module.exports = ({
     addBooleanOption(balanceHistory, '--invert', 'invert the sign of report amounts', 'invert');
     addOutputBooleanOption(balanceHistory, '--csv', 'write CSV output', 'csv');
 
-    const gain = registerCommand(
-      program.command('gain').description('show investment gains'),
-      'gainReport',
-      'misc',
+    const unrealizedGains = registerCommand(
+      program.command('unrealized-gains').description('show unrealized investment gains'),
+      'unrealizedGains',
+      'reports',
     );
-    addJournal(gain);
-    addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPatterns(gain); addDateBasisOption(gain); addJson(gain);
-    addOutputBooleanOption(gain, '--csv', 'write CSV output', 'csv');
+    addJournal(unrealizedGains);
+    addDateOption(unrealizedGains, '--at <date>', 'show gains at YYYY-MM-DD', 'at');
+    addAccountPatterns(unrealizedGains); addDateBasisOption(unrealizedGains);
+    addOutputValueOption(unrealizedGains, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
+    addOutputBooleanOption(unrealizedGains, '--total', 'append the total gain', 'total');
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
@@ -376,7 +379,7 @@ module.exports = ({
     }
     if (commandName === 'valuation-rate') return { ...common, options: compact({ commodity: options.commodity, throughDate: options.throughDate }) };
     const reportOptions = compact({
-      from: options.from, to: options.to, accounts: options.accounts || [],
+      from: options.from, to: options.to, at: options.at, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
     if (commandName === 'balance') {
@@ -387,6 +390,13 @@ module.exports = ({
         groupBy: options.groupBy,
       }));
       return { ...common, reportOptions, output: { format: options.format } };
+    }
+    if (commandName === 'unrealized-gains') {
+      return {
+        ...common,
+        reportOptions,
+        output: { format: options.format, total: options.total || false },
+      };
     }
     if (commandName === 'balance-history') {
       const factors = accountFactors(options.accountFactor);

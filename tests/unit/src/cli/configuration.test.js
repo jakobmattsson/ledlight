@@ -45,8 +45,8 @@ test('prefers the user .ledlightrc and expands its home directory', (t) => {
   fs.writeFileSync(path.join(workingDirectory, '.ledlightrc'), '--file project.ledger\n');
 
   assert.deepEqual(
-    configuration(home, workingDirectory).apply(['gain']),
-    ['gain', '--file', path.join(home, 'books/main.ledger')],
+    configuration(home, workingDirectory).apply(['unrealized-gains']),
+    ['unrealized-gains', '--file', path.join(home, 'books/main.ledger')],
   );
 });
 
