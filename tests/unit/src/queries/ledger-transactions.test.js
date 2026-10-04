@@ -20,6 +20,7 @@ function createProject(t) {
   default
 account Assets:Cash
 account Equity:Opening
+account Expenses:Shop
 
 2024-01-01 First
   Assets:Cash  10 SEK
@@ -32,7 +33,7 @@ account Equity:Opening
 2024-01-03 Shop | Third  ; imported
   ; Project: Home
   Assets:Cash  -5 SEK  ; card
-  Equity:Opening
+  Expenses:Shop
 `);
   return openJournal(journalPath);
 }
@@ -102,6 +103,21 @@ test('filters the transaction collection by ID', (t) => {
   assert.deepEqual(missing.transactions, []);
 });
 
+test('filters complete transactions by exact account', (t) => {
+  const project = createProject(t);
+
+  const result = project.ledgerTransactions({ account: 'Expenses:Shop' });
+
+  assert.equal(result.totalTransactions, 1);
+  assert.equal(result.totalPages, 1);
+  assert.equal(result.transactions[0].description, 'Shop | Third');
+  assert.deepEqual(
+    result.transactions[0].postings.map((posting) => posting.account),
+    ['Assets:Cash', 'Expenses:Shop'],
+  );
+  assert.equal(project.ledgerTransactions({ account: 'Expenses' }).totalTransactions, 0);
+});
+
 test('clamps pages and rejects invalid list options', (t) => {
   const project = createProject(t);
 
@@ -114,6 +130,8 @@ test('clamps pages and rejects invalid list options', (t) => {
     /pageSize must not exceed 100/u);
   assert.throws(() => project.ledgerTransactions({ id: 'invalid' }),
     /id must be a positive integer/u);
+  assert.throws(() => project.ledgerTransactions({ account: '' }),
+    /account must be a non-empty string/u);
   assert.throws(() => project.ledgerTransactions({
     order: 'newest', page: 1, pageSize: 2, unknown: true,
   }), /Unknown ledgerTransactions option: unknown/u);

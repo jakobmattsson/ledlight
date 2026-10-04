@@ -56,7 +56,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.ledgerTransactions, {
     command: 'ledger-transactions',
-    inputs: ['journalPath', 'id', 'order', 'page', 'pageSize'],
+    inputs: ['journalPath', 'account', 'id', 'order', 'page', 'pageSize'],
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregateReport.outputInputs, ['json', 'csv']);
@@ -278,11 +278,14 @@ test('maps every remaining API parameter to CLI arguments', () => {
     options: { account: 'Assets:Cash' },
   });
   assert.deepEqual(parseArguments([
-    'ledger-transactions', '--file', '/journal', '--id', '42', '--order', 'oldest', '--page', '2',
+    'ledger-transactions', '--file', '/journal', '--account', 'Assets:Cash',
+    '--id', '42', '--order', 'oldest', '--page', '2',
     '--page-size', '25', '--format', 'csv',
   ]), {
     command: 'ledger-transactions', journalPath: '/journal',
-    options: { id: '42', order: 'oldest', page: '2', pageSize: '25' },
+    options: {
+      account: 'Assets:Cash', id: '42', order: 'oldest', page: '2', pageSize: '25',
+    },
     output: { format: 'csv' },
   });
   assert.deepEqual(parseArguments(['ledger-transactions', '--file', '/journal']), {
@@ -332,12 +335,15 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /--help\s+show help/u);
   assert.match(usage(), /ledlight <command> --help/u);
   assert.match(usage(), /Commands:\n {2}accounts\s+show declared accounts/u);
+  assert.match(usage(), /ledger-transactions\|print\s+show a page of transactions/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <prefix>/u);
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
+  assert.match(usage('print'), /^Usage: ledlight ledger-transactions\|print --file <path> \[options\]/u);
+  assert.match(usage('print'), /--account <name>\s+select transactions for an exact account/u);
   assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
   assert.match(usage('aggregate'), /--accounts <prefix>.*repeatable/u);
   assert.match(

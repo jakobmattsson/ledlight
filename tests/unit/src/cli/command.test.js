@@ -204,7 +204,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
     quoteCommodity: 'USD', comment: null,
   }]);
   assert.deepEqual(run([
-    'ledger-transactions', '--file', '/journal', '--id', '7', '--order', 'newest', '--page', '2', '--page-size', '10',
+    'ledger-transactions', '--file', '/journal', '--account', 'Assets:Cash',
+    '--id', '7', '--order', 'newest', '--page', '2', '--page-size', '10',
     '--format', 'json',
   ]), {
     order: 'newest', page: 2, pageSize: 10, totalTransactions: 1, totalPages: 1,
@@ -244,7 +245,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['commodities'],
     ['openJournal', '/journal'], ['prices'],
     ['openJournal', '/journal'], ['ledgerTransactions', {
-      id: '7', order: 'newest', page: '2', pageSize: '10',
+      account: 'Assets:Cash', id: '7', order: 'newest', page: '2', pageSize: '10',
     }],
     ['openJournal', '/journal'], ['commodityDescriptions'], ['ledgerTransactions', {}],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
