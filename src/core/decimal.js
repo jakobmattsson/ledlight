@@ -56,6 +56,22 @@ module.exports = () => {
     });
   }
 
+  function divideDecimals(left, right, scale) {
+    if (right.coefficient === 0n) throw new RangeError('Cannot divide by zero');
+    if (!Number.isInteger(scale) || scale < 0) {
+      throw new RangeError('Decimal scale must be a non-negative integer');
+    }
+    const exponent = scale + right.scale - left.scale;
+    const numerator = left.coefficient * powerOfTen(Math.max(exponent, 0));
+    const denominator = right.coefficient * powerOfTen(Math.max(-exponent, 0));
+    const negative = (numerator < 0n) !== (denominator < 0n);
+    const absoluteNumerator = numerator < 0n ? -numerator : numerator;
+    const absoluteDenominator = denominator < 0n ? -denominator : denominator;
+    let coefficient = absoluteNumerator / absoluteDenominator;
+    if ((absoluteNumerator % absoluteDenominator) * 2n >= absoluteDenominator) coefficient += 1n;
+    return normalizeDecimal({ coefficient: negative ? -coefficient : coefficient, scale });
+  }
+
   function negateDecimal(decimal) {
     return { coefficient: -decimal.coefficient, scale: decimal.scale };
   }
@@ -124,6 +140,7 @@ module.exports = () => {
   return {
     addDecimals,
     compareDecimals,
+    divideDecimals,
     formatDecimal,
     formatDecimalFixed,
     multiplyDecimals,

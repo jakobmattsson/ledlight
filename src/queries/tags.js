@@ -9,9 +9,10 @@ module.exports = ({
   function queryTags(database, options, _caches) {
     parseOptions(optionsSchema, options, 'tags');
     return database.prepare(`
-      SELECT name AS tag
-      FROM tag_declarations
-      ORDER BY tag, entry_id
+      SELECT name AS tag FROM transaction_tags
+      UNION
+      SELECT name AS tag FROM posting_tags
+      ORDER BY tag
     `).all();
   }
 

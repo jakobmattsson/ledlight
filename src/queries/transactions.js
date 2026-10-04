@@ -27,7 +27,14 @@ module.exports = ({
     const { accounts, id, order, page, pageSize } = parseOptions(
       optionsSchema, options, 'transactions',
     );
-    const filters = [];
+    const filters = [`EXISTS (
+      SELECT 1
+      FROM postings AS nonzero_postings
+      JOIN resolved_posting_amounts AS nonzero_amounts
+        ON nonzero_amounts.posting_id = nonzero_postings.id
+      WHERE nonzero_postings.transaction_id = transactions.entry_id
+        AND decimal_cmp(nonzero_amounts.quantity, '0') != 0
+    )`];
     const filterParameters = [];
     if (id !== undefined) {
       filters.push('transactions.entry_id = ?');
@@ -61,7 +68,7 @@ module.exports = ({
       FROM transactions
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
       ${filter}
-      ORDER BY transactions.date ${direction}, entries.sequence ${direction}
+      ORDER BY entries.sequence ${direction}
       LIMIT ? OFFSET ?
     `).all(...filterParameters, pageSize, (selectedPage - 1) * pageSize);
     const transactions = transactionRows.map((row) => ({ ...row, notes: [], postings: [] }));
@@ -74,6 +81,7 @@ module.exports = ({
           postings.transaction_id AS transactionId,
           postings.id AS postingId,
           postings.report_date AS postingDate,
+          postings.line AS sourceLine,
           postings.account,
           postings.comment,
           postings.amount_quantity AS amountQuantity,
@@ -135,17 +143,25 @@ module.exports = ({
               },
             amounts: [],
           };
+          Object.defineProperty(posting, 'sourceLine', { value: row.sourceLine });
           transaction.postings.push(posting);
         }
         posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
       }
       const noteRows = database.prepare(`
-        SELECT transaction_id AS transactionId, text
+        SELECT transaction_id AS transactionId, line, text
         FROM transaction_notes
         WHERE transaction_id IN (${placeholders})
         ORDER BY transaction_id, position
       `).all(...transactions.map((transaction) => transaction.transactionId));
-      for (const row of noteRows) byId.get(row.transactionId).notes.push(row.text);
+      for (const row of noteRows) {
+        const transaction = byId.get(row.transactionId);
+        transaction.notes.push(row.text);
+        if (!Object.hasOwn(transaction, 'positionedNotes')) {
+          Object.defineProperty(transaction, 'positionedNotes', { value: [] });
+        }
+        transaction.positionedNotes.push({ line: row.line, text: row.text });
+      }
     }
     return {
       order,
@@ -153,10 +169,23 @@ module.exports = ({
       pageSize,
       totalTransactions,
       totalPages,
-      transactions: transactions.map((transaction) => ({
-        ...transaction,
-        postings: transaction.postings.map(({ id: _id, ...posting }) => posting),
-      })),
+      transactions: transactions.map((transaction) => {
+        const result = {
+          ...transaction,
+          postings: transaction.postings.map(({ id: _id, ...posting }, index) => {
+            Object.defineProperty(posting, 'sourceLine', {
+              value: transaction.postings[index].sourceLine,
+            });
+            return posting;
+          }),
+        };
+        if (Object.hasOwn(transaction, 'positionedNotes')) {
+          Object.defineProperty(result, 'positionedNotes', {
+            value: transaction.positionedNotes,
+          });
+        }
+        return result;
+      }),
     };
   }
 

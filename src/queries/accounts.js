@@ -13,18 +13,18 @@ module.exports = ({
     const { accounts } = parseOptions(optionsSchema, options, 'accounts');
     const filter = accounts.length === 0
       ? { sql: '1 = 1', parameters: [] }
-      : accountFilter('declarations.name', accounts);
+      : accountFilter('postings.account', accounts);
     return database.prepare(`
       SELECT
-        declarations.name AS account,
+        postings.account,
         declarations.comment,
         COUNT(DISTINCT postings.transaction_id) AS transactionCount
-      FROM account_declarations AS declarations
-      JOIN journal_entries AS entries ON entries.id = declarations.entry_id
-      LEFT JOIN postings ON postings.account = declarations.name
-      WHERE ${filter.sql}
-      GROUP BY declarations.entry_id
-      ORDER BY declarations.name, entries.sequence
+      FROM postings
+      JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
+      LEFT JOIN account_declarations AS declarations ON declarations.name = postings.account
+      WHERE decimal_cmp(amounts.quantity, '0') != 0 AND ${filter.sql}
+      GROUP BY postings.account
+      ORDER BY postings.account || char(1114111)
     `).all(...filter.parameters);
   }
 

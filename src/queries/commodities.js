@@ -9,9 +9,20 @@ module.exports = ({
   function queryCommodities(database, options, _caches) {
     parseOptions(optionsSchema, options, 'commodities');
     return database.prepare(`
-      SELECT symbol AS commodity
-      FROM commodity_declarations
-      ORDER BY commodity, entry_id
+      SELECT commodity FROM resolved_posting_amounts
+      UNION
+      SELECT amount_commodity AS commodity FROM postings WHERE amount_commodity IS NOT NULL
+      UNION
+      SELECT lot_cost_commodity AS commodity FROM postings WHERE lot_cost_commodity IS NOT NULL
+      UNION
+      SELECT cost_commodity AS commodity FROM postings WHERE cost_commodity IS NOT NULL
+      UNION
+      SELECT balance_assignment_commodity AS commodity
+      FROM postings WHERE balance_assignment_commodity IS NOT NULL
+      UNION
+      SELECT balance_assertion_commodity AS commodity
+      FROM postings WHERE balance_assertion_commodity IS NOT NULL
+      ORDER BY commodity
     `).all();
   }
 

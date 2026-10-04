@@ -5,6 +5,8 @@ const { resolveRepositoryModule } = require("../../../support/repository-contain
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
+  divideDecimals,
+  formatDecimal,
   formatDecimalFixed,
   parseDecimal,
   registerDecimalFunctions,
@@ -15,6 +17,16 @@ test('rounds exact decimal values to a fixed number of places', () => {
   assert.equal(formatDecimalFixed(parseDecimal('1.004'), 2), '1.00');
   assert.equal(formatDecimalFixed(parseDecimal('1.005'), 2), '1.01');
   assert.equal(formatDecimalFixed(parseDecimal('-1.005'), 2), '-1.01');
+});
+
+test('divides exact decimal values to a bounded scale', () => {
+  assert.equal(formatDecimal(divideDecimals(parseDecimal('1000'), parseDecimal('10'), 10)), '100');
+  assert.equal(
+    formatDecimal(divideDecimals(parseDecimal('19999.98'), parseDecimal('48.34'), 10)),
+    '413.7356226727',
+  );
+  assert.equal(formatDecimal(divideDecimals(parseDecimal('-1'), parseDecimal('3'), 2)), '-0.33');
+  assert.throws(() => divideDecimals(parseDecimal('1'), parseDecimal('0'), 10), /divide by zero/u);
 });
 
 test('requires digits on both sides of a decimal point', () => {

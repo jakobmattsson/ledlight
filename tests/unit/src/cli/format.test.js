@@ -259,7 +259,10 @@ test('formats prices as text, JSON, and CSV', () => {
     comment: 'Closing, official',
   }];
 
-  assert.equal(formatPrices(prices, { format: 'text' }), '2024/01/02 FUND 12.5 SEK\n');
+  assert.equal(
+    formatPrices(prices, { format: 'text' }),
+    '2024/01/02 FUND         12.5 SEK\n',
+  );
   assert.equal(formatPrices(prices, { format: 'json' }), `${JSON.stringify(prices, null, 2)}\n`);
   assert.equal(
     formatPrices(prices, { format: 'csv' }),
@@ -308,7 +311,7 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
 
   assert.equal(
     formatTransactions(report, { format: 'text' }),
-    '2024/01/03 Shop | Groceries  ; imported\n' +
+    '2024/01/03 Shop | Groceries ; imported\n' +
     '    ; Project: Home\n' +
     '    Assets:Cash                               -5 SEK  ; card\n' +
     '    Expenses:Food\n',

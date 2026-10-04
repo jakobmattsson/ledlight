@@ -372,14 +372,14 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /ledlight <command> --help/u);
   assert.match(
     usage(),
-    /raw:\n {2}accounts\s+show declared accounts[\s\S]* {2}tags\s+show declared tags[\s\S]* {2}commodities\s+show declared commodities[\s\S]* {2}prices\s+show price directives[\s\S]* {2}transactions\|print\s+show a page of transactions/u,
+    /raw:\n {2}accounts\s+show used accounts[\s\S]* {2}tags\s+show used tags[\s\S]* {2}commodities\s+show used commodities[\s\S]* {2}prices\s+show market prices[\s\S]* {2}transactions\|print\s+show transactions/u,
   );
   assert.match(
     usage(),
     /misc:[\s\S]* {2}balance\s+show account balances[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
-  assert.match(usage(), /transactions\|print\s+show a page of transactions/u);
+  assert.match(usage(), /transactions\|print\s+show transactions/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);

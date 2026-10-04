@@ -221,8 +221,8 @@ Each posting contains `postingDate` and exact amount rows with the running
 
 ### `journal.accounts({ accounts })`
 
-Returns one row per declared account, sorted by name. Later duplicate
-declarations produce warnings and are not stored. The optional `accounts`
+Returns one row per used, non-zero account in Ledger order. A matching account
+declaration supplies its comment. The optional `accounts`
 array selects names matching any supplied pattern and defaults to `[]`:
 
 ```js
@@ -235,17 +235,19 @@ array selects names matching any supplied pattern and defaults to `[]`:
 
 ### `journal.tags()`
 
-Returns one row per declared tag, sorted by name. Later duplicate declarations
-produce warnings and are not stored. Each row is `{ tag }`.
+Returns one row per used tag, sorted by name. Unused declarations are omitted.
+Each row is `{ tag }`.
 
 ### `journal.commodities()`
 
-Returns one row per declared commodity, sorted by symbol. Later duplicate
-declarations produce warnings and are not stored. Each row is `{ commodity }`.
+Returns one row per commodity used by a non-zero posting, sorted by symbol.
+Unused declarations are omitted. Each row is `{ commodity }`.
 
 ### `journal.prices()`
 
-Returns every price directive, ordered by date and then journal position:
+Returns Ledger's effective market prices for used commodities. Explicit prices
+replace inferred prices on the same date, repeated explicit prices use the last
+value, and lot or transaction costs contribute inferred prices:
 
 ```js
 {
@@ -274,7 +276,8 @@ cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
 The `transactions` CLI command, also available as `print`, defaults to
-`--format text`. Its repeatable `--accounts PATTERN` option selects transactions
+`--format text` and prints every matching transaction rather than applying the
+API's 100-row default page size. Its repeatable `--accounts PATTERN` option selects transactions
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the transactions on the selected page.
 `--format json` returns the complete paginated API result, while `--format csv`

@@ -38,23 +38,26 @@ P 2024-01-02 FUND 13 SEK ; corrected
   return openJournal(journalPath);
 }
 
-test('lists each declared tag once', (t) => {
+test('lists each used tag once while omitting unused declarations', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.tags(), [{ tag: 'Declared' }]);
+  assert.deepEqual(project.tags(), [
+    { tag: 'Receipt' },
+    { tag: 'Reviewed' },
+    { tag: 'Source' },
+  ]);
 });
 
-test('lists each declared commodity once while omitting undeclared symbols', (t) => {
+test('lists each used commodity once while omitting unused declarations', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.commodities(), [
     { commodity: 'FUND' },
     { commodity: 'SEK' },
-    { commodity: 'UNUSED' },
   ]);
 });
 
-test('lists each declared account once with the first declaration metadata', (t) => {
+test('lists each used account once with its declaration metadata', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.accounts(), [{
@@ -81,26 +84,20 @@ test('warns about every duplicate declaration', (t) => {
   }]);
 });
 
-test('lists every price directive in date and journal order', (t) => {
+test('lists the effective explicit and inferred market prices', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.prices(), [{
-    date: '2024-01-01',
-    baseCommodity: 'EUR',
-    quoteQuantity: '11',
-    quoteCommodity: 'NOK',
-    comment: null,
-  }, {
-    date: '2024-01-02',
-    baseCommodity: 'FUND',
-    quoteQuantity: '12.5',
-    quoteCommodity: 'SEK',
-    comment: 'closing',
-  }, {
     date: '2024-01-02',
     baseCommodity: 'FUND',
     quoteQuantity: '13',
     quoteCommodity: 'SEK',
     comment: 'corrected',
+  }, {
+    date: '2024-01-03',
+    baseCommodity: 'FUND',
+    quoteQuantity: '10',
+    quoteCommodity: 'SEK',
+    comment: null,
   }]);
 });

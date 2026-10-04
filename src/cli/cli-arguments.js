@@ -122,7 +122,7 @@ module.exports = ({
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
     const accounts = registerCommand(
-      program.command('accounts').description('show declared accounts'),
+      program.command('accounts').description('show used accounts'),
       'accounts',
       'raw',
     );
@@ -135,9 +135,9 @@ module.exports = ({
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
     for (const [name, operation, description] of [
-      ['tags', 'tags', 'show declared tags'],
-      ['commodities', 'commodities', 'show declared commodities'],
-      ['prices', 'prices', 'show price directives'],
+      ['tags', 'tags', 'show used tags'],
+      ['commodities', 'commodities', 'show used commodities'],
+      ['prices', 'prices', 'show market prices'],
     ]) {
       const command = registerCommand(
         program.command(name).description(description), operation, 'raw',
@@ -175,7 +175,7 @@ module.exports = ({
 
     const transactions = registerCommand(
       program.command('transactions').alias('print')
-        .description('show a page of transactions'),
+        .description('show transactions'),
       'transactions',
       'raw',
     );

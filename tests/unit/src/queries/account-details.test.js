@@ -90,13 +90,12 @@ test('rejects invalid account-detail options', (t) => {
     /Unknown accountTransactions option: unknown/u);
 });
 
-test('lists declared accounts with transaction counts', (t) => {
+test('lists used accounts with transaction counts in Ledger order', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.accounts(), [
-    { account: 'Assets:Closed', comment: null, transactionCount: 3 },
     { account: 'Assets:Closed:Child', comment: null, transactionCount: 1 },
-    { account: 'Assets:Unused', comment: 'Kept for future use', transactionCount: 0 },
+    { account: 'Assets:Closed', comment: null, transactionCount: 3 },
     { account: 'Equity:Opening', comment: null, transactionCount: 4 },
   ]);
   assert.deepEqual(project.accounts({ accounts: ['Closed$', '^Equity:'] }), [
