@@ -24,7 +24,7 @@ module.exports = ({
     };
   }
 
-  function queryReconciliationEntries(database, options) {
+  function queryReconciliationEntries(database, options, _caches) {
     const { accounts, related = false } = parseOptions(
       optionsSchema, options, 'reconciliationEntries',
     );
