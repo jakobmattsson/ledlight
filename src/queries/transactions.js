@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  accountFilter: { accountFilter },
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
@@ -22,9 +23,9 @@ module.exports = ({
       .default(100),
   });
 
-  function queryLedgerTransactions(database, options, _caches) {
+  function queryTransactions(database, options, _caches) {
     const { account, id, order, page, pageSize } = parseOptions(
-      optionsSchema, options, 'ledgerTransactions',
+      optionsSchema, options, 'transactions',
     );
     const filters = [];
     const filterParameters = [];
@@ -33,13 +34,14 @@ module.exports = ({
       filterParameters.push(id);
     }
     if (account !== undefined) {
+      const accountMatch = accountFilter('matching_postings.account', [account]);
       filters.push(`EXISTS (
         SELECT 1
         FROM postings AS matching_postings
         WHERE matching_postings.transaction_id = transactions.entry_id
-          AND matching_postings.account = ?
+          AND ${accountMatch.sql}
       )`);
-      filterParameters.push(account);
+      filterParameters.push(...accountMatch.parameters);
     }
     const filter = filters.length === 0 ? '' : `WHERE ${filters.join(' AND ')}`;
     const totalTransactions = database.prepare(`
@@ -158,5 +160,5 @@ module.exports = ({
     };
   }
 
-  return { name: 'ledgerTransactions', inputSchema: optionsSchema, execute: queryLedgerTransactions };
+  return { name: 'transactions', inputSchema: optionsSchema, execute: queryTransactions };
 };

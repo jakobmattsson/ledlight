@@ -99,8 +99,8 @@ module.exports = ({
     command, '--date-basis <basis>', 'select posting or transaction dates',
     { choices: ['posting', 'transaction'], apiInput: 'dateBasis' },
   );
-  const addAccountPrefixes = (command) => addValueOption(
-    command, '--accounts <prefix>', 'include an account prefix (repeatable)',
+  const addAccountPatterns = (command) => addValueOption(
+    command, '--accounts <pattern>', 'include accounts matching a pattern (repeatable)',
     { repeatable: true, apiInput: 'accounts' },
   );
   const addJournal = (command) => addValueOption(
@@ -147,32 +147,32 @@ module.exports = ({
       });
     }
     const accountBalances = registerCommand(
-      program.command('account-balances').description('show balances for one exact account'),
+      program.command('account-balances').description('show balances for matching accounts'),
       'accountBalances',
       'misc',
     );
     addJournal(accountBalances);
-    addValueOption(accountBalances, '--account <name>', 'select an exact account', {
+    addValueOption(accountBalances, '--account <pattern>', 'select matching accounts', {
       required: true, apiInput: 'account',
     });
     addDateOption(accountBalances, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     const accountPostings = registerCommand(
-      program.command('account-postings').description('show postings for one exact account'),
+      program.command('account-postings').description('show postings for matching accounts'),
       'accountPostings',
       'misc',
     );
     addJournal(accountPostings);
-    addValueOption(accountPostings, '--account <name>', 'select an exact account', {
+    addValueOption(accountPostings, '--account <pattern>', 'select matching accounts', {
       required: true, apiInput: 'account',
     });
     addDateOption(accountPostings, '--after <date>', 'include activity after YYYY-MM-DD', 'after');
     const accountTransactions = registerCommand(
-      program.command('account-transactions').description('show transactions for one exact account'),
+      program.command('account-transactions').description('show transactions for matching accounts'),
       'accountTransactions',
       'misc',
     );
     addJournal(accountTransactions);
-    addValueOption(accountTransactions, '--account <name>', 'select an exact account', {
+    addValueOption(accountTransactions, '--account <pattern>', 'select matching accounts', {
       required: true, apiInput: 'account',
     });
     const commodityDescriptions = registerCommand(
@@ -182,39 +182,39 @@ module.exports = ({
     );
     addJournal(commodityDescriptions);
 
-    const ledgerTransactions = registerCommand(
-      program.command('ledger-transactions').alias('print')
+    const transactions = registerCommand(
+      program.command('transactions').alias('print')
         .description('show a page of transactions'),
-      'ledgerTransactions',
+      'transactions',
       'raw',
     );
-    addJournal(ledgerTransactions);
-    addValueOption(ledgerTransactions, '--account <name>', 'select transactions for an exact account', {
+    addJournal(transactions);
+    addValueOption(transactions, '--account <pattern>', 'select transactions for matching accounts', {
       apiInput: 'account',
     });
-    addValueOption(ledgerTransactions, '--id <id>', 'select one transaction ID', {
+    addValueOption(transactions, '--id <id>', 'select one transaction ID', {
       apiInput: 'id',
     });
-    addValueOption(ledgerTransactions, '--order <order>', 'sort transactions', {
+    addValueOption(transactions, '--order <order>', 'sort transactions', {
       choices: ['newest', 'oldest'], apiInput: 'order',
     });
-    addValueOption(ledgerTransactions, '--page <number>', 'select a page', {
+    addValueOption(transactions, '--page <number>', 'select a page', {
       apiInput: 'page',
     });
-    addValueOption(ledgerTransactions, '--page-size <number>', 'set the page size (maximum 100)', {
+    addValueOption(transactions, '--page-size <number>', 'set the page size (maximum 100)', {
       apiInput: 'pageSize',
     });
-    addOutputValueOption(ledgerTransactions, '--format <format>', 'select the output format', {
+    addOutputValueOption(transactions, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
     const reconciliationEntries = registerCommand(
       program.command('reconciliation-entries')
-        .description('show entries for reconciling exact accounts'),
+        .description('show entries for reconciling matching accounts'),
       'reconciliationEntries',
       'misc',
     );
     addJournal(reconciliationEntries);
-    addValueOption(reconciliationEntries, '--account <name>', 'select an exact account (repeatable)', {
+    addValueOption(reconciliationEntries, '--account <pattern>', 'select matching accounts (repeatable)', {
       repeatable: true, required: true, apiInput: 'accounts',
     });
     addBooleanOption(
@@ -242,7 +242,7 @@ module.exports = ({
     addJournal(aggregate);
     addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPrefixes(aggregate); addDateBasisOption(aggregate); addJson(aggregate);
+    addAccountPatterns(aggregate); addDateBasisOption(aggregate); addJson(aggregate);
     addBooleanOption(aggregate, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
     addBooleanOption(aggregate, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
     addBooleanOption(aggregate, '--invert', 'invert the sign of report amounts', 'invert');
@@ -257,8 +257,8 @@ module.exports = ({
     addJournal(balanceHistory);
     addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPrefixes(balanceHistory); addDateBasisOption(balanceHistory);
-    addValueOption(balanceHistory, '--account-factor <account=factor>', 'factor an exact account (repeatable)', {
+    addAccountPatterns(balanceHistory); addDateBasisOption(balanceHistory);
+    addValueOption(balanceHistory, '--account-factor <pattern=factor>', 'factor matching accounts (repeatable)', {
       repeatable: true, apiInput: 'accountFactors',
     });
     addJson(balanceHistory);
@@ -272,7 +272,7 @@ module.exports = ({
     );
     addJournal(gain);
     addDateOption(gain, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPrefixes(gain); addDateBasisOption(gain); addJson(gain);
+    addAccountPatterns(gain); addDateBasisOption(gain); addJson(gain);
     addOutputBooleanOption(gain, '--csv', 'write CSV output', 'csv');
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
@@ -282,7 +282,7 @@ module.exports = ({
     addJournal(performance);
     addDateOption(performance, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(performance, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPrefixes(performance);
+    addAccountPatterns(performance);
     addValueOption(performance, '--commodities <name>', 'include a commodity (repeatable)', {
       repeatable: true, apiInput: 'commodities',
     });
@@ -367,7 +367,7 @@ module.exports = ({
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };
-    if (commandName === 'ledger-transactions') {
+    if (commandName === 'transactions') {
       return {
         ...common,
         options: compact({
@@ -435,7 +435,7 @@ module.exports = ({
         !parsed.output.details && parsed.output.format === 'text') {
       return `${prefix} accounts`;
     }
-    if (parsed.command === 'ledger-transactions' &&
+    if (parsed.command === 'transactions' &&
         Object.keys(parsed.options).length === 0 && parsed.output.format === 'text') {
       return `${prefix} print`;
     }

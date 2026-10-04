@@ -63,9 +63,9 @@ module.exports = ({
     execute: queryPrices,
   } = query('prices');
   const {
-    inputSchema: ledgerTransactionsOptionsSchema,
-    execute: queryLedgerTransactions,
-  } = query('ledgerTransactions');
+    inputSchema: transactionsOptionsSchema,
+    execute: queryTransactions,
+  } = query('transactions');
   const {
     inputSchema: reconciliationEntriesOptionsSchema,
     execute: queryReconciliationEntries,
@@ -85,7 +85,7 @@ module.exports = ({
     tags: { inputs: journalInputs(tagsOptionsSchema) },
     commodities: { inputs: journalInputs(commoditiesOptionsSchema) },
     prices: { inputs: journalInputs(pricesOptionsSchema) },
-    ledgerTransactions: { inputs: journalInputs(ledgerTransactionsOptionsSchema) },
+    transactions: { inputs: journalInputs(transactionsOptionsSchema) },
     reconciliationEntries: { inputs: journalInputs(reconciliationEntriesOptionsSchema) },
     ledgerValuationRateResolver: {
       inputs: ['journalPath', ...resolverInputNames],
@@ -180,8 +180,8 @@ module.exports = ({
       prices() {
         return runQuery(queryPrices, {});
       },
-      ledgerTransactions(options) {
-        return runQuery(queryLedgerTransactions, options);
+      transactions(options) {
+        return runQuery(queryTransactions, options);
       },
       reconciliationEntries(options) {
         return queryDatabase(current.databasePath,

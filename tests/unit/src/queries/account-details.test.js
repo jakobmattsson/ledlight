@@ -47,24 +47,29 @@ account Equity:Opening
   return openJournal(journalPath);
 }
 
-test('returns exact-account balances by commodity through an inclusive date', (t) => {
+test('returns matching-account balances by commodity through an inclusive date', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.accountBalances({ account: 'Assets:Closed' }), [
+  assert.deepEqual(project.accountBalances({ account: '^Assets:Closed$' }), [
     { commodity: 'FUND', quantity: '0' },
     { commodity: 'SEK', quantity: '1' },
   ]);
-  assert.deepEqual(project.accountBalances({ account: 'Assets:Closed', to: '2023-01-02' }), [
+  assert.deepEqual(project.accountBalances({ account: '^Assets:Closed$', to: '2023-01-02' }), [
     { commodity: 'FUND', quantity: '0' },
     { commodity: 'SEK', quantity: '0' },
   ]);
+  assert.deepEqual(project.accountBalances({ account: 'Closed' }), [
+    { commodity: 'FUND', quantity: '0' },
+    { commodity: 'SEK', quantity: '2' },
+  ]);
 });
 
-test('returns exact-account activity after either its transaction or posting date', (t) => {
+test('returns matching-account activity after either its transaction or posting date', (t) => {
   const project = createProject(t);
 
-  assert.equal(project.accountPostings({ account: 'Assets:Closed' }).length, 5);
-  assert.deepEqual(project.accountPostings({ account: 'Assets:Closed', after: '2023-01-02' }), [
+  assert.equal(project.accountPostings({ account: '^Assets:Closed$' }).length, 5);
+  assert.equal(project.accountPostings({ account: 'Closed' }).length, 6);
+  assert.deepEqual(project.accountPostings({ account: '^Assets:Closed$', after: '2023-01-02' }), [
     {
       transactionDate: '2023-01-02',
       postingDate: '2023-01-04',
@@ -101,7 +106,7 @@ test('lists declared accounts with transaction counts', (t) => {
 test('returns newest-first transactions and groups amounts by posting', (t) => {
   const project = createProject(t);
 
-  const transactions = project.accountTransactions({ account: 'Assets:Closed' });
+  const transactions = project.accountTransactions({ account: '^Assets:Closed$' });
   assert.equal(transactions.length, 3);
   assert.deepEqual(transactions[0], {
     transactionId: 10,
@@ -123,4 +128,5 @@ test('returns newest-first transactions and groups amounts by posting', (t) => {
       { quantity: '2', commodity: 'FUND', balance: '2' },
     ],
   }]);
+  assert.equal(project.accountTransactions({ account: 'Closed' }).length, 4);
 });

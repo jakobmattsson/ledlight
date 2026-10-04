@@ -41,24 +41,24 @@ test('reads direct and related reconciliation entries from the open journal', (t
   const journal = openJournal(journalPath);
 
   assert.deepEqual(journal.reconciliationEntries({
-    accounts: ['Assets:Cash'],
+    accounts: ['Cash$'],
   }).map(reconciliationFields), [{
     date: '2024-01-01',
     amount: '-10',
     description: 'Shop | Groceries',
     commodity: 'SEK',
-    account: 'Assets:Cash',
+    account: 'Cash$',
   }]);
   assert.deepEqual(
     journal.reconciliationEntries({
-      accounts: ['Assets:Cash'], related: true,
+      accounts: ['^Assets'], related: true,
     }).map(reconciliationFields),
     [{
       date: '2024-01-01',
       amount: '10',
       description: 'Shop | Groceries',
       commodity: 'SEK',
-      account: 'Assets:Cash',
+      account: '^Assets',
       postingAccount: 'Expenses:Food',
     }],
   );

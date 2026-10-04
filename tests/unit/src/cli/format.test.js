@@ -11,7 +11,7 @@ const {
   formatHumanReadable,
   formatInvestmentPerformance,
   formatInvestmentPerformanceJson,
-  formatLedgerTransactions,
+  formatTransactions,
   formatJson,
   formatAccounts,
   formatCommodities,
@@ -272,25 +272,25 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
   };
 
   assert.equal(
-    formatLedgerTransactions(report, { format: 'text' }),
+    formatTransactions(report, { format: 'text' }),
     '2024/01/03 Shop | Groceries  ; imported\n' +
     '    ; Project: Home\n' +
     '    Assets:Cash                               -5 SEK  ; card\n' +
     '    Expenses:Food\n',
   );
   assert.equal(
-    formatLedgerTransactions(report, { format: 'csv' }),
+    formatTransactions(report, { format: 'csv' }),
     'transactionId,transactionDate,description,transactionComment,postingDate,account,' +
     'postingComment,quantity,commodity\n' +
     '7,2024-01-03,Shop | Groceries,imported,2024-01-03,Assets:Cash,card,-5,SEK\n' +
     '7,2024-01-03,Shop | Groceries,imported,2024-01-03,Expenses:Food,,5,SEK\n',
   );
   assert.equal(
-    formatLedgerTransactions(report, { format: 'json' }),
+    formatTransactions(report, { format: 'json' }),
     `${JSON.stringify(report, null, 2)}\n`,
   );
   assert.equal(
-    formatLedgerTransactions({ ...report, transactions: [] }, { format: 'text' }),
+    formatTransactions({ ...report, transactions: [] }, { format: 'text' }),
     '',
   );
 });

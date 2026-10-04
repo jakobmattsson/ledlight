@@ -41,7 +41,7 @@ account Expenses:Shop
 test('paginates complete transactions in either date order', (t) => {
   const project = createProject(t);
 
-  const newest = project.ledgerTransactions({ order: 'newest', page: 1, pageSize: 2 });
+  const newest = project.transactions({ order: 'newest', page: 1, pageSize: 2 });
   assert.equal(newest.totalTransactions, 3);
   assert.equal(newest.totalPages, 2);
   assert.deepEqual(newest.transactions.map((transaction) => transaction.transactionDate), [
@@ -65,7 +65,7 @@ test('paginates complete transactions in either date order', (t) => {
   });
   assert.equal(newest.transactions[0].postings[1].amount, null);
 
-  const oldest = project.ledgerTransactions({ order: 'oldest', page: 2, pageSize: 2 });
+  const oldest = project.transactions({ order: 'oldest', page: 2, pageSize: 2 });
   assert.equal(oldest.page, 2);
   assert.deepEqual(oldest.transactions.map((transaction) => transaction.transactionDate), [
     '2024-01-03',
@@ -75,7 +75,7 @@ test('paginates complete transactions in either date order', (t) => {
 test('defaults to the first 100 transactions in journal order', (t) => {
   const project = createProject(t);
 
-  const result = project.ledgerTransactions();
+  const result = project.transactions();
 
   assert.equal(result.order, 'oldest');
   assert.equal(result.page, 1);
@@ -87,9 +87,9 @@ test('defaults to the first 100 transactions in journal order', (t) => {
 
 test('filters the transaction collection by ID', (t) => {
   const project = createProject(t);
-  const id = project.ledgerTransactions().transactions[2].transactionId;
+  const id = project.transactions().transactions[2].transactionId;
 
-  const result = project.ledgerTransactions({ id });
+  const result = project.transactions({ id });
 
   assert.equal(result.totalTransactions, 1);
   assert.equal(result.totalPages, 1);
@@ -97,16 +97,16 @@ test('filters the transaction collection by ID', (t) => {
   assert.equal(result.transactions[0].description, 'Shop | Third');
   assert.equal(result.transactions[0].postings.length, 2);
 
-  const missing = project.ledgerTransactions({ id: 999 });
+  const missing = project.transactions({ id: 999 });
   assert.equal(missing.totalTransactions, 0);
   assert.equal(missing.totalPages, 0);
   assert.deepEqual(missing.transactions, []);
 });
 
-test('filters complete transactions by exact account', (t) => {
+test('filters complete transactions with literal substrings and optional anchors', (t) => {
   const project = createProject(t);
 
-  const result = project.ledgerTransactions({ account: 'Expenses:Shop' });
+  const result = project.transactions({ account: '^Expenses:Shop$' });
 
   assert.equal(result.totalTransactions, 1);
   assert.equal(result.totalPages, 1);
@@ -115,24 +115,27 @@ test('filters complete transactions by exact account', (t) => {
     result.transactions[0].postings.map((posting) => posting.account),
     ['Assets:Cash', 'Expenses:Shop'],
   );
-  assert.equal(project.ledgerTransactions({ account: 'Expenses' }).totalTransactions, 0);
+  assert.equal(project.transactions({ account: 'Expenses' }).totalTransactions, 1);
+  assert.equal(project.transactions({ account: '^Assets' }).totalTransactions, 3);
+  assert.equal(project.transactions({ account: 'Shop$' }).totalTransactions, 1);
+  assert.equal(project.transactions({ account: '^Expenses$' }).totalTransactions, 0);
 });
 
 test('clamps pages and rejects invalid list options', (t) => {
   const project = createProject(t);
 
-  assert.equal(project.ledgerTransactions({ order: 'newest', page: 99, pageSize: 2 }).page, 2);
-  assert.throws(() => project.ledgerTransactions({ order: 'sideways', page: 1, pageSize: 2 }),
+  assert.equal(project.transactions({ order: 'newest', page: 99, pageSize: 2 }).page, 2);
+  assert.throws(() => project.transactions({ order: 'sideways', page: 1, pageSize: 2 }),
     /order must be newest or oldest/u);
-  assert.throws(() => project.ledgerTransactions({ order: 'newest', page: 0, pageSize: 2 }),
+  assert.throws(() => project.transactions({ order: 'newest', page: 0, pageSize: 2 }),
     /page must be a positive integer/u);
-  assert.throws(() => project.ledgerTransactions({ order: 'newest', page: 1, pageSize: 101 }),
+  assert.throws(() => project.transactions({ order: 'newest', page: 1, pageSize: 101 }),
     /pageSize must not exceed 100/u);
-  assert.throws(() => project.ledgerTransactions({ id: 'invalid' }),
+  assert.throws(() => project.transactions({ id: 'invalid' }),
     /id must be a positive integer/u);
-  assert.throws(() => project.ledgerTransactions({ account: '' }),
+  assert.throws(() => project.transactions({ account: '' }),
     /account must be a non-empty string/u);
-  assert.throws(() => project.ledgerTransactions({
+  assert.throws(() => project.transactions({
     order: 'newest', page: 1, pageSize: 2, unknown: true,
-  }), /Unknown ledgerTransactions option: unknown/u);
+  }), /Unknown transactions option: unknown/u);
 });

@@ -135,15 +135,15 @@ test('values holdings daily and applies date filters to the output', (t) => {
   ]);
 });
 
-test('also returns balances with exact per-account factors when requested', (t) => {
+test('also returns balances with per-pattern account factors when requested', (t) => {
   const databasePath = buildFixture(t);
 
   assert.deepEqual(balanceHistoryReport(databasePath, {
     to: '2024-01-03',
-    accounts: ['Assets:', 'Liabilities:'],
+    accounts: ['^Assets:', '^Liabilities:'],
     accountFactors: {
-      'Assets:Fund': '0.5',
-      'Liabilities:Card': '0.25',
+      'Fund$': '0.5',
+      '^Liabilities': '0.25',
     },
   }), [
     { date: '2024-01-01', amount: '20', commodity: 'SEK', factoredAmount: '10' },

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  accountPrefixFilter: { accountPrefixFilter },
+  accountFilter: { accountFilter },
   publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
   investmentReturns: { calculatePerformance },
@@ -39,7 +39,7 @@ module.exports = ({
     const clauses = [];
     const parameters = [];
     if (options.accounts.length > 0) {
-      const filter = accountPrefixFilter('p.account', options.accounts);
+      const filter = accountFilter('p.account', options.accounts);
       clauses.push(filter.sql);
       parameters.push(...filter.parameters);
     }
@@ -61,7 +61,7 @@ module.exports = ({
     const clauses = [`${alias}.commodity IN (${commodities.map(() => '?').join(', ')})`];
     const parameters = [...commodities];
     if (options.accounts.length > 0) {
-      const filter = accountPrefixFilter('p.account', options.accounts);
+      const filter = accountFilter('p.account', options.accounts);
       clauses.push(filter.sql);
       parameters.push(...filter.parameters);
     }
@@ -141,7 +141,7 @@ module.exports = ({
     const accountClauses = [];
     const accountParameters = [];
     if (options.accounts.length > 0) {
-      const filter = accountPrefixFilter('p.account', options.accounts);
+      const filter = accountFilter('p.account', options.accounts);
       accountClauses.push(filter.sql);
       accountParameters.push(...filter.parameters);
     }

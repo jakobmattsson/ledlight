@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  accountFilter: { accountFilter },
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
@@ -11,6 +12,7 @@ module.exports = ({
 
   function queryAccountPostings(database, options, _caches) {
     const { account, after } = parseOptions(optionsSchema, options, 'accountPostings');
+    const filter = accountFilter('p.account', [account]);
     return database.prepare(`
       SELECT
         t.date AS transactionDate,
@@ -20,13 +22,13 @@ module.exports = ({
       FROM resolved_posting_amounts AS r
       JOIN postings AS p ON p.id = r.posting_id
       JOIN transactions AS t ON t.entry_id = p.transaction_id
-      WHERE p.account = ?
+      WHERE ${filter.sql}
         AND (
           t.date > COALESCE(?, '0000-00-00')
           OR p.report_date > COALESCE(?, '0000-00-00')
         )
       ORDER BY p.report_date, p.id, r.position
-    `).all(account, after ?? null, after ?? null);
+    `).all(...filter.parameters, after ?? null, after ?? null);
   }
 
   return { name: 'accountPostings', inputSchema: optionsSchema, execute: queryAccountPostings };

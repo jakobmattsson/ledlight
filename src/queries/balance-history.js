@@ -6,7 +6,7 @@ module.exports = ({
     negateDecimal,
     parseDecimal,
   },
-  accountPrefixFilter: { accountPrefixFilter },
+  accountFilter: { accountFilter },
   publicErrors: { createError, errorCodes },
   apiOptions: { parseOptions },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
@@ -53,18 +53,22 @@ module.exports = ({
   function selectBalanceHistory(database, options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
     const factorEntries = Object.entries(options.accountFactors);
+    const factorFilters = factorEntries.map(([pattern]) => accountFilter('p.account', [pattern]));
     const factorExpression = factorEntries.length > 0
-      ? `CASE p.account
-          ${factorEntries.map(() => 'WHEN ? THEN ?').join('\n          ')}
+      ? `CASE
+          ${factorFilters.map((filter) => `WHEN ${filter.sql} THEN ?`).join('\n          ')}
           ELSE '1'
         END`
       : undefined;
     const postingClauses = [];
-    const parameters = factorEntries.flatMap(([account, factor]) => [account, factor]);
+    const parameters = factorEntries.flatMap(([, factor], index) => [
+      ...factorFilters[index].parameters,
+      factor,
+    ]);
     if (options.accounts.length > 0) {
-      const accountFilter = accountPrefixFilter('p.account', options.accounts);
-      postingClauses.push(accountFilter.sql);
-      parameters.push(...accountFilter.parameters);
+      const filter = accountFilter('p.account', options.accounts);
+      postingClauses.push(filter.sql);
+      parameters.push(...filter.parameters);
     }
     const postingWhere = postingClauses.length > 0
       ? `WHERE ${postingClauses.join('\n        AND ')}`

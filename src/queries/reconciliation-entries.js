@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  accountFilter: { accountMatches },
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
@@ -45,26 +46,18 @@ module.exports = ({
       JOIN source_files AS sf ON sf.id = je.source_file_id
       ORDER BY p.report_date, p.id, r.position
     `).all();
-    const directByAccount = new Map();
-    const transactionIdsByAccount = new Map();
-    rows.forEach((row, index) => {
-      const direct = directByAccount.get(row.postingAccount) || [];
-      direct.push({ row, rowNumber: index + 1 });
-      directByAccount.set(row.postingAccount, direct);
-      const transactionIds = transactionIdsByAccount.get(row.postingAccount) || new Set();
-      transactionIds.add(row.transactionId);
-      transactionIdsByAccount.set(row.postingAccount, transactionIds);
-    });
-
-    return accounts.flatMap((accountName) => {
+    return accounts.flatMap((accountPattern) => {
       if (!related) {
-        return (directByAccount.get(accountName) || [])
-          .map(({ row, rowNumber }) => toEntry(row, accountName, false, rowNumber));
+        return rows.flatMap((row, index) => accountMatches(row.postingAccount, accountPattern)
+          ? [toEntry(row, accountPattern, false, index + 1)]
+          : []);
       }
-      const transactionIds = transactionIdsByAccount.get(accountName) || new Set();
+      const transactionIds = new Set(rows
+        .filter((row) => accountMatches(row.postingAccount, accountPattern))
+        .map((row) => row.transactionId));
       return rows.flatMap((row, index) =>
-        transactionIds.has(row.transactionId) && row.postingAccount !== accountName
-          ? [toEntry(row, accountName, true, index + 1)]
+        transactionIds.has(row.transactionId) && !accountMatches(row.postingAccount, accountPattern)
+          ? [toEntry(row, accountPattern, true, index + 1)]
           : []);
     });
   }

@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  accountFilter: { accountFilter },
   decimal: { addDecimals, formatDecimal, parseDecimal },
   apiOptions: { parseOptions },
   zod: { z },
@@ -11,6 +12,7 @@ module.exports = ({
 
   function queryAccountTransactions(database, options, _caches) {
     const { account } = parseOptions(optionsSchema, options, 'accountTransactions');
+    const filter = accountFilter('postings.account', [account]);
     const rows = database.prepare(`
       SELECT
         transactions.entry_id AS transactionId,
@@ -27,10 +29,10 @@ module.exports = ({
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
       JOIN postings ON postings.transaction_id = transactions.entry_id
       JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
-      WHERE postings.account = ?
+      WHERE ${filter.sql}
       ORDER BY postings.report_date, entries.sequence,
         postings.position, amounts.position
-    `).all(account);
+    `).all(...filter.parameters);
     const transactions = [];
     const byId = new Map();
     const balances = new Map();

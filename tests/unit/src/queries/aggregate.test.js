@@ -84,12 +84,12 @@ test('supports open and closed date intervals', (t) => {
   ]);
 });
 
-test('combines repeated account prefixes with OR using literal prefix matching', (t) => {
+test('combines literal account patterns with OR and supports anchors', (t) => {
   const databasePath = buildFixture(t);
 
   assert.deepEqual(aggregateReport(databasePath, {
     to: '2024-01-02',
-    accounts: ['Assets:Cash', 'Equity:'],
+    accounts: ['Cash$', '^Equity:'],
   }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '150' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-170' },
