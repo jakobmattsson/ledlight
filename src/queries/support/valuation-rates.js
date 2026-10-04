@@ -9,8 +9,6 @@ module.exports = ({
   publicErrors: { createError, errorCodes },
   valuationRateResolver: {
     createLedgerValuationRateResolver,
-    resolverArgumentsSchema,
-    resolverInputNames,
   },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
 }) => {
@@ -118,19 +116,9 @@ module.exports = ({
   `).all(throughDate ?? null);
   }
 
-  function queryLedgerValuationRateResolver(database, _options, _caches) {
-    return createLedgerValuationRateResolver(
-      selectPriceHistory(database),
-      valuationCommodityFromDatabase(database),
-    );
-  }
-
   return {
     createLedgerValuationRateResolver,
-    resolverArgumentsSchema,
-    resolverInputNames,
     queryValuationRates,
-    queryLedgerValuationRateResolver,
     $$private: {
       resolveValuationRates,
       selectLatestPrices,

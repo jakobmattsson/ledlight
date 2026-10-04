@@ -27,7 +27,6 @@ test('defines one CLI command for every journal operation', () => {
     prices: 'prices',
     transactions: 'transactions',
     reconciliationEntries: 'reconciliation-entries',
-    ledgerValuationRateResolver: 'valuation-rate',
   });
 });
 
@@ -353,12 +352,6 @@ test('maps every remaining API parameter to CLI arguments', () => {
   ]), {
     command: 'reconciliation-entries', journalPath: '/journal',
     options: { accounts: ['Assets:Cash', 'Assets:Bank'], related: true },
-  });
-  assert.deepEqual(parseArguments([
-    'valuation-rate', '--file', '/journal', '--commodity', 'EUR', '--through-date', '2024-12-31',
-  ]), {
-    command: 'valuation-rate', journalPath: '/journal',
-    options: { commodity: 'EUR', throughDate: '2024-12-31' },
   });
 });
 

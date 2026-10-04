@@ -126,7 +126,6 @@ underlying result.
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
-| `valuation-rate --file PATH` | `openJournal(journalPath).ledgerValuationRateResolver()` | Resolve one valuation rate |
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |

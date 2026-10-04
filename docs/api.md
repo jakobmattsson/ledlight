@@ -294,13 +294,6 @@ Each row contains `date`, `amount`, `description`, `commodity`, `account`,
 exact decimal string, `account` is the selected pattern, and `row` is the
 one-based position in the complete ordered posting-amount result.
 
-### `journal.ledgerValuationRateResolver()`
-
-Returns a cached function `resolve(commodity, throughDate)`. The function
-returns the exact rate from `commodity` to the journal default commodity using
-prices on or before `throughDate`. It throws when no conversion path exists or
-a circular chain is encountered.
-
 ## Command-line parity
 
 Every query method on the object returned by `openJournal()` has a CLI command,

@@ -189,13 +189,6 @@ test('delegates non-report commands to the corresponding journal operations', ()
       };
     },
     reconciliationEntries(options) { calls.push(['reconciliationEntries', options]); return ['entries']; },
-    ledgerValuationRateResolver() {
-      calls.push(['ledgerValuationRateResolver']);
-      return (commodity, throughDate) => {
-        calls.push(['resolveRate', commodity, throughDate]);
-        return '10.5';
-      };
-    },
   };
   const project = {
     openJournal(journalPath) { calls.push(['openJournal', journalPath]); return journal; },
@@ -250,10 +243,6 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(run([
     'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',
   ]), ['entries']);
-  assert.equal(run([
-    'valuation-rate', '--file', '/journal', '--commodity', 'EUR', '--through-date', '2024-12-31',
-  ]), '10.5');
-
   assert.deepEqual(calls, [
     ['openJournal', '/journal'], ['accountPostings', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['accountTransactions', { accounts: ['Assets:Cash'] }],
@@ -268,8 +257,6 @@ test('delegates non-report commands to the corresponding journal operations', ()
     }],
     ['openJournal', '/journal'], ['commodityDescriptions'], ['transactions', { accounts: [] }],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
-    ['openJournal', '/journal'], ['ledgerValuationRateResolver'],
-    ['resolveRate', 'EUR', '2024-12-31'],
   ]);
 });
 
@@ -319,7 +306,6 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['transactions'],
     ['print'],
     ['reconciliation-entries', '--account', 'Assets:Cash'],
-    ['valuation-rate', '--commodity', 'USD'],
     ['balance-history'],
     ['unrealized-gains'],
     ['investment-performance'],

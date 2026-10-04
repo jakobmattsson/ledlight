@@ -48,9 +48,6 @@ module.exports = ({
     if (command === 'reconciliation-entries') {
       return formatJson(journal.reconciliationEntries(options));
     }
-    if (command === 'valuation-rate') {
-      return formatJson(journal.ledgerValuationRateResolver()(options.commodity, options.throughDate));
-    }
     throw new Error(`Unsupported command: ${command}`);
   }
 
