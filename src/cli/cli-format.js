@@ -182,6 +182,88 @@ module.exports = ({
     ]);
   }
 
+  function transactionRows(report) {
+    return report.transactions.flatMap((transaction) =>
+      transaction.postings.flatMap((posting) => posting.amounts.map((amount) => ({
+        transactionId: transaction.transactionId,
+        transactionDate: transaction.transactionDate,
+        description: transaction.description,
+        transactionComment: transaction.comment ?? '',
+        postingDate: posting.postingDate,
+        account: posting.account,
+        postingComment: posting.comment ?? '',
+        quantity: amount.quantity,
+        commodity: amount.commodity,
+      }))));
+  }
+
+  function formatLedgerTransactionsCsv(report) {
+    const fields = [
+      'transactionId', 'transactionDate', 'description', 'transactionComment',
+      'postingDate', 'account', 'postingComment', 'quantity', 'commodity',
+    ];
+    const lines = [fields.join(',')];
+    for (const row of transactionRows(report)) {
+      lines.push(fields.map((field) => csvField(row[field])).join(','));
+    }
+    return `${lines.join('\n')}\n`;
+  }
+
+  function formatPostingAmount(amount, formats) {
+    const quantity = formats.has(amount.commodity)
+      ? displayQuantity(amount.quantity, amount.commodity, formats, null)
+      : amount.quantity;
+    return `${quantity} ${amount.commodity}`;
+  }
+
+  function formatPostingExpression(posting, formats) {
+    const expressions = [];
+    if (posting.amount !== null) expressions.push(formatPostingAmount(posting.amount, formats));
+    if (posting.lotCost !== null) {
+      const braces = posting.lotCost.isTotal ? ['{{', '}}'] : ['{', '}'];
+      expressions.push(`${braces[0]}${formatPostingAmount(posting.lotCost, formats)}${braces[1]}`);
+    }
+    if (posting.cost !== null) {
+      expressions.push(`${posting.cost.isTotal ? '@@' : '@'} ${formatPostingAmount(posting.cost, formats)}`);
+    }
+    if (posting.balanceAssignment !== null) {
+      expressions.push(`= ${formatPostingAmount(posting.balanceAssignment, formats)}`);
+    }
+    if (posting.balanceAssertion !== null) {
+      expressions.push(`= ${formatPostingAmount(posting.balanceAssertion, formats)}`);
+    }
+    return expressions.join(' ');
+  }
+
+  function formatLedgerTransactionsText(report, descriptions) {
+    const formats = commodityFormats(descriptions);
+    const lines = [];
+    for (const transaction of report.transactions) {
+      const date = transaction.transactionDate.replaceAll('-', '/');
+      const comment = transaction.comment === null ? '' : `  ; ${transaction.comment}`;
+      lines.push(`${date} ${transaction.description}${comment}`);
+      for (const note of transaction.notes) lines.push(`    ; ${note}`);
+      for (const posting of transaction.postings) {
+        const expression = formatPostingExpression(posting, formats);
+        const postingComment = posting.comment === null ? '' : `  ; ${posting.comment}`;
+        const body = expression === ''
+          ? posting.account
+          : `${posting.account.padEnd(34)}  ${expression.padStart(12)}`;
+        lines.push(`    ${body}${postingComment}`);
+      }
+      lines.push('');
+    }
+    if (lines.length === 0) return '';
+    lines.pop();
+    return `${lines.join('\n')}\n`;
+  }
+
+  function formatLedgerTransactions(report, { format }, descriptions) {
+    if (format === 'json') return formatJson(report);
+    if (format === 'csv') return formatLedgerTransactionsCsv(report);
+    return formatLedgerTransactionsText(report, descriptions);
+  }
+
   function formatBalanceHistoryHumanReadable(rows, descriptions) {
     const formats = commodityFormats(descriptions);
     const amounts = rows.map((row) =>
@@ -220,6 +302,7 @@ module.exports = ({
     formatHumanReadable,
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
+    formatLedgerTransactions,
     formatJson,
     formatAccounts,
     $$private: { parseCommodityFormat },
