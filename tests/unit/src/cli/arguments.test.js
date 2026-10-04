@@ -5,9 +5,12 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const createArguments = require('../../../../src/cli/cli-arguments');
-const argumentsModule = resolveRepositoryModule('src/cli/cli-arguments.js');
-const { apiCommands, parseArguments, usage } = argumentsModule;
 const project = resolveRepositoryModule('src/core/project.js');
+const argumentsModule = createArguments({
+  cliConfiguration: { apply: (arguments_) => arguments_ },
+  project,
+});
+const { apiCommands, parseArguments, usage } = argumentsModule;
 
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
@@ -36,6 +39,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
   };
   assert.throws(
     () => createArguments({
+      cliConfiguration: { apply: (arguments_) => arguments_ },
       project: { apiDefinitions },
     }),
     /CLI inputs do not cover the aggregateReport API contract/u,
@@ -71,6 +75,22 @@ test('uses aggregate defaults when no options are supplied', () => {
   assert.deepEqual(parseArguments(['aggregate', '--file', '/journal']), {
     command: 'aggregate',
     journalPath: '/journal',
+    reportOptions: { accounts: [] },
+    output: { csv: false, json: false },
+  });
+});
+
+test('uses the CLI configuration file argument when --file is omitted', () => {
+  const configuredArguments = createArguments({
+    cliConfiguration: {
+      apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],
+    },
+    project,
+  });
+
+  assert.deepEqual(configuredArguments.parseArguments(['aggregate']), {
+    command: 'aggregate',
+    journalPath: '/configured-journal',
     reportOptions: { accounts: [] },
     output: { csv: false, json: false },
   });

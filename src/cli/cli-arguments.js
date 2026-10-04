@@ -3,6 +3,7 @@
 const { Command, InvalidArgumentError, Option } = require('commander');
 
 module.exports = ({
+  cliConfiguration,
   project: { apiDefinitions: projectDefinitions },
 }) => {
   const definitions = Object.freeze({ ...projectDefinitions });
@@ -259,6 +260,7 @@ module.exports = ({
     return { ...common, reportOptions, output: { csv: options.csv || false, json: options.json || false } };
   }
   function parseArguments(arguments_) {
+    arguments_ = cliConfiguration.apply(arguments_);
     const program = createProgram();
     if (arguments_.length === 0) throw new Error(usage());
     let selectedCommand;
