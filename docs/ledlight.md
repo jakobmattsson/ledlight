@@ -200,8 +200,49 @@ Explicit non-zero postings in commodities other than the journal default must
 also describe their trade direction unambiguously. A positive quantity must
 have a lot cost (`{}` or `{{}}`) and no transaction price. A negative quantity
 must have both a lot cost and a transaction price (`@` or `@@`). Unit and total
-annotations may be combined freely. Zero quantities are exempt because they do
-not acquire or dispose of a commodity.
+annotations may be combined freely. As a Ledger-compatible special case, a
+positive quantity may have both annotations when both prices are zero. This
+represents a cost-free acquisition that still needs an explicit zero transaction
+price to balance. Zero quantities are exempt because they do not acquire or
+dispose of a commodity.
+
+### Zero-cost acquisitions
+
+A free allocation can have a non-zero commodity quantity while both its cost
+basis and transaction value are zero. For example, subscription rights may be
+recorded as:
+
+```ledger
+2024-07-03 Free subscription rights
+  Assets:Rights  420 RIGHT {0 SEK} @ 0 SEK
+```
+
+The two zero annotations describe different facts. `{0 SEK}` is the per-unit
+lot cost: it records a zero acquisition basis for the `RIGHT` lot. `@ 0 SEK` is
+the per-unit transaction price: it explicitly states that the posting exchanged
+at a zero SEK value. The corresponding total forms are `{{0 SEK}}` and
+`@@ 0 SEK`.
+
+Ledger normally infers a posting cost from the opposing non-zero commodity
+amount. A regular purchase can therefore use only a lot cost because its cash
+leg supplies the exchange value. A free allocation has no non-zero cash leg
+from which to infer a conversion. Ledger treats a non-fixated lot cost as lot
+metadata rather than as an explicit posting cost during this part of balancing,
+so `420 RIGHT {0 SEK}` leaves an unbalanced `420 RIGHT` remainder. The explicit
+`@ 0 SEK` supplies the missing zero-value conversion and makes the transaction
+balance.
+
+Ledger can derive a zero lot annotation from `420 RIGHT @ 0 SEK`, but Ledlight
+requires the lot cost to remain explicit because later gain calculations depend
+on an explicit acquisition basis. Consequently, Ledlight accepts both
+annotations on a positive posting only when both values are exactly zero. It
+continues to reject mixed cases such as `{0 SEK} @ 10 SEK` and
+`{10 SEK} @ 0 SEK`, as well as ordinary positive postings carrying both a lot
+cost and a transaction price.
+
+This syntax records a zero basis and zero value for this transaction. It does
+not assert that the acquired instrument has no economic or market value at
+other times; valuation remains the responsibility of price data.
 
 `src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building

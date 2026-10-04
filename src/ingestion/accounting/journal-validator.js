@@ -26,10 +26,14 @@ module.exports = ({
   function validateCommodityTrade(posting, defaultCommodity) {
     if (!posting.amount || !defaultCommodity || posting.amount.commodity === defaultCommodity) return;
     const sign = compareDecimals(parseDecimal(posting.amount.quantity), ZERO);
-    if (sign > 0 && (!posting.lotCost || posting.cost)) {
+    const isZeroValueAcquisition = posting.lotCost && posting.cost &&
+      compareDecimals(parseDecimal(posting.lotCost.amount.quantity), ZERO) === 0 &&
+      compareDecimals(parseDecimal(posting.cost.amount.quantity), ZERO) === 0;
+    if (sign > 0 && (!posting.lotCost || (posting.cost && !isZeroValueAcquisition))) {
       throw new JournalValidationError(
         `Positive ${posting.amount.commodity} posting must use a lot cost ({...} or {{...}}) ` +
-        `and no transaction price (@ or @@); the default commodity is ${defaultCommodity}`,
+        `and no transaction price (@ or @@), except when both prices are zero; ` +
+        `the default commodity is ${defaultCommodity}`,
         posting.location,
       );
     }
