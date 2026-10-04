@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  cliCommand: { runReportCommand },
+  cliCommand: { runReportCommandWithWarnings },
 }) => ({
-  run: (arguments_) => runReportCommand(arguments_),
+  run: (arguments_) => runReportCommandWithWarnings(arguments_),
 });

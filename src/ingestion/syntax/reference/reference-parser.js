@@ -2,9 +2,11 @@
 
 module.exports = ({
   fs,
+  ingestionWarning: { createWarning, warningCodes },
   path,
   ohm,
   syntaxErrors: { syntaxError },
+  topLevelBlocks: { splitTopLevelBlocks },
 }) => {
 
   const grammarSource = fs.readFileSync(path.join(__dirname, 'ledger.ohm'), 'utf8');
@@ -229,7 +231,7 @@ module.exports = ({
     _terminal() { return this.sourceString; },
   });
 
-  function parse(sourceText, options) {
+  function parseStrict(sourceText, options) {
     const source = options.source || '<input>';
     const result = grammar.match(sourceText, 'document');
     if (result.failed()) {
@@ -239,5 +241,35 @@ module.exports = ({
     return semantics(result).ast(source);
   }
 
-  return { $$private: { parse } };
+  function parse(sourceText, options) {
+    const source = options.source || '<input>';
+    const entries = [];
+    const warnings = [];
+    for (const block of splitTopLevelBlocks(sourceText)) {
+      try {
+        const padding = '\n'.repeat(block.startLine - 1);
+        entries.push(...parseStrict(`${padding}${block.sourceText}`, { source }).entries);
+      } catch (error) {
+        if (!(error instanceof SyntaxError)) throw error;
+        warnings.push(createWarning(
+          warningCodes.SYNTAX_ERROR,
+          error.detail || error.message,
+          {
+            source,
+            line: error.line,
+            column: error.column,
+            startLine: block.startLine,
+            endLine: block.endLine,
+          },
+        ));
+      }
+    }
+    return {
+      source,
+      entries,
+      ...(warnings.length > 0 ? { warnings } : {}),
+    };
+  }
+
+  return { $$private: { parse, parseStrict } };
 };

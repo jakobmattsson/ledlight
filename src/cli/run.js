@@ -14,7 +14,9 @@ const modules = loadCliModules();
 modules.output.handleBrokenPipe();
 
 try {
-  modules.output.writeOutput(modules.reportCommand.run(process.argv.slice(2)));
+  const result = modules.reportCommand.run(process.argv.slice(2));
+  modules.output.writeWarnings(result.warnings);
+  modules.output.writeOutput(result.output);
 } catch (error) {
   modules.output.writeError(`${error.message}\n`);
   process.exitCode = 1;

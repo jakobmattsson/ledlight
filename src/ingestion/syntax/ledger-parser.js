@@ -2,7 +2,9 @@
 
 module.exports = ({
   amountParser: { parseAmountExpression },
+  ingestionWarning: { createWarning, warningCodes },
   syntaxErrors: { syntaxError },
+  topLevelBlocks: { splitTopLevelBlocks },
   publicErrors: { createError, errorCodes },
   zod: { z },
 }) => {
@@ -157,7 +159,7 @@ module.exports = ({
   }
 
   /** Fast runtime parser. Its behavior is checked against ledger.ohm. */
-  function parse(sourceText, options) {
+  function parseStrict(sourceText, options, lineOffset) {
     const result = optionsSchema.safeParse(options ?? {});
     if (!result.success) {
       throw createError(
@@ -170,7 +172,7 @@ module.exports = ({
     const entries = [];
     let transaction = null;
     let commodity = null;
-    let lineNumber = 0;
+    let lineNumber = lineOffset || 0;
     let start = 0;
 
     for (let end = 0; end <= sourceText.length; end++) {
@@ -262,5 +264,46 @@ module.exports = ({
     return { source, entries };
   }
 
-  return { parse };
+  function parse(sourceText, options) {
+    const result = optionsSchema.safeParse(options ?? {});
+    if (!result.success) {
+      throw createError(
+        errorCodes.INVALID_API_INPUT,
+        `Invalid parse options: ${result.error.issues[0].message}`,
+        TypeError,
+      );
+    }
+    const source = result.data.source || '<input>';
+    const entries = [];
+    const warnings = [];
+    for (const block of splitTopLevelBlocks(sourceText)) {
+      try {
+        entries.push(...parseStrict(
+          block.sourceText,
+          { source },
+          block.startLine - 1,
+        ).entries);
+      } catch (error) {
+        if (error.code !== errorCodes.SYNTAX) throw error;
+        warnings.push(createWarning(
+          warningCodes.SYNTAX_ERROR,
+          error.detail || error.message,
+          {
+            source,
+            line: error.line,
+            column: error.column,
+            startLine: block.startLine,
+            endLine: block.endLine,
+          },
+        ));
+      }
+    }
+    return {
+      source,
+      entries,
+      ...(warnings.length > 0 ? { warnings } : {}),
+    };
+  }
+
+  return { parse, $$private: { parseStrict } };
 };

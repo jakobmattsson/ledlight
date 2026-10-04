@@ -5,11 +5,11 @@ module.exports = ({
   path,
 }) => {
 
-  const SCHEMA_VERSION = '14';
+  const SCHEMA_VERSION = '16';
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 
   const supportedVersions = new Set([
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', SCHEMA_VERSION,
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', SCHEMA_VERSION,
   ]);
 
   function tableExists(database, name) {
@@ -35,6 +35,7 @@ module.exports = ({
       database.transaction(() => {
         database.exec(`
           DROP TABLE IF EXISTS posting_tags;
+          DROP TABLE IF EXISTS ingestion_warnings;
           DROP TABLE IF EXISTS transaction_tags;
           DROP TABLE IF EXISTS resolved_posting_amounts;
           DROP TABLE IF EXISTS transaction_notes;

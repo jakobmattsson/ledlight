@@ -10,6 +10,7 @@ module.exports = ({ publicErrors: { errorCodes, withCode } }) => {
     error.source = source;
     error.line = line;
     error.column = column;
+    error.detail = message;
     return error;
   }
 

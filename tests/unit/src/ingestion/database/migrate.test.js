@@ -26,6 +26,7 @@ test('creates the current schema in an empty database', (t) => {
     SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY name
   `).pluck().all();
   assert.ok(tables.includes('database_metadata'));
+  assert.ok(tables.includes('ingestion_warnings'));
   assert.ok(!tables.includes('metadata'));
   assert.ok(tables.includes('journal_entries'));
   assert.ok(tables.includes('transaction_tags'));

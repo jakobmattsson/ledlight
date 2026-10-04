@@ -188,3 +188,30 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['resolveRate', 'EUR', '2024-12-31'],
   ]);
 });
+
+test('collects ingestion warnings before invoking a query', () => {
+  const calls = [];
+  const warning = Object.freeze({ code: 'EXAMPLE', message: 'Example warning' });
+  const journal = {
+    get warnings() {
+      calls.push('warnings');
+      return [warning];
+    },
+    ledgerAccounts() {
+      calls.push('query');
+      return [];
+    },
+  };
+  const { runReportCommandWithWarnings } = createCommand({
+    project: { openJournal: () => journal },
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
+
+  assert.deepEqual(
+    runReportCommandWithWarnings(['ledger-accounts', '--file', '/journal']),
+    { output: '[]\n', warnings: [warning] },
+  );
+  assert.deepEqual(calls, ['warnings', 'query']);
+});

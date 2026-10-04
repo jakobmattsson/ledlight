@@ -10,6 +10,7 @@ module.exports = ({
     parseDecimal,
     subtractDecimals,
   },
+  ingestionWarning: { createWarning, warningCodes },
 }) => {
 
   const ZERO = parseDecimal('0');
@@ -64,8 +65,9 @@ module.exports = ({
   }
 
   class PostingResolver {
-    constructor() {
+    constructor(warnings) {
       this.balances = new Map();
+      this.warnings = warnings || [];
     }
 
     accountBalance(account, commodity) {
@@ -79,10 +81,12 @@ module.exports = ({
         .filter(([key, amount]) => key.startsWith(prefix) && compareDecimals(amount, ZERO) !== 0)
         .map(([key]) => key.slice(prefix.length));
       if (commodities.length !== 1) {
-        throw new Error(
-          `Cannot infer balance assignment commodity at ` +
-        `${posting.location.source}:${posting.location.line}`,
-        );
+        this.warnings.push(createWarning(
+          warningCodes.AMBIGUOUS_BALANCE_ASSIGNMENT,
+          'Cannot infer balance assignment commodity',
+          posting.location,
+        ));
+        return null;
       }
       return commodities[0];
     }
@@ -92,19 +96,26 @@ module.exports = ({
     }
 
     resolve(transaction) {
+      const balancesBeforeTransaction = new Map(this.balances);
       const resolved = transaction.postings.map(() => []);
       const transactionBalance = new Map();
       const transactionTolerances = new Map();
       const calculatedCostCommodities = new Set();
       let implicitPosition = null;
       let hasCost = false;
+      let invalidTransaction = false;
 
       transaction.postings.forEach((posting, position) => {
+        if (invalidTransaction) return;
         const annotation = balancingCost(posting);
         if (annotation) hasCost = true;
         let amount = posting.amount;
         if (posting.balanceAssignment) {
           const commodity = this.assignmentCommodity(posting);
+          if (commodity === null) {
+            invalidTransaction = true;
+            return;
+          }
           const target = parseDecimal(posting.balanceAssignment.quantity);
           const current = this.accountBalance(posting.account, commodity);
           amount = {
@@ -113,7 +124,13 @@ module.exports = ({
           };
         } else if (!amount) {
           if (implicitPosition !== null) {
-            throw new Error(`Transaction at ${transaction.location.source}:${transaction.location.line} has multiple implicit postings`);
+            this.warnings.push(createWarning(
+              warningCodes.MULTIPLE_IMPLICIT_POSTINGS,
+              'Transaction has multiple implicit postings',
+              transaction.location,
+            ));
+            invalidTransaction = true;
+            return;
           }
           implicitPosition = position;
           return;
@@ -136,14 +153,21 @@ module.exports = ({
           const actual = this.accountBalance(posting.account, posting.balanceAssertion.commodity);
           const expected = parseDecimal(posting.balanceAssertion.quantity);
           if (compareDecimals(actual, expected) !== 0) {
-            throw new Error(
-              `Balance assertion failed at ${posting.location.source}:${posting.location.line}: ` +
-            `expected ${formatDecimal(expected)} ${posting.balanceAssertion.commodity}, ` +
-            `got ${formatDecimal(actual)} ${posting.balanceAssertion.commodity}`,
-            );
+            this.warnings.push(createWarning(
+              warningCodes.BALANCE_ASSERTION_FAILED,
+              `Balance assertion failed: expected ${formatDecimal(expected)} ` +
+                `${posting.balanceAssertion.commodity}, got ${formatDecimal(actual)} ` +
+                posting.balanceAssertion.commodity,
+              posting.location,
+            ));
           }
         }
       });
+
+      if (invalidTransaction) {
+        this.balances = balancesBeforeTransaction;
+        return null;
+      }
 
       const residuals = [...transactionBalance].filter(([commodity, residual]) => {
         if (compareDecimals(residual, ZERO) === 0) return false;
@@ -162,10 +186,11 @@ module.exports = ({
         const imbalance = residuals
           .map(([commodity, residual]) => `${formatDecimal(residual)} ${commodity}`)
           .join(', ');
-        throw new Error(
-          `Transaction at ${transaction.location.source}:${transaction.location.line} ` +
-        `does not balance: ${imbalance}`,
-        );
+        this.warnings.push(createWarning(
+          warningCodes.UNBALANCED_TRANSACTION,
+          `Transaction does not balance: ${imbalance}`,
+          transaction.location,
+        ));
       }
 
       return resolved;

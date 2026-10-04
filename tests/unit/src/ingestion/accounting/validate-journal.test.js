@@ -8,9 +8,6 @@ const { parse } = resolveRepositoryModule("src/ingestion/syntax/ledger-parser.js
 const {
   validateJournal,
 } = resolveRepositoryModule("src/ingestion/accounting/journal-validator.js");
-const { JournalValidationError } = resolveRepositoryModule(
-  "src/ingestion/accounting/journal-validator.js",
-).$$private;
 
 const invalidAmounts = [
   {
@@ -20,7 +17,7 @@ const invalidAmounts = [
   Equity:Opening
 `,
     invalidate: (journal) => { journal.entries[0].postings[0].amount.commodity = null; },
-    message: /fixture\.ledger:2:3: Posting amount must specify a commodity/u,
+    message: 'Posting amount must specify a commodity',
   },
   {
     name: 'lot costs',
@@ -29,7 +26,7 @@ const invalidAmounts = [
   Equity:Opening
 `,
     invalidate: (journal) => { journal.entries[0].postings[0].lotCost.amount.commodity = null; },
-    message: /fixture\.ledger:2:3: Lot cost must specify a commodity/u,
+    message: 'Lot cost must specify a commodity',
   },
   {
     name: 'posting costs',
@@ -38,7 +35,7 @@ const invalidAmounts = [
   Equity:Opening
 `,
     invalidate: (journal) => { journal.entries[0].postings[0].cost.amount.commodity = null; },
-    message: /fixture\.ledger:2:3: Posting cost must specify a commodity/u,
+    message: 'Posting cost must specify a commodity',
   },
   {
     name: 'balance assertions',
@@ -47,24 +44,31 @@ const invalidAmounts = [
   Equity:Opening
 `,
     invalidate: (journal) => { journal.entries[0].postings[0].balanceAssertion.commodity = null; },
-    message: /fixture\.ledger:2:3: Balance assertion must specify a commodity/u,
+    message: 'Balance assertion must specify a commodity',
   },
   {
     name: 'prices',
     source: 'P 2024-01-01 FUND 10 SEK\n',
     invalidate: (journal) => { journal.entries[0].price.commodity = null; },
-    message: /fixture\.ledger:1:1: Price must specify a commodity/u,
+    message: 'Price must specify a commodity',
   },
 ];
 
 for (const fixture of invalidAmounts) {
-  test(`rejects commodity-less ${fixture.name}`, () => {
+  test(`warns about commodity-less ${fixture.name} and marks its entry unstoreable`, () => {
     const journal = parse(fixture.source, { source: 'fixture.ledger' });
     fixture.invalidate(journal);
-    assert.throws(
-      () => validateJournal(journal),
-      (error) => error instanceof JournalValidationError && fixture.message.test(error.message),
-    );
+    const result = validateJournal(journal);
+    assert.deepEqual(result.warnings, [{
+      code: 'MISSING_COMMODITY',
+      message: fixture.message,
+      source: 'fixture.ledger',
+      line: fixture.name === 'prices' ? 1 : 2,
+      column: fixture.name === 'prices' ? 1 : 3,
+      startLine: fixture.name === 'prices' ? 1 : 2,
+      endLine: fixture.name === 'prices' ? 1 : 2,
+    }]);
+    assert.deepEqual([...result.invalidEntries], [journal.entries[0]]);
   });
 }
 
@@ -77,7 +81,10 @@ test('allows implicit postings and balance assignments', () => {
   Equity:Opening
 `, { source: 'fixture.ledger' });
 
-  assert.equal(validateJournal(journal), journal);
+  const result = validateJournal(journal);
+  assert.equal(result.journal, journal);
+  assert.deepEqual(result.warnings, []);
+  assert.deepEqual([...result.invalidEntries], []);
 });
 
 function parseTrade(posting) {
@@ -89,7 +96,7 @@ function parseTrade(posting) {
 `, { source: 'fixture.ledger' });
 }
 
-test('requires positive non-default commodity postings to use only a lot cost', () => {
+test('warns when positive non-default commodity postings do not use only a lot cost', () => {
   for (const posting of [
     '1 FUND',
     '1 FUND @ 10 SEK',
@@ -97,37 +104,35 @@ test('requires positive non-default commodity postings to use only a lot cost', 
     '1 FUND {0 SEK} @ 10 SEK',
     '1 FUND {10 SEK} @ 0 SEK',
   ]) {
-    assert.throws(
-      () => validateJournal(parseTrade(posting)),
-      (error) => error instanceof JournalValidationError &&
-        /fixture\.ledger:4:3: Positive FUND posting must use a lot cost .* and no transaction price .* default commodity is SEK/u.test(error.message),
-    );
+    const result = validateJournal(parseTrade(posting));
+    assert.equal(result.warnings.length, 1);
+    assert.equal(result.warnings[0].code, 'INVALID_COMMODITY_TRADE');
+    assert.match(result.warnings[0].message, /Positive FUND posting must use a lot cost .* default commodity is SEK/u);
   }
 
-  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {10 SEK}')));
-  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {{10 SEK}}')));
+  assert.deepEqual(validateJournal(parseTrade('1 FUND {10 SEK}')).warnings, []);
+  assert.deepEqual(validateJournal(parseTrade('1 FUND {{10 SEK}}')).warnings, []);
 });
 
 test('allows positive non-default commodity postings with zero lot and transaction prices', () => {
-  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {0 SEK} @ 0 SEK')));
-  assert.doesNotThrow(() => validateJournal(parseTrade('1 FUND {{0 SEK}} @@ 0 SEK')));
+  assert.deepEqual(validateJournal(parseTrade('1 FUND {0 SEK} @ 0 SEK')).warnings, []);
+  assert.deepEqual(validateJournal(parseTrade('1 FUND {{0 SEK}} @@ 0 SEK')).warnings, []);
 });
 
-test('requires negative non-default commodity postings to use lot cost and transaction price', () => {
+test('warns when negative non-default commodity postings omit lot cost or transaction price', () => {
   for (const posting of ['-1 FUND', '-1 FUND {10 SEK}', '-1 FUND @ 12 SEK']) {
-    assert.throws(
-      () => validateJournal(parseTrade(posting)),
-      (error) => error instanceof JournalValidationError &&
-        /fixture\.ledger:4:3: Negative FUND posting must use both a lot cost .* and a transaction price .* default commodity is SEK/u.test(error.message),
-    );
+    const result = validateJournal(parseTrade(posting));
+    assert.equal(result.warnings.length, 1);
+    assert.equal(result.warnings[0].code, 'INVALID_COMMODITY_TRADE');
+    assert.match(result.warnings[0].message, /Negative FUND posting must use both a lot cost .* default commodity is SEK/u);
   }
 
-  assert.doesNotThrow(() => validateJournal(parseTrade('-1 FUND {10 SEK} @ 12 SEK')));
-  assert.doesNotThrow(() => validateJournal(parseTrade('-1 FUND {{10 SEK}} @@ 12 SEK')));
+  assert.deepEqual(validateJournal(parseTrade('-1 FUND {10 SEK} @ 12 SEK')).warnings, []);
+  assert.deepEqual(validateJournal(parseTrade('-1 FUND {{10 SEK}} @@ 12 SEK')).warnings, []);
 });
 
 test('does not apply the trade annotation rule to default commodities or zero quantities', () => {
-  assert.doesNotThrow(() => validateJournal(parseTrade('0 FUND')));
-  assert.doesNotThrow(() => validateJournal(parseTrade('1 SEK')));
-  assert.doesNotThrow(() => validateJournal(parseTrade('-1 SEK')));
+  assert.deepEqual(validateJournal(parseTrade('0 FUND')).warnings, []);
+  assert.deepEqual(validateJournal(parseTrade('1 SEK')).warnings, []);
+  assert.deepEqual(validateJournal(parseTrade('-1 SEK')).warnings, []);
 });

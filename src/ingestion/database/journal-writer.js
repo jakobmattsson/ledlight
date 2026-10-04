@@ -84,8 +84,7 @@ module.exports = ({
     };
   }
 
-  function insertTransaction(statements, entryId, entry, counters, postingResolver) {
-    const resolvedPostings = postingResolver.resolve(entry);
+  function insertTransaction(statements, entryId, entry, counters, resolvedPostings) {
     statements.transaction.run(
       entryId, entry.date, entry.description, entry.payee, entry.narration, entry.comment,
     );
@@ -141,10 +140,12 @@ module.exports = ({
     });
   }
 
-  function insertEntry(statements, entryId, entry, counters, postingResolver) {
+  function insertEntry(
+    statements, entryId, entry, counters, resolvedTransactions, ignoredProperties,
+  ) {
     switch (entry.type) {
       case 'transaction':
-        insertTransaction(statements, entryId, entry, counters, postingResolver);
+        insertTransaction(statements, entryId, entry, counters, resolvedTransactions.get(entry));
         break;
       case 'price':
         statements.price.run(
@@ -160,12 +161,13 @@ module.exports = ({
         break;
       case 'commodity':
         statements.commodity.run(entryId, entry.symbol, entry.comment);
-        entry.properties.forEach((property, position) => {
-          statements.commodityProperty.run(
-            ++counters.property, entryId, position, property.location.line,
-            property.location.column, property.name, property.value, property.comment,
-          );
-        });
+        entry.properties.filter((property) => !ignoredProperties.has(property))
+          .forEach((property, position) => {
+            statements.commodityProperty.run(
+              ++counters.property, entryId, position, property.location.line,
+              property.location.column, property.name, property.value, property.comment,
+            );
+          });
         break;
       default:
         throw new Error(`Cannot store unsupported journal entry type: ${entry.type}`);
@@ -173,8 +175,22 @@ module.exports = ({
   }
 
   function writeJournalDatabase(databasePath, journal) {
-    const valuationCommodity = valuationCommodityFromJournal(journal);
-    validateJournal(journal, valuationCommodity);
+    const warnings = [...(journal.warnings || [])];
+    const ignoredProperties = new Set();
+    const valuationCommodity = valuationCommodityFromJournal(
+      journal, warnings, ignoredProperties,
+    );
+    const validation = validateJournal(journal, valuationCommodity, warnings);
+    const postingResolver = new PostingResolver(validation.warnings);
+    const resolvedTransactions = new Map();
+    for (const entry of journal.entries) {
+      if (validation.invalidEntries.has(entry) || entry.type !== 'transaction') continue;
+      const resolved = postingResolver.resolve(entry);
+      if (resolved) resolvedTransactions.set(entry, resolved);
+    }
+    const storableEntries = journal.entries.filter((entry) =>
+      !validation.invalidEntries.has(entry) &&
+      (entry.type !== 'transaction' || resolvedTransactions.has(entry)));
     const resolvedDatabasePath = path.resolve(databasePath);
     const database = new Database(resolvedDatabasePath);
     database.pragma('foreign_keys = ON');
@@ -183,9 +199,15 @@ module.exports = ({
     try {
       migrateDatabase(database);
       const statements = prepareStatements(database);
+      const insertWarning = database.prepare(`
+        INSERT INTO ingestion_warnings
+          (position, code, message, source, line, column, start_line, end_line)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
       const replaceContents = database.transaction(() => {
         database.exec(`
         DELETE FROM valuation_prices;
+        DELETE FROM ingestion_warnings;
         DELETE FROM journal_entries;
         DELETE FROM source_files;
         DELETE FROM database_metadata;
@@ -213,8 +235,7 @@ module.exports = ({
           transactionTag: 0,
           postingTag: 0,
         };
-        const postingResolver = new PostingResolver();
-        journal.entries.forEach((entry, sequence) => {
+        storableEntries.forEach((entry, sequence) => {
           const sourceFileId = sourceIds.get(entry.location.source);
           if (sourceFileId === undefined) {
             throw new Error(`Journal entry refers to an unregistered source file: ${entry.location.source}`);
@@ -223,7 +244,16 @@ module.exports = ({
           statements.journalEntry.run(
             entryId, sequence, sourceFileId, entry.type, entry.location.line, entry.location.column,
           );
-          insertEntry(statements, entryId, entry, counters, postingResolver);
+          insertEntry(
+            statements, entryId, entry, counters, resolvedTransactions, ignoredProperties,
+          );
+        });
+
+        validation.warnings.forEach((warning, position) => {
+          insertWarning.run(
+            position, warning.code, warning.message, warning.source, warning.line, warning.column,
+            warning.startLine, warning.endLine,
+          );
         });
 
         counters.valuationPrice = materializeValuationPrices(database, valuationCommodity);
@@ -236,13 +266,14 @@ module.exports = ({
         databasePath: resolvedDatabasePath,
         journalPath: journal.journalPath,
         files: journal.files.length,
-        entries: journal.entries.length,
-        transactions: journal.entries.filter((entry) => entry.type === 'transaction').length,
+        entries: storableEntries.length,
+        transactions: storableEntries.filter((entry) => entry.type === 'transaction').length,
         postings: counters.posting,
         postingAmounts: counters.resolvedAmount,
-        prices: journal.entries.filter((entry) => entry.type === 'price').length,
+        prices: storableEntries.filter((entry) => entry.type === 'price').length,
         valuationCommodity,
         valuationPrices: counters.valuationPrice,
+        warnings: validation.warnings,
       };
     } finally {
       database.close();

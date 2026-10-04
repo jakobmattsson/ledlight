@@ -34,7 +34,7 @@ The current implementation provides:
 - an Ohm reference parser plus a faster, dependency-free runtime parser that
   must produce the same syntax tree;
 - exact decimal strings, avoiding binary floating-point loss during import;
-- source locations and syntax errors;
+- source locations and recoverable syntax warnings;
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
@@ -188,8 +188,11 @@ tags, and comments; postings with omitted or explicit amounts; unit and total lo
 costs (`{}` and `{{}}`); unit and total transaction costs (`@` and `@@`);
 balance assignments; and balance assertions.
 
-Unsupported Ledger syntax fails with a source location instead of being
-silently ignored. The runtime parser has no I/O or database dependency;
+Unsupported or malformed Ledger syntax produces a warning with the exact error
+location and the affected top-level line range. The parser omits that complete
+top-level block and continues with the next one, so a bad posting cannot leave
+a partial transaction and multiple bad blocks produce multiple warnings. The
+runtime parser has no I/O or database dependency;
 `loadJournal` is the thin layer responsible for file I/O, include expansion,
 and hashing.
 
@@ -202,6 +205,14 @@ When a posting has both a lot cost and a transaction cost, its lot cost
 determines the balancing amount. This requires a realized gain or loss posting
 when disposal proceeds differ from the lot's cost basis, matching Ledger's
 behavior.
+
+Accounting checks are non-blocking ingestion warnings. Failed balance
+assertions, unbalanced transactions, invalid trade annotations, and additional
+default commodity declarations are recorded before queries run. Data that can
+still be represented is retained; an entry with unresolved amounts is skipped
+without preventing valid entries from being queried. The public API exposes
+the warnings on the opened journal, while the CLI writes the same structured
+list to stderr and keeps query output on stdout.
 
 Explicit non-zero postings in commodities other than the journal default must
 also describe their trade direction unambiguously. A positive quantity must

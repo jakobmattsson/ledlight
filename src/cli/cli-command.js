@@ -14,9 +14,12 @@ module.exports = ({
   },
 }) => {
 
+  let lastWarnings = [];
+
   function runJsonCommand(parsed) {
     const { command, journalPath, options } = parsed;
     const journal = project.openJournal(journalPath);
+    lastWarnings = journal.warnings || [];
     if (command === 'account-balances') return formatJson(journal.accountBalances(options));
     if (command === 'account-postings') return formatJson(journal.accountPostings(options));
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
@@ -36,6 +39,7 @@ module.exports = ({
   function runReport(parsed) {
     const { command, reportOptions, journalPath, output } = parsed;
     const journal = project.openJournal(journalPath);
+    lastWarnings = journal.warnings || [];
     if (command === 'investment-performance') {
       const report = journal.investmentPerformance(reportOptions);
       return output.json
@@ -89,5 +93,11 @@ module.exports = ({
       : runJsonCommand(parsed);
   }
 
-  return { runReportCommand };
+  function runReportCommandWithWarnings(arguments_) {
+    lastWarnings = [];
+    const output = runReportCommand(arguments_);
+    return { output, warnings: lastWarnings };
+  }
+
+  return { runReportCommand, runReportCommandWithWarnings };
 };

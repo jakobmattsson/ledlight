@@ -7,6 +7,9 @@ module.exports = () => ({
       throw error;
     });
   },
+  writeWarnings(warnings) {
+    if (warnings.length > 0) process.stderr.write(`${JSON.stringify(warnings, null, 2)}\n`);
+  },
   writeError: (value) => process.stderr.write(value),
   writeOutput: (value) => process.stdout.write(value),
 });
