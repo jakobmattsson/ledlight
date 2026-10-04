@@ -102,6 +102,14 @@ module.exports = ({
     if (arguments_.length === 1 && arguments_[0] === '--version') {
       return `${version}\n`;
     }
+    if (arguments_.length === 1) {
+      try {
+        return `${usage(arguments_[0])}\n`;
+      } catch (error) {
+        if (!error.message.startsWith('Unknown command:')) throw error;
+        // Let the argument parser produce its usual error for unknown commands and options.
+      }
+    }
     if (arguments_.length >= 2 && arguments_.slice(1).includes('--help')) {
       return `${usage(arguments_[0])}\n`;
     }

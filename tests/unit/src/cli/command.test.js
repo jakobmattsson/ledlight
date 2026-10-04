@@ -8,6 +8,21 @@ const createCommand = require('../../../../src/cli/cli-command');
 const cliArguments = resolveRepositoryModule('src/cli/cli-arguments.js');
 const cliFormat = resolveRepositoryModule('src/cli/cli-format.js');
 
+const commandNames = [...new Set([...Object.values(cliArguments.apiCommands), 'print'])];
+
+test('shows identical command help with or without the explicit help option', () => {
+  const { runReportCommand } = createCommand({
+    project: { openJournal: () => { throw new Error('must not open a journal'); } },
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
+
+  for (const command of commandNames) {
+    assert.equal(runReportCommand([command]), runReportCommand([command, '--help']));
+  }
+});
+
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
   const journal = {
