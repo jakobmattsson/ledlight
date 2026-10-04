@@ -41,10 +41,13 @@ test('the published archive installs and exposes the module and CLI', () => {
       'LICENSE',
       'README.md',
       'docs/api.md',
+      'docs/ledger-cli-equivalence.md',
       'docs/ledlight.md',
       'docs/package.md',
       'index.js',
       'package.json',
+      'scripts/compare-ledger.js',
+      'scripts/ledger-compatibility-matrix.js',
       'src/cli/run.js',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);
