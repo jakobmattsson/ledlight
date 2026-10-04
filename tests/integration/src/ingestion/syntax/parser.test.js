@@ -85,6 +85,15 @@ test('treats former transaction status and code syntax as description text', () 
   }
 });
 
+test('keeps pipe-separated transaction text as one description', () => {
+  const sourceText = '2024-01-29 Shop | Groceries\n  Assets:Cash  1 SEK\n  Equity:Opening\n';
+  const transaction = parseConformant(sourceText, 'fixture.ledger').entries[0];
+
+  assert.equal(transaction.description, 'Shop | Groceries');
+  assert.equal('payee' in transaction, false);
+  assert.equal('narration' in transaction, false);
+});
+
 test('uses semicolons as the only top-level comment marker', () => {
   const document = parseConformant(`; top-level comment
 2024-01-01 Transaction

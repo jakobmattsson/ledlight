@@ -45,7 +45,7 @@ test('reads direct and related reconciliation entries from the open journal', (t
   }).map(reconciliationFields), [{
     date: '2024-01-01',
     amount: '-10',
-    description: 'Shop',
+    description: 'Shop | Groceries',
     commodity: 'SEK',
     account: 'Assets:Cash',
   }]);
@@ -56,7 +56,7 @@ test('reads direct and related reconciliation entries from the open journal', (t
     [{
       date: '2024-01-01',
       amount: '10',
-      description: 'Shop',
+      description: 'Shop | Groceries',
       commodity: 'SEK',
       account: 'Assets:Cash',
       postingAccount: 'Expenses:Food',

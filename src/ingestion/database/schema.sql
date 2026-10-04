@@ -35,8 +35,6 @@ CREATE TABLE IF NOT EXISTS transactions (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
   date TEXT NOT NULL,
   description TEXT NOT NULL,
-  payee TEXT,
-  narration TEXT NOT NULL,
   comment TEXT
 );
 

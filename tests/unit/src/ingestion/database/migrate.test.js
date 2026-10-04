@@ -48,6 +48,8 @@ test('creates the current schema in an empty database', (t) => {
   const transactionColumns = database.pragma('table_info(transactions)').map((column) => column.name);
   assert.ok(!transactionColumns.includes('status'));
   assert.ok(!transactionColumns.includes('code'));
+  assert.ok(!transactionColumns.includes('payee'));
+  assert.ok(!transactionColumns.includes('narration'));
   const priceColumns = database.pragma('table_info(prices)');
   assert.deepEqual(
     priceColumns.filter((column) => [

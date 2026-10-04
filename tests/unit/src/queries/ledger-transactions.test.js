@@ -45,8 +45,9 @@ test('paginates complete transactions in either date order', (t) => {
   assert.deepEqual(newest.transactions.map((transaction) => transaction.transactionDate), [
     '2024-01-03', '2024-01-02',
   ]);
-  assert.equal(newest.transactions[0].payee, 'Shop');
-  assert.equal(newest.transactions[0].narration, 'Third');
+  assert.equal(newest.transactions[0].description, 'Shop | Third');
+  assert.equal('payee' in newest.transactions[0], false);
+  assert.equal('narration' in newest.transactions[0], false);
   assert.equal(newest.transactions[0].comment, 'imported');
   assert.deepEqual(newest.transactions[0].postings[0], {
     postingDate: '2024-01-03',

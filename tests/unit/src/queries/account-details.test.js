@@ -107,8 +107,6 @@ test('returns newest-first transactions and groups amounts by posting', (t) => {
     transactionId: 10,
     transactionDate: '2023-01-02',
     description: 'Deferred posting',
-    payee: null,
-    narration: 'Deferred posting',
     postings: [{
       postingDate: '2023-01-04',
       amounts: [{ quantity: '1', commodity: 'SEK', balance: '1' }],
@@ -134,8 +132,6 @@ test('returns every posting in one transaction', (t) => {
     transactionId: 7,
     transactionDate: '2023-01-01',
     description: 'Open account',
-    payee: null,
-    narration: 'Open account',
     comment: null,
     postings: [{
       postingDate: '2023-01-01',
