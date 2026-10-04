@@ -142,7 +142,25 @@ test('delegates non-report commands to the corresponding journal operations', ()
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
     ledgerTransaction(options) { calls.push(['ledgerTransaction', options]); return { id: 7 }; },
-    ledgerTransactions(options) { calls.push(['ledgerTransactions', options]); return { page: 2 }; },
+    ledgerTransactions(options) {
+      calls.push(['ledgerTransactions', options]);
+      return {
+        order: 'newest', page: 2, pageSize: 10, totalTransactions: 1, totalPages: 1,
+        transactions: [{
+          transactionId: 7,
+          transactionDate: '2024-01-03',
+          description: 'Shop',
+          comment: null,
+          notes: [],
+          postings: [{
+            postingDate: '2024-01-03', account: 'Assets:Cash', comment: null,
+            amount: { quantity: '-5', commodity: 'SEK' },
+            lotCost: null, cost: null, balanceAssignment: null, balanceAssertion: null,
+            amounts: [{ quantity: '-5', commodity: 'SEK' }],
+          }],
+        }],
+      };
+    },
     reconciliationEntries(options) { calls.push(['reconciliationEntries', options]); return ['entries']; },
     ledgerValuationRateResolver() {
       calls.push(['ledgerValuationRateResolver']);
@@ -174,7 +192,27 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(run(['ledger-transaction', '--file', '/journal', '--transaction-id', '7']), { id: 7 });
   assert.deepEqual(run([
     'ledger-transactions', '--file', '/journal', '--order', 'newest', '--page', '2', '--page-size', '10',
-  ]), { page: 2 });
+    '--format', 'json',
+  ]), {
+    order: 'newest', page: 2, pageSize: 10, totalTransactions: 1, totalPages: 1,
+    transactions: [{
+      transactionId: 7,
+      transactionDate: '2024-01-03',
+      description: 'Shop',
+      comment: null,
+      notes: [],
+      postings: [{
+        postingDate: '2024-01-03', account: 'Assets:Cash', comment: null,
+        amount: { quantity: '-5', commodity: 'SEK' },
+        lotCost: null, cost: null, balanceAssignment: null, balanceAssertion: null,
+        amounts: [{ quantity: '-5', commodity: 'SEK' }],
+      }],
+    }],
+  });
+  assert.equal(
+    runReportCommand(['ledger-transactions', '--file', '/journal']),
+    '2024/01/03 Shop\n    Assets:Cash                               -5 SEK\n',
+  );
   assert.deepEqual(run([
     'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',
   ]), ['entries']);
@@ -191,6 +229,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['ledgerAccounts'],
     ['openJournal', '/journal'], ['ledgerTransaction', { transactionId: '7' }],
     ['openJournal', '/journal'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
+    ['openJournal', '/journal'], ['commodityDescriptions'], ['ledgerTransactions', {}],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
     ['openJournal', '/journal'], ['ledgerValuationRateResolver'],
     ['resolveRate', 'EUR', '2024-12-31'],

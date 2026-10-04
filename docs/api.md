@@ -227,10 +227,15 @@ comment, and exact `{ quantity, commodity }` amounts.
 
 ### `journal.ledgerTransactions({ order, page, pageSize })`
 
-Returns a paginated transaction collection. `order` is `newest` or `oldest`;
-`page` and `pageSize` are positive integers, and `pageSize` cannot exceed 100.
+Returns a paginated transaction collection. All options are optional. `order`
+is `newest` or `oldest` and defaults to `oldest`; `page` defaults to `1`, while
+`pageSize` defaults to `100`. Page values are positive integers, and `pageSize`
+cannot exceed 100.
 The result contains `order`, the selected `page`, `pageSize`,
-`totalTransactions`, `totalPages`, and `transactions`.
+`totalTransactions`, `totalPages`, and `transactions`. Transactions include
+their ordered note text. Postings retain their nullable source `amount`, lot
+cost, transaction cost, balance assignment, and balance assertion, as well as
+the existing resolved `amounts` array.
 
 ### `journal.reconciliationEntries({ accounts, related })`
 
@@ -273,6 +278,11 @@ newline-separated account names as `ledger accounts`. Its `--details` flag
 includes comments and transaction counts; detailed text uses a table. The
 `--format json` and `--format csv` alternatives encode either the account names
 or, with `--details`, all fields returned by `journal.ledgerAccounts()`.
+
+`ledger-transactions` also defaults to `--format text`. Its text output is a
+Ledger-style journal containing the transactions on the selected page.
+`--format json` returns the complete paginated API result, while `--format csv`
+returns one row per posting amount with transaction and posting fields.
 
 CLI commands preserve the query result on stdout and emit the journal's
 `warnings` array as JSON on stderr when it is non-empty. No warning output is

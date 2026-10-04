@@ -30,8 +30,9 @@ account Equity:Opening
   Equity:Opening  -20 SEK
 
 2024-01-03 Shop | Third  ; imported
+  ; Project: Home
   Assets:Cash  -5 SEK  ; card
-  Equity:Opening  5 SEK
+  Equity:Opening
 `);
   return openJournal(journalPath);
 }
@@ -49,17 +50,37 @@ test('paginates complete transactions in either date order', (t) => {
   assert.equal('payee' in newest.transactions[0], false);
   assert.equal('narration' in newest.transactions[0], false);
   assert.equal(newest.transactions[0].comment, 'imported');
+  assert.deepEqual(newest.transactions[0].notes, ['Project: Home']);
   assert.deepEqual(newest.transactions[0].postings[0], {
     postingDate: '2024-01-03',
     account: 'Assets:Cash',
     comment: 'card',
+    amount: { quantity: '-5', commodity: 'SEK' },
+    lotCost: null,
+    cost: null,
+    balanceAssignment: null,
+    balanceAssertion: null,
     amounts: [{ quantity: '-5', commodity: 'SEK' }],
   });
+  assert.equal(newest.transactions[0].postings[1].amount, null);
 
   const oldest = project.ledgerTransactions({ order: 'oldest', page: 2, pageSize: 2 });
   assert.equal(oldest.page, 2);
   assert.deepEqual(oldest.transactions.map((transaction) => transaction.transactionDate), [
     '2024-01-03',
+  ]);
+});
+
+test('defaults to the first 100 transactions in journal order', (t) => {
+  const project = createProject(t);
+
+  const result = project.ledgerTransactions();
+
+  assert.equal(result.order, 'oldest');
+  assert.equal(result.page, 1);
+  assert.equal(result.pageSize, 100);
+  assert.deepEqual(result.transactions.map((transaction) => transaction.transactionDate), [
+    '2024-01-01', '2024-01-02', '2024-01-03',
   ]);
 });
 

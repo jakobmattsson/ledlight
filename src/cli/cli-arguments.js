@@ -134,13 +134,16 @@ module.exports = ({
     );
     addJournal(ledgerTransactions);
     addValueOption(ledgerTransactions, '--order <order>', 'sort transactions', {
-      choices: ['newest', 'oldest'], required: true, apiInput: 'order',
+      choices: ['newest', 'oldest'], apiInput: 'order',
     });
     addValueOption(ledgerTransactions, '--page <number>', 'select a page', {
-      required: true, apiInput: 'page',
+      apiInput: 'page',
     });
     addValueOption(ledgerTransactions, '--page-size <number>', 'set the page size (maximum 100)', {
-      required: true, apiInput: 'pageSize',
+      apiInput: 'pageSize',
+    });
+    addOutputValueOption(ledgerTransactions, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
     const reconciliationEntries = registerCommand(
       program.command('reconciliation-entries')
@@ -287,7 +290,13 @@ module.exports = ({
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { account: options.account } };
     if (commandName === 'ledger-transaction') return { ...common, options: { transactionId: options.transactionId } };
-    if (commandName === 'ledger-transactions') return { ...common, options: { order: options.order, page: options.page, pageSize: options.pageSize } };
+    if (commandName === 'ledger-transactions') {
+      return {
+        ...common,
+        options: compact({ order: options.order, page: options.page, pageSize: options.pageSize }),
+        output: { format: options.format },
+      };
+    }
     if (commandName === 'reconciliation-entries') {
       return { ...common, options: compact({ accounts: options.account, related: options.related || undefined }) };
     }

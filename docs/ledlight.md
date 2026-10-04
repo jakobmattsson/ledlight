@@ -132,6 +132,7 @@ underlying result.
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `ledger-accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `ledger-accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `ledger-transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |
@@ -139,6 +140,8 @@ underlying result.
 | `<command> --help` | None | Detailed usage for one command |
 
 Commands without a specialized human-readable representation emit JSON.
+`ledger-transactions` defaults to Ledger-style text; all pagination options
+are optional and default to `--order oldest --page 1 --page-size 100`.
 Report commands accept `--json` when the complete API result is needed; this
 is required to retain fields such as `valuationValue` and `factoredAmount`.
 Tests compare the journal method inventory with the CLI command inventory,
