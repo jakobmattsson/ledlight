@@ -51,6 +51,18 @@ module.exports = ({
     execute: queryAccounts,
   } = query('accounts');
   const {
+    inputSchema: tagsOptionsSchema,
+    execute: queryTags,
+  } = query('tags');
+  const {
+    inputSchema: commoditiesOptionsSchema,
+    execute: queryCommodities,
+  } = query('commodities');
+  const {
+    inputSchema: pricesOptionsSchema,
+    execute: queryPrices,
+  } = query('prices');
+  const {
     inputSchema: ledgerTransactionOptionsSchema,
     execute: queryLedgerTransaction,
   } = query('ledgerTransaction');
@@ -74,6 +86,9 @@ module.exports = ({
     accountTransactions: { inputs: journalInputs(accountTransactionsOptionsSchema) },
     commodityDescriptions: { inputs: journalInputs(commodityDescriptionsOptionsSchema) },
     accounts: { inputs: journalInputs(accountsOptionsSchema) },
+    tags: { inputs: journalInputs(tagsOptionsSchema) },
+    commodities: { inputs: journalInputs(commoditiesOptionsSchema) },
+    prices: { inputs: journalInputs(pricesOptionsSchema) },
     ledgerTransaction: { inputs: journalInputs(ledgerTransactionOptionsSchema) },
     ledgerTransactions: { inputs: journalInputs(ledgerTransactionsOptionsSchema) },
     reconciliationEntries: { inputs: journalInputs(reconciliationEntriesOptionsSchema) },
@@ -160,6 +175,15 @@ module.exports = ({
       },
       accounts() {
         return runQuery(queryAccounts, {});
+      },
+      tags() {
+        return runQuery(queryTags, {});
+      },
+      commodities() {
+        return runQuery(queryCommodities, {});
+      },
+      prices() {
+        return runQuery(queryPrices, {});
       },
       ledgerTransaction(options) {
         return runQuery(queryLedgerTransaction, options);

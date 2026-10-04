@@ -94,6 +94,12 @@ than a second implementation.
 right-aligned transaction count followed by account and comment. `--format
 json` and `--format csv` encode the selected basic or detailed representation.
 
+`tags`, `commodities`, and `prices` follow the same listing convention. They
+have no required query parameters beyond `--file`, default to text, and accept
+`--format text`, `--format json`, or `--format csv`. Tags and commodities are
+deduplicated and sorted; prices include every price directive in date and
+journal order.
+
 ### CLI to API parity
 
 The following table is the required mapping between CLI behavior and the
@@ -112,6 +118,9 @@ underlying result.
 | `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Exact-account transactions |
 | `commodity-descriptions --file PATH` | `openJournal(journalPath).commodityDescriptions()` | Commodity metadata |
 | `accounts --file PATH` | `openJournal(journalPath).accounts()` | Account metadata |
+| `tags --file PATH` | `openJournal(journalPath).tags()` | Declared and used tags |
+| `commodities --file PATH` | `openJournal(journalPath).commodities()` | Declared and used commodities |
+| `prices --file PATH` | `openJournal(journalPath).prices()` | Price directives |
 | `ledger-transaction --file PATH` | `openJournal(journalPath).ledgerTransaction(options)` | One transaction |
 | `ledger-transactions --file PATH` | `openJournal(journalPath).ledgerTransactions(options)` | Paginated transactions |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for exact accounts |
@@ -132,6 +141,9 @@ underlying result.
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `tags --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `commodities --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `prices --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--csv` | None | Output formatting only |
 | `--json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |

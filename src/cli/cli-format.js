@@ -182,6 +182,42 @@ module.exports = ({
     ]);
   }
 
+  function formatNameRows(rows, { format }, key) {
+    const names = rows.map((row) => row[key]);
+    if (format === 'json') return formatJson(names);
+    if (format === 'csv') {
+      return `${[key, ...names.map(csvField)].join('\n')}\n`;
+    }
+    return names.length === 0 ? '' : `${names.join('\n')}\n`;
+  }
+
+  const formatTags = (rows, output) => formatNameRows(rows, output, 'tag');
+  const formatCommodities = (rows, output) => formatNameRows(rows, output, 'commodity');
+
+  function formatPrices(rows, { format }) {
+    if (format === 'json') return formatJson(rows);
+    if (format === 'csv') {
+      const lines = ['date,baseCommodity,quoteQuantity,quoteCommodity,comment'];
+      for (const row of rows) {
+        lines.push([
+          row.date,
+          row.baseCommodity,
+          row.quoteQuantity,
+          row.quoteCommodity,
+          row.comment ?? '',
+        ].map(csvField).join(','));
+      }
+      return `${lines.join('\n')}\n`;
+    }
+    const lines = rows.map((row) => [
+      row.date.replaceAll('-', '/'),
+      row.baseCommodity,
+      row.quoteQuantity,
+      row.quoteCommodity,
+    ].join(' '));
+    return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
+  }
+
   function formatBalanceHistoryHumanReadable(rows, descriptions) {
     const formats = commodityFormats(descriptions);
     const amounts = rows.map((row) =>
@@ -222,6 +258,9 @@ module.exports = ({
     formatInvestmentPerformanceJson,
     formatJson,
     formatAccounts,
+    formatCommodities,
+    formatPrices,
+    formatTags,
     $$private: { parseCommodityFormat },
   };
 };

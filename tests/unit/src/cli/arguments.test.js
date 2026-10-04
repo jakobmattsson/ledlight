@@ -23,6 +23,9 @@ test('defines one CLI command for every journal operation', () => {
     accountTransactions: 'account-transactions',
     commodityDescriptions: 'commodity-descriptions',
     accounts: 'accounts',
+    tags: 'tags',
+    commodities: 'commodities',
+    prices: 'prices',
     ledgerTransaction: 'ledger-transaction',
     ledgerTransactions: 'ledger-transactions',
     reconciliationEntries: 'reconciliation-entries',
@@ -74,6 +77,28 @@ test('parses account output options without adding API options', () => {
   );
   assert.match(usage('accounts'), /--details\s+include comments and transaction counts/u);
   assert.match(usage('accounts'), /--format <format>\s+select the output format/u);
+});
+
+test('parses listing output formats without requiring query parameters', () => {
+  for (const command of ['tags', 'commodities', 'prices']) {
+    assert.deepEqual(parseArguments([command, '--file', '/journal']), {
+      command,
+      journalPath: '/journal',
+      output: { format: 'text' },
+    });
+    assert.deepEqual(parseArguments([command, '--file', '/journal', '--format', 'json']), {
+      command,
+      journalPath: '/journal',
+      output: { format: 'json' },
+    });
+    assert.throws(
+      () => parseArguments([command, '--file', '/journal', '--format', 'yaml']),
+      /Allowed choices are text, json, csv/u,
+    );
+    assert.match(usage(command), new RegExp(
+      `^Usage: ledlight ${command} --file <path> \\[options\\]`, 'u',
+    ));
+  }
 });
 
 test('parses aggregate report options and output flags', () => {

@@ -89,6 +89,17 @@ module.exports = ({
     addOutputValueOption(accounts, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
+    for (const [name, operation, description] of [
+      ['tags', 'tags', 'show declared and used tags'],
+      ['commodities', 'commodities', 'show declared and used commodities'],
+      ['prices', 'prices', 'show price directives'],
+    ]) {
+      const command = registerCommand(program.command(name).description(description), operation);
+      addJournal(command);
+      addOutputValueOption(command, '--format <format>', 'select the output format', {
+        choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+      });
+    }
     const accountBalances = registerCommand(
       program.command('account-balances').description('show balances for one exact account'),
       'accountBalances',
@@ -283,6 +294,9 @@ module.exports = ({
         ...common,
         output: { details: options.details || false, format: options.format },
       };
+    }
+    if (['tags', 'commodities', 'prices'].includes(commandName)) {
+      return { ...common, output: { format: options.format } };
     }
     if (commandName === 'account-balances') return { ...common, options: compact({ account: options.account, to: options.to }) };
     if (commandName === 'account-postings') return { ...common, options: compact({ account: options.account, after: options.after }) };

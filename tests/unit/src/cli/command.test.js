@@ -141,6 +141,15 @@ test('delegates non-report commands to the corresponding journal operations', ()
       calls.push(['accounts']);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
+    tags() { calls.push(['tags']); return [{ tag: 'Imported' }]; },
+    commodities() { calls.push(['commodities']); return [{ commodity: 'USD' }]; },
+    prices() {
+      calls.push(['prices']);
+      return [{
+        date: '2024-01-01', baseCommodity: 'EUR', quoteQuantity: '1.1',
+        quoteCommodity: 'USD', comment: null,
+      }];
+    },
     ledgerTransaction(options) { calls.push(['ledgerTransaction', options]); return { id: 7 }; },
     ledgerTransactions(options) { calls.push(['ledgerTransactions', options]); return { page: 2 }; },
     reconciliationEntries(options) { calls.push(['reconciliationEntries', options]); return ['entries']; },
@@ -171,6 +180,12 @@ test('delegates non-report commands to the corresponding journal operations', ()
   assert.deepEqual(run([
     'accounts', '--file', '/journal', '--details', '--format', 'json',
   ]), [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }]);
+  assert.equal(runReportCommand(['tags', '--file', '/journal']), 'Imported\n');
+  assert.equal(runReportCommand(['commodities', '--file', '/journal']), 'USD\n');
+  assert.deepEqual(run(['prices', '--file', '/journal', '--format', 'json']), [{
+    date: '2024-01-01', baseCommodity: 'EUR', quoteQuantity: '1.1',
+    quoteCommodity: 'USD', comment: null,
+  }]);
   assert.deepEqual(run(['ledger-transaction', '--file', '/journal', '--transaction-id', '7']), { id: 7 });
   assert.deepEqual(run([
     'ledger-transactions', '--file', '/journal', '--order', 'newest', '--page', '2', '--page-size', '10',
@@ -189,6 +204,9 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['commodityDescriptions'],
     ['openJournal', '/journal'], ['accounts'],
     ['openJournal', '/journal'], ['accounts'],
+    ['openJournal', '/journal'], ['tags'],
+    ['openJournal', '/journal'], ['commodities'],
+    ['openJournal', '/journal'], ['prices'],
     ['openJournal', '/journal'], ['ledgerTransaction', { transactionId: '7' }],
     ['openJournal', '/journal'], ['ledgerTransactions', { order: 'newest', page: '2', pageSize: '10' }],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],

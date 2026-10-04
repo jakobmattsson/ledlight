@@ -12,6 +12,9 @@ module.exports = ({
     formatInvestmentPerformance,
     formatJson,
     formatAccounts,
+    formatCommodities,
+    formatPrices,
+    formatTags,
   },
 }) => {
 
@@ -28,6 +31,11 @@ module.exports = ({
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(), parsed.output);
     }
+    if (command === 'tags') return formatTags(journal.tags(), parsed.output);
+    if (command === 'commodities') {
+      return formatCommodities(journal.commodities(), parsed.output);
+    }
+    if (command === 'prices') return formatPrices(journal.prices(), parsed.output);
     if (command === 'ledger-transaction') return formatJson(journal.ledgerTransaction(options));
     if (command === 'ledger-transactions') return formatJson(journal.ledgerTransactions(options));
     if (command === 'reconciliation-entries') {
