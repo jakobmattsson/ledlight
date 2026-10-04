@@ -132,19 +132,19 @@ CREATE TABLE IF NOT EXISTS valuation_prices (
 
 CREATE TABLE IF NOT EXISTS account_declarations (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
+  name TEXT NOT NULL UNIQUE,
   comment TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tag_declarations (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
+  name TEXT NOT NULL UNIQUE,
   comment TEXT
 );
 
 CREATE TABLE IF NOT EXISTS commodity_declarations (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
-  symbol TEXT NOT NULL,
+  symbol TEXT NOT NULL UNIQUE,
   comment TEXT
 );
 

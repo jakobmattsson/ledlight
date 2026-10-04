@@ -195,9 +195,10 @@ Returns one row per declared commodity, sorted by commodity symbol:
 }
 ```
 
-`comment` and `format` are strings or `null`; `isDefault` is a boolean. When a
-commodity has several declarations, later comments and format properties take
-precedence. Other commodity properties are not currently exposed.
+`comment` and `format` are strings or `null`; `isDefault` is a boolean. A later
+duplicate commodity declaration produces a warning and is not stored, so the
+first declaration supplies these values. Other commodity properties are not
+currently exposed.
 
 ### `journal.accountTransactions({ account })`
 
@@ -208,7 +209,8 @@ Each posting contains `postingDate` and exact amount rows with the running
 
 ### `journal.accounts()`
 
-Returns one row per account declaration, sorted by name and journal position:
+Returns one row per declared account, sorted by name. Later duplicate
+declarations produce warnings and are not stored:
 
 ```js
 {
@@ -220,13 +222,13 @@ Returns one row per account declaration, sorted by name and journal position:
 
 ### `journal.tags()`
 
-Returns one row per tag declaration, sorted by name and journal position. Each
-row is `{ tag }`.
+Returns one row per declared tag, sorted by name. Later duplicate declarations
+produce warnings and are not stored. Each row is `{ tag }`.
 
 ### `journal.commodities()`
 
-Returns one row per commodity declaration, sorted by symbol and journal
-position. Each row is `{ commodity }`.
+Returns one row per declared commodity, sorted by symbol. Later duplicate
+declarations produce warnings and are not stored. Each row is `{ commodity }`.
 
 ### `journal.prices()`
 

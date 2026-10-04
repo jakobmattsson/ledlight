@@ -118,6 +118,28 @@ tag Posting
   assert.deepEqual([...result.invalidEntries], []);
 });
 
+test('warns about duplicate declarations and marks the later entries unstoreable', () => {
+  const journal = parse(`account Assets:Cash
+account Assets:Cash
+commodity SEK
+commodity SEK
+tag Reviewed
+tag Reviewed
+`, { source: 'fixture.ledger' });
+
+  const result = validateJournal(journal);
+  assert.deepEqual(result.warnings.map(({ code, line }) => ({ code, line })), [{
+    code: 'DUPLICATE_ACCOUNT_DECLARATION', line: 2,
+  }, {
+    code: 'DUPLICATE_COMMODITY_DECLARATION', line: 4,
+  }, {
+    code: 'DUPLICATE_TAG_DECLARATION', line: 6,
+  }]);
+  assert.deepEqual([...result.invalidEntries], [
+    journal.entries[1], journal.entries[3], journal.entries[5],
+  ]);
+});
+
 test('checks every commodity role in prices and postings', () => {
   const journal = parse(`account Assets:Fund
 P 2024-01-01 FUND 10 SEK

@@ -38,30 +38,27 @@ P 2024-01-02 FUND 13 SEK ; corrected
   return openJournal(journalPath);
 }
 
-test('lists every tag declaration in name and journal order', (t) => {
+test('lists each declared tag once', (t) => {
   const project = createProject(t);
 
-  assert.deepEqual(project.tags(), [{ tag: 'Declared' }, { tag: 'Declared' }]);
+  assert.deepEqual(project.tags(), [{ tag: 'Declared' }]);
 });
 
-test('lists every commodity declaration while omitting undeclared symbols', (t) => {
+test('lists each declared commodity once while omitting undeclared symbols', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.commodities(), [
-    { commodity: 'FUND' },
     { commodity: 'FUND' },
     { commodity: 'SEK' },
     { commodity: 'UNUSED' },
   ]);
 });
 
-test('lists every account declaration with its own metadata', (t) => {
+test('lists each declared account once with the first declaration metadata', (t) => {
   const project = createProject(t);
 
   assert.deepEqual(project.accounts(), [{
     account: 'Assets:Fund', comment: 'primary', transactionCount: 1,
-  }, {
-    account: 'Assets:Fund', comment: 'duplicate', transactionCount: 1,
   }, {
     account: 'Equity:Opening', comment: null, transactionCount: 1,
   }]);

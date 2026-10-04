@@ -26,8 +26,10 @@ module.exports = ({
         `${label} ${name} has already been declared`,
         location,
       ));
+      return false;
     }
     declarations.add(name);
+    return true;
   }
 
   function validatePostingDeclarations(posting, declarations, warnings) {
@@ -147,11 +149,19 @@ module.exports = ({
     };
     for (const entry of journal.entries) {
       if (entry.type === 'account') {
-        declare('account', entry.name, declarations.accounts, entry.location, warnings);
+        if (!declare('account', entry.name, declarations.accounts, entry.location, warnings)) {
+          invalidEntries.add(entry);
+        }
       } else if (entry.type === 'commodity') {
-        declare('commodity', entry.symbol, declarations.commodities, entry.location, warnings);
+        if (!declare(
+          'commodity', entry.symbol, declarations.commodities, entry.location, warnings,
+        )) {
+          invalidEntries.add(entry);
+        }
       } else if (entry.type === 'tag') {
-        declare('tag', entry.name, declarations.tags, entry.location, warnings);
+        if (!declare('tag', entry.name, declarations.tags, entry.location, warnings)) {
+          invalidEntries.add(entry);
+        }
       } else if (entry.type === 'transaction') {
         validateTransactionDeclarations(entry, declarations, warnings);
         const postingResults = entry.postings.map((posting) => validatePosting(

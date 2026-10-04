@@ -12,7 +12,7 @@ const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
 
-test('returns consolidated commodity metadata in symbol order', (t) => {
+test('returns first-declaration commodity metadata in symbol order', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity-descriptions-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
@@ -27,7 +27,7 @@ commodity FUND ; updated
   assert.deepEqual(openJournal(journalPath).commodityDescriptions(), [
     {
       commodity: 'FUND',
-      comment: 'updated',
+      comment: 'original',
       format: '1,000.0000 FUND',
       isDefault: false,
     },

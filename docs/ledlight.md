@@ -98,7 +98,8 @@ json` and `--format csv` encode the selected basic or detailed representation.
 have no required query parameters beyond `--file`, default to text, and accept
 `--format text`, `--format json`, or `--format csv`. Tags and commodities list
 sorted declaration rows; prices include every price directive in date and
-journal order. Duplicate declarations remain visible and produce warnings.
+journal order. Later duplicate declarations produce warnings and are not
+stored, so listings contain each declared name once.
 
 ### CLI to API parity
 
@@ -249,8 +250,9 @@ price, but the `accounts`, `commodities`, and `tags` queries intentionally list
 only declarations so the journal remains responsible for correcting them.
 Declaring the same name again produces a `DUPLICATE_ACCOUNT_DECLARATION`,
 `DUPLICATE_COMMODITY_DECLARATION`, or `DUPLICATE_TAG_DECLARATION` warning at
-the later declaration. Listing queries retain these duplicate rows rather than
-silently normalizing an invalid journal.
+the later declaration. The later declaration is not stored; the first
+declaration and its metadata remain authoritative. Unique database constraints
+on declaration names enforce the same invariant independently of validation.
 
 Explicit non-zero postings in commodities other than the journal default must
 also describe their trade direction unambiguously. A positive quantity must
