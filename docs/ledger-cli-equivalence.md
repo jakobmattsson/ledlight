@@ -44,8 +44,10 @@ ledlight-cmp --list
 ```
 
 The script exits with status 1 if a command fails or a result differs. Every
-comparison is byte-for-byte exact. `LEDGER_BIN` remains available as an
-alternative to `--ledger-bin`. The integration suite separately tests semantic
+comparison is byte-for-byte exact; mismatches print a unified diff with three
+lines of context. Each command may produce up to 256 MiB of output.
+`LEDGER_BIN` remains available as an alternative to `--ledger-bin`. The
+integration suite separately tests semantic
 balance and unrealized-gain compatibility using normalized result rows; those
 are deliberately not presented as exact CLI equivalents here.
 

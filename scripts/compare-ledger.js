@@ -5,7 +5,10 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { createPatch } = require('diff');
 const YAML = require('yaml');
+
+const MAX_OUTPUT_BYTES = 256 * 1024 * 1024;
 
 const repositoryRoot = path.resolve(__dirname, '..');
 const ledlightCli = path.join(repositoryRoot, 'src/cli/run.js');
@@ -87,6 +90,7 @@ function run(command, options) {
     cwd: path.dirname(options.journal),
     encoding: 'utf8',
     env: options.environment,
+    maxBuffer: MAX_OUTPUT_BYTES,
   });
   if (result.error) throw result.error;
   if (result.status !== 0) {
@@ -108,8 +112,14 @@ function selectedCases(names) {
 
 function showMismatch(id, ledlightOutput, ledgerOutput) {
   process.stdout.write(`FAIL ${id}\n`);
-  process.stdout.write(`  Ledger:   ${JSON.stringify(ledgerOutput)}\n`);
-  process.stdout.write(`  Ledlight: ${JSON.stringify(ledlightOutput)}\n`);
+  process.stdout.write(createPatch(
+    id,
+    ledgerOutput,
+    ledlightOutput,
+    'Ledger',
+    'Ledlight',
+    { context: 3 },
+  ));
 }
 
 function main(arguments_) {
