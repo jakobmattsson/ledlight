@@ -25,6 +25,7 @@ test('defines one CLI command for every journal operation', () => {
     commodities: 'commodities',
     prices: 'prices',
     transactions: 'transactions',
+    postings: 'postings',
     reconciliationEntries: 'reconciliation-entries',
   });
 });
@@ -54,6 +55,11 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   assert.deepEqual(argumentsModule.apiInputCoverage.transactions, {
     command: 'transactions',
     inputs: ['journalPath', 'accounts', 'id', 'order', 'page', 'pageSize'],
+    outputInputs: ['format'],
+  });
+  assert.deepEqual(argumentsModule.apiInputCoverage.postings, {
+    command: 'postings',
+    inputs: ['journalPath', 'from', 'to', 'accounts'],
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.summary.outputInputs, ['format']);
@@ -371,6 +377,20 @@ test('maps every remaining API parameter to CLI arguments', () => {
   assert.deepEqual(parseArguments(['transactions', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',
     options: { accounts: [], order: 'oldest' }, output: { format: 'text' },
+  });
+  assert.deepEqual(parseArguments([
+    'postings', '--file', '/journal', '--from', '2024-01-01', '--to', '2024-01-31',
+    '--accounts', 'Assets:Cash', '--accounts', 'Expenses:', '--format', 'csv',
+  ]), {
+    command: 'postings', journalPath: '/journal',
+    options: {
+      from: '2024-01-01', to: '2024-01-31', accounts: ['Assets:Cash', 'Expenses:'],
+    },
+    output: { format: 'csv' },
+  });
+  assert.deepEqual(parseArguments(['postings', '--file', '/journal']), {
+    command: 'postings', journalPath: '/journal',
+    options: { accounts: [] }, output: { format: 'text' },
   });
   assert.deepEqual(parseArguments(['print', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',

@@ -62,6 +62,10 @@ module.exports = ({
     execute: queryTransactions,
   } = query('transactions');
   const {
+    inputSchema: postingsOptionsSchema,
+    execute: queryPostings,
+  } = query('postings');
+  const {
     inputSchema: reconciliationEntriesOptionsSchema,
     execute: queryReconciliationEntries,
   } = query('reconciliationEntries');
@@ -79,6 +83,7 @@ module.exports = ({
     commodities: { inputs: journalInputs(commoditiesOptionsSchema) },
     prices: { inputs: journalInputs(pricesOptionsSchema) },
     transactions: { inputs: journalInputs(transactionsOptionsSchema) },
+    postings: { inputs: journalInputs(postingsOptionsSchema) },
     reconciliationEntries: { inputs: journalInputs(reconciliationEntriesOptionsSchema) },
   });
   const projectConfigurationError = (message) =>
@@ -164,6 +169,9 @@ module.exports = ({
       },
       transactions(options) {
         return runQuery(queryTransactions, options);
+      },
+      postings(options) {
+        return runQuery(queryPostings, options);
       },
       reconciliationEntries(options) {
         return queryDatabase(current.databasePath,

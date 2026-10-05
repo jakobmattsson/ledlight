@@ -212,6 +212,18 @@ module.exports = ({
     addOutputValueOption(transactions, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
+    const postings = registerCommand(
+      program.command('postings').description('show postings'),
+      'postings',
+      'raw',
+    );
+    addJournal(postings);
+    addDateOption(postings, '--from <date>', 'include postings on or after YYYY-MM-DD', 'from');
+    addDateOption(postings, '--to <date>', 'include postings on or before YYYY-MM-DD', 'to');
+    addAccountPatterns(postings);
+    addOutputValueOption(postings, '--format <format>', 'select the output format', {
+      choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
+    });
     const reconciliationEntries = registerCommand(
       program.command('reconciliation-entries')
         .description('show entries for reconciling matching accounts'),
@@ -391,6 +403,15 @@ module.exports = ({
         options: compact({
           accounts: options.accounts || [], id: options.id, order: options.order,
           page: options.page, pageSize: options.pageSize,
+        }),
+        output: { format: options.format },
+      };
+    }
+    if (commandName === 'postings') {
+      return {
+        ...common,
+        options: compact({
+          from: options.from, to: options.to, accounts: options.accounts || [],
         }),
         output: { format: options.format },
       };

@@ -18,6 +18,7 @@ const {
   formatAccounts,
   formatCommodities,
   formatPrices,
+  formatPostings,
   formatTags,
 } = resolveRepositoryModule("src/cli/cli-format.js");
 
@@ -365,4 +366,44 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
     formatTransactions({ ...report, transactions: [] }, { format: 'text' }),
     '',
   );
+});
+
+test('formats complete posting rows as text, JSON, and flat CSV', () => {
+  const postings = [{
+    postingId: 8,
+    transactionId: 7,
+    transactionDate: '2024-01-02',
+    description: 'Buy, fund',
+    transactionComment: 'imported',
+    transactionNotes: ['Project: Savings'],
+    postingDate: '2024-01-03',
+    account: 'Assets:Fund',
+    postingComment: '[2024-01-03] broker',
+    amount: { quantity: '10', commodity: 'FUND' },
+    lotCost: { quantity: '10', commodity: 'SEK', isTotal: false },
+    cost: { quantity: '100', commodity: 'SEK', isTotal: true },
+    balanceAssignment: null,
+    balanceAssertion: { quantity: '10', commodity: 'FUND' },
+    amounts: [{ quantity: '10', commodity: 'FUND' }],
+  }];
+
+  assert.match(
+    formatPostings(postings, { format: 'text' }),
+    /2024-01-02\s+2024-01-03\s+Buy, fund\s+Assets:Fund\s+10\s+FUND/u,
+  );
+  assert.equal(
+    formatPostings(postings, { format: 'json' }),
+    `${JSON.stringify(postings, null, 2)}\n`,
+  );
+  assert.equal(
+    formatPostings(postings, { format: 'csv' }),
+    'postingId,transactionId,transactionDate,description,transactionComment,' +
+    'transactionNotes,postingDate,account,postingComment,amountQuantity,amountCommodity,' +
+    'lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,' +
+    'balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,' +
+    'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity\n' +
+    '8,7,2024-01-02,"Buy, fund",imported,"[""Project: Savings""]",2024-01-03,' +
+    'Assets:Fund,[2024-01-03] broker,10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND\n',
+  );
+  assert.equal(formatPostings([], { format: 'text' }), '');
 });
