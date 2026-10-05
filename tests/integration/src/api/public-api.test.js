@@ -90,7 +90,7 @@ test('loads SQLite only when a journal is opened', (t) => {
   assert.deepEqual(journal.summary(), []);
   assert.deepEqual(journal.balanceHistoryReport(), []);
   assert.deepEqual(journal.unrealizedGains(), []);
-  assert.deepEqual(journal.reconciliationEntries({ accounts: ['Assets:Cash'] }), []);
+  assert.equal(Object.hasOwn(journal, 'reconciliationEntries'), false);
   assert.deepEqual(journal.commodities(), [{
     commodity: 'SEK',
     comment: null,

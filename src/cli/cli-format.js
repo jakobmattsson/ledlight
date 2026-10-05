@@ -487,6 +487,8 @@ module.exports = ({
 
   function postingCsvRows(postings) {
     return postings.flatMap((posting) => posting.amounts.map((resolvedAmount) => ({
+      filename: posting.filename,
+      transactionSourceLine: posting.transactionSourceLine,
       postingId: posting.postingId,
       transactionId: posting.transactionId,
       transactionDate: posting.transactionDate,
@@ -523,6 +525,7 @@ module.exports = ({
       'balanceAssignmentQuantity', 'balanceAssignmentCommodity',
       'balanceAssertionQuantity', 'balanceAssertionCommodity',
       'resolvedQuantity', 'resolvedCommodity', 'resolvedBalance',
+      'filename', 'transactionSourceLine',
     ];
     const lines = [fields.join(',')];
     for (const row of postingCsvRows(postings)) {
@@ -547,6 +550,8 @@ module.exports = ({
       { heading: 'Transaction comment', value: (row) => row.transactionComment },
       { heading: 'Notes', value: (row) => row.transactionNotes },
       { heading: 'Posting comment', value: (row) => row.postingComment },
+      { heading: 'Filename', value: (row) => row.filename },
+      { heading: 'Transaction source line', value: (row) => row.transactionSourceLine },
     ]);
   }
 

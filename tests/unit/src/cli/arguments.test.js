@@ -24,7 +24,6 @@ test('defines one CLI command for every journal operation', () => {
     prices: 'prices',
     transactions: 'transactions',
     postings: 'postings',
-    reconciliationEntries: 'reconciliation-entries',
   });
 });
 
@@ -76,7 +75,6 @@ test('documents the effective default for every enum option in command help', ()
   for (const command of Object.values(apiCommands)) {
     const parsed = parseArguments([
       command, '--file', '/journal',
-      ...(command === 'reconciliation-entries' ? ['--account', 'Assets:'] : []),
     ]);
     const options = { ...parsed.options, ...parsed.reportOptions, ...parsed.output };
     const helpOptions = usage(command).split(/\n(?= {2}--)/u).slice(1);
@@ -387,13 +385,6 @@ test('maps every remaining API parameter to CLI arguments', () => {
     /--order <order>\s+sort transactions \(choices: "newest", "oldest", default:\s+"oldest"\)/u,
   );
   assert.match(usage('transactions'), /--page-size <number>\s+set the page size/u);
-  assert.deepEqual(parseArguments([
-    'reconciliation-entries', '--file', '/journal',
-    '--account', 'Assets:Cash', '--account', 'Assets:Bank', '--related',
-  ]), {
-    command: 'reconciliation-entries', journalPath: '/journal',
-    options: { accounts: ['Assets:Cash', 'Assets:Bank'], related: true },
-  });
 });
 
 test('rejects missing commands, values, duplicate dates, and unknown options', () => {
@@ -414,7 +405,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
     ['unrealized-gains', '--value'],
-    ['reconciliation-entries', '--file', '/journal'],
+    ['reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash'],
   ];
   for (const arguments_ of invalidArguments) {
     assert.throws(() => parseArguments(arguments_), /Usage:|may only be specified once/u);

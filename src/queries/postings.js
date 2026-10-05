@@ -37,6 +37,8 @@ module.exports = ({
         postings.id AS postingId,
         postings.transaction_id AS transactionId,
         transactions.date AS transactionDate,
+        source_files.path AS filename,
+        entries.line AS transactionSourceLine,
         transactions.description,
         transactions.comment AS transactionComment,
         postings.report_date AS postingDate,
@@ -60,6 +62,7 @@ module.exports = ({
       FROM postings
       JOIN transactions ON transactions.entry_id = postings.transaction_id
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
+      JOIN source_files ON source_files.id = entries.source_file_id
       JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
       WHERE ${clauses.join('\n        AND ')}
       ORDER BY entries.sequence, postings.position, amounts.position
@@ -73,6 +76,8 @@ module.exports = ({
           postingId: row.postingId,
           transactionId: row.transactionId,
           transactionDate: row.transactionDate,
+          filename: row.filename,
+          transactionSourceLine: row.transactionSourceLine,
           description: row.description,
           transactionComment: row.transactionComment,
           transactionNotes: [],

@@ -268,7 +268,10 @@ Each result contains `postingId`, `postingDate`, `account`, `postingComment`,
 the nullable source `amount`, lot cost, transaction cost, balance assignment,
 and balance assertion, and every resolved amount. It also contains the parent
 transaction's `transactionId`, `transactionDate`, `description`,
-`transactionComment`, and ordered `transactionNotes`.
+`transactionComment`, and ordered `transactionNotes`. `filename` identifies the
+source file containing the transaction, including when it was loaded through an
+`include`. `transactionSourceLine` is the one-based line number of the transaction
+header in that file, not the posting line.
 
 Each resolved amount is `{ quantity, commodity, balance }`. `balance` is the
 exact running balance for that posting's account and commodity after applying
@@ -278,20 +281,12 @@ the journal database is rebuilt.
 The `postings` CLI command supports the same filters and defaults to `--format
 text`. `--format json` preserves the nested API result. `--format csv` emits one
 row per resolved amount and includes every source annotation as separate
-columns.
+columns, including `filename` and `transactionSourceLine`. Text output also
+includes both source fields.
 
-### `journal.reconciliationEntries({ accounts, related })`
-
-Returns resolved posting amounts for one or more account patterns, ordered
-by posting date and journal position. `accounts` must be a non-empty array of
-non-empty strings. `related` defaults to `false`; when true, the result instead
-contains the other postings from transactions involving each selected pattern.
-
-Each row contains `date`, `amount`, `description`, `commodity`, `account`,
-`filename`, `sourceLine`, and `row`. Related rows also contain
-`postingAccount`, which identifies the other posting's account. `amount` is an
-exact decimal string, `account` is the selected pattern, and `row` is the
-one-based position in the complete ordered posting-amount result.
+For reconciliation, use the resolved `amounts` rather than the nullable source
+`amount`. To select counterpart postings, fetch all postings and group them by
+`transactionId`; filtering by account first would discard those counterparts.
 
 ## Command-line parity
 

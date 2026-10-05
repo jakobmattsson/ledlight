@@ -57,10 +57,6 @@ module.exports = ({
     inputSchema: postingsOptionsSchema,
     execute: queryPostings,
   } = query('postings');
-  const {
-    inputSchema: reconciliationEntriesOptionsSchema,
-    execute: queryReconciliationEntries,
-  } = query('reconciliationEntries');
   const schemaInputs = (schema) => Object.keys(schema.shape);
   const journalInputs = (schema) => ['journalPath', ...schemaInputs(schema)];
   const apiDefinitions = Object.freeze({
@@ -74,7 +70,6 @@ module.exports = ({
     prices: { inputs: journalInputs(pricesOptionsSchema) },
     transactions: { inputs: journalInputs(transactionsOptionsSchema) },
     postings: { inputs: journalInputs(postingsOptionsSchema) },
-    reconciliationEntries: { inputs: journalInputs(reconciliationEntriesOptionsSchema) },
   });
   const projectConfigurationError = (message) =>
     createError(errorCodes.PROJECT_CONFIGURATION, message);
@@ -156,10 +151,6 @@ module.exports = ({
       },
       postings(options) {
         return runQuery(queryPostings, options);
-      },
-      reconciliationEntries(options) {
-        return queryDatabase(current.databasePath,
-          (database) => queryReconciliationEntries(database, options));
       },
     };
   }

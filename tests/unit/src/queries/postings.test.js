@@ -49,6 +49,8 @@ test('returns every field for postings and their transactions in journal order',
     postingId: postings[0].postingId,
     transactionId: postings[0].transactionId,
     transactionDate: '2024-01-02',
+    filename: journal.journalPath,
+    transactionSourceLine: 8,
     description: 'Buy fund',
     transactionComment: 'imported',
     transactionNotes: ['Project: Savings'],
@@ -66,6 +68,8 @@ test('returns every field for postings and their transactions in journal order',
     postingId: postings[1].postingId,
     transactionId: postings[1].transactionId,
     transactionDate: '2024-01-02',
+    filename: journal.journalPath,
+    transactionSourceLine: 8,
     description: 'Buy fund',
     transactionComment: 'imported',
     transactionNotes: ['Project: Savings'],
@@ -101,4 +105,41 @@ test('validates posting query options', (t) => {
     /accounts\.0 must be a non-empty string/u);
   assert.throws(() => journal.postings({ unknown: true }),
     /Unknown postings option: unknown/u);
+});
+
+test('preserves transaction source locations from included files in JSON', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-posting-sources-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const includedPath = path.join(directory, 'included.ledger');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+account Assets:Cash
+account Expenses:Food
+include included.ledger
+
+2024-01-02 Lunch
+  Assets:Cash  -20 SEK
+  Expenses:Food
+`);
+  fs.writeFileSync(includedPath, `; Imported transactions
+
+2024-01-01 Breakfast
+  Assets:Cash  -10 SEK
+  Expenses:Food
+`);
+
+  const journal = openJournal(journalPath);
+  const postings = JSON.parse(JSON.stringify(journal.postings()));
+  assert.deepEqual(
+    postings.map(({ filename, transactionSourceLine }) => ({ filename, transactionSourceLine })),
+    [
+      { filename: fs.realpathSync.native(includedPath), transactionSourceLine: 3 },
+      { filename: fs.realpathSync.native(includedPath), transactionSourceLine: 3 },
+      { filename: fs.realpathSync.native(journalPath), transactionSourceLine: 7 },
+      { filename: fs.realpathSync.native(journalPath), transactionSourceLine: 7 },
+    ],
+  );
+  assert.equal(postings[1].amount, null);
+  assert.deepEqual(postings[1].amounts, [{ quantity: '10', commodity: 'SEK', balance: '10' }]);
 });

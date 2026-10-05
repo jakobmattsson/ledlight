@@ -62,9 +62,6 @@ module.exports = ({
     if (command === 'postings') {
       return formatPostings(journal.postings(options), parsed.output);
     }
-    if (command === 'reconciliation-entries') {
-      return formatJson(journal.reconciliationEntries(options));
-    }
     throw new Error(`Unsupported command: ${command}`);
   }
 
