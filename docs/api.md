@@ -26,7 +26,8 @@ including `reconciliation-entries`. The singular `--account` is not supported.
 All dates must be valid calendar dates in `YYYY-MM-DD` format; timestamps,
 JavaScript `Date` objects, and `null` are rejected. `from` and `to` are inclusive,
 may be supplied independently, and must satisfy `from <= to` when both are
-present. `at` is an inclusive snapshot cutoff, using the same date validation.
+present. For `unrealizedGains`, `to` is an inclusive snapshot cutoff and `from`
+is not supported.
 No omitted date defaults to the current day.
 
 Selection arrays contain non-empty strings. Exact duplicate selections are
@@ -39,7 +40,7 @@ all default to `false`.
 | --- | --- | --- |
 | `summary` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `groupBy`, `inValuationCommodity`, `withValuationValue`, `invert`, `includeTotal` |
 | `balanceHistoryReport` | `from`, `to`: select daily closing balances, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `invert` |
-| `unrealizedGains` | `at`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
+| `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
 | `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
 | `transactions` | No date filter; results include transaction and posting dates. | `accounts`, `id`, `order`, `page`, `pageSize` |
@@ -64,8 +65,9 @@ Existing API/CLI differences are deliberate compatibility constraints:
   order, not a date sort. The API paginates by default; CLI text output includes
   all matching transactions unless pagination is explicitly requested.
 
-These spellings and defaults remain supported. `at` remains distinct from
-`from`/`to` because unrealized gains describe a snapshot rather than period activity.
+These spellings and defaults remain supported. Unrealized gains use only `to`
+because they describe a snapshot rather than period activity; all earlier
+positions contribute to that snapshot.
 
 ## Errors
 
@@ -188,11 +190,13 @@ grouped by account and expressed as exact decimal strings in the journal
 default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
-Options are `at`, `accounts`, and `dateBasis`. `at` is the inclusive snapshot
+Options are `to`, `accounts`, and `dateBasis`. `to` is the inclusive snapshot
 date for both positions and valuation prices, `accounts` contains account
 patterns, and `dateBasis` is `posting` (the default) or `transaction`. When
-`at` is omitted, all positions and the latest available journal prices are
-used.
+`to` is omitted, all positions and the latest available journal prices are
+used. `from` is not supported because earlier positions contribute to the
+snapshot. The former `at` option is rejected; use `to` in the API and `--to`
+in the CLI.
 
 ### `journal.investmentPerformance(options)`
 

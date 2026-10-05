@@ -1,5 +1,5 @@
 runs:
-  - command: unrealized-gains --at 2024-02-28 --format json
+  - command: unrealized-gains --to 2024-02-28 --format json
     expect:
       exitCode: 0
       result:
@@ -7,7 +7,7 @@ runs:
           quantity: "5400"
           commodity: USD
       warnings: []
-  - command: unrealized-gains --at 2024-03-31 --format json
+  - command: unrealized-gains --to 2024-03-31 --format json
     expect:
       exitCode: 0
       result:
@@ -15,7 +15,7 @@ runs:
           quantity: "-150"
           commodity: USD
       warnings: []
-  - command: unrealized-gains --at 2024-04-30 --format json
+  - command: unrealized-gains --to 2024-04-30 --format json
     expect:
       exitCode: 0
       result: []

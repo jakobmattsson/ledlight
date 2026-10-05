@@ -245,7 +245,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
   assert.deepEqual(parseArguments([
     'unrealized-gains',
     '--file', '/journal',
-    '--at', '2024-12-31',
+    '--to', '2024-12-31',
     '--accounts', 'Assets:',
     '--date-basis', 'transaction',
     '--format', 'csv',
@@ -254,7 +254,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
     command: 'unrealized-gains',
     journalPath: '/journal',
     reportOptions: {
-      at: '2024-12-31',
+      to: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction',
     },
@@ -274,7 +274,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
     () => parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'yaml']),
     /Allowed choices are text, json, csv/u,
   );
-  for (const option of ['--csv', '--json', '--from', '--to']) {
+  for (const option of ['--csv', '--json', '--from', '--at']) {
     assert.throws(
       () => parseArguments(['unrealized-gains', '--file', '/journal', option, '2024-01-01']),
       /Usage:/u,

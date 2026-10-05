@@ -251,7 +251,7 @@ module.exports = ({
       'reports',
     );
     addJournal(unrealizedGains);
-    addDateOption(unrealizedGains, '--at <date>', 'show gains at YYYY-MM-DD', 'at');
+    addDateOption(unrealizedGains, '--to <date>', 'include positions and prices on or before YYYY-MM-DD', 'to');
     addAccountPatterns(unrealizedGains); addDateBasisOption(unrealizedGains);
     addOutputValueOption(unrealizedGains, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
@@ -384,7 +384,7 @@ module.exports = ({
       return { ...common, options: compact({ accounts: options.accounts, related: options.related || undefined }) };
     }
     const reportOptions = compact({
-      from: options.from, to: options.to, at: options.at, accounts: options.accounts || [],
+      from: options.from, to: options.to, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
     if (commandName === 'summary') {

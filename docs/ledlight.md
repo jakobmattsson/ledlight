@@ -139,7 +139,7 @@ underlying result.
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
-| `unrealized-gains --at DATE` | `options.at` | Inclusive position and valuation snapshot |
+| `unrealized-gains --to DATE` | `options.to` | Inclusive position and valuation snapshot |
 | `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `balance --group-by DIMENSION` | `options.groupBy` | Group by `account` or `commodity` |
@@ -510,15 +510,15 @@ commodity, and omit zero gains. Losses are returned as negative quantities.
 
 ```console
 ledlight unrealized-gains --file main.ledger
-ledlight unrealized-gains --file main.ledger --at 2024-12-31 --accounts "^Assets:Broker"
+ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "^Assets:Broker"
 ledlight unrealized-gains --file main.ledger --format csv
 ledlight unrealized-gains --file main.ledger --total
 ```
 
-The API accepts `at`, `accounts`, and `dateBasis`. The CLI exposes these as
-`--at`, repeated `--accounts`, and `--date-basis`. It uses positions and the
-latest valuation prices on or before `at`, or the complete journal and latest
-available prices when `at` is omitted. Realized quantities and their lot costs
+The API accepts `to`, `accounts`, and `dateBasis`. The CLI exposes these as
+`--to`, repeated `--accounts`, and `--date-basis`. It uses positions and the
+latest valuation prices on or before `to`, or the complete journal and latest
+available prices when `to` is omitted. Realized quantities and their lot costs
 cancel when a lot is sold, leaving only unrealized gains or losses on the
 remaining position.
 

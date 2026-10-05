@@ -20,7 +20,7 @@ module.exports = ({
   const optionsSchema = z.strictObject({
     accounts,
     dateBasis,
-    at: dateOption,
+    to: dateOption,
   });
 
   function reportFilter(options, valuationCommodity) {
@@ -29,7 +29,7 @@ module.exports = ({
       'r.commodity != ?',
       `${dateExpression} <= COALESCE(?, '9999-12-31')`,
     ];
-    const parameters = [valuationCommodity, options.at ?? null];
+    const parameters = [valuationCommodity, options.to ?? null];
     if (options.accounts.length > 0) {
       const filter = accountFilter('p.account', options.accounts);
       clauses.push(filter.sql);
@@ -98,7 +98,7 @@ module.exports = ({
     const positions = queryPositions(database, reportOptions, valuationCommodity);
     const rates = queryValuationRates(
       database,
-      reportOptions.at,
+      reportOptions.to,
       new Set(positions.map((position) => position.commodity)),
       valuationPriceCache,
     );

@@ -1,5 +1,5 @@
 runs:
-  - command: unrealized-gains --at 2024-04-30 --format json
+  - command: unrealized-gains --to 2024-04-30 --format json
     expect:
       exitCode: 0
       result: []

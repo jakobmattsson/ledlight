@@ -55,7 +55,7 @@ test('every public query rejects unknown options and invalid option objects', (t
 test('date parameters share calendar validation and inclusive interval ordering', (t) => {
   const { journal, queries } = createJournal(t);
   for (const { name, inputSchema } of queries) {
-    for (const field of ['from', 'to', 'at'].filter((key) => key in inputSchema.shape)) {
+    for (const field of ['from', 'to'].filter((key) => key in inputSchema.shape)) {
       for (const value of ['2023-02-29', '2024-02-30', '2024-2-01', '2024/02/01',
         '2024-02-29T00:00:00Z', '', null, new Date('2024-02-29')]) {
         invalidInput(() => journal[name]({ [field]: value }), /must be a valid date in YYYY-MM-DD format/u);

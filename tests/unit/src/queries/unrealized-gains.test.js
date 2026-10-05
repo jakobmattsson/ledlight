@@ -64,7 +64,15 @@ test('returns unrealized gains and losses by account in the default commodity', 
 
 test('uses the snapshot date for positions, prices, and account selection', (t) => {
   const databasePath = buildFixture(t);
-  assert.deepEqual(unrealizedGains(databasePath, { at: '2024-01-31' }), []);
+  assert.deepEqual(unrealizedGains(databasePath, { to: '2024-01-31' }), []);
+  assert.deepEqual(unrealizedGains(databasePath, { to: '2024-02-01' }), [
+    { account: 'Assets:Bonds', quantity: '-20', commodity: 'USD' },
+    { account: 'Assets:Broker', quantity: '210', commodity: 'USD' },
+  ]);
+  assert.deepEqual(unrealizedGains(databasePath, { to: '2024-02-02' }), [
+    { account: 'Assets:Bonds', quantity: '-20', commodity: 'USD' },
+    { account: 'Assets:Broker', quantity: '130', commodity: 'USD' },
+  ]);
   assert.deepEqual(unrealizedGains(databasePath, { accounts: ['Assets:Bonds'] }), [
     { account: 'Assets:Bonds', quantity: '-20', commodity: 'USD' },
   ]);
@@ -74,10 +82,10 @@ test('rejects unsupported unrealized-gain options and invalid dates', (t) => {
   const databasePath = buildFixture(t);
   assert.throws(() => unrealizedGains(databasePath, { unknown: true }),
     /Unknown unrealizedGains option: unknown/u);
-  assert.throws(() => unrealizedGains(databasePath, { at: '2024-02-30' }),
-    /at must be a valid date/u);
+  assert.throws(() => unrealizedGains(databasePath, { to: '2024-02-30' }),
+    /to must be a valid date/u);
   assert.throws(() => unrealizedGains(databasePath, { from: '2024-01-01' }),
     /Unknown unrealizedGains option: from/u);
-  assert.throws(() => unrealizedGains(databasePath, { to: '2024-01-01' }),
-    /Unknown unrealizedGains option: to/u);
+  assert.throws(() => unrealizedGains(databasePath, { at: '2024-01-01' }),
+    /Unknown unrealizedGains option: at/u);
 });

@@ -1,5 +1,5 @@
 runs:
-  - command: unrealized-gains --at 2024-03-31 --format json
+  - command: unrealized-gains --to 2024-03-31 --format json
     expect:
       exitCode: 0
       result:
@@ -8,13 +8,13 @@ runs:
           commodity: USD
       warnings: []
     pendingWarnings: Valid transfers and splits currently produce an incorrect INVALID_COMMODITY_TRADE warning.
-  - command: unrealized-gains --at 2024-03-31 --format json --accounts Assets:Broker
+  - command: unrealized-gains --to 2024-03-31 --format json --accounts Assets:Broker
     expect:
       exitCode: 0
       result: []
       warnings: []
     pendingWarnings: Valid transfers currently produce an incorrect INVALID_COMMODITY_TRADE warning.
-  - command: unrealized-gains --at 2024-03-31 --format json --accounts Assets:OtherBroker
+  - command: unrealized-gains --to 2024-03-31 --format json --accounts Assets:OtherBroker
     expect:
       exitCode: 0
       result:
