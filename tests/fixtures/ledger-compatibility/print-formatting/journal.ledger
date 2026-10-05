@@ -1,0 +1,11 @@
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1000.000000 FUND
+account Assets:Cash
+account Assets:Cash:At:A:Bank:With:A:Very:Long:Account
+account Equity:Opening
+account Expenses:Unsorted
+
+include entries/*.ledger

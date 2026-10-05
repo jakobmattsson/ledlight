@@ -134,6 +134,19 @@ test('transactions defaults to the exact Ledger print output', (t) => {
   assert.equal(ledlightOutput, ledgerOutput);
 });
 
+test('transactions matches Ledger print formatting across included files', (t) => {
+  const projectDirectory = temporaryProject(t, 'print-formatting');
+  const journalPath = path.join(projectDirectory, 'journal.ledger');
+  const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
+    '--args-only', '--no-pager', '--file', journalPath, 'print',
+  ]);
+  const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
+    cliPath, 'transactions', '--file', journalPath,
+  ]);
+
+  assert.equal(ledlightOutput, ledgerOutput);
+});
+
 test('print aliases transactions', (t) => {
   const projectDirectory = temporaryProject(t, 'basic');
   const journalPath = path.join(projectDirectory, 'journal.ledger');

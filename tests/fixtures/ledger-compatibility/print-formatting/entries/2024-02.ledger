@@ -1,0 +1,15 @@
+2024-02-01 Separate posting comment
+  Assets:Cash  -4598 SEK
+  Expenses:Unsorted  4598 SEK  ; Supporting explanation stays on its own line
+
+2024-02-02 Inline posting comment
+  Assets:Cash  -10 SEK
+  Expenses:Unsorted  10 SEK  ; Short
+
+2024-02-03 Long transaction comment  ; This transaction comment is long enough to wrap like Ledger output
+  Assets:Cash  -10 SEK
+  Expenses:Unsorted
+
+2024-02-04 Total lot cost
+  Assets:Cash:At:A:Bank:With:A:Very:Long:Account  259.98 FUND {{40000 SEK}}
+  Equity:Opening  -40000 SEK

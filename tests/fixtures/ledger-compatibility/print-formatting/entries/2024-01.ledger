@@ -1,0 +1,31 @@
+2024-01-01 Short account
+  Assets:Cash  -357 SEK
+  Equity:Opening
+
+2024-01-02 Long account
+  Assets:Cash:At:A:Bank:With:A:Very:Long:Account  932 SEK
+  Equity:Opening
+
+2024-01-03 Long account with a narrow amount
+  Assets:Cash:At:A:Bank:With:A:Very:Long:Account  98.78 SEK
+  Equity:Opening
+
+2024-01-04 Explicit elided amount on a long account
+  Equity:Opening  -10 SEK
+  Assets:Cash:At:A:Bank:With:A:Very:Long:Account  10 SEK
+
+2024-01-05 Inline metadata comment
+  Assets:Cash  -10 SEK
+  Equity:Opening  ; [2024-01-06]
+
+2024-01-06 Inline metadata comment on a long account
+  Assets:Cash:At:A:Bank:With:A:Very:Long:Account  ; [2024-01-07]
+  Equity:Opening  10 SEK
+
+2024-01-07 Implicit first posting
+  Assets:Cash
+  Assets:Cash:At:A:Bank:With:A:Very:Long:Account  -10 SEK
+
+2024-01-08 Balance assignment
+  Assets:Cash  = 100 SEK
+  Equity:Opening
