@@ -118,14 +118,14 @@ function runLedger(projectDirectory, { options, queries }) {
   }));
 }
 
-test('Ledger-compatible transactions match the exact Ledger print output', (t) => {
+test('transactions matches the exact Ledger print output', (t) => {
   const projectDirectory = temporaryProject(t, 'basic');
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const ledgerOutput = execFileSync(ledgerBinary, [
     '--args-only', '--date-format', '%Y-%m-%d', '--file', journalPath, 'print',
   ], { cwd: projectDirectory, encoding: 'utf8' });
   const ledlightOutput = execFileSync(process.execPath, [
-    cliPath, 'transactions', '--ledger-compatible', '--file', journalPath,
+    cliPath, 'transactions', '--file', journalPath,
   ], {
     cwd: projectDirectory,
     encoding: 'utf8',
@@ -142,42 +142,12 @@ test('transactions matches Ledger print formatting across included files', (t) =
     '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath, 'print',
   ]);
   const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
-    cliPath, 'transactions', '--ledger-compatible', '--file', journalPath,
+    cliPath, 'transactions', '--file', journalPath,
   ]);
 
   assert.equal(ledlightOutput, ledgerOutput);
 });
 
-test('Ledger-compatible transactions match zero amounts and halfway rounding', (t) => {
-  const projectDirectory = temporaryJournal(t, `commodity SEK
-  format 1,000.00 SEK
-  default
-commodity FUND
-  format 1000.00 FUND
-commodity RIGHT
-  format 1000 RIGHT
-account Assets:Fund
-account Assets:Rights
-account Assets:Cash
-account Income:Other
-2024-01-01 Halfway rounding
-  Assets:Fund  86980.00 SEK
-  Assets:Fund  -3136.675 FUND {{83341.46 SEK}} @@ 86980.00 SEK
-  Income:Other  -3638.54 SEK
-2024-01-02 Explicit zero
-  Assets:Rights  1 RIGHT {0 SEK} @ 0 SEK
-  Income:Other   0 SEK
-`);
-  const journalPath = path.join(projectDirectory, 'journal.ledger');
-  const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
-    '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath, 'print',
-  ]);
-  const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
-    cliPath, 'transactions', '--ledger-compatible', '--file', journalPath,
-  ]);
-
-  assert.equal(ledlightOutput, ledgerOutput);
-});
 
 const scenarios = [
   {
