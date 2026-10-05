@@ -129,8 +129,7 @@ test('clamps pages and rejects invalid list options', (t) => {
     /order must be newest or oldest/u);
   assert.throws(() => project.transactions({ order: 'newest', page: 0, pageSize: 2 }),
     /page must be a positive integer/u);
-  assert.throws(() => project.transactions({ order: 'newest', page: 1, pageSize: 101 }),
-    /pageSize must not exceed 100/u);
+  assert.equal(project.transactions({ order: 'newest', page: 1, pageSize: 101 }).pageSize, 101);
   assert.throws(() => project.transactions({ id: 'invalid' }),
     /id must be a positive integer/u);
   assert.throws(() => project.transactions({ accounts: [''] }),

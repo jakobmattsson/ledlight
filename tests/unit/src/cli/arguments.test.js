@@ -370,12 +370,17 @@ test('maps every remaining API parameter to CLI arguments', () => {
   });
   assert.deepEqual(parseArguments(['transactions', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',
-    options: { accounts: [] }, output: { format: 'text' },
+    options: { accounts: [], order: 'oldest' }, output: { format: 'text' },
   });
   assert.deepEqual(parseArguments(['print', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',
-    options: { accounts: [] }, output: { format: 'text' },
+    options: { accounts: [], order: 'oldest' }, output: { format: 'text' },
   });
+  assert.match(
+    usage('transactions'),
+    /--order <order>\s+sort transactions \(choices: "newest", "oldest", default:\s+"oldest"\)/u,
+  );
+  assert.match(usage('transactions'), /--page-size <number>\s+set the page size/u);
   assert.deepEqual(parseArguments([
     'reconciliation-entries', '--file', '/journal',
     '--account', 'Assets:Cash', '--account', 'Assets:Bank', '--related',
