@@ -1,0 +1,22 @@
+runs:
+  - command: unrealized-gains --at 2024-02-28 --format json
+    expect:
+      exitCode: 0
+      result:
+        - account: Assets:Broker
+          quantity: "10"
+          commodity: USD
+      warnings: []
+  - command: unrealized-gains --at 2024-04-30 --format json
+    expect:
+      exitCode: 0
+      result:
+        - account: Assets:Broker
+          quantity: "21"
+          commodity: USD
+      warnings: []
+  - command: unrealized-gains --at 2024-05-31 --format json
+    expect:
+      exitCode: 0
+      result: []
+      warnings: []

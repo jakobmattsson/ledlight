@@ -1,0 +1,8 @@
+runs:
+  - command: unrealized-gains --at 2024-03-31 --format json
+    expect:
+      exitCode: 0
+      result: []
+      warnings:
+        - "[RESIDUAL_COST_BASIS] Assets:Broker: zero FUND units retain cost basis -100 USD"
+    pendingWarnings: Global accounting diagnostics are not implemented yet.

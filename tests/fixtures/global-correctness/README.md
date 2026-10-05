@@ -1,112 +1,96 @@
 # Global accounting correctness scenarios
 
-These fixtures define Ledlight expectations independently of Ledger CLI output.
-Each directory contains a standalone `journal.ledger` and a hand-calculated
-`expected.json`. The journals use USD as their valuation commodity and declare
-their accounts and commodities. They need no configured accounting instance.
+Each scenario contains a standalone `journal.ledger`, an `expected.yaml` with
+concrete CLI runs, and `NOTES.md` explaining the calculations. The expected
+results are derived from the accounting examples, never copied from Ledger CLI
+output. No configured accounting instance is required.
 
-This is a specification and regression-fixture change, not an implementation of
-a new global reconciliation API. The integration runner is
-`tests/integration/global-correctness.test.js`; run it with
-`node --test tests/integration/global-correctness.test.js`, or run the complete
-canonical verification with `npm test`.
+## Read a scenario as a command
 
-## Accounting rules
+For example, `allocation-below-minimum/expected.yaml` specifies:
 
-- Reconcile units and carrying cost separately for each account and commodity.
-- Acquisitions add basis; disposals remove the explicitly booked basis. The
-  allocation method is outside the scope of this check, but the full sequence
-  must admit at least one feasible allocation of the available acquisition costs.
-  See [allocation feasibility](ALLOCATION.md) for quantity-aware bounds,
-  chronological constraints, and additional scenarios.
-- Transfers carry both units and basis between accounts. They do not create
-  realized results, and they cancel when both accounts are in scope.
-- Splits and reverse splits change units without changing total basis. These
-  fixtures explicitly remove the old units and introduce the replacement units
-  at the same total basis, so no external corporate-action metadata is needed.
-- A closed position must have zero residual basis. Diagnose positive and
-  negative residuals before account or portfolio aggregation, even when they
-  cancel. An empty report alone is not an adequate outcome for an invalid
-  closed position.
-- For an open position, unrealized gain is market value minus carrying basis.
-  A gain, a loss, and zero are all valid outcomes.
-- Recorded realized gain, less separately expensed fees, plus unrealized gain
-  must equal sale proceeds plus remaining market value minus purchase cost and
-  separately expensed fees. Fees already included in basis or net proceeds must
-  not be subtracted again.
-- Missing basis or valuation data makes the relevant conclusion incomplete;
-  unknown values are not zero. Basis can reconcile without a market price, but
-  unrealized gain cannot be calculated in that case.
+```yaml
+runs:
+  - command: unrealized-gains --at 2024-02-28 --format json
+    expect:
+      exitCode: 0
+      result:
+        - account: Assets:Broker
+          quantity: "27.99"
+          commodity: USD
+      warnings:
+        - "[IMPOSSIBLE_COST_BASIS] Impossible first sale: Assets:Broker sold 11 FUND with cost 11.99 USD; allowed range is 12 to 32 USD"
+    pendingWarnings: Global accounting diagnostics are not implemented yet.
+```
 
-The total-result identity alone is not proof of correctness: an invalid closed
-position can retain a residual basis that offsets an incorrect realized gain.
-The closed-position rule is an additional requirement. Likewise, offsetting
-errors must not disappear simply because their portfolio sum is zero. Even zero
-residual basis at full liquidation does not erase an impossible earlier disposal.
-Allocation feasibility is an additional requirement beyond these identities.
+The journal balances, but selling eleven units cannot consume less than 12 USD
+of its available acquisition cost. The report still shows the result calculated
+from the booked values, accompanied by a warning. After full liquidation the
+result becomes `[]`, while the warning about the earlier sale remains.
 
-## Expected output format
+To run a scenario manually, use its `command`, prefixed with `node src/cli/run.js`,
+and add `--file tests/fixtures/global-correctness/<scenario>/journal.ledger`.
 
-`snapshots` specify inclusive report dates. Future transactions and quotes must
-not affect an earlier snapshot. All amounts and quantities are exact decimal
-strings; no machine floating-point tolerance is part of the contract.
+## Expected output contract
 
-- `status` is the proposed reconciliation outcome: `balanced`, `invalid`, or
-  `incomplete`. These labels and the `issues[].kind` values are fixture vocabulary,
-  not existing or finalized public API fields or diagnostic codes.
-- `positions` retain zero-unit positions so their residual basis is reviewable.
-  `costBasis` is the remaining booked basis. `marketValue` is quantity times the
-  snapshot market price. `unrealizedGain` is their arithmetic difference. For an
-  invalid closed position this difference is diagnostic arithmetic, not a valid
-  unrealized result to publish. `null` means unknown, never zero.
-- `flows.purchaseCost` includes capitalized purchase fees;
-  `flows.saleProceeds` follows gross or net proceeds as explicitly booked;
-  `flows.expensedFees` contains only separately booked fees.
-- `bookedRealizedGain` reverses the sign of the income account balance;
-  `netRealizedGain` additionally deducts separately expensed fees.
-- `economicGain` comes from cash flows and remaining market value.
-  `resultDifference` is net realized plus unrealized gain minus economic gain;
-  a nonzero difference is an error. Zero alone does not establish correctness.
-- `unrealizedGains.rows` is exact expected output from the existing
-  `unrealizedGains` query (the JSON rows of `unrealized-gains`). Zero results are
-  omitted, and multiple commodities aggregate by account only after validation.
-- `unrealizedGains.errorIncludes` specifies an expected existing query error.
-  `unrealizedGains.pending` describes a required diagnostic for a known behavior
-  gap. Its delivery as a warning or error is intentionally not decided here.
-- `accountReports` specifies additional exact output with account filters.
-  Reconciliation totals still describe the combined portfolio; a filtered
-  report does not assert that the selected account was the entire portfolio.
-- `currentIngestionWarningCodes` records current ingestion behavior, separately
-  from desired reconciliation outcomes. For example,
-  the incorrect realized result is already an unbalanced transaction, while
-  the closed residual examples balance transaction by transaction. Transfers
-  and splits currently trigger `INVALID_COMMODITY_TRADE` because the validator
-  treats negative commodity postings without sale prices as invalid trades.
-  Their warnings are recorded as a known limitation, with TODO tests requiring
-  recognition of valid non-sale adjustments; adding fictitious sale prices to
-  these fixtures would hide the limitation.
-- `costBasisChecks` specifies proposed per-disposal feasibility outcomes and
-  exact minimum and maximum **total** disposal costs, conditional on all earlier
-  entries. Its transaction descriptions identify unique postings in the journal.
-  Each check explains the hand-derived bounds. See [ALLOCATION.md](ALLOCATION.md)
-  for the complete meaning of the contract.
-- `allocationWitnesses`, when present, gives concrete fractional allocations
-  that explain a valid sequence. The runner checks their amounts, acquisition
-  capacities, and ordering. These prove existence, not the optimality of bounds;
-  the test runner does not implement a feasibility or optimization solver.
+- `command` is the actual report command, including snapshot date and any
+  account filters. The runner passes arguments directly to Node without a shell
+  and adds the path to a test-owned temporary copy of the journal.
+- `expect.exitCode` is the process exit code: 0 for a completed report, including
+  reports with accounting warnings; 1 when required data prevents calculation.
+- `expect.result` is the complete parsed JSON from stdout, including row order.
+  Quantities are exact decimal strings. Zero-gain accounts and closed positions
+  are omitted. A residual basis on a closed position must appear in warnings,
+  not as a phantom unrealized gain.
+- `expect.warnings` is the complete ordered list of diagnostic summary lines on
+  stderr. `[]` explicitly requires no warnings. Indented source-location lines
+  are excluded from comparison because their temporary paths vary.
+- `expect.error` replaces `result` when calculation fails. It is the exact error
+  line on stderr; stdout must be empty. Unknown basis or market value must not
+  be replaced with zero. The current CLI emits the fatal error without ingestion
+  warnings, which these error scenarios preserve.
+- `pendingWarnings` explains a known warning-behavior gap. Only that run's warning
+  assertion is marked TODO. Exit codes, errors and result rows remain active
+  assertions, including numerical results for invalid accounting histories.
 
-The runner verifies ingestion, booked quantities, cash flows, income, fees,
-fixture arithmetic, and supported report output. Future global diagnostics and
-known report gaps appear as explicit TODO tests. Both acceptance and rejection
-by the future allocation validator also appear as named TODOs. Passing this
-suite therefore does not mean the new global reconciliation rules have been
-implemented.
+`IMPOSSIBLE_COST_BASIS`, `RESIDUAL_COST_BASIS`, and `RESULT_MISMATCH` and their
+messages specify intended future CLI diagnostics, not implemented production
+behavior. Valid transfers and splits should not produce trade warnings; the
+current spurious `INVALID_COMMODITY_TRADE` warning is also covered by TODO
+assertions. These are real comparisons against desired output, not empty TODO
+placeholders. Remove `pendingWarnings` when the implementation satisfies the
+contract. The format and wording can be revised deliberately with that API work.
+
+The output policy is explicit: computable booked results remain visible with
+warnings for invalid accounting. A report without warnings is the intended
+outcome for valid examples, regardless of the user's allocation method. Missing
+information needed for the numerical result produces a fatal error.
+
+## Verification and supporting calculations
+
+Run `node --test tests/integration/global-correctness.test.js` for these scenarios,
+`npm run test:integration` for all integration tests, or `npm test` for canonical
+project verification. The runner actually launches the CLI for every command
+using an isolated journal copy and cache. It does not invoke Ledger.
+
+`NOTES.md` retains positions, cash flows, realized and unrealized results,
+hand-derived disposal bounds, and example feasible allocations. Those figures
+explain the expected output; they are not a parallel machine-readable output
+contract or separately asserted internal implementation state. In particular,
+a successful report does not expose its computed disposal interval. Boundary
+acceptance and rejection scenarios test observable consequences; exact successful
+intervals and allocation witnesses remain explanatory calculations.
+
+The fixtures specify future global correctness and allocation validation without
+implementing either. Passing the suite while warning TODOs remain does not mean
+these controls exist. See [ALLOCATION.md](ALLOCATION.md) for history-dependent
+bounds, proportional allocations, chronological order, transfers and splits.
 
 ## Scenarios and expected results
 
 Amounts below are USD at the last snapshot. Realized results are after separately
-expensed fees. The complete position-level and earlier-date expectations are in
-each directory's `expected.json`.
+expensed fees. Exact report expectations, including earlier dates, are in each
+directory's `expected.yaml`; position-level calculations are in `NOTES.md`.
 
 | Scenario | Net realized | Unrealized | Economic result | Expected outcome |
 | --- | ---: | ---: | ---: | --- |
@@ -141,19 +125,18 @@ and outcomes in [ALLOCATION.md](ALLOCATION.md). Together these directories conta
 
 ## Scope
 
-These are complete-history, long-position examples with no opening holdings,
-external asset transfers, or foreign-currency basis. All internal transfers have
-both accounts present. Amounts can therefore be checked directly against bank
-and income balances without inventing an opening value or classifying arbitrary
-real-world account names. They do not claim to cover every corporate action,
-short positions, foreign-exchange policy, or an external transfer with unknown
-history. Such cases need additional explicit fixtures and accounting rules.
+These are complete-history, long-position examples in USD with no opening
+holdings, external asset transfers, or foreign-currency basis. Internal transfers
+have both accounts present. Purchases add basis, sales remove it, transfers carry
+it, and splits preserve total basis while changing units. Separately expensed
+fees affect net results once; capitalized fees form part of acquisition cost.
 
-No fixture asks Ledlight to enforce FIFO, LIFO, average cost, tax treatment, or
-transaction-level lot matching. The method names describe how the example's
-author chose the disposal basis; Ledlight receives the resulting postings.
+The total-result identity and zero residual basis at liquidation do not prove
+that all earlier allocations were possible. The warning expectations preserve
+historical violations, including ones that cancel in portfolio totals.
 
-Tax rules and tax reporting are outside Ledlight's scope. A deduction in an
-external tax calculation cannot change the historical basis removed from a
-position. No tax tags, tax methods, exemption flags, or alternative tax-derived
-lot costs participate in these scenarios or in their intended validation.
+Tax calculations, tax metadata and exemption flags are outside Ledlight's scope.
+The fixtures do not enforce FIFO, LIFO, average cost, tax treatment, or matching
+individual sold shares to original lots. A historical allocation must merely
+have at least one feasible explanation under the recorded movements. These cases
+do not define short-sale rules, every corporate action, or cross-currency policy.

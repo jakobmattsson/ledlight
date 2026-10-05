@@ -6,9 +6,11 @@ adjustments accounted for? The validator must neither select a particular lot
 method nor require that sold whole shares identify particular original shares.
 
 These are specifications for future behavior. No production solver or global
-validation API is introduced by these fixtures. `costBasisChecks` are hand-derived
-expected constraints. The integration test binds them to actual journal postings
-and registers named TODO tests for the future validator's acceptance or rejection.
+validation API is introduced by these fixtures. `expected.yaml` specifies actual
+`unrealized-gains` commands with expected rows, warnings, errors and exit codes.
+The integration test executes those commands; unfinished warning behavior has
+TODO assertions. Hand-derived bounds and witness allocations are retained in each
+scenario's `NOTES.md` as explanations.
 
 ## Bounds and history
 
@@ -39,19 +41,18 @@ and registers named TODO tests for the future validator's acceptance or rejectio
    explanation. Transaction balancing, the realized-plus-unrealized identity,
    and zero closing basis are necessary but insufficient.
 
-Each `costBasisChecks` entry contains a unique `transaction` description,
-`account`, `commodity`, positive disposed `quantity`, recorded positive
-`costBasis`, inclusive `minimum` and `maximum`, `outcome` (`feasible` or
-`infeasible`), and an explanation. All costs are total USD amounts. The interval
-is conditional on the complete feasible prefix, not on a chosen witness.
-The fixture vocabulary is not a finalized public API.
+The disposal-bound tables in each scenario's `NOTES.md` identify transactions,
+accounts, quantities, recorded total costs, inclusive bounds and intended
+outcomes. The interval is conditional on the complete feasible prefix, not on a
+chosen witness. These tables are explanatory rather than CLI output fields.
 
-For invalid histories, `positions` and result fields still describe the booked
-arithmetic. They are diagnostic evidence, not certified investment results.
-`unrealizedGains.pending` requires surfacing the violation; it intentionally
-leaves the warning/error transport undecided. An empty report after liquidation
-must not hide the historical problem. For valid histories, `unrealizedGains.rows`
-gives the exact expected existing query output.
+Invalid histories still produce booked unrealized-gain rows when calculable,
+with `IMPOSSIBLE_COST_BASIS` warnings identifying the offending transaction,
+account, commodity, sold quantity, recorded cost and allowed total-cost range.
+An empty report after liquidation must retain the historical warning. Valid
+histories require exact result rows and `warnings: []`. This specifies the
+warning behavior without implementing the validator. Successful reports need
+not expose their internal intervals or a chosen allocation.
 
 ## Scenarios
 
@@ -90,8 +91,9 @@ one at average cost 2 can be represented by 0.5 from each group. After acquiring
 one more at 8, the remaining six units cost 18 in total. Selling three at average
 cost 3 can be represented by 1.25 cheap, 1.25 expensive, and 0.5 newly acquired
 units. The final three consume the same proportions. All original capacities
-are respected exactly. The JSON witness records these fractions and the runner
-checks them without searching for an allocation.
+are respected exactly. The scenario's notes record these fractions as a
+human-readable explanation; the runner asserts the resulting CLI behavior
+without searching for or prescribing an allocation.
 
 ## Transfer, split, and fee calculation
 
