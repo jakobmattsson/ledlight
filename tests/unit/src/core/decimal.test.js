@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   divideDecimals,
+  divideDecimalsHalfEven,
   formatDecimal,
   formatDecimalFixed,
   parseDecimal,
@@ -33,6 +34,13 @@ test('requires digits on both sides of a decimal point', () => {
   for (const value of ['.5', '-1.', '+.25', '+10.']) {
     assert.throws(() => parseDecimal(value), /Invalid decimal value/u);
   }
+});
+
+test('rounds exact division ties to even for Ledger price presentation', () => {
+  for (const [numerator, expected] of [['1', '0.007812'], ['3', '0.023438'], ['-1', '-0.007812']]) {
+    assert.equal(formatDecimal(divideDecimalsHalfEven(parseDecimal(numerator), parseDecimal('128'), 6)), expected);
+  }
+  assert.equal(formatDecimal(divideDecimals(parseDecimal('1'), parseDecimal('128'), 6)), '0.007813');
 });
 
 test('retains parsed decimal state until a database sum completes', () => {

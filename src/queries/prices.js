@@ -7,6 +7,7 @@ module.exports = ({
 }) => {
   const optionsSchema = z.strictObject({});
   const inferredPriceScale = 30;
+  const decimalScale = (quantity) => quantity.split('.')[1]?.length ?? 0;
 
   function queryPrices(database, options, _caches) {
     parseOptions(optionsSchema, options, 'prices');
@@ -20,7 +21,9 @@ module.exports = ({
         entries.sequence,
         -1 AS position,
         0 AS isTotal,
-        NULL AS baseQuantity
+        NULL AS baseQuantity,
+        NULL AS transactionId,
+        0 AS hasTransactionCost
       FROM prices
       JOIN journal_entries AS entries ON entries.id = prices.entry_id
       UNION ALL
@@ -33,7 +36,9 @@ module.exports = ({
         entries.sequence,
         postings.position,
         COALESCE(postings.cost_is_total, postings.lot_cost_is_total),
-        postings.amount_quantity
+        postings.amount_quantity,
+        postings.transaction_id,
+        postings.cost_quantity IS NOT NULL
       FROM postings
       JOIN transactions ON transactions.entry_id = postings.transaction_id
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
@@ -41,6 +46,16 @@ module.exports = ({
         AND (postings.cost_quantity IS NOT NULL OR postings.lot_cost_quantity IS NOT NULL)
       ORDER BY sequence, position
     `).all();
+    const transactionScales = new Map();
+    for (const row of database.prepare(`
+      SELECT transaction_id, amount_commodity, amount_quantity
+      FROM postings WHERE amount_quantity IS NOT NULL
+    `).all()) {
+      const key = `${row.transaction_id}\u0000${row.amount_commodity}`;
+      transactionScales.set(key, Math.max(
+        transactionScales.get(key) ?? 0, decimalScale(row.amount_quantity),
+      ));
+    }
     const usedCommodities = new Set(database.prepare(`
       SELECT DISTINCT commodity
       FROM resolved_posting_amounts
@@ -53,6 +68,15 @@ module.exports = ({
       const pair = `${event.baseCommodity}\u0000${event.quoteCommodity}`;
       if (!quoteOrder.has(pair)) quoteOrder.set(pair, quoteOrder.size);
       if (event.isTotal) {
+        // Preserve the source operands for text rendering without changing the
+        // public row shape or rounding the high-precision API quantity twice.
+        Object.defineProperty(event, 'ledgerPrice', { value: {
+          totalQuantity: event.quoteQuantity,
+          baseQuantity: event.baseQuantity,
+          hasTransactionCost: Boolean(event.hasTransactionCost),
+          baseScale: transactionScales.get(`${event.transactionId}\u0000${event.baseCommodity}`) ?? 0,
+          quoteScale: transactionScales.get(`${event.transactionId}\u0000${event.quoteCommodity}`) ?? 0,
+        } });
         const amount = parseDecimal(event.baseQuantity);
         const absoluteAmount = amount.coefficient < 0n
           ? { ...amount, coefficient: -amount.coefficient }
@@ -65,6 +89,8 @@ module.exports = ({
       delete event.position;
       delete event.isTotal;
       delete event.baseQuantity;
+      delete event.transactionId;
+      delete event.hasTransactionCost;
       const key = `${pair}\u0000${event.date}`;
       byKey.set(key, event);
     }

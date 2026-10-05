@@ -19,6 +19,60 @@ account Income:Gains
 
 module.exports = [
   {
+    name: 'inferred purchase and total sale display precision preserves source decimal places',
+    source: `${declarations}
+2024-01-01 Purchase with integer amounts
+  Assets:Funds  3 ALPHA {{1 SEK}}
+  Assets:Cash  -1 SEK
+
+2024-01-02 Purchase with explicit decimal places
+  Assets:Funds  3.0000 ALPHA {{1.00 SEK}}
+  Assets:Cash  -1.00 SEK
+
+2024-01-03 Sale with integer amounts
+  Assets:Funds  -3 ALPHA {{1 SEK}} @@ 2 SEK
+  Assets:Cash  2 SEK
+  Income:Gains  -1 SEK
+
+2024-01-04 Sale with explicit decimal places
+  Assets:Funds  -3.0000 ALPHA {{1.00 SEK}} @@ 2.00 SEK
+  Assets:Cash  2.00 SEK
+  Income:Gains  -1.00 SEK
+
+P 2024-01-05 ALPHA 0.123456789012345678901234567890123456 SEK
+`,
+    expected: [
+      ['2024-01-01', 'ALPHA', '0.333333333333333333333333333333', null],
+      ['2024-01-02', 'ALPHA', '0.333333333333333333333333333333', null],
+      ['2024-01-03', 'ALPHA', '0.666666666666666666666666666667', null],
+      ['2024-01-04', 'ALPHA', '0.666666666666666666666666666667', null],
+      ['2024-01-05', 'ALPHA', '0.123456789012345678901234567890123456', null],
+    ],
+    text: '2024-01-01 ALPHA    0.333333333333 SEK\n' +
+      '2024-01-02 ALPHA    0.3333333333333333333333 SEK\n' +
+      '2024-01-03 ALPHA    0.666667 SEK\n' +
+      '2024-01-04 ALPHA    0.666666666667 SEK\n' +
+      '2024-01-05 ALPHA    0.123456789012345678901234567890123456 SEK\n',
+  },
+  {
+    name: 'total sale display rounds ties to even',
+    source: `${declarations}
+2024-01-01 Purchase
+  Assets:Funds  128 ALPHA {{1 SEK}}
+  Assets:Cash  -1 SEK
+
+2024-01-02 Sale
+  Assets:Funds  -128 ALPHA {{1 SEK}} @@ 1 SEK
+  Assets:Cash  1 SEK
+`,
+    expected: [
+      ['2024-01-01', 'ALPHA', '0.0078125', null],
+      ['2024-01-02', 'ALPHA', '0.0078125', null],
+    ],
+    text: '2024-01-01 ALPHA    0.0078125 SEK\n' +
+      '2024-01-02 ALPHA    0.007812 SEK\n',
+  },
+  {
     name: 'independent quote currencies with corrections and first-seen currency order',
     source: `${declarations}commodity NOK
   format 1,000.00 NOK

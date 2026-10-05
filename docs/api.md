@@ -219,8 +219,8 @@ properties are not currently exposed.
 ### `journal.prices()`
 
 Returns Ledger's effective market prices for used commodities. The last price
-encountered for a commodity and date wins, whether explicit or inferred from
-lot or transaction costs:
+encountered for a base commodity, quote commodity, and date wins, whether explicit
+or inferred from lot or transaction costs:
 
 ```js
 {
@@ -232,7 +232,10 @@ lot or transaction costs:
 }
 ```
 
-`comment` is a string or `null`. Quantities remain exact decimal strings.
+`comment` is a string or `null`. Explicit quantities retain their source decimal
+strings; inferred unit prices are calculated to thirty decimal places. Text
+output follows Ledger's display precision for inferred prices, while API, JSON,
+and CSV quantities retain their calculation precision.
 Rows sort by ascending date, then base commodity. Dates use `YYYY-MM-DD`.
 
 ### `journal.transactions({ accounts, id, order, page, pageSize })`
@@ -317,7 +320,7 @@ They default to `--format text` and also accept `--format json` and `--format
 csv`. Text tag and commodity output contains one name per line. With
 `commodities --details`, text uses a metadata table and JSON or CSV includes
 every field returned by `journal.commodities(options)`. Text price output
-contains one price per line with a Ledger-style slash-separated date. JSON and
+contains one price per line with an ISO date. JSON and
 CSV retain every field returned by `journal.prices()`.
 
 CLI commands preserve the query result on stdout and emit a human-readable
