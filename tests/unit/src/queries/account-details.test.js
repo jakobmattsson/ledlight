@@ -64,28 +64,9 @@ test('groups matching account balances by commodity and retains zero balances', 
   ]);
 });
 
-test('returns matching-account activity after either its transaction or posting date', (t) => {
-  const project = createProject(t);
-
-  assert.equal(project.accountPostings({ accounts: ['^Assets:Closed$'] }).length, 5);
-  assert.equal(project.accountPostings({ accounts: ['^Assets:Closed$', '^Assets:Closed:Child$'] }).length, 6);
-  assert.deepEqual(project.accountPostings({ accounts: ['^Assets:Closed$'], after: '2023-01-02' }), [
-    {
-      transactionDate: '2023-01-02',
-      postingDate: '2023-01-04',
-      commodity: 'SEK',
-      quantity: '1',
-    },
-  ]);
-});
-
 test('rejects invalid account-detail options', (t) => {
   const project = createProject(t);
 
-  assert.throws(() => project.accountPostings({ accounts: [''], after: '2023-01-02' }),
-    /accounts\.0 must be a non-empty string/u);
-  assert.throws(() => project.accountPostings({ accounts: [] }),
-    /accounts must contain at least one account/u);
   assert.throws(() => project.accountTransactions({ accounts: ['Assets:Closed'], unknown: true }),
     /Unknown accountTransactions option: unknown/u);
 });

@@ -86,7 +86,6 @@ test('loads SQLite only when a journal is opened', (t) => {
     'every journal operation must have a CLI command',
   );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
-  assert.deepEqual(journal.accountPostings({ accounts: ['Assets:Cash'] }), []);
   assert.deepEqual(journal.postings(), []);
   assert.deepEqual(journal.summary(), []);
   assert.deepEqual(journal.balanceHistoryReport(), []);

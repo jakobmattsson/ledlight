@@ -18,10 +18,6 @@ module.exports = ({
     return definition;
   };
   const {
-    inputSchema: accountPostingsOptionsSchema,
-    execute: queryAccountPostings,
-  } = query('accountPostings');
-  const {
     inputSchema: accountTransactionsOptionsSchema,
     execute: queryAccountTransactions,
   } = query('accountTransactions');
@@ -72,7 +68,6 @@ module.exports = ({
   const schemaInputs = (schema) => Object.keys(schema.shape);
   const journalInputs = (schema) => ['journalPath', ...schemaInputs(schema)];
   const apiDefinitions = Object.freeze({
-    accountPostings: { inputs: journalInputs(accountPostingsOptionsSchema) },
     summary: { inputs: journalInputs(summaryOptionsSchema) },
     balanceHistoryReport: { inputs: journalInputs(balanceHistoryOptionsSchema) },
     unrealizedGains: { inputs: journalInputs(unrealizedGainsOptionsSchema) },
@@ -137,9 +132,6 @@ module.exports = ({
     return {
       ...current,
       warnings,
-      accountPostings(options) {
-        return runQuery(queryAccountPostings, options);
-      },
       accountTransactions(options) {
         return runQuery(queryAccountTransactions, options);
       },

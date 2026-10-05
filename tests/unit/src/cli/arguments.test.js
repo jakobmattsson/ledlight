@@ -14,7 +14,6 @@ const { apiCommands, ledgerCommand, parseArguments, usage } = argumentsModule;
 
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
-    accountPostings: 'account-postings',
     summary: 'summary',
     balanceHistoryReport: 'balance-history',
     unrealizedGains: 'unrealized-gains',
@@ -354,10 +353,6 @@ test('maps every remaining API parameter to CLI arguments', () => {
     ]),
     /Allowed choices are text, json, csv/u,
   );
-  assert.deepEqual(parseArguments(['account-postings', '--file', '/journal', '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank', '--after', '2024-01-01']), {
-    command: 'account-postings', journalPath: '/journal',
-    options: { accounts: ['Assets:Cash', 'Assets:Bank'], after: '2024-01-01' },
-  });
   assert.deepEqual(parseArguments(['account-transactions', '--file', '/journal', '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank']), {
     command: 'account-transactions', journalPath: '/journal',
     options: { accounts: ['Assets:Cash', 'Assets:Bank'] },

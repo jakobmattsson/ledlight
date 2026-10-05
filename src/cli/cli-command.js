@@ -27,7 +27,6 @@ module.exports = ({
     const { command, journalPath, options } = parsed;
     const journal = project.openJournal(journalPath);
     lastWarnings = journal.warnings || [];
-    if (command === 'account-postings') return formatJson(journal.accountPostings(options));
     if (command === 'account-transactions') return formatJson(journal.accountTransactions(options));
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(options), parsed.output);

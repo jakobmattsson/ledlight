@@ -170,25 +170,6 @@ JavaScript numbers. Return fields are `null` when they cannot be calculated.
 The precision boundary for these numeric monetary fields is tracked in the
 improvement backlog.
 
-## Account operations
-
-### `journal.accountPostings({ accounts, after })`
-
-Returns resolved amounts for matching accounts after the optional exclusive
-date. A row is:
-
-```js
-{
-  transactionDate,
-  postingDate,
-  quantity,
-  commodity,
-}
-```
-
-Activity qualifies when either its transaction date or posting date is after
-`after`. Rows are ordered by posting date and journal position.
-
 ## Additional journal queries
 
 ### `journal.accountTransactions({ accounts })`

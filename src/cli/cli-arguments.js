@@ -170,16 +170,6 @@ module.exports = ({
         choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
       });
     }
-    const accountPostings = registerCommand(
-      program.command('account-postings').description('show postings for matching accounts'),
-      'accountPostings',
-      'misc',
-    );
-    addJournal(accountPostings);
-    addValueOption(accountPostings, '--accounts <pattern>', 'select matching accounts (repeatable)', {
-      repeatable: true, required: true, apiInput: 'accounts',
-    });
-    addDateOption(accountPostings, '--after <date>', 'include activity after YYYY-MM-DD', 'after');
     const accountTransactions = registerCommand(
       program.command('account-transactions').description('show transactions for matching accounts'),
       'accountTransactions',
@@ -395,7 +385,6 @@ module.exports = ({
     if (commandName === 'prices') {
       return { ...common, output: { format: options.format } };
     }
-    if (commandName === 'account-postings') return { ...common, options: compact({ accounts: options.accounts, after: options.after }) };
     if (commandName === 'account-transactions') return { ...common, options: { accounts: options.accounts } };
     if (commandName === 'transactions') {
       return {

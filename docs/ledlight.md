@@ -115,7 +115,6 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
 | `summary --file PATH` | `openJournal(journalPath).summary(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
