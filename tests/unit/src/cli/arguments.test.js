@@ -53,7 +53,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   assert.deepEqual(argumentsModule.apiInputCoverage.transactions, {
     command: 'transactions',
     inputs: ['journalPath', 'accounts', 'id', 'order', 'page', 'pageSize'],
-    outputInputs: ['format', 'ledgerCompatible'],
+    outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.postings, {
     command: 'postings',
@@ -361,12 +361,12 @@ test('maps every remaining API parameter to CLI arguments', () => {
     options: {
       accounts: ['Assets:Cash', 'Assets:Bank'], id: '42', order: 'oldest', page: '2', pageSize: '25',
     },
-    output: { format: 'csv', ledgerCompatible: false },
+    output: { format: 'csv' },
   });
   assert.deepEqual(parseArguments(['transactions', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',
     options: { accounts: [], order: 'oldest' },
-    output: { format: 'text', ledgerCompatible: false },
+    output: { format: 'text' },
   });
   assert.deepEqual(parseArguments([
     'postings', '--file', '/journal', '--from', '2024-01-01', '--to', '2024-01-31',
@@ -387,19 +387,6 @@ test('maps every remaining API parameter to CLI arguments', () => {
     /--order <order>\s+sort transactions \(choices: "newest", "oldest", default:\s+"oldest"\)/u,
   );
   assert.match(usage('transactions'), /--page-size <number>\s+set the page size/u);
-  assert.match(
-    usage('transactions'),
-    /--ledger-compatible\s+match Ledger rounding and zero-amount text output/u,
-  );
-  assert.deepEqual(parseArguments([
-    'transactions', '--file', '/journal', '--ledger-compatible',
-  ]).output, { format: 'text', ledgerCompatible: true });
-  assert.throws(
-    () => parseArguments([
-      'transactions', '--file', '/journal', '--ledger-compatible', '--format', 'json',
-    ]),
-    /--ledger-compatible requires --format text/u,
-  );
   assert.deepEqual(parseArguments([
     'reconciliation-entries', '--file', '/journal',
     '--account', 'Assets:Cash', '--account', 'Assets:Bank', '--related',

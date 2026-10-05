@@ -10,7 +10,7 @@ makes the missing equivalents visible.
 | `tags --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL tags` | `tags` |
 | `commodities --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL commodities` | `commodities` |
 | `prices --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL prices` | `prices` |
-| `transactions --ledger-compatible --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL print` | `transactions` |
+| `transactions --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL print` | `transactions` |
 | `balance` | No exact equivalent | — |
 | `unrealized-gains` | No exact equivalent | — |
 | `balance-history` | No exact equivalent | — |
