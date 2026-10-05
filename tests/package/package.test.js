@@ -69,7 +69,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       '--no-audit',
       '--no-fund',
       '--no-package-lock',
-      '--prefer-offline',
+      '--prefer-online',
       archivePath,
     ], { cwd: consumerDirectory });
 
