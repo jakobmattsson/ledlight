@@ -14,8 +14,9 @@ module.exports = ({ rational: { zero, parse, mul, neg, add, cmp } }) => {
     const candidates = new Map();
     for (const posting of transaction.postings) {
       if (!posting.amount || posting.cost || !posting.lotCost ||
-          posting.amount.commodity === valuationCommodity) continue;
-      const key = JSON.stringify([posting.amount.commodity, posting.lotCost.amount.commodity]);
+          posting.amount.commodity === valuationCommodity ||
+          posting.lotCost.amount.commodity !== valuationCommodity) continue;
+      const key = posting.amount.commodity;
       if (!candidates.has(key)) candidates.set(key, []);
       candidates.get(key).push(posting);
     }

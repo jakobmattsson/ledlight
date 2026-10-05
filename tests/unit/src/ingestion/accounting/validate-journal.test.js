@@ -202,8 +202,8 @@ account Equity:Opening
   assert.deepEqual([...result.invalidEntries], []);
 });
 
-function parseTrade(posting, additionalDeclarations) {
-  return parse(`${additionalDeclarations ?? ''}commodity SEK
+function parseTrade(posting) {
+  return parse(`commodity SEK
   format 1,000.00 SEK
   default
 commodity FUND
@@ -257,12 +257,21 @@ test('does not apply the trade annotation rule to default commodities or zero qu
   assert.deepEqual(validateJournal(parseTrade('-1 SEK')).warnings, []);
 });
 
-test('accepts unit and total lot costs in a non-default currency', () => {
+test('warns about foreign lot cost currencies without discarding the transaction', () => {
   for (const annotation of ['{10 USD}', '{{10 USD}}']) {
     for (const amount of [`1 FUND ${annotation}`, `-1 FUND ${annotation} @ 12 USD`]) {
-      const journal = parseTrade(amount, 'commodity USD\n  format 1,000.00 USD\n');
+      const journal = parseTrade(amount);
       const result = validateJournal(journal);
-      assert.deepEqual(result.warnings, []);
+      assert.deepEqual(result.warnings.filter(({ code }) => code === 'FOREIGN_LOT_COST_CURRENCY'), [{
+        code: 'FOREIGN_LOT_COST_CURRENCY',
+        message: 'Assets:Fund: lot cost in USD must be expressed in the default commodity SEK. ' +
+          'Unrealized gains omit affected positions; their totals may be incomplete',
+        source: 'fixture.ledger',
+        line: 9,
+        column: 3,
+        startLine: 9,
+        endLine: 9,
+      }]);
       assert.equal(result.invalidEntries.size, 0);
     }
   }

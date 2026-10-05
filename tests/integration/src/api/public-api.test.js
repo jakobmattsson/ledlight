@@ -52,7 +52,7 @@ test('exposes stable error code strings instead of public error classes', (t) =>
   );
 });
 
-test('supports foreign lot costs and removes obsolete warnings from older caches', (t) => {
+test('persists foreign lot cost warnings for every report and rebuilds older caches', (t) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-foreign-basis-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -79,15 +79,18 @@ P 2024-01-01 USD 2 SEK
   Assets:USD
 `);
   const journal = openJournal(journalPath);
-  assert.deepEqual(journal.warnings, []);
+  const message = 'Assets:Stock: lot cost in USD must be expressed in the default commodity SEK. ' +
+    'Unrealized gains omit affected positions; their totals may be incomplete';
+  assert.deepEqual(journal.warnings.map(({ code, message }) => ({ code, message })), [{
+    code: 'FOREIGN_LOT_COST_CURRENCY', message,
+  }]);
+  assert.equal(journal.warnings[0].instances[0].line, 19);
   assert.deepEqual(openJournal(journalPath).warnings, journal.warnings);
   const Database = require(sqliteModulePath);
   const previousCache = new Database(journal.databasePath);
   try {
-    previousCache.prepare("UPDATE database_metadata SET value = '23' WHERE key = 'schema_version'").run();
-    previousCache.exec(`INSERT INTO ingestion_warnings
-      (position, code, message, source, line, column, start_line, end_line)
-      VALUES (0, 'FOREIGN_LOT_COST_CURRENCY', 'Obsolete restriction', 'journal.ledger', 19, 3, 19, 19)`);
+    previousCache.prepare("UPDATE database_metadata SET value = '24' WHERE key = 'schema_version'").run();
+    previousCache.prepare('DELETE FROM ingestion_warnings').run();
   } finally {
     previousCache.close();
   }
@@ -100,9 +103,7 @@ P 2024-01-01 USD 2 SEK
   assert.deepEqual(journal.balanceHistoryReport(), [
     { date: '2024-01-01', amount: '10', commodity: 'SEK' },
   ]);
-  assert.deepEqual(journal.unrealizedGains(), [
-    { account: 'Assets:Stock', quantity: '10', commodity: 'SEK' },
-  ]);
+  assert.deepEqual(journal.unrealizedGains(), []);
   for (const command of ['aggregate', 'balance-history', 'unrealized-gains', 'accounts']) {
     const result = spawnSync(process.execPath, [
       cliPath, command, '--format', 'json', '--file', journalPath,
@@ -114,10 +115,8 @@ P 2024-01-01 USD 2 SEK
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
     assert.ok(Array.isArray(JSON.parse(result.stdout)));
-    if (command === 'unrealized-gains') {
-      assert.deepEqual(JSON.parse(result.stdout), journal.unrealizedGains());
-    }
-    assert.equal(result.stderr, '');
+    if (command === 'unrealized-gains') assert.deepEqual(JSON.parse(result.stdout), []);
+    assert.equal(result.stderr.split('\n')[0], `[FOREIGN_LOT_COST_CURRENCY] ${message}`);
   }
 
   fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(

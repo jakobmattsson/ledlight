@@ -322,9 +322,7 @@ annotations may be combined freely. As a Ledger-compatible special case, a
 positive quantity may have both annotations when both prices are zero. This
 represents a cost-free acquisition that still needs an explicit zero transaction
 price to balance. Zero quantities are exempt because they do not acquire or
-dispose of a commodity. A commodity used as a lot cost currency is also a
-settlement currency: plain postings in it are allowed without lot annotations.
-Explicit annotated currency trades retain the normal acquisition/disposal rules.
+dispose of a commodity.
 
 ### Zero-cost acquisitions
 
@@ -545,25 +543,17 @@ value of each open non-default commodity position minus its remaining lot
 cost. Results are grouped by account, expressed in the journal default
 commodity, and omit zero gains. Losses are returned as negative quantities.
 
-Lot costs remain in the recorded acquisition currency, which may differ from
-the journal default used for presentation. The report converts market value and
-remaining cost separately at the report date. Trading an asset in USD therefore
-retains its USD basis and realizes its trading result in USD.
-
-A non-default commodity used as a lot cost currency also has a currency-capital
-pool. Plain USD settlement postings do not consume its basis when dollars are
-invested in shares or returned by their sale. Annotated currency postings change
-the pool. Its unrealized exchange gain is shown separately as
-`Currency capital (USD)`, including when the bank's cash balance is zero because
-its capital is invested. JSON marks these rows with `isCurrencyCapital: true`.
-Account filters select source postings before pooling; they do not select these
-synthetic labels. Currency pools span accounts, while ordinary asset basis
-continues to be checked per account and acquisition currency.
-
-Missing lot costs on open non-settlement positions still cause an error. Closed
-positions are omitted from the report, but ingestion checks residual basis in
-each cost currency. Reports never infer a lot allocation method or create
-bookkeeping entries.
+Lot costs for selected open positions must be expressed in the journal default
+commodity. Ingestion records a `FOREIGN_LOT_COST_CURRENCY` warning for costs in
+another currency, visible in every report regardless of account or date filters.
+The gain report omits affected account/commodity positions instead of failing or
+mixing currencies. Its account sums and total include only the remaining positions
+and may be incomplete, as the warning explains. This includes costs on both
+acquisitions and disposals contributing to an open position. Missing lot costs on
+other open positions still cause an error. Prices alone cannot
+identify the original acquisition exchange rates for later disposals or transfers;
+record the acquisition basis in the default commodity explicitly. Closed positions
+are omitted before checking their lot costs.
 
 ```console
 ledlight unrealized-gains --file main.ledger
@@ -595,6 +585,9 @@ command, independent of report dates or account filters:
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
   at their recorded acquisition costs.
+- `FOREIGN_LOT_COST_CURRENCY` identifies lot costs outside the journal default
+  commodity. These postings remain available to other reports, but affected
+  positions are omitted from unrealized gains, making its totals potentially incomplete.
 
 The validator uses exact rational arithmetic, including fractional allocations.
 A recorded total disposal cost may be rounded either down or up to the adjacent
@@ -620,80 +613,10 @@ Diagnostic ranges bound the underlying exact cost before applying the current
 rounding rule. Earlier rounding can make an endpoint unattainable; touching such
 an endpoint does not establish feasibility. Non-terminating bounds are displayed
 as fractions. The validator does not infer missing basis, modify recorded costs,
-or implement short-sale rules for ordinary assets. An impossible history
+or implement short-sale or foreign-currency-basis rules. An impossible history
 is retained as a diagnostic; later disposals cannot erase it or yield invented feasible bounds. Computable
 reports remain available with warnings and exit code zero. A final disposal's
 residual warning takes precedence over an equivalent allocation warning.
-
-### Foreign currency capital and realization
-
-The following example keeps stock cost and realized stock profit in USD, then
-explicitly translates that profit and exchanges all capital back to SEK:
-
-```sh
-node src/cli/run.js unrealized-gains --to 2024-01-02 --include-total <<'LEDGER'
-commodity SEK
-  default
-  format 1,000.00 SEK
-commodity USD
-  format 1,000.00 USD
-commodity STOCK
-  format 1,000 STOCK
-account Assets:SEK
-account Assets:USD
-account Assets:Stock
-account Income:Stock
-account Income:FX
-P 2024-01-01 USD 10 SEK
-P 2024-01-01 STOCK 12 USD
-P 2024-01-02 USD 11 SEK
-P 2024-01-04 USD 12 SEK
-
-2024-01-01 Buy dollars
-  Assets:USD  10 USD {10 SEK}
-  Assets:SEK  -100 SEK
-
-2024-01-01 Buy shares
-  Assets:Stock  1 STOCK {10 USD}
-  Assets:USD
-
-2024-01-03 Sell shares
-  Assets:Stock  -1 STOCK {10 USD} @ 12 USD
-  Assets:USD  12 USD
-  Income:Stock  -2 USD
-
-2024-01-04 Translate profit and exchange all capital
-  Income:Stock  2 USD {12 SEK}
-  Income:Stock  -24 SEK
-  Assets:USD  -12 USD {{124 SEK}} @@ 144 SEK
-  Assets:SEK  144 SEK
-  Income:FX  -20 SEK
-LEDGER
-```
-
-On January 2, the report shows 22 SEK of stock gain and 10 SEK of currency-capital
-gain, totaling 32 SEK. On January 3 the stock gain is realized in USD, leaving
-only the 10 SEK currency-capital gain unrealized. On January 4 the explicit
-translation cancels the USD result and books 24 SEK of stock profit. It adds
-2 USD with 24 SEK basis to the original 10 USD with 100 SEK basis, so the final
-exchange removes 12 USD with 124 SEK basis and realizes 20 SEK of exchange gain.
-Nothing remains unrealized; subsequent USD quotes cannot change the settled
-journal's total. Currency acquisitions within this atomic translation/exchange
-transaction are available to its disposals regardless of posting order.
-
-Losses likewise need explicit translation. A 2 USD stock loss drawn from dollars
-bought for 10 SEK each can be translated at 12 SEK/USD with
-`Income:Stock  -2 USD {10 SEK} @ 12 SEK`, `Income:Stock  24 SEK`, and
-`Income:FX  -4 SEK`. This removes 2 USD of the original currency capital with
-20 SEK basis while recognizing the loss and the exchange gain separately.
-
-Keeping result postings in USD intentionally leaves a foreign-currency balance
-in the complete journal, even after the bank balance is emptied. To finish
-realization, translate those result postings explicitly; Ledlight does not rewrite
-income or choose a historical SEK basis for individual stock lots. Partial
-currency disposals still require an explicit basis supported by the available
-currency-capital acquisitions. The cost currency's declared precision controls
-rounding and all existing allocation, residual-basis, and result checks apply.
 
 ## Balance history
 
