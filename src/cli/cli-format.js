@@ -8,7 +8,6 @@ module.exports = ({
     parseDecimal,
     compareDecimals,
     divideDecimals,
-    multiplyDecimals,
   },
 }) => {
 
@@ -332,43 +331,58 @@ module.exports = ({
     return `${quantity} ${amount.commodity}`;
   }
 
+  function formatAnnotationAmount(amount, formats) {
+    return `${formatPriceQuantity(amount.quantity, amount.commodity, formats)} ` +
+      amount.commodity;
+  }
+
+  function decimalScale(quantity) {
+    const point = quantity.indexOf('.');
+    return point < 0 ? 0 : quantity.length - point - 1;
+  }
+
   function formatPostingExpression(posting, formats) {
     const expressions = [];
-    if (posting.amount !== null) expressions.push(formatPostingAmount(posting.amount, formats));
+    let amountText = null;
+    if (posting.amount !== null) amountText = formatPostingAmount(posting.amount, formats);
+    else if (posting.balanceAssignment !== null) {
+      const inferredAmount = posting.amounts.find((amount) =>
+        amount.commodity === posting.balanceAssignment.commodity);
+      if (inferredAmount) amountText = formatPostingAmount(inferredAmount, formats);
+    }
+    if (amountText !== null) expressions.push(amountText);
     if (posting.lotCost !== null) {
       if (posting.lotCost.isTotal) {
         const amount = parseDecimal(posting.amount.quantity);
         const absoluteAmount = amount.coefficient < 0n
           ? { ...amount, coefficient: -amount.coefficient }
           : amount;
+        const unitCostScale = decimalScale(posting.lotCost.quantity) +
+          decimalScale(posting.amount.quantity) + 6;
         const unitCost = divideDecimals(
-          parseDecimal(posting.lotCost.quantity), absoluteAmount, 10,
+          parseDecimal(posting.lotCost.quantity), absoluteAmount, unitCostScale,
         );
         const lotCost = {
           quantity: formatDecimal(unitCost),
           commodity: posting.lotCost.commodity,
         };
-        const divisionIsExact = compareDecimals(
-          multiplyDecimals(unitCost, absoluteAmount),
-          parseDecimal(posting.lotCost.quantity),
-        ) === 0;
-        expressions.push(`{${divisionIsExact
-          ? formatPostingAmount(lotCost, formats)
-          : `${lotCost.quantity} ${lotCost.commodity}`}}`);
+        expressions.push(`{${formatAnnotationAmount(lotCost, formats)}}`);
       } else {
-        expressions.push(`{${formatPostingAmount(posting.lotCost, formats)}}`);
+        expressions.push(`{${formatAnnotationAmount(posting.lotCost, formats)}}`);
       }
     }
     if (posting.cost !== null) {
-      expressions.push(`${posting.cost.isTotal ? '@@' : '@'} ${formatPostingAmount(posting.cost, formats)}`);
+      expressions.push(
+        `${posting.cost.isTotal ? '@@' : '@'} ${formatAnnotationAmount(posting.cost, formats)}`,
+      );
     }
     if (posting.balanceAssignment !== null) {
-      expressions.push(`= ${formatPostingAmount(posting.balanceAssignment, formats)}`);
+      expressions.push(`= ${formatAnnotationAmount(posting.balanceAssignment, formats)}`);
     }
     if (posting.balanceAssertion !== null) {
-      expressions.push(`= ${formatPostingAmount(posting.balanceAssertion, formats)}`);
+      expressions.push(`= ${formatAnnotationAmount(posting.balanceAssertion, formats)}`);
     }
-    return expressions.join(' ');
+    return { text: expressions.join(' '), amountWidth: amountText?.length ?? 0 };
   }
 
   function formatTransactionsText(report, descriptions) {
@@ -379,13 +393,19 @@ module.exports = ({
     const lines = [];
     for (const transaction of report.transactions) {
       const date = transaction.transactionDate.replaceAll('-', '/');
-      const comment = transaction.comment === null ? '' : ` ; ${transaction.comment}`;
-      lines.push(`${date} ${transaction.description}${comment}`);
+      const header = `${date} ${transaction.description}`;
+      const inlineTransactionComment = transaction.comment === null
+        ? ''
+        : ` ; ${transaction.comment}`;
+      const multilineTransactionComment = transaction.comment !== null &&
+        `${header}${inlineTransactionComment}`.length > 80;
+      lines.push(`${header}${multilineTransactionComment ? '' : inlineTransactionComment}`);
+      if (multilineTransactionComment) lines.push(`    ; ${transaction.comment}`);
       const positionedNotes = transaction.positionedNotes ?? transaction.notes.map((text) => ({
         line: Number.NEGATIVE_INFINITY, text,
       }));
       let noteIndex = 0;
-      const canElideLastAmount = transaction.postings.length === 2 &&
+      const canElideAmount = transaction.postings.length === 2 &&
         transaction.postings.every((posting) =>
           posting.amounts.length === 1 && posting.lotCost === null && posting.cost === null &&
           posting.balanceAssignment === null && posting.balanceAssertion === null) &&
@@ -395,6 +415,11 @@ module.exports = ({
           parseDecimal(transaction.postings[0].amounts[0].quantity),
           parseDecimal(transaction.postings[1].amounts[0].quantity),
         ), parseDecimal('0')) === 0;
+      const implicitPostingIndexes = transaction.postings.flatMap((posting, index) =>
+        posting.amount === null ? [index] : []);
+      const elidedAmountIndex = canElideAmount
+        ? implicitPostingIndexes.length === 1 ? implicitPostingIndexes[0] : 1
+        : -1;
       transaction.postings.forEach((posting, index) => {
         while (noteIndex < positionedNotes.length &&
                positionedNotes[noteIndex].line <
@@ -402,19 +427,30 @@ module.exports = ({
           lines.push(`    ; ${positionedNotes[noteIndex].text}`);
           noteIndex += 1;
         }
-        const expression = canElideLastAmount && index === 1
-          ? ''
-          : formatPostingExpression(posting, formats);
+        const formattedExpression = formatPostingExpression(posting, formats);
+        const expression = index === elidedAmountIndex ? '' : formattedExpression.text;
+        const alignmentWidth = posting.lotCost !== null || posting.cost !== null
+          ? expression.length
+          : formattedExpression.amountWidth;
+        const alignedExpression = (width) => expression.padStart(
+          expression.length + Math.max(0, width - alignmentWidth),
+        );
         const body = expression === ''
-          ? posting.account
+          ? posting.account +
+            (posting.amount !== null && posting.account.length > accountColumnWidth ? '  ' : '')
           : posting.account.length > accountColumnWidth
-            ? `${posting.account}  ${expression}`
+            ? `${posting.account}  ${alignedExpression(10)}`
             : `${posting.account.padEnd(accountColumnWidth)}  ` +
-              expression.padStart(amountColumnWidth);
+              alignedExpression(amountColumnWidth);
         const inlineComment = posting.comment === null ? '' : `  ; ${posting.comment}`;
+        const maximumWidth = expression === '' ? maximumPostingLineWidth : 80;
+        const projectedLineLength = expression === ''
+          ? 4 + Math.min(posting.account.length, accountColumnWidth) +
+            (posting.amount !== null && posting.account.length > accountColumnWidth ? 2 : 0) +
+            inlineComment.length
+          : `    ${body}${inlineComment}`.length;
         const multilineComment = posting.comment !== null &&
-          (/^[^:;\s][^:]*:\s/u.test(posting.comment) || /^\[/u.test(posting.comment) ||
-            `    ${body}${inlineComment}`.length > maximumPostingLineWidth);
+          projectedLineLength > maximumWidth;
         const postingComment = multilineComment ? '' : inlineComment;
         lines.push(`    ${body}${postingComment}`);
         if (multilineComment) lines.push(`    ; ${posting.comment}`);
