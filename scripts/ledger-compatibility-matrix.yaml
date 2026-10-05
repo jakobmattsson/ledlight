@@ -1,5 +1,5 @@
 baseline:
-  ledger: --args-only --no-pager --file <journal>
+  ledger: --args-only --no-pager --date-format %Y-%m-%d --file <journal>
   ledlight: --file <journal>
 
 commands:
@@ -14,7 +14,7 @@ commands:
     ledger: commodities
   prices:
     ledlight: prices
-    ledger: prices
+    ledger: prices --sort date,account
   transactions:
     ledlight: transactions --format text
     ledger: print

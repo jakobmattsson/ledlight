@@ -19,8 +19,7 @@ module.exports = ({
         entries.sequence,
         -1 AS position,
         0 AS isTotal,
-        NULL AS baseQuantity,
-        1 AS isExplicit
+        NULL AS baseQuantity
       FROM prices
       JOIN journal_entries AS entries ON entries.id = prices.entry_id
       UNION ALL
@@ -33,8 +32,7 @@ module.exports = ({
         entries.sequence,
         postings.position,
         COALESCE(postings.cost_is_total, postings.lot_cost_is_total),
-        postings.amount_quantity,
-        0
+        postings.amount_quantity
       FROM postings
       JOIN transactions ON transactions.entry_id = postings.transaction_id
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
@@ -48,12 +46,8 @@ module.exports = ({
       WHERE decimal_cmp(quantity, '0') != 0
     `).pluck().all());
     const byKey = new Map();
-    const commodityOrder = new Map();
     for (const event of events) {
       if (!usedCommodities.has(event.baseCommodity)) continue;
-      if (!commodityOrder.has(event.baseCommodity)) {
-        commodityOrder.set(event.baseCommodity, commodityOrder.size);
-      }
       if (event.isTotal) {
         const amount = parseDecimal(event.baseQuantity);
         const absoluteAmount = amount.coefficient < 0n
@@ -68,12 +62,12 @@ module.exports = ({
       delete event.isTotal;
       delete event.baseQuantity;
       const key = `${event.baseCommodity}\u0000${event.date}`;
-      if (event.isExplicit || !byKey.get(key)?.isExplicit) byKey.set(key, event);
+      byKey.set(key, event);
     }
-    for (const event of byKey.values()) delete event.isExplicit;
     return [...byKey.values()].sort((left, right) =>
-      commodityOrder.get(left.baseCommodity) - commodityOrder.get(right.baseCommodity) ||
-      left.date.localeCompare(right.date));
+      left.date.localeCompare(right.date) ||
+      (left.baseCommodity < right.baseCommodity ? -1 :
+        left.baseCommodity > right.baseCommodity ? 1 : 0));
   }
 
   return { name: 'prices', inputSchema: optionsSchema, execute: queryPrices };
