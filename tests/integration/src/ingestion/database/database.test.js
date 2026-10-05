@@ -87,6 +87,29 @@ P 2024-01-01 FUND 123.45 SEK
     ],
   );
   assert.deepEqual(
+    database.prepare(`
+      SELECT postings.account, amounts.quantity, amounts.commodity, amounts.running_balance
+      FROM resolved_posting_amounts AS amounts
+      JOIN postings ON postings.id = amounts.posting_id
+      ORDER BY amounts.id
+    `).all(),
+    [
+      {
+        account: 'Assets:Cash',
+        quantity: '8.000000000000000001',
+        commodity: 'SEK',
+        running_balance: '8.000000000000000001',
+      },
+      {
+        account: 'Equity:Opening',
+        quantity: '-8.000000000000000001',
+        commodity: 'SEK',
+        running_balance: '-8.000000000000000001',
+      },
+    ],
+  );
+  assert.equal(result.postingBalances, 2);
+  assert.deepEqual(
     database.prepare('SELECT key, value FROM transaction_notes').get(),
     { key: 'Source', value: 'statement.csv:4' },
   );
@@ -162,6 +185,45 @@ test('stores lot costs separately from transaction costs', (t) => {
       cost_is_total: 1,
     },
   );
+});
+
+test('materializes exact account and commodity balances in posting-date order', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+2024-01-03 Later date first in journal
+  Assets:Cash  5 SEK
+  Equity:Opening  -5 SEK
+
+2024-01-01 Earlier date later in journal
+  Assets:Cash  10 SEK
+  Equity:Opening  -10 SEK
+
+2024-01-02 Separate account and commodity
+  Assets:Bank  7 SEK
+  Assets:Cash  2 FUND
+  Equity:Opening  -7 SEK
+  Equity:Opening  -2 FUND
+`);
+
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(database.prepare(`
+    SELECT postings.account, postings.report_date AS date,
+      amounts.quantity, amounts.commodity, amounts.running_balance AS balance
+    FROM resolved_posting_amounts AS amounts
+    JOIN postings ON postings.id = amounts.posting_id
+    WHERE postings.account LIKE 'Assets:%'
+    ORDER BY postings.report_date, postings.id, amounts.position
+  `).all(), [
+    { account: 'Assets:Cash', date: '2024-01-01', quantity: '10', commodity: 'SEK', balance: '10' },
+    { account: 'Assets:Bank', date: '2024-01-02', quantity: '7', commodity: 'SEK', balance: '7' },
+    { account: 'Assets:Cash', date: '2024-01-02', quantity: '2', commodity: 'FUND', balance: '2' },
+    { account: 'Assets:Cash', date: '2024-01-03', quantity: '5', commodity: 'SEK', balance: '15' },
+  ]);
 });
 
 test('materializes Ledger-compatible resolvable price choices', (t) => {

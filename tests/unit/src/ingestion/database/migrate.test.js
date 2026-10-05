@@ -48,6 +48,10 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(postingColumns.includes('lot_cost_quantity'));
   assert.ok(postingColumns.includes('lot_cost_commodity'));
   assert.ok(postingColumns.includes('lot_cost_is_total'));
+  const runningBalance = database.pragma('table_info(resolved_posting_amounts)')
+    .find((column) => column.name === 'running_balance');
+  assert.equal(runningBalance.notnull, 1);
+  assert.equal(runningBalance.dflt_value, "'0'");
   assert.deepEqual(
     database.pragma('index_info(postings_account_report_date)')
       .map((column) => column.name),

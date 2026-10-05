@@ -384,7 +384,7 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
     cost: { quantity: '100', commodity: 'SEK', isTotal: true },
     balanceAssignment: null,
     balanceAssertion: { quantity: '10', commodity: 'FUND' },
-    amounts: [{ quantity: '10', commodity: 'FUND' }],
+    amounts: [{ quantity: '10', commodity: 'FUND', balance: '25' }],
   }];
 
   assert.match(
@@ -401,9 +401,9 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
     'transactionNotes,postingDate,account,postingComment,amountQuantity,amountCommodity,' +
     'lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,' +
     'balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,' +
-    'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity\n' +
+    'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance\n' +
     '8,7,2024-01-02,"Buy, fund",imported,"[""Project: Savings""]",2024-01-03,' +
-    'Assets:Fund,[2024-01-03] broker,10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND\n',
+    'Assets:Fund,[2024-01-03] broker,10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25\n',
   );
   assert.equal(formatPostings([], { format: 'text' }), '');
 });

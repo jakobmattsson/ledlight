@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS resolved_posting_amounts (
   position INTEGER NOT NULL,
   quantity TEXT NOT NULL,
   commodity TEXT NOT NULL,
+  running_balance TEXT NOT NULL DEFAULT '0',
   UNIQUE (posting_id, position)
 );
 

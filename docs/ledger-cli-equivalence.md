@@ -16,8 +16,6 @@ makes the missing equivalents visible instead of relying on each command's
 | `unrealized-gains` | No exact equivalent | — |
 | `balance-history` | No exact equivalent | — |
 | `investment-performance` | No exact equivalent | — |
-| `account-postings` | No exact equivalent | — |
-| `account-transactions` | No exact equivalent | — |
 | `reconciliation-entries` | No exact equivalent | — |
 
 The runnable matrix covers each command's default, unfiltered form. Additional

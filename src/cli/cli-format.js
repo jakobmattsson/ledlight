@@ -497,6 +497,7 @@ module.exports = ({
       balanceAssertionCommodity: posting.balanceAssertion?.commodity ?? '',
       resolvedQuantity: resolvedAmount.quantity,
       resolvedCommodity: resolvedAmount.commodity,
+      resolvedBalance: resolvedAmount.balance,
     })));
   }
 
@@ -508,7 +509,7 @@ module.exports = ({
       'lotCostIsTotal', 'costQuantity', 'costCommodity', 'costIsTotal',
       'balanceAssignmentQuantity', 'balanceAssignmentCommodity',
       'balanceAssertionQuantity', 'balanceAssertionCommodity',
-      'resolvedQuantity', 'resolvedCommodity',
+      'resolvedQuantity', 'resolvedCommodity', 'resolvedBalance',
     ];
     const lines = [fields.join(',')];
     for (const row of postingCsvRows(postings)) {

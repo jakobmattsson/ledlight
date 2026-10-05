@@ -60,7 +60,7 @@ test('returns every field for postings and their transactions in journal order',
     cost: null,
     balanceAssignment: null,
     balanceAssertion: null,
-    amounts: [{ quantity: '-100', commodity: 'SEK' }],
+    amounts: [{ quantity: '-100', commodity: 'SEK', balance: '-100' }],
   });
   assert.deepEqual(postings[1], {
     postingId: postings[1].postingId,
@@ -77,7 +77,7 @@ test('returns every field for postings and their transactions in journal order',
     cost: { quantity: '100', commodity: 'SEK', isTotal: false },
     balanceAssignment: null,
     balanceAssertion: null,
-    amounts: [{ quantity: '10', commodity: 'FUND' }],
+    amounts: [{ quantity: '10', commodity: 'FUND', balance: '10' }],
   });
 });
 

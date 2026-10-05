@@ -64,32 +64,6 @@ test('groups matching account balances by commodity and retains zero balances', 
   ]);
 });
 
-test('returns matching-account activity after either its transaction or posting date', (t) => {
-  const project = createProject(t);
-
-  assert.equal(project.accountPostings({ accounts: ['^Assets:Closed$'] }).length, 5);
-  assert.equal(project.accountPostings({ accounts: ['^Assets:Closed$', '^Assets:Closed:Child$'] }).length, 6);
-  assert.deepEqual(project.accountPostings({ accounts: ['^Assets:Closed$'], after: '2023-01-02' }), [
-    {
-      transactionDate: '2023-01-02',
-      postingDate: '2023-01-04',
-      commodity: 'SEK',
-      quantity: '1',
-    },
-  ]);
-});
-
-test('rejects invalid account-detail options', (t) => {
-  const project = createProject(t);
-
-  assert.throws(() => project.accountPostings({ accounts: [''], after: '2023-01-02' }),
-    /accounts\.0 must be a non-empty string/u);
-  assert.throws(() => project.accountPostings({ accounts: [] }),
-    /accounts must contain at least one account/u);
-  assert.throws(() => project.accountTransactions({ accounts: ['Assets:Closed'], unknown: true }),
-    /Unknown accountTransactions option: unknown/u);
-});
-
 test('lists declared accounts with usage and transaction counts in Ledger order', (t) => {
   const project = createProject(t);
 
@@ -105,34 +79,4 @@ test('lists declared accounts with usage and transaction counts in Ledger order'
     { account: 'Assets:Closed', comment: null, used: true, transactionCount: 3 },
     { account: 'Equity:Opening', comment: null, used: true, transactionCount: 4 },
   ]);
-});
-
-test('returns newest-first transactions and groups amounts by posting', (t) => {
-  const project = createProject(t);
-
-  const transactions = project.accountTransactions({ accounts: ['^Assets:Closed$'] });
-  assert.equal(transactions.length, 3);
-  assert.deepEqual(transactions[0], {
-    transactionId: 10,
-    transactionDate: '2023-01-02',
-    description: 'Deferred posting',
-    postings: [{
-      postingDate: '2023-01-04',
-      amounts: [{ quantity: '1', commodity: 'SEK', balance: '1' }],
-    }],
-  });
-  assert.deepEqual(transactions[2].postings, [{
-    postingDate: '2023-01-01',
-    amounts: [
-      { quantity: '10', commodity: 'SEK', balance: '10' },
-    ],
-  }, {
-    postingDate: '2023-01-01',
-    amounts: [
-      { quantity: '2', commodity: 'FUND', balance: '2' },
-    ],
-  }]);
-  assert.equal(project.accountTransactions({
-    accounts: ['^Assets:Closed$', '^Assets:Closed:Child$'],
-  }).length, 4);
 });

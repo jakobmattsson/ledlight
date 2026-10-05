@@ -55,7 +55,8 @@ module.exports = ({
         postings.balance_assertion_quantity AS balanceAssertionQuantity,
         postings.balance_assertion_commodity AS balanceAssertionCommodity,
         amounts.quantity,
-        amounts.commodity
+        amounts.commodity,
+        amounts.running_balance AS balance
       FROM postings
       JOIN transactions ON transactions.entry_id = postings.transaction_id
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
@@ -112,7 +113,11 @@ module.exports = ({
         byId.set(row.postingId, posting);
         postings.push(posting);
       }
-      posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
+      posting.amounts.push({
+        quantity: row.quantity,
+        commodity: row.commodity,
+        balance: row.balance,
+      });
     }
     if (postings.length > 0) {
       const transactionIds = [...new Set(postings.map(({ transactionId }) => transactionId))];

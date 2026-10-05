@@ -115,12 +115,10 @@ underlying result.
 
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
-| `account-postings --file PATH` | `openJournal(journalPath).accountPostings(options)` | Matching-account postings |
 | `summary --file PATH` | `openJournal(journalPath).summary(options)` | Report selection and calculation |
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
-| `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
 | `tags --file PATH` | `openJournal(journalPath).tags()` | Used tags |
 | `commodities --file PATH` | `openJournal(journalPath).commodities()` | Used commodities |
@@ -258,6 +256,9 @@ and hashing.
 The grammar requires commodities on explicit posting amounts, lot costs,
 transaction costs, balance assignments, balance assertions, and prices.
 Implicit postings infer their resolved commodity during accounting validation.
+Each resolved amount also stores the exact running balance for its posting
+account and commodity. These balances are materialized in posting-date and
+journal order during the full database rebuild.
 Explicit transactions must balance, allowing Ledger-style two-commodity
 exchanges and the precision tolerance associated with calculated unit costs.
 When a posting has both a lot cost and a transaction cost, its lot cost
