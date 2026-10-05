@@ -372,6 +372,9 @@ module.exports = ({
   }
 
   function formatTransactionsText(report, descriptions) {
+    const accountColumnWidth = 34;
+    const amountColumnWidth = 12;
+    const maximumPostingLineWidth = 61;
     const formats = commodityFormats(descriptions);
     const lines = [];
     for (const transaction of report.transactions) {
@@ -402,14 +405,17 @@ module.exports = ({
         const expression = canElideLastAmount && index === 1
           ? ''
           : formatPostingExpression(posting, formats);
-        const multilineComment = posting.comment !== null &&
-          (/^[^:;\s][^:]*:\s/u.test(posting.comment) || /^\[/u.test(posting.comment));
-        const postingComment = posting.comment === null || multilineComment
-          ? ''
-          : `  ; ${posting.comment}`;
         const body = expression === ''
           ? posting.account
-          : `${posting.account.padEnd(34)}  ${expression.padStart(12)}`;
+          : posting.account.length > accountColumnWidth
+            ? `${posting.account}  ${expression}`
+            : `${posting.account.padEnd(accountColumnWidth)}  ` +
+              expression.padStart(amountColumnWidth);
+        const inlineComment = posting.comment === null ? '' : `  ; ${posting.comment}`;
+        const multilineComment = posting.comment !== null &&
+          (/^[^:;\s][^:]*:\s/u.test(posting.comment) || /^\[/u.test(posting.comment) ||
+            `    ${body}${inlineComment}`.length > maximumPostingLineWidth);
+        const postingComment = multilineComment ? '' : inlineComment;
         lines.push(`    ${body}${postingComment}`);
         if (multilineComment) lines.push(`    ; ${posting.comment}`);
       });

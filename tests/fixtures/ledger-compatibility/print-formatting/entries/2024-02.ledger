@@ -1,0 +1,7 @@
+2024-02-01 Separate posting comment
+  Assets:Cash  -4598 SEK
+  Expenses:Unsorted  4598 SEK  ; Supporting explanation stays on its own line
+
+2024-02-02 Inline posting comment
+  Assets:Cash  -10 SEK
+  Expenses:Unsorted  10 SEK  ; Short
