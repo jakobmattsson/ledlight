@@ -148,6 +148,19 @@ module.exports = ({
     return storable;
   }
 
+  function validateResolvedCommodityTrades(transaction, resolved, defaultCommodity, warnings) {
+    const postings = transaction.postings.flatMap((posting, index) =>
+      resolved[index].map((amount) => ({ ...posting, amount, original: posting })));
+    const carried = new Set(carriedMovements({ ...transaction, postings }, defaultCommodity)
+      .flatMap(({ outgoing, incoming }) => [outgoing, incoming]));
+    for (const posting of postings) {
+      // Explicit amounts were checked before resolution. Assignments must use
+      // the actual change in holdings, not the target balance's sign.
+      if (posting.original.amount && !posting.original.balanceAssignment) continue;
+      if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
+    }
+  }
+
   function validateJournal(journal, defaultCommodity, initialWarnings) {
     const warnings = [...(initialWarnings || [])];
     const invalidEntries = new Set();
@@ -203,5 +216,5 @@ module.exports = ({
     return { invalidEntries, journal, warnings };
   }
 
-  return { validateJournal };
+  return { validateJournal, validateResolvedCommodityTrades };
 };
