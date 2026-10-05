@@ -210,7 +210,7 @@ module.exports = ({
     addBooleanOption(aggregate, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
     addBooleanOption(aggregate, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
     addBooleanOption(aggregate, '--invert', 'invert the sign of report amounts', 'invert');
-    addBooleanOption(aggregate, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
+    addBooleanOption(aggregate, '--include-total', 'append an exact total for each commodity', 'includeTotal');
     addOutputValueOption(aggregate, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
@@ -240,7 +240,7 @@ module.exports = ({
     addOutputValueOption(unrealizedGains, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
-    addOutputBooleanOption(unrealizedGains, '--total', 'append the total gain', 'total');
+    addOutputBooleanOption(unrealizedGains, '--include-total', 'append the total gain', 'includeTotal');
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
@@ -381,7 +381,7 @@ module.exports = ({
       return {
         ...common,
         reportOptions,
-        output: { format: options.format, total: options.total || false },
+        output: { format: options.format, includeTotal: options.includeTotal || false },
       };
     }
     if (commandName === 'balance-history') {

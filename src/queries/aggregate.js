@@ -2,13 +2,13 @@
 
 module.exports = ({
   decimal: {
-    addDecimals,
     formatDecimal,
     multiplyDecimals,
     negateDecimal,
     parseDecimal,
   },
   accountFilter: { accountFilter },
+  reportTotals: { appendTotal },
   apiOptions: { accounts, booleanOption, dateBasis, dateRange, validateDateRange, parseOptions },
   valuationRates: { queryValuationRates },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
@@ -29,12 +29,6 @@ module.exports = ({
       context.addIssue({
         code: 'custom',
         message: 'inValuationCommodity and withValuationValue cannot be used together',
-      });
-    }
-    if (input.includeTotal && !input.inValuationCommodity) {
-      context.addIssue({
-        code: 'custom',
-        message: 'includeTotal requires inValuationCommodity',
       });
     }
     if (input.includeTotal && input.groupBy === 'commodity') {
@@ -145,20 +139,7 @@ module.exports = ({
         }),
       }))
       : rows;
-    if (!options.includeTotal || transformed.length === 0) return transformed;
-    const total = transformed.reduce(
-      (sum, row) => addDecimals(sum, parseDecimal(row.quantity)),
-      parseDecimal('0'),
-    );
-    return [
-      ...transformed,
-      {
-        account: 'Total',
-        commodity: transformed[0].commodity,
-        isTotal: true,
-        quantity: formatDecimal(total),
-      },
-    ];
+    return options.includeTotal ? appendTotal(transformed) : transformed;
   }
 
   function queryAggregate(database, options, { valuationPriceCache }) {

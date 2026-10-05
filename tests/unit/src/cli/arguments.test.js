@@ -62,7 +62,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   assert.deepEqual(argumentsModule.apiInputCoverage.aggregate.outputInputs, ['format']);
   assert.deepEqual(
     argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
-    ['format', 'total'],
+    ['format', 'includeTotal'],
   );
   assert.deepEqual(argumentsModule.apiInputCoverage.balanceHistoryReport, {
     command: 'balance-history',
@@ -247,7 +247,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
     '--accounts', 'Assets:',
     '--date-basis', 'transaction',
     '--format', 'csv',
-    '--total',
+    '--include-total',
   ]), {
     command: 'unrealized-gains',
     journalPath: '/journal',
@@ -256,17 +256,17 @@ test('parses unrealized gains options and CLI-only output controls', () => {
       accounts: ['Assets:'],
       dateBasis: 'transaction',
     },
-    output: { format: 'csv', total: true },
+    output: { format: 'csv', includeTotal: true },
   });
   assert.deepEqual(parseArguments(['unrealized-gains', '--file', '/journal']), {
     command: 'unrealized-gains',
     journalPath: '/journal',
     reportOptions: { accounts: [], dateBasis: 'posting' },
-    output: { format: 'text', total: false },
+    output: { format: 'text', includeTotal: false },
   });
   assert.deepEqual(
     parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'json']).output,
-    { format: 'json', total: false },
+    { format: 'json', includeTotal: false },
   );
   assert.throws(
     () => parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'yaml']),
@@ -277,6 +277,17 @@ test('parses unrealized gains options and CLI-only output controls', () => {
       () => parseArguments(['unrealized-gains', '--file', '/journal', option, '2024-01-01']),
       /Usage:/u,
     );
+  }
+});
+
+test('uses the same total flag for both reports without requiring valuation', () => {
+  for (const command of ['aggregate', 'unrealized-gains']) {
+    const parsed = parseArguments([command, '--file', '/journal', '--include-total']);
+    assert.equal((command === 'aggregate' ? parsed.reportOptions : parsed.output).includeTotal, true);
+    assert.equal(parsed.reportOptions.inValuationCommodity, undefined);
+    assert.match(usage(command), /--include-total/u);
+    assert.doesNotMatch(usage(command), /--total\b|requires --value/u);
+    assert.throws(() => parseArguments([command, '--file', '/journal', '--total']), /unknown option/u);
   }
 });
 

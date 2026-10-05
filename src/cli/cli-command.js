@@ -78,7 +78,7 @@ module.exports = ({
     }
     if (command === 'unrealized-gains') {
       const reportRows = journal.unrealizedGains(reportOptions);
-      const rows = output.total ? appendTotal(reportRows) : reportRows;
+      const rows = output.includeTotal ? appendTotal(reportRows) : reportRows;
       if (output.format === 'json') return formatJson(rows);
       return output.format === 'csv'
         ? formatCsv(rows, true)

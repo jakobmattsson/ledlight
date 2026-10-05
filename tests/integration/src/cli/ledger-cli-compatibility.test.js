@@ -214,6 +214,41 @@ test('the configured Ledger CLI is available', () => {
   assert.match(execFileSync(ledgerBinary, ['--version'], { encoding: 'utf8' }), /^Ledger 3\./u);
 });
 
+test('unconverted totals match Ledger per commodity in every output format', (t) => {
+  const directory = temporaryJournal(t, `2024-01-01 Opening
+  Assets:A  0.1 FUND
+  Assets:A  10 USD
+  Equity:Opening  -0.1 FUND
+  Equity:Opening  -10 USD
+
+2024-01-02 Additional holding
+  Assets:B  0.2 FUND
+  Assets:B  -2 USD
+  Equity:Opening  -0.2 FUND
+  Equity:Opening  2 USD
+`);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const ledgerOutput = exactCommandOutput(directory, ledgerBinary, [
+    '--args-only', '--no-pager', '--file', journalPath, 'balance', '--flat', '^Assets:',
+  ]);
+  const ledgerTotals = ledgerOutput.split(/^-+\n/mu)[1].trim().split('\n').map((line) => {
+    const [quantity, commodity] = line.trim().split(/\s+/u);
+    return { account: 'Total', quantity: normalizeDecimal(quantity), commodity, isTotal: true };
+  });
+  const arguments_ = [cliPath, 'aggregate', '--file', journalPath, '--accounts', '^Assets:', '--include-total'];
+  const json = JSON.parse(exactCommandOutput(directory, process.execPath, [...arguments_, '--format', 'json']));
+  assert.deepEqual(json.filter((row) => row.isTotal), ledgerTotals);
+  const csv = exactCommandOutput(directory, process.execPath, [...arguments_, '--format', 'csv']);
+  assert.equal(csv.split('\n').filter((line) => line.startsWith('Total,')).join('\n'),
+    ledgerTotals.map((row) => `Total,${row.quantity},${row.commodity}`).join('\n'));
+  const text = exactCommandOutput(directory, process.execPath, arguments_);
+  assert.equal(text.match(/^-+$/gmu).length, 1);
+  assert.deepEqual(text.split(/^-+\n/mu)[1].trim().split('\n').map((line) => {
+    const [quantity, commodity] = line.trim().split(/\s+/u);
+    return { account: 'Total', quantity: normalizeDecimal(quantity), commodity, isTotal: true };
+  }), ledgerTotals);
+});
+
 test('accounts defaults to the exact Ledger accounts output', (t) => {
   const projectDirectory = temporaryProject(t, 'basic');
   const journalPath = path.join(projectDirectory, 'journal.ledger');

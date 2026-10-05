@@ -155,16 +155,20 @@ Options:
 | `inValuationCommodity` | boolean | `false` | Convert and combine rows in the journal default commodity |
 | `withValuationValue` | boolean | `false` | Preserve commodity rows and add `valuationValue` |
 | `invert` | boolean | `false` | Negate quantities and valuation values |
-| `includeTotal` | boolean | `false` | Append an exact total; requires `inValuationCommodity` |
+| `includeTotal` | boolean | `false` | Append an exact total for each reported commodity |
 
 `inValuationCommodity` and `withValuationValue` are mutually exclusive.
 `includeTotal` is unavailable with commodity grouping because the grouped
-valuation result is already a total.
+rows already contain the totals for each commodity.
 Account-grouped rows are `{ account, quantity, commodity }`, sorted by account
 and commodity. Commodity-grouped rows omit `account`, combine all matching
 accounts, and retain exact zero balances. `withValuationValue` adds an exact
 `valuationValue`. A total row is
-`{ account: 'Total', quantity, commodity, isTotal: true }`.
+`{ account: 'Total', quantity, commodity, isTotal: true }`. Totals are appended
+in commodity order and retain exact zero balances. With `withValuationValue`,
+each total also includes the summed `valuationValue` for that commodity. Empty
+reports have no total rows. Conversion to the default commodity is optional;
+with `inValuationCommodity`, there is a single total in that commodity.
 
 ### `journal.balanceHistoryReport(options)`
 
