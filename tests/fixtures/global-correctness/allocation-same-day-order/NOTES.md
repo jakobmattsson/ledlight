@@ -24,7 +24,7 @@ The arithmetic can balance despite the recorded error. Closed-position residuals
 
 ## Disposal bounds
 
-Bounds are inclusive total costs, conditional on the complete feasible history before each disposal. They are hand-derived explanations, not a required successful-report payload.
+These inclusive bounds describe exact-cost allocations before allowing monetary rounding. They provide hand-derived witnesses and reference calculations. Validation also preserves nearby allocations allowed by the declared precision; see [the rounding contract](../ALLOCATION.md#rounding-contract).
 
 | Transaction | Account | Units | Recorded cost | Minimum | Maximum | Intended outcome |
 | --- | --- | ---: | ---: | ---: | ---: | --- |

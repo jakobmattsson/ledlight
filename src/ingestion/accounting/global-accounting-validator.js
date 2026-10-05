@@ -8,6 +8,12 @@ module.exports = ({
 }) => {
   function validateGlobalAccounting(entries, resolvedTransactions, valuationCommodity, warnings) {
     if (!valuationCommodity) return;
+    const declaration = entries.find((entry) =>
+      entry.type === 'commodity' && entry.symbol === valuationCommodity);
+    const declaredFormat = declaration?.properties.find(({ name }) => name === 'format')?.value;
+    const formatMatch = /^(?:[\d,]+)(?:\.(\d+))?[ \t]+/u.exec(declaredFormat || '');
+    const scale = formatMatch?.[1]?.length ?? 0;
+    const roundingUnit = formatMatch ? parse(scale ? `0.${'0'.repeat(scale - 1)}1` : '1') : zero;
     const histories = new Map();
     const positions = new Map();
     const impossible = [];
@@ -17,7 +23,7 @@ module.exports = ({
       .sort((left, right) => left.date.localeCompare(right.date));
     const historyFor = (account, commodity) => {
       const key = JSON.stringify([account, commodity]);
-      if (!histories.has(key)) histories.set(key, new AllocationHistory());
+      if (!histories.has(key)) histories.set(key, new AllocationHistory(roundingUnit));
       return histories.get(key);
     };
 

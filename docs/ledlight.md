@@ -267,7 +267,8 @@ stderr and keeps query output on stdout.
 Every commodity declaration must include an explicit `format` property. A
 declaration without one produces a `MISSING_COMMODITY_FORMAT` warning. Requiring
 the format prevents display precision from changing when a later amount happens
-to contain more decimal places.
+to contain more decimal places. The default cost currency's format also defines
+the rounding step used by acquisition-cost allocation checks.
 
 Accounts, commodities, and tags must be declared before their first use in
 journal traversal order. Each use before its declaration produces an
@@ -538,10 +539,31 @@ command, independent of report dates or account filters:
   at their recorded acquisition costs.
 
 The validator uses exact rational arithmetic, including fractional allocations.
-Non-terminating bounds are displayed as fractions. It does not infer missing
-basis, round recorded costs into a feasible range, or implement short-sale or
-foreign-currency-basis rules. An impossible history is retained as a diagnostic;
-later disposals cannot erase it or yield invented feasible bounds. Computable
+A recorded total disposal cost may be rounded either down or up to the adjacent
+multiple of the cost currency's declared `format` step. For `format 1,000.00 USD`,
+an exact cost of 1/3 USD may be booked as 0.33 or 0.34 USD. An exact cost of 1 USD
+cannot be booked as 0.99 or 1.01 USD: the difference must be strictly less than
+one step. This applies to the total cost, including totals calculated from unit
+annotations, not independently to each unit. Explicit costs finer than the
+step are checked exactly; missing formats also retain exact checks.
+
+All disposals must share one feasible acquisition history. Rounding intervals
+remain part of that history, including their excluded endpoints; the validator
+does not choose a lot method or replace original acquisition prices with booked
+rounded prices. Reports continue to use booked amounts. Full liquidation must
+remove exactly the remaining booked basis and also pass the allocation check.
+Thus three units bought for 1 USD may be sold with costs 0.34, 0.33, 0.33 in any
+order. Costs 0.34, 0.34, 0.32 fail allocation despite summing to 1; three costs of
+0.34 leave a residual warning. Complete transfers and splits carry both the
+booked remainder and the exact acquisition history without resetting either.
+Partial transfers constrain the history using the same rounding rule as sales.
+
+Diagnostic ranges bound the underlying exact cost before applying the current
+rounding rule. Earlier rounding can make an endpoint unattainable; touching such
+an endpoint does not establish feasibility. Non-terminating bounds are displayed
+as fractions. The validator does not infer missing basis, modify recorded costs,
+or implement short-sale or foreign-currency-basis rules. An impossible history
+is retained as a diagnostic; later disposals cannot erase it or yield invented feasible bounds. Computable
 reports remain available with warnings and exit code zero. A final disposal's
 residual warning takes precedence over an equivalent allocation warning.
 

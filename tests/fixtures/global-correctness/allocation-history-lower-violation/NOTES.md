@@ -54,13 +54,13 @@ The arithmetic can balance despite the recorded error. Closed-position residuals
 
 ## Disposal bounds
 
-Bounds are inclusive total costs, conditional on the complete feasible history before each disposal. They are hand-derived explanations, not a required successful-report payload.
+These exact-cost bounds include the declared cent-rounding policy. Excluded limits cannot themselves be attained. See [the rounding contract](../ALLOCATION.md#rounding-contract).
 
 | Transaction | Account | Units | Recorded cost | Minimum | Maximum | Intended outcome |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | First sale | Assets:Broker | 11 | 12 | 12 | 32 | feasible |
-| Impossible second sale | Assets:Broker | 10 | 20 | 21 | 30 | infeasible |
+| Impossible second sale | Assets:Broker | 10 | 20 | 20.99 (excluded) | 30 | infeasible |
 
-**First sale:** The first allocation is exactly an admissible endpoint.
+**First sale:** The booked cost equals an admissible endpoint, but nearby exact allocations must also remain available under cent rounding.
 
-**Impossible second sale:** Condition on the first sale: nine units at 2 and ten at 3 remain.
+**Impossible second sale:** With exact first cost 12, nine units at 2 and ten at 3 remain. The booked cost 12 also admits exact costs below 12.01. This leaves the next minimum strictly above 20.99: replacing a small amount of cheap units in the first sale reduces the next minimum by that same cost increase. Cost 20 still cannot round from a feasible value.

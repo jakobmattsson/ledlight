@@ -40,10 +40,10 @@ The arithmetic can balance despite the recorded error. Closed-position residuals
 
 ## Disposal bounds
 
-Bounds are inclusive total costs, conditional on the complete feasible history before each disposal. They are hand-derived explanations, not a required successful-report payload.
+These exact-cost bounds include the declared cent-rounding policy. Excluded limits cannot themselves be attained. See [the rounding contract](../ALLOCATION.md#rounding-contract).
 
 | Transaction | Account | Units | Recorded cost | Minimum | Maximum | Intended outcome |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Destination sale | Assets:OtherBroker | 10 | 77 | 88 | 110 | infeasible |
+| Destination sale | Assets:OtherBroker | 10 | 77 | 87.99 (excluded) | 110 | infeasible |
 
-**Destination sale:** The transfer basis 154 for eight units at 11 or 22 forces two cheap and six expensive original units. After the split the destination has four at 5.5 and twelve at 11. Ten cost at least 4*5.5+6*11=88, at most 110. The cheaper source units are not available here.
+**Destination sale:** Exact transferred basis 154 has two cheap and six expensive original units. With cent rounding the exact transfer cost T is in (153.99,154.01). After the split, the minimum for ten units is T - 66, giving the excluded lower limit 87.99. The upper limit is 110. Cost 77 cannot round from any feasible cost; cheaper units in the source account cannot be used.
