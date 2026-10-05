@@ -197,6 +197,11 @@ grouped by account and expressed as exact decimal strings in the journal
 default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
+All lot costs contributing to a selected open position must be expressed in
+the journal default commodity. Missing lot costs or costs in another currency
+cause an error; the report does not infer historical exchange rates or lot
+allocations. Closed positions are omitted before this check.
+
 Options are `to`, `accounts`, and `dateBasis`. `to` is the inclusive snapshot
 date for both positions and valuation prices, `accounts` contains account
 patterns, and `dateBasis` is `posting` (the default) or `transaction`. When

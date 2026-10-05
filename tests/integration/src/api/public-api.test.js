@@ -52,6 +52,70 @@ test('exposes stable error code strings instead of public error classes', (t) =>
   );
 });
 
+test('rejects foreign acquisition costs instead of silently reporting them in the default currency', (t) => {
+  const { openJournal } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-foreign-basis-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+account Assets:USD
+account Assets:Cash
+P 2024-01-01 STOCK 30 SEK
+P 2024-01-01 USD 2 SEK
+
+2024-01-01 Buy dollars
+  Assets:USD  10 USD {2 SEK}
+  Assets:Cash  -20 SEK
+
+2024-01-01 Buy shares
+  Assets:Stock  1 STOCK {10 USD}
+  Assets:USD
+`);
+  const journal = openJournal(journalPath);
+  assert.deepEqual(journal.warnings, []);
+  assert.deepEqual(journal.aggregate({ inValuationCommodity: true, includeTotal: true }).at(-1), {
+    account: 'Total', commodity: 'SEK', isTotal: true, quantity: '10',
+  });
+  assert.deepEqual(journal.balanceHistoryReport(), [
+    { date: '2024-01-01', amount: '10', commodity: 'SEK' },
+  ]);
+  const message = 'Cannot calculate unrealized gain for Assets:Stock: STOCK has lot cost in USD; ' +
+    'lot costs must be expressed in SEK';
+  assert.throws(() => journal.unrealizedGains(), { message });
+  const result = spawnSync(process.execPath, [
+    cliPath, 'unrealized-gains', '--include-total', '--format', 'json', '--file', journalPath,
+  ], {
+    cwd: directory,
+    encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: cacheDirectory },
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, `${message}\n`);
+
+  fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(
+    '1 STOCK {10 USD}\n  Assets:USD\n',
+    '1 STOCK {20 SEK}\n  Assets:USD  -10 USD {2 SEK} @ 2 SEK\n',
+  ));
+  const correctedJournal = openJournal(journalPath);
+  assert.deepEqual(correctedJournal.warnings, []);
+  assert.deepEqual(correctedJournal.unrealizedGains(), [
+    { account: 'Assets:Stock', quantity: '10', commodity: 'SEK' },
+  ]);
+  assert.equal(correctedJournal.aggregate({
+    inValuationCommodity: true, includeTotal: true,
+  }).at(-1).quantity, '10');
+  assert.equal(correctedJournal.balanceHistoryReport().at(-1).amount, '10');
+});
+
 test('prints CLI help and the public package version without opening a project', () => {
   assert.match(execFileSync(process.execPath, [cliPath, '--help'], { encoding: 'utf8' }), /^Usage:/u);
   assert.equal(

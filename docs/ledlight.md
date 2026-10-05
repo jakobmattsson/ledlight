@@ -511,6 +511,14 @@ value of each open non-default commodity position minus its remaining lot
 cost. Results are grouped by account, expressed in the journal default
 commodity, and omit zero gains. Losses are returned as negative quantities.
 
+Lot costs for selected open positions must be expressed in the journal default
+commodity. A missing lot cost or one in another currency causes an error instead
+of a gain calculated from incompatible currencies. This includes costs on both
+acquisitions and disposals contributing to an open position. Prices alone cannot
+identify the original acquisition exchange rates for later disposals or transfers;
+record the acquisition basis in the default commodity explicitly. Closed positions
+are omitted before checking their lot costs.
+
 ```console
 ledlight unrealized-gains --file main.ledger
 ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "^Assets:Broker"
