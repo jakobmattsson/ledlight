@@ -149,7 +149,7 @@ test('delegates report behavior to the public Node API and only formats results'
       'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
       '--include-total',
     ]),
-    /-10\.00 USD.*Total/u,
+    /-{20}\n\s+-10\.00 USD\n$/u,
   );
   assert.equal(
     runReportCommand([
@@ -244,7 +244,8 @@ test('aggregate includes a total only when requested in every output format', ()
 
     const outputWithTotal = runReportCommand([...arguments_, '--include-total']);
     assert.match(outputWithTotal, /Assets:Cash/u);
-    assert.match(outputWithTotal, /Total/u);
+    if (format === 'text') assert.match(outputWithTotal, /-{20}\n\s+10\.00 USD\n$/u);
+    else assert.match(outputWithTotal, /Total/u);
     assert.equal(calls.at(-1).includeTotal, true);
   }
 });

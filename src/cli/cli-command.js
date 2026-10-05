@@ -10,6 +10,7 @@ module.exports = ({
     formatBalanceHistoryCsv,
     formatBalanceHistoryHumanReadable,
     formatHumanReadable,
+    formatAggregateText,
     formatInvestmentPerformance,
     formatTransactions,
     formatJson,
@@ -94,7 +95,7 @@ module.exports = ({
     if (output.format === 'json') return formatJson(rows);
     return output.format === 'csv'
       ? formatCsv(rows, reportOptions.inValuationCommodity, reportOptions.groupBy)
-      : formatHumanReadable(
+      : formatAggregateText(
         rows,
         reportOptions.inValuationCommodity,
         journal.commodities({ usage: 'all' }),

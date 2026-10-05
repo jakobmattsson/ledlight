@@ -10,6 +10,7 @@ const {
   formatBalanceHistoryCsv,
   formatBalanceHistoryHumanReadable,
   formatHumanReadable,
+  formatAggregateText,
   formatInvestmentPerformance,
   formatInvestmentPerformanceJson,
   formatTransactions,
@@ -111,6 +112,29 @@ test('applies declared commodity precision and separators only to human-readable
     formatCsv([{ account: 'Assets:Euros', quantity: '1234.5', commodity: 'EUR' }], false),
     'account,amount,commodity\nAssets:Euros,1234.5,EUR\n',
   );
+});
+
+test('formats valued account balances with Ledger column width and unlabeled totals', () => {
+  const descriptions = [{ commodity: 'SEK', format: '1,000.00 SEK' }];
+  const balances = [
+    { account: 'Assets:Cash', quantity: '1000', commodity: 'SEK' },
+    { account: 'Equity:Opening', quantity: '-1000', commodity: 'SEK' },
+    { account: 'Total', quantity: '0', commodity: 'SEK', isTotal: true },
+  ];
+  assert.equal(formatAggregateText(balances, true, descriptions, 'account'),
+    '        1,000.00 SEK  Assets:Cash\n' +
+    '       -1,000.00 SEK  Equity:Opening\n' +
+    '--------------------\n' +
+    '                   0\n');
+  assert.equal(formatAggregateText([{
+    account: 'Total', quantity: '1234.567', commodity: 'SEK', isTotal: true,
+  }], true, descriptions, 'account'),
+  '--------------------\n        1,234.57 SEK\n');
+  assert.equal(formatAggregateText([], true, descriptions, 'account'), '');
+  assert.equal(formatAggregateText(balances, false, descriptions, 'account'),
+    formatHumanReadable(balances, false, descriptions, 'account'));
+  assert.equal(formatAggregateText([{ quantity: '1000', commodity: 'SEK' }],
+    true, descriptions, 'commodity'), '1,000.00 SEK\n');
 });
 
 test('appends an exact total without mutating report rows', () => {
