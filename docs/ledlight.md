@@ -258,6 +258,12 @@ a payment of 100 SEK without an explicit posting for the difference. An implicit
 posting absorbs the full exact residual, including fractions of the smallest
 displayed monetary unit. These balancing rules are separate from the rounding
 rules for acquisition-cost allocation checks.
+Cost annotations expressed in the posting's own commodity must preserve its
+nominal value: unit costs must be exactly one, and total costs must equal the
+posting amount under the usual total-cost sign convention. For example,
+`100 SEK {2 SEK}` and `100 SEK {{200 SEK}}` produce `INVALID_COMMODITY_TRADE`,
+while `{1 SEK}` and `{{100 SEK}}` are valid for a 100 SEK posting. This applies
+to both lot costs and transaction prices, including the default commodity.
 When a posting has both a lot cost and a transaction cost, its lot cost
 determines the balancing amount. This requires a realized gain or loss posting
 when disposal proceeds differ from the lot's cost basis, matching Ledger's
