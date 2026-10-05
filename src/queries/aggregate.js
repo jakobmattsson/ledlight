@@ -9,7 +9,8 @@ module.exports = ({
   },
   accountFilter: { accountFilter },
   reportTotals: { appendTotal },
-  apiOptions: { accounts, booleanOption, dateBasis, dateRange, validateDateRange, parseOptions },
+  apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
+  costValuation: { validateCostValuation, costValueSql },
   valuationRates: { queryValuationRates },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
@@ -18,6 +19,7 @@ module.exports = ({
   const optionsSchema = z.strictObject({
     accounts,
     dateBasis,
+    valuation,
     ...dateRange,
     groupBy: z.enum(['account', 'commodity'], { error: 'Invalid groupBy' }).default('account'),
     includeTotal: booleanOption,
@@ -59,6 +61,9 @@ module.exports = ({
 
   function queryCommodityTotals(database, options) {
     const filter = reportFilter(options);
+    const costColumn = options.withValuationValue && options.valuation === 'cost'
+      ? `, decimal_sum(${costValueSql}) AS valuationValue`
+      : '';
     const accountColumn = options.groupBy === 'account' ? 'p.account,\n      ' : '';
     const groupBy = options.groupBy === 'account'
       ? 'p.account, r.commodity'
@@ -70,7 +75,7 @@ module.exports = ({
     return database.prepare(`
     SELECT
       ${accountColumn}r.commodity,
-      decimal_sum(r.quantity) AS quantity
+      decimal_sum(r.quantity) AS quantity${costColumn}
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     JOIN transactions AS t ON t.entry_id = p.transaction_id
@@ -81,21 +86,26 @@ module.exports = ({
   }
 
   function queryValuationTotals(database, options, commodityTotals, valuationPriceCache) {
-    const rates = queryValuationRates(
-      database,
-      options.to,
-      new Set(commodityTotals.map((row) => row.commodity)),
-      valuationPriceCache,
-    );
+    if (options.valuation === 'market') {
+      const rates = queryValuationRates(
+        database,
+        options.to,
+        new Set(commodityTotals.map((row) => row.commodity)),
+        valuationPriceCache,
+      );
+      database.function('valuation_rate', { deterministic: true }, (commodity) => rates.get(commodity));
+    }
+    const valueSql = options.valuation === 'cost'
+      ? costValueSql
+      : 'decimal_mul(r.quantity, valuation_rate(r.commodity))';
     const valuationCommodity = valuationCommodityFromDatabase(database);
-    database.function('valuation_rate', { deterministic: true }, (commodity) => rates.get(commodity));
     const filter = reportFilter(options);
     const accountColumn = options.groupBy === 'account' ? 'p.account,\n      ' : '';
     const groupBy = options.groupBy === 'account' ? 'p.account' : '1';
     const nonZero = options.groupBy === 'account'
       ? `
     HAVING decimal_cmp(
-      decimal_sum(decimal_mul(r.quantity, valuation_rate(r.commodity))),
+      decimal_sum(${valueSql}),
       '0'
     ) != 0`
       : '';
@@ -103,7 +113,7 @@ module.exports = ({
     return database.prepare(`
     SELECT
       ${accountColumn}? AS commodity,
-      decimal_sum(decimal_mul(r.quantity, valuation_rate(r.commodity))) AS quantity
+      decimal_sum(${valueSql}) AS quantity
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     JOIN transactions AS t ON t.entry_id = p.transaction_id
@@ -114,6 +124,7 @@ module.exports = ({
   }
 
   function withValuationValues(database, options, commodityTotals, valuationPriceCache) {
+    if (options.valuation === 'cost') return commodityTotals;
     const rates = queryValuationRates(
       database,
       options.to,
@@ -144,6 +155,10 @@ module.exports = ({
 
   function queryAggregate(database, options, { valuationPriceCache }) {
     const reportOptions = parseOptions(optionsSchema, options, 'aggregate');
+    if (reportOptions.valuation === 'cost' &&
+        (reportOptions.inValuationCommodity || reportOptions.withValuationValue)) {
+      validateCostValuation(database, reportFilter(reportOptions));
+    }
     const commodityTotals = queryCommodityTotals(database, reportOptions);
     const rows = reportOptions.inValuationCommodity
       ? queryValuationTotals(database, reportOptions, commodityTotals, valuationPriceCache)

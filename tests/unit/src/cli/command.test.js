@@ -179,7 +179,7 @@ test('delegates report behavior to the public Node API and only formats results'
       operation: 'aggregate',
       options: {
         accounts: ['Assets:'],
-        dateBasis: 'posting',
+        dateBasis: 'posting', valuation: 'market',
         groupBy: 'account',
         inValuationCommodity: true,
         invert: true,
@@ -191,7 +191,7 @@ test('delegates report behavior to the public Node API and only formats results'
     {
       operation: 'aggregate',
       options: {
-        accounts: ['Assets:'], dateBasis: 'posting', groupBy: 'commodity',
+        accounts: ['Assets:'], dateBasis: 'posting', valuation: 'market', groupBy: 'commodity',
       },
     },
     { operation: 'openJournal', journalPath: '/journal' },
@@ -199,7 +199,7 @@ test('delegates report behavior to the public Node API and only formats results'
       operation: 'balanceHistoryReport',
       options: {
         accounts: [],
-        dateBasis: 'posting',
+        dateBasis: 'posting', valuation: 'market',
         invert: true,
       },
     },

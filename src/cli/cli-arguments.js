@@ -100,6 +100,10 @@ module.exports = ({
     command, '--date-basis <basis>', 'select posting or transaction dates',
     { choices: ['posting', 'transaction'], defaultValue: 'posting', apiInput: 'dateBasis' },
   );
+  const addValuationOption = (command) => addValueOption(
+    command, '--valuation <valuation>', 'value holdings at cost or market prices',
+    { choices: ['cost', 'market'], defaultValue: 'market', apiInput: 'valuation' },
+  );
   const addAccountPatterns = (command) => addValueOption(
     command, '--accounts <pattern>', 'include accounts matching a pattern (repeatable)',
     { repeatable: true, apiInput: 'accounts' },
@@ -204,6 +208,7 @@ module.exports = ({
     addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPatterns(aggregate); addDateBasisOption(aggregate);
+    addValuationOption(aggregate);
     addValueOption(aggregate, '--group-by <dimension>', 'group totals by account or commodity', {
       choices: ['account', 'commodity'], defaultValue: 'account', apiInput: 'groupBy',
     });
@@ -224,6 +229,7 @@ module.exports = ({
     addDateOption(balanceHistory, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
     addDateOption(balanceHistory, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPatterns(balanceHistory); addDateBasisOption(balanceHistory);
+    addValuationOption(balanceHistory);
     addBooleanOption(balanceHistory, '--invert', 'invert the sign of report amounts', 'invert');
     addOutputValueOption(balanceHistory, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
@@ -367,6 +373,7 @@ module.exports = ({
     const reportOptions = compact({
       from: options.from, to: options.to, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
+      valuation: options.valuation,
     });
     if (commandName === 'aggregate') {
       Object.assign(reportOptions, compact({
