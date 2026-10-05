@@ -445,6 +445,8 @@ The same behavior is available directly through `journal.aggregate`: set
 append the total row. `includeTotal` requires `inValuationCommodity: true`, so
 the quantities have one common commodity. The CLI requests this total only with
 `--include-total`; human-readable output formats the row with a separator.
+Valued account reports use Ledger's 20-character amount column, an unlabeled
+total, and `0` for zero amounts. CSV and JSON retain the total's account label.
 
 Human-readable reports that pair numeric results with hierarchical labels put
 the numeric column first and right-align it, then put the label column second

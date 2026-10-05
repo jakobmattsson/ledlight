@@ -165,6 +165,23 @@ module.exports = ({
     }));
   }
 
+  function formatAggregateText(rows, inValuationCommodity, descriptions, groupBy) {
+    if (!inValuationCommodity || groupBy === 'commodity') {
+      return formatHumanReadable(rows, inValuationCommodity, descriptions, groupBy);
+    }
+    const formats = commodityFormats(descriptions);
+    const lines = [];
+    for (const row of rows) {
+      const quantity = displayQuantity(row.quantity, row.commodity, formats, 2);
+      const amount = parseDecimal(quantity.replaceAll(',', '')).coefficient === 0n
+        ? '0'
+        : `${quantity} ${row.commodity}`;
+      if (row.isTotal) lines.push('-'.repeat(20));
+      lines.push(row.isTotal ? amount.padStart(20) : `${amount.padStart(20)}  ${row.account}`);
+    }
+    return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
+  }
+
   function formatBalanceHistoryCsv(rows) {
     const lines = ['date,amount'];
     for (const row of displayBalanceHistory(rows)) {
@@ -600,6 +617,7 @@ module.exports = ({
     formatBalanceHistoryCsv,
     formatBalanceHistoryHumanReadable,
     formatHumanReadable,
+    formatAggregateText,
     formatInvestmentPerformance,
     formatInvestmentPerformanceJson,
     formatTransactions,

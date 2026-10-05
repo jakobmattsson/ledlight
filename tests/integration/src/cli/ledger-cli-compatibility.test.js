@@ -327,12 +327,36 @@ test('the comparison matrix applies ISO dates to every Ledger command', (t) => {
   const comparisonPath = path.join(repositoryRoot, 'scripts/compare-ledger.js');
   const matrix = exactCommandOutput(directory, process.execPath, [comparisonPath, '--list']);
   const ledgerCommands = matrix.split('\n').filter((line) => line.includes('`ledger '));
-  assert.equal(ledgerCommands.length, 5);
+  assert.equal(ledgerCommands.length, 8);
   for (const command of ledgerCommands) assert.match(command, /--date-format %Y-%m-%d/u);
   assert.equal(exactCommandOutput(directory, process.execPath, [
     comparisonPath, '--file', path.join(directory, 'journal.ledger'),
     '--ledger-bin', ledgerBinary,
-  ]), 'PASS accounts\nPASS tags\nPASS commodities\nPASS prices\nPASS transactions\n');
+  ]), 'PASS accounts\nPASS tags\nPASS commodities\nPASS prices\nPASS transactions\n' +
+    'PASS balance\nPASS balance-with-total\nPASS balance-inverted\n');
+});
+
+test('balance matrix cases match Ledger with market gains and a nonzero total', (t) => {
+  const directory = temporaryJournal(t, `commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1000 FUND
+account Assets:Fund
+account Equity:Opening
+
+2024-01-01 Opening investment
+  Assets:Fund  2 FUND @ 1000 SEK
+  Equity:Opening  -2000 SEK
+
+P 2024-01-02 FUND 1234.56 SEK
+`);
+  assert.equal(exactCommandOutput(directory, process.execPath, [
+    path.join(repositoryRoot, 'scripts/compare-ledger.js'),
+    '--file', path.join(directory, 'journal.ledger'),
+    '--case', 'balance', '--case', 'balance-with-total', '--case', 'balance-inverted',
+    '--ledger-bin', ledgerBinary,
+  ]), 'PASS balance\nPASS balance-with-total\nPASS balance-inverted\n');
 });
 
 test('transactions does not apply the API page limit to default text output', (t) => {

@@ -490,7 +490,7 @@ account Equity:Opening
   );
   assert.equal(
     roundedHumanReadable,
-    '     2.01 SEK  Assets:Cash,Main\n10,000.00 SEK  Assets:LongAccount\n',
+    '            2.01 SEK  Assets:Cash,Main\n       10,000.00 SEK  Assets:LongAccount\n',
   );
 
   const roundedHumanReadableWithTotal = execFileSync(
@@ -500,7 +500,8 @@ account Equity:Opening
   );
   assert.equal(
     roundedHumanReadableWithTotal,
-    '     2.01 SEK  Assets:Cash,Main\n10,000.00 SEK  Assets:LongAccount\n-------------\n10,002.01 SEK  Total\n',
+    '            2.01 SEK  Assets:Cash,Main\n       10,000.00 SEK  Assets:LongAccount\n' +
+    '--------------------\n       10,002.01 SEK\n',
   );
 
   const invertedHumanReadable = execFileSync(
@@ -513,7 +514,8 @@ account Equity:Opening
   );
   assert.equal(
     invertedHumanReadable,
-    '     -2.01 SEK  Assets:Cash,Main\n-10,000.00 SEK  Assets:LongAccount\n--------------\n-10,002.01 SEK  Total\n',
+    '           -2.01 SEK  Assets:Cash,Main\n      -10,000.00 SEK  Assets:LongAccount\n' +
+    '--------------------\n      -10,002.01 SEK\n',
   );
 
   const invertedCsv = execFileSync(
