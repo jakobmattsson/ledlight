@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { execFileSync, execSync } = require('node:child_process');
+const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -338,7 +338,7 @@ ${transactions}`);
   assert.equal(ledlightOutput, ledgerOutput);
 });
 
-test('accounts accepts multiple filters and --ledger preserves their Ledger syntax', (t) => {
+test('accounts accepts multiple filters matching Ledger query syntax', (t) => {
   const projectDirectory = temporaryProject(t, 'basic');
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const commonOptions = {
@@ -355,41 +355,9 @@ test('accounts accepts multiple filters and --ledger preserves their Ledger synt
     'accounts', '^Assets:', '^Expenses:',
   ], commonOptions);
   const ledlightOutput = execFileSync(process.execPath, [cliPath, ...arguments_], commonOptions);
-  const ledgerCommand = execFileSync(process.execPath, [
-    cliPath, ...arguments_, '--ledger',
-  ], commonOptions).trimEnd();
 
   assert.equal(ledlightOutput, expectedOutput);
-  assert.equal(execSync(ledgerCommand, commonOptions), expectedOutput);
 });
-
-for (const [ledlightCommand, ledgerSubcommand] of [
-  ['accounts', 'accounts'],
-  ['transactions', 'print'],
-]) {
-  test(`${ledlightCommand} --ledger prints a standalone command with identical output`, (t) => {
-    const projectDirectory = temporaryProject(t, 'basic');
-    const journalPath = path.join(projectDirectory, 'journal.ledger');
-    fs.writeFileSync(path.join(projectDirectory, '.ledgerrc'), '--file missing.ledger\n');
-    const commonOptions = {
-      cwd: projectDirectory,
-      encoding: 'utf8',
-      env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
-    };
-    const expectedOutput = execFileSync(process.execPath, [
-      cliPath, ledlightCommand, '--file', journalPath,
-    ], commonOptions);
-    const ledgerCommand = execFileSync(process.execPath, [
-      cliPath, ledlightCommand, '--file', journalPath, '--ledger',
-    ], commonOptions).trimEnd();
-
-    assert.match(
-      ledgerCommand,
-      new RegExp(`^ledger --args-only --no-pager --file .+ ${ledgerSubcommand}$`, 'u'),
-    );
-    assert.equal(execSync(ledgerCommand, commonOptions), expectedOutput);
-  });
-}
 
 for (const scenario of scenarios) {
   test(`Ledlight and Ledger produce the same ${scenario.name}`, (t) => {

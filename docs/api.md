@@ -310,8 +310,7 @@ names use kebab case on the command line; for example, `withValuationValue` is
 
 `accounts` defaults to `--format text` and prints the same
 newline-separated account names as `ledger accounts`. Repeating `--accounts
-PATTERN` selects names matching any supplied pattern. In `--ledger` mode these
-filters are emitted as Ledger's positional report-query arguments. Its `--details` flag
+PATTERN` selects names matching any supplied pattern. Its `--details` flag
 includes comments and transaction counts; detailed text uses a table with the
 right-aligned transaction count first, followed by account and comment. The
 `--format json` and `--format csv` alternatives encode either the account names

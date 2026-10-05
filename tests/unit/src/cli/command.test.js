@@ -405,34 +405,3 @@ test('formats the postings API result in the requested CLI format', () => {
     ['postings', { from: '2024-01-01', to: '2024-01-31', accounts: ['Assets:'] }],
   ]);
 });
-
-test('--ledger never opens a journal and is available on every command', () => {
-  const { runReportCommand } = createCommand({
-    project: { openJournal: () => { throw new Error('must not open a journal'); } },
-    packageMetadata: { version: '1.2.3' },
-    cliArguments,
-    cliFormat,
-  });
-  const commands = [
-    ['accounts'],
-    ['tags'],
-    ['commodities'],
-    ['prices'],
-    ['summary'],
-    ['transactions'],
-    ['postings'],
-    ['reconciliation-entries', '--account', 'Assets:Cash'],
-    ['balance-history'],
-    ['unrealized-gains'],
-    ['investment-performance'],
-  ];
-
-  for (const arguments_ of commands) {
-    const output = runReportCommand([...arguments_, '--file', '/journal', '--ledger']);
-    if (['accounts', 'transactions'].includes(arguments_[0])) {
-      assert.match(output, /^ledger --args-only --no-pager --file \/journal (?:accounts|print)\n$/u);
-    } else {
-      assert.equal(output, 'No ledger equivalent command exists\n');
-    }
-  }
-});

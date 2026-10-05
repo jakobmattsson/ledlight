@@ -2,8 +2,7 @@
 
 Ledlight intentionally has a different CLI shape from Ledger. This matrix
 records the command pairs whose results are expected to be equivalent. It also
-makes the missing equivalents visible instead of relying on each command's
-`--ledger` option for discovery.
+makes the missing equivalents visible.
 
 | Ledlight command | Exact Ledger equivalent | Runnable case |
 | --- | --- | --- |
