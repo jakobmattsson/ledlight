@@ -10,7 +10,7 @@ const cliArguments = resolveRepositoryModule('src/cli/cli-arguments.js');
 const cliFormat = resolveRepositoryModule('src/cli/cli-format.js');
 const coreProject = resolveRepositoryModule('src/core/project.js');
 
-const commandNames = [...new Set([...Object.values(cliArguments.apiCommands), 'print'])];
+const commandNames = [...new Set(Object.values(cliArguments.apiCommands))];
 
 test('shows command help only with the explicit help option', () => {
   const { runReportCommand } = createCommand({
@@ -429,7 +429,6 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['account-transactions', '--accounts', 'Assets:Cash'],
     ['transactions'],
     ['postings'],
-    ['print'],
     ['reconciliation-entries', '--account', 'Assets:Cash'],
     ['balance-history'],
     ['unrealized-gains'],
@@ -438,7 +437,7 @@ test('--ledger never opens a journal and is available on every command', () => {
 
   for (const arguments_ of commands) {
     const output = runReportCommand([...arguments_, '--file', '/journal', '--ledger']);
-    if (['accounts', 'transactions', 'print'].includes(arguments_[0])) {
+    if (['accounts', 'transactions'].includes(arguments_[0])) {
       assert.match(output, /^ledger --args-only --no-pager --file \/journal (?:accounts|print)\n$/u);
     } else {
       assert.equal(output, 'No ledger equivalent command exists\n');

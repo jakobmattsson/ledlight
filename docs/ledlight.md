@@ -125,7 +125,7 @@ underlying result.
 | `tags --file PATH` | `openJournal(journalPath).tags()` | Used tags |
 | `commodities --file PATH` | `openJournal(journalPath).commodities()` | Used commodities |
 | `prices --file PATH` | `openJournal(journalPath).prices()` | Effective market prices |
-| `transactions --file PATH` (`print` alias) | `openJournal(journalPath).transactions(options)` | Transactions (unpaged in default text output) |
+| `transactions --file PATH` | `openJournal(journalPath).transactions(options)` | Transactions (unpaged in default text output) |
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
@@ -181,7 +181,7 @@ calculations to the API before formatting.
 
 Every command accepts the CLI-only `--ledger` option. It skips journal loading
 and query execution and prints exactly one line. The basic text variants of
-`accounts` and `transactions` (including its `print` alias) produce a
+`accounts` and `transactions` produce a
 complete Ledger invocation with `--args-only` and `--no-pager`, so neither
 `.ledgerrc`, Ledger environment defaults, nor pager behavior affect it. Variants
 with Ledlight-specific filters or output formats, and commands without a

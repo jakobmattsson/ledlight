@@ -275,7 +275,7 @@ their ordered note text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
-The `transactions` CLI command, also available as `print`, defaults to
+The `transactions` CLI command defaults to
 `--format text` and prints every matching transaction rather than applying the
 API's 100-row default page size. Its repeatable `--accounts PATTERN` option selects transactions
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style

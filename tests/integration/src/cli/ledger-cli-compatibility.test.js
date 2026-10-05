@@ -147,24 +147,6 @@ test('transactions matches Ledger print formatting across included files', (t) =
   assert.equal(ledlightOutput, ledgerOutput);
 });
 
-test('print aliases transactions', (t) => {
-  const projectDirectory = temporaryProject(t, 'basic');
-  const journalPath = path.join(projectDirectory, 'journal.ledger');
-  const commonOptions = {
-    cwd: projectDirectory,
-    encoding: 'utf8',
-    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
-  };
-  const transactionsOutput = execFileSync(process.execPath, [
-    cliPath, 'transactions', '--file', journalPath,
-  ], commonOptions);
-  const printOutput = execFileSync(process.execPath, [
-    cliPath, 'print', '--file', journalPath,
-  ], commonOptions);
-
-  assert.equal(printOutput, transactionsOutput);
-});
-
 const scenarios = [
   {
     name: 'plain posting summaries with implicit postings',
@@ -349,8 +331,11 @@ test('accounts accepts multiple filters and --ledger preserves their Ledger synt
   assert.equal(execSync(ledgerCommand, commonOptions), expectedOutput);
 });
 
-for (const command of ['accounts', 'print']) {
-  test(`${command} --ledger prints a standalone command with identical output`, (t) => {
+for (const [ledlightCommand, ledgerSubcommand] of [
+  ['accounts', 'accounts'],
+  ['transactions', 'print'],
+]) {
+  test(`${ledlightCommand} --ledger prints a standalone command with identical output`, (t) => {
     const projectDirectory = temporaryProject(t, 'basic');
     const journalPath = path.join(projectDirectory, 'journal.ledger');
     fs.writeFileSync(path.join(projectDirectory, '.ledgerrc'), '--file missing.ledger\n');
@@ -359,7 +344,6 @@ for (const command of ['accounts', 'print']) {
       encoding: 'utf8',
       env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(projectDirectory, '.cache') },
     };
-    const ledlightCommand = command === 'print' ? 'print' : 'accounts';
     const expectedOutput = execFileSync(process.execPath, [
       cliPath, ledlightCommand, '--file', journalPath,
     ], commonOptions);
@@ -369,7 +353,7 @@ for (const command of ['accounts', 'print']) {
 
     assert.match(
       ledgerCommand,
-      new RegExp(`^ledger --args-only --no-pager --file .+ ${command}$`, 'u'),
+      new RegExp(`^ledger --args-only --no-pager --file .+ ${ledgerSubcommand}$`, 'u'),
     );
     assert.equal(execSync(ledgerCommand, commonOptions), expectedOutput);
   });
