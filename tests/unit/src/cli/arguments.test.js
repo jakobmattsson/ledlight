@@ -445,7 +445,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
   assert.throws(() => usage('print'), /Unknown command: print/u);
-  assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
+  assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read this journal file, or - for stdin/u);
   assert.match(usage('aggregate'), /--accounts <pattern>.*repeatable/u);
   assert.match(
     usage('aggregate'),
