@@ -17,7 +17,7 @@ test('registers all queries as one immutable dependency', () => {
   assert.ok(Object.isFrozen(queries));
   assert.equal(queries.length, 10);
   for (const registrationName of [
-    'summaryQuery',
+    'aggregateQuery',
     'balanceHistoryQuery',
     'unrealizedGainsQuery',
     'investmentPerformanceQuery',
@@ -35,7 +35,6 @@ test('each query module is exposed through the query collection', () => {
 
   for (const fileName of queryFiles) {
     const expectedName = {
-      'summary.js': 'summary',
       'balance-history.js': 'balanceHistoryReport',
       'unrealized-gains.js': 'unrealizedGains',
     }[fileName] ?? fileName.replace(/-([a-z])/gu, (_match, letter) => letter.toUpperCase())

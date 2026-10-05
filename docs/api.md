@@ -38,7 +38,7 @@ all default to `false`.
 
 | Query | Date inputs and meaning | Other inputs |
 | --- | --- | --- |
-| `summary` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `groupBy`, `inValuationCommodity`, `withValuationValue`, `invert`, `includeTotal` |
+| `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `groupBy`, `inValuationCommodity`, `withValuationValue`, `invert`, `includeTotal` |
 | `balanceHistoryReport` | `from`, `to`: select daily closing balances, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `invert` |
 | `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
 | `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
@@ -137,7 +137,7 @@ its own warning, including blocks in included files.
 Report methods are called on the object returned by `openJournal()` and accept
 an optional `options` object.
 
-### `journal.summary(options)`
+### `journal.aggregate(options)`
 
 Options:
 
@@ -375,7 +375,7 @@ Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the
 API call or its result. Commands without an established text format return the
 API result as JSON. The report commands preserve their human-readable formats.
-`summary`, `balance-history`, and `unrealized-gains` accept `--format json`;
+`aggregate`, `balance-history`, and `unrealized-gains` accept `--format json`;
 `investment-performance` accepts `--json` to return every API field. API option
 names use kebab case on the command line; for example, `withValuationValue` is
 `--with-valuation-value` and `includeTotal` is `--include-total`.

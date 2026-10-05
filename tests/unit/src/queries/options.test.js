@@ -91,7 +91,7 @@ test('shared selections and booleans have consistent validation and duplicate ha
 test('range queries include both endpoints while histories retain opening balances', (t) => {
   const { journal } = createJournal(t);
   const options = { accounts: ['Assets:'], from: '2024-02-29', to: '2024-02-29' };
-  assert.deepEqual(journal.summary(options), [
+  assert.deepEqual(journal.aggregate(options), [
     { account: 'Assets:Cash', quantity: '2', commodity: 'SEK' },
   ]);
   assert.deepEqual(journal.postings(options).map(({ postingDate, amounts }) => ({ postingDate, amounts })), [

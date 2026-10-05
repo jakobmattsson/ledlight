@@ -14,7 +14,7 @@ const { apiCommands, parseArguments, usage } = argumentsModule;
 
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
-    summary: 'summary',
+    aggregate: 'aggregate',
     balanceHistoryReport: 'balance-history',
     unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
@@ -30,8 +30,8 @@ test('defines one CLI command for every journal operation', () => {
 test('fails when a locally declared API input has no actual CLI option', () => {
   const apiDefinitions = {
     ...project.apiDefinitions,
-    summary: {
-      inputs: [...project.apiDefinitions.summary.inputs, 'futureOption'],
+    aggregate: {
+      inputs: [...project.apiDefinitions.aggregate.inputs, 'futureOption'],
     },
   };
   assert.throws(
@@ -39,7 +39,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
       cliConfiguration: { apply: (arguments_) => arguments_ },
       project: { apiDefinitions },
     }),
-    /CLI inputs do not cover the summary API contract/u,
+    /CLI inputs do not cover the aggregate API contract/u,
   );
 });
 
@@ -59,7 +59,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     inputs: ['journalPath', 'from', 'to', 'accounts'],
     outputInputs: ['format'],
   });
-  assert.deepEqual(argumentsModule.apiInputCoverage.summary.outputInputs, ['format']);
+  assert.deepEqual(argumentsModule.apiInputCoverage.aggregate.outputInputs, ['format']);
   assert.deepEqual(
     argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
     ['format', 'total'],
@@ -158,9 +158,9 @@ test('parses listing output formats and unused declaration selection', () => {
   });
 });
 
-test('parses summary report options and output format', () => {
+test('parses aggregate report options and output format', () => {
   assert.deepEqual(parseArguments([
-    'summary',
+    'aggregate',
     '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
@@ -171,7 +171,7 @@ test('parses summary report options and output format', () => {
     '--group-by', 'commodity',
     '--format', 'csv',
   ]), {
-    command: 'summary',
+    command: 'aggregate',
     journalPath: '/journal',
     reportOptions: {
       from: '2024-01-01',
@@ -186,9 +186,9 @@ test('parses summary report options and output format', () => {
   });
 });
 
-test('uses summary defaults when no options are supplied', () => {
-  assert.deepEqual(parseArguments(['summary', '--file', '/journal']), {
-    command: 'summary',
+test('uses aggregate defaults when no options are supplied', () => {
+  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal']), {
+    command: 'aggregate',
     journalPath: '/journal',
     reportOptions: { accounts: [], dateBasis: 'posting', groupBy: 'account' },
     output: { format: 'text' },
@@ -203,8 +203,8 @@ test('uses the CLI configuration file argument when --file is omitted', () => {
     project,
   });
 
-  assert.deepEqual(configuredArguments.parseArguments(['summary']), {
-    command: 'summary',
+  assert.deepEqual(configuredArguments.parseArguments(['aggregate']), {
+    command: 'aggregate',
     journalPath: '/configured-journal',
     reportOptions: { accounts: [], dateBasis: 'posting', groupBy: 'account' },
     output: { format: 'text' },
@@ -313,17 +313,17 @@ test('parses investment performance selections and JSON output', () => {
 
 test('maps every remaining API parameter to CLI arguments', () => {
   assert.deepEqual(parseArguments([
-    'summary', '--file', '/journal', '--with-valuation-value', '--format', 'json',
+    'aggregate', '--file', '/journal', '--with-valuation-value', '--format', 'json',
   ]), {
-    command: 'summary',
+    command: 'aggregate',
     journalPath: '/journal',
     reportOptions: {
       accounts: [], dateBasis: 'posting', groupBy: 'account', withValuationValue: true,
     },
     output: { format: 'json' },
   });
-  assert.deepEqual(parseArguments(['summary', '--file', '/journal', '--value', '--include-total']), {
-    command: 'summary',
+  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal', '--value', '--include-total']), {
+    command: 'aggregate',
     journalPath: '/journal',
     reportOptions: {
       accounts: [], dateBasis: 'posting', groupBy: 'account',
@@ -345,7 +345,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
   });
   assert.throws(
     () => parseArguments([
-      'summary', '--file', '/journal', '--format', 'yaml',
+      'aggregate', '--file', '/journal', '--format', 'yaml',
     ]),
     /Allowed choices are text, json, csv/u,
   );
@@ -394,14 +394,14 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['aggregate'],
     ['ledger-transactions', '--file', '/journal'],
     ['print', '--file', '/journal'],
-    ['summary', '--from'],
-    ['summary', '--from', '--value'],
-    ['summary', '--to', '2024-01-01', '--to', '2024-02-01'],
-    ['summary', '--date-basis', 'other'],
-    ['summary', '--date-basis', 'posting', '--date-basis', 'transaction'],
-    ['summary', '--group-by', 'currency'],
-    ['summary', '--unknown'],
-    ['summary', '--file', '/journal', '--account', 'Assets:Cash'],
+    ['aggregate', '--from'],
+    ['aggregate', '--from', '--value'],
+    ['aggregate', '--to', '2024-01-01', '--to', '2024-02-01'],
+    ['aggregate', '--date-basis', 'other'],
+    ['aggregate', '--date-basis', 'posting', '--date-basis', 'transaction'],
+    ['aggregate', '--group-by', 'currency'],
+    ['aggregate', '--unknown'],
+    ['aggregate', '--file', '/journal', '--account', 'Assets:Cash'],
     ['investment-performance', '--commodities'],
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
@@ -417,16 +417,13 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /ledlight <command> --help/u);
   assert.match(
     usage(),
-    /raw:\n {2}accounts\s+show used accounts[\s\S]* {2}tags\s+show used tags[\s\S]* {2}commodities\s+show used commodities[\s\S]* {2}prices\s+show market prices[\s\S]* {2}transactions\s+show transactions/u,
+    /raw:\n {2}accounts\s+show accounts[\s\S]* {2}tags\s+show tags[\s\S]* {2}commodities\s+show commodities[\s\S]* {2}prices\s+show prices[\s\S]* {2}transactions\s+show transactions[\s\S]* {2}postings\s+show postings/u,
   );
   assert.match(
     usage(),
-    /reports:\n {2}summary\s+summarize postings[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}unrealized-gains\s+show unrealized investment gains[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /reports:\n {2}aggregate\s+aggregate postings[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}unrealized-gains\s+show unrealized investment gains[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
-  assert.match(
-    usage(),
-    /misc:/u,
-  );
+  assert.doesNotMatch(usage(), /misc:/u);
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\s+show transactions/u);
   assert.doesNotMatch(usage(), /transactions\|print/u);
@@ -435,24 +432,24 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <pattern>/u);
   assert.match(usage(), /--version[\s\S]*--help/u);
-  assert.match(usage('summary'), /^Usage: ledlight summary --file <path> \[options\]/u);
+  assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
   assert.throws(() => usage('print'), /Unknown command: print/u);
-  assert.match(usage('summary'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
-  assert.match(usage('summary'), /--accounts <pattern>.*repeatable/u);
+  assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
+  assert.match(usage('aggregate'), /--accounts <pattern>.*repeatable/u);
   assert.match(
-    usage('summary'),
-    /^Usage: ledlight summary --file <path> \[options\]/u,
+    usage('aggregate'),
+    /^Usage: ledlight aggregate --file <path> \[options\]/u,
   );
   assert.match(
-    usage('summary'),
+    usage('aggregate'),
     /--accounts <pattern>[\s\S]*--group-by <dimension>[\s\S]*--format <format>[\s\S]*--help/u,
   );
   assert.match(
     usage('investment-performance'),
     /Return measures:[\s\S]*Time-weighted return[\s\S]*end of the day[\s\S]*Money-weighted return \(total\)[\s\S]*first to the last[\s\S]*Money-weighted return \(annualized\)[\s\S]*present value/u,
   );
-  assert.match(usage('summary'), /--help\s+show command help/u);
-  assert.doesNotMatch(usage('summary'), /-h, --help/u);
+  assert.match(usage('aggregate'), /--help\s+show command help/u);
+  assert.doesNotMatch(usage('aggregate'), /-h, --help/u);
   assert.doesNotMatch(usage(), /-V, --version/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
 });

@@ -28,7 +28,7 @@ function formatGroupedHelp(command, helper) {
     helper,
   ));
   const defaultSection = [helper.styleTitle('Commands:'), ...defaultCommandList, ''].join('\n');
-  const groupedSection = ['raw', 'reports', 'misc'].flatMap((group) => [
+  const groupedSection = ['raw', 'reports'].flatMap((group) => [
     helper.styleTitle(`${group}:`),
     ...formatCommands(group),
     '',
@@ -127,7 +127,7 @@ module.exports = ({
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
 
     const accounts = registerCommand(
-      program.command('accounts').description('show used accounts'),
+      program.command('accounts').description('show accounts'),
       'accounts',
       'raw',
     );
@@ -141,9 +141,9 @@ module.exports = ({
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
     for (const [name, operation, description] of [
-      ['tags', 'tags', 'show used tags'],
-      ['commodities', 'commodities', 'show used commodities'],
-      ['prices', 'prices', 'show market prices'],
+      ['tags', 'tags', 'show tags'],
+      ['commodities', 'commodities', 'show commodities'],
+      ['prices', 'prices', 'show prices'],
     ]) {
       const command = registerCommand(
         program.command(name).description(description), operation, 'raw',
@@ -195,23 +195,23 @@ module.exports = ({
     addOutputValueOption(postings, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
-    const summary = registerCommand(
-      program.command('summary').description('summarize postings'),
-      'summary',
+    const aggregate = registerCommand(
+      program.command('aggregate').description('aggregate postings'),
+      'aggregate',
       'reports',
     );
-    addJournal(summary);
-    addDateOption(summary, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
-    addDateOption(summary, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
-    addAccountPatterns(summary); addDateBasisOption(summary);
-    addValueOption(summary, '--group-by <dimension>', 'group totals by account or commodity', {
+    addJournal(aggregate);
+    addDateOption(aggregate, '--from <date>', 'include entries on or after YYYY-MM-DD', 'from');
+    addDateOption(aggregate, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
+    addAccountPatterns(aggregate); addDateBasisOption(aggregate);
+    addValueOption(aggregate, '--group-by <dimension>', 'group totals by account or commodity', {
       choices: ['account', 'commodity'], defaultValue: 'account', apiInput: 'groupBy',
     });
-    addBooleanOption(summary, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
-    addBooleanOption(summary, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
-    addBooleanOption(summary, '--invert', 'invert the sign of report amounts', 'invert');
-    addBooleanOption(summary, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
-    addOutputValueOption(summary, '--format <format>', 'select the output format', {
+    addBooleanOption(aggregate, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
+    addBooleanOption(aggregate, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
+    addBooleanOption(aggregate, '--invert', 'invert the sign of report amounts', 'invert');
+    addBooleanOption(aggregate, '--include-total', 'append an exact total (requires --value)', 'includeTotal');
+    addOutputValueOption(aggregate, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
 
@@ -368,7 +368,7 @@ module.exports = ({
       from: options.from, to: options.to, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
-    if (commandName === 'summary') {
+    if (commandName === 'aggregate') {
       Object.assign(reportOptions, compact({
         inValuationCommodity: options.value || undefined,
         withValuationValue: options.withValuationValue || undefined,
