@@ -113,7 +113,12 @@ test('returns newest-first transactions and groups amounts by posting', (t) => {
       { quantity: '2', commodity: 'FUND', balance: '2' },
     ],
   }]);
-  assert.equal(project.accountTransactions({
+  const combined = project.accountTransactions({
     accounts: ['^Assets:Closed$', '^Assets:Closed:Child$'],
-  }).length, 4);
+  });
+  assert.equal(combined.length, 4);
+  assert.equal(combined.find(({ description }) => description === 'Deferred posting')
+    .postings[0].amounts[0].balance, '1');
+  assert.equal(combined.find(({ description }) => description === 'Child account activity')
+    .postings[0].amounts[0].balance, '1');
 });

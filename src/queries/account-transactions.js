@@ -2,7 +2,6 @@
 
 module.exports = ({
   accountFilter: { accountFilter },
-  decimal: { addDecimals, formatDecimal, parseDecimal },
   apiOptions: { parseOptions },
   zod: { z },
 }) => {
@@ -25,7 +24,8 @@ module.exports = ({
         postings.report_date AS postingDate,
         amounts.position AS amountPosition,
         amounts.quantity,
-        amounts.commodity
+        amounts.commodity,
+        amounts.running_balance AS balance
       FROM transactions
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
       JOIN postings ON postings.transaction_id = transactions.entry_id
@@ -36,13 +36,7 @@ module.exports = ({
     `).all(...filter.parameters);
     const transactions = [];
     const byId = new Map();
-    const balances = new Map();
     for (const row of rows) {
-      const balance = addDecimals(
-        balances.get(row.commodity) ?? parseDecimal('0'),
-        parseDecimal(row.quantity),
-      );
-      balances.set(row.commodity, balance);
       let transaction = byId.get(row.transactionId);
       if (!transaction) {
         transaction = {
@@ -63,7 +57,7 @@ module.exports = ({
       posting.amounts.push({
         quantity: row.quantity,
         commodity: row.commodity,
-        balance: formatDecimal(balance),
+        balance: row.balance,
       });
     }
     return transactions

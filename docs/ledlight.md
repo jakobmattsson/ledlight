@@ -257,6 +257,9 @@ and hashing.
 The grammar requires commodities on explicit posting amounts, lot costs,
 transaction costs, balance assignments, balance assertions, and prices.
 Implicit postings infer their resolved commodity during accounting validation.
+Each resolved amount also stores the exact running balance for its posting
+account and commodity. These balances are materialized in posting-date and
+journal order during the full database rebuild.
 Explicit transactions must balance, allowing Ledger-style two-commodity
 exchanges and the precision tolerance associated with calculated unit costs.
 When a posting has both a lot cost and a transaction cost, its lot cost

@@ -7,6 +7,7 @@ module.exports = ({
   postingResolver: { PostingResolver },
   journalValidator: { validateJournal },
   journalValuationCommodity: { valuationCommodityFromJournal },
+  postingBalanceMaterializer: { materializePostingBalances },
   valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },
 }) => {
@@ -295,6 +296,7 @@ module.exports = ({
           );
         });
 
+        counters.postingBalance = materializePostingBalances(database);
         counters.valuationPrice = materializeValuationPrices(database, valuationCommodity);
 
         return counters;
@@ -309,6 +311,7 @@ module.exports = ({
         transactions: storableEntries.filter((entry) => entry.type === 'transaction').length,
         postings: counters.posting,
         postingAmounts: counters.resolvedAmount,
+        postingBalances: counters.postingBalance,
         prices: storableEntries.filter((entry) => entry.type === 'price').length,
         valuationCommodity,
         valuationPrices: counters.valuationPrice,

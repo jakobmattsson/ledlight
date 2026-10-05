@@ -178,7 +178,7 @@ Returns newest-first transactions containing postings to matching accounts.
 `accounts` is a non-empty array and matches any supplied pattern.
 Each transaction contains identity and description fields plus `postings`.
 Each posting contains `postingDate` and exact amount rows with the running
-`balance` for that commodity.
+`balance` for that posting's account and commodity.
 
 ### `journal.accounts({ accounts, usage })`
 
@@ -276,6 +276,11 @@ the nullable source `amount`, lot cost, transaction cost, balance assignment,
 and balance assertion, and every resolved amount. It also contains the parent
 transaction's `transactionId`, `transactionDate`, `description`,
 `transactionComment`, and ordered `transactionNotes`.
+
+Each resolved amount is `{ quantity, commodity, balance }`. `balance` is the
+exact running balance for that posting's account and commodity after applying
+the amount. Balances are materialized in posting-date and journal order when
+the journal database is rebuilt.
 
 The `postings` CLI command supports the same filters and defaults to `--format
 text`. `--format json` preserves the nested API result. `--format csv` emits one
