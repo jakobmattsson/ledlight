@@ -178,6 +178,8 @@ test('delegates report behavior to the public Node API and only formats results'
       operation: 'summary',
       options: {
         accounts: ['Assets:'],
+        dateBasis: 'posting',
+        groupBy: 'account',
         inValuationCommodity: true,
         invert: true,
         includeTotal: true,
@@ -187,13 +189,16 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'openJournal', journalPath: '/journal' },
     {
       operation: 'summary',
-      options: { accounts: ['Assets:'], groupBy: 'commodity', includeTotal: false },
+      options: {
+        accounts: ['Assets:'], dateBasis: 'posting', groupBy: 'commodity', includeTotal: false,
+      },
     },
     { operation: 'openJournal', journalPath: '/journal' },
     {
       operation: 'balanceHistoryReport',
       options: {
         accounts: [],
+        dateBasis: 'posting',
         invert: true,
       },
     },
@@ -204,7 +209,7 @@ test('delegates report behavior to the public Node API and only formats results'
     },
     { operation: 'commodities', options: { usage: 'all' } },
     { operation: 'openJournal', journalPath: '/journal' },
-    { operation: 'unrealizedGains', options: { accounts: [] } },
+    { operation: 'unrealizedGains', options: { accounts: [], dateBasis: 'posting' } },
   ]);
 });
 

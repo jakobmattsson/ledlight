@@ -103,7 +103,7 @@ module.exports = ({
     addValueOption(command, flags, description, { apiInput });
   const addDateBasisOption = (command) => addValueOption(
     command, '--date-basis <basis>', 'select posting or transaction dates',
-    { choices: ['posting', 'transaction'], apiInput: 'dateBasis' },
+    { choices: ['posting', 'transaction'], defaultValue: 'posting', apiInput: 'dateBasis' },
   );
   const addAccountPatterns = (command) => addValueOption(
     command, '--accounts <pattern>', 'include accounts matching a pattern (repeatable)',
@@ -112,7 +112,7 @@ module.exports = ({
   const addUsageSelection = (command, noun) => {
     const option = new Option(
       '--usage <selection>', `select all, used, or unused ${noun}`,
-    ).choices(['all', 'used', 'unused']);
+    ).choices(['all', 'used', 'unused']).default('used');
     option.argParser(singleValue('--usage'));
     option.apiInput = 'usage';
     return command.addOption(option);
@@ -236,7 +236,7 @@ module.exports = ({
     addDateOption(summary, '--to <date>', 'include entries on or before YYYY-MM-DD', 'to');
     addAccountPatterns(summary); addDateBasisOption(summary);
     addValueOption(summary, '--group-by <dimension>', 'group totals by account or commodity', {
-      choices: ['account', 'commodity'], apiInput: 'groupBy',
+      choices: ['account', 'commodity'], defaultValue: 'account', apiInput: 'groupBy',
     });
     addBooleanOption(summary, '--value', 'convert amounts to the valuation commodity', 'inValuationCommodity');
     addBooleanOption(summary, '--with-valuation-value', 'add the valuation value to commodity rows', 'withValuationValue');
@@ -364,14 +364,14 @@ module.exports = ({
     if (commandName === 'accounts') {
       return {
         ...common,
-        options: { accounts: options.accounts || [], usage: options.usage || 'used' },
+        options: { accounts: options.accounts || [], usage: options.usage },
         output: { details: options.details || false, format: options.format },
       };
     }
     if (['tags', 'commodities'].includes(commandName)) {
       return {
         ...common,
-        options: { usage: options.usage || 'used' },
+        options: { usage: options.usage },
         output: {
           ...(commandName === 'commodities' ? { details: options.details || false } : {}),
           format: options.format,

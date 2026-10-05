@@ -72,6 +72,24 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   });
 });
 
+test('documents the effective default for every enum option in command help', () => {
+  for (const command of Object.values(apiCommands)) {
+    const parsed = parseArguments([
+      command, '--file', '/journal',
+      ...(command === 'reconciliation-entries' ? ['--account', 'Assets:'] : []),
+    ]);
+    const options = { ...parsed.options, ...parsed.reportOptions, ...parsed.output };
+    const helpOptions = usage(command).split(/\n(?= {2}--)/u).slice(1);
+    for (const helpOption of helpOptions.filter((entry) => entry.includes('(choices:'))) {
+      const flag = /^ {2}--([\w-]+)/u.exec(helpOption)[1];
+      const input = flag.replace(/-([a-z])/gu, (_, letter) => letter.toUpperCase());
+      const documentedDefault = /default:\s+"([^"]+)"/u.exec(helpOption);
+      assert.ok(documentedDefault, `${command} --${flag} must document its default`);
+      assert.equal(documentedDefault[1], options[input], `${command} --${flag}`);
+    }
+  }
+});
+
 test('parses account output options without adding API options', () => {
   assert.deepEqual(parseArguments(['accounts', '--file', '/journal']), {
     command: 'accounts',
@@ -161,6 +179,7 @@ test('parses summary report options and output format', () => {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:', 'Liabilities:'],
+      dateBasis: 'posting',
       inValuationCommodity: true,
       invert: true,
       groupBy: 'commodity',
@@ -173,7 +192,7 @@ test('uses summary defaults when no options are supplied', () => {
   assert.deepEqual(parseArguments(['summary', '--file', '/journal']), {
     command: 'summary',
     journalPath: '/journal',
-    reportOptions: { accounts: [] },
+    reportOptions: { accounts: [], dateBasis: 'posting', groupBy: 'account' },
     output: { format: 'text' },
   });
 });
@@ -216,7 +235,7 @@ test('uses the CLI configuration file argument when --file is omitted', () => {
   assert.deepEqual(configuredArguments.parseArguments(['summary']), {
     command: 'summary',
     journalPath: '/configured-journal',
-    reportOptions: { accounts: [] },
+    reportOptions: { accounts: [], dateBasis: 'posting', groupBy: 'account' },
     output: { format: 'text' },
   });
 });
@@ -271,7 +290,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
   assert.deepEqual(parseArguments(['unrealized-gains', '--file', '/journal']), {
     command: 'unrealized-gains',
     journalPath: '/journal',
-    reportOptions: { accounts: [] },
+    reportOptions: { accounts: [], dateBasis: 'posting' },
     output: { format: 'text', total: false },
   });
   assert.deepEqual(
@@ -327,13 +346,18 @@ test('maps every remaining API parameter to CLI arguments', () => {
   ]), {
     command: 'summary',
     journalPath: '/journal',
-    reportOptions: { accounts: [], withValuationValue: true },
+    reportOptions: {
+      accounts: [], dateBasis: 'posting', groupBy: 'account', withValuationValue: true,
+    },
     output: { format: 'json' },
   });
   assert.deepEqual(parseArguments(['summary', '--file', '/journal', '--value', '--include-total']), {
     command: 'summary',
     journalPath: '/journal',
-    reportOptions: { accounts: [], inValuationCommodity: true, includeTotal: true },
+    reportOptions: {
+      accounts: [], dateBasis: 'posting', groupBy: 'account',
+      inValuationCommodity: true, includeTotal: true,
+    },
     output: { format: 'text' },
   });
   assert.deepEqual(parseArguments([
@@ -344,6 +368,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
     journalPath: '/journal',
     reportOptions: {
       accounts: ['Assets:Fund', 'Assets:Cash'],
+      dateBasis: 'posting',
     },
     output: { format: 'json' },
   });
