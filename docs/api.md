@@ -235,6 +235,18 @@ interval do not fail the report unless needed to value its opening positions.
 Automatic commodity discovery includes positions on or before `to`, including
 historical positions needed for the opening balance.
 
+For annotated trades, contributions use acquisition lot costs and sale prices
+(`@`/`@@`), converted to the default commodity on the posting date. Moving the
+cash counterpart between accounts does not change an instrument's return.
+Separately expensed fees outside the selected holdings are excluded; capitalized
+fees and fees already netted into the sale annotation remain in the trade value.
+Selected cash movements contribute their own signed values, so purchases funded
+by selected portfolio cash do not create additional contributions. Paired
+transfers and splits within the selection on the same posting date create no
+external flow; transfers across the account selection use market value.
+Incomplete, unannotated trades retain the market/counterposting fallback and
+their ingestion warnings; account-independent trade returns require annotations.
+
 Without `from`, the period starts at the first selected posting. Daily points
 end at the latest selected posting or journal price, capped by `to`; an explicit
 later `to` remains the terminal date for return calculations without adding

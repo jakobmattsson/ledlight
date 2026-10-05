@@ -283,10 +283,14 @@ the later declaration. The later declaration is not stored; the first
 declaration and its metadata remain authoritative. Unique database constraints
 on declaration names enforce the same invariant independently of validation.
 
-Explicit non-zero postings in commodities other than the journal default must
+Non-zero postings in commodities other than the journal default must
 also describe their trade direction unambiguously. A positive quantity must
 have a lot cost (`{}` or `{{}}`) and no transaction price. A negative quantity
-must have both a lot cost and a transaction price (`@` or `@@`). Unit and total
+must have both a lot cost and a transaction price (`@` or `@@`). The same rules
+apply after resolving implicit postings and balance assignments. Assignment
+checks use the actual change in holdings, not the target balance. Missing
+annotations produce `INVALID_COMMODITY_TRADE` even when a report can still
+calculate market value; an unchanged balance adds no trade warning. Unit and total
 annotations may be combined freely. As a Ledger-compatible special case, a
 positive quantity may have both annotations when both prices are zero. This
 represents a cost-free acquisition that still needs an explicit zero transaction
@@ -562,6 +566,17 @@ command, independent of report dates or account filters:
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
   at their recorded acquisition costs.
+- `SALE_PROCEEDS_MISMATCH` identifies a transaction whose sale prices cannot be
+  reconciled with its monetary postings. Sales use `@`/`@@`, simultaneous purchases
+  use their lot costs, and internal transfers and splits are excluded. The net
+  settlement must equal a subset of the transaction's default-currency postings,
+  allowing half the declared monetary step for rounding. This accommodates
+  separate fees, net proceeds, and realized losses without assuming account names.
+  Because accounts have no type metadata, this is a necessary consistency check,
+  not proof of correct classification: an accidental matching subset can pass.
+  Cross-currency trades and annotated monetary postings are not checked. The
+  subset search stops after 100,000 distinct states; an inconclusive search does
+  not emit a mismatch warning.
 
 The validator uses exact rational arithmetic, including fractional allocations.
 A recorded total disposal cost may be rounded either down or up to the adjacent

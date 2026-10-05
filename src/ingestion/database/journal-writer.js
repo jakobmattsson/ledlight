@@ -6,7 +6,7 @@ module.exports = ({
   decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
   postingResolver: { PostingResolver },
   globalAccountingValidator: { validateGlobalAccounting },
-  journalValidator: { validateJournal },
+  journalValidator: { validateJournal, validateResolvedCommodityTrades },
   journalValuationCommodity: { valuationCommodityFromJournal },
   postingBalanceMaterializer: { materializePostingBalances },
   valuationPriceMaterializer: { materializeValuationPrices },
@@ -226,7 +226,10 @@ module.exports = ({
     for (const entry of journal.entries) {
       if (validation.invalidEntries.has(entry) || entry.type !== 'transaction') continue;
       const resolved = postingResolver.resolve(entry);
-      if (resolved) resolvedTransactions.set(entry, resolved);
+      if (resolved) {
+        validateResolvedCommodityTrades(entry, resolved, valuationCommodity, validation.warnings);
+        resolvedTransactions.set(entry, resolved);
+      }
     }
     const storableEntries = journal.entries.filter((entry) =>
       !validation.invalidEntries.has(entry) &&
