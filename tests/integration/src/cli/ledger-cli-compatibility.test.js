@@ -307,8 +307,8 @@ for (const scenario of priceScenarios) {
       '--file', journalPath, '--case', 'prices', '--ledger-bin', ledgerBinary,
     ]), 'PASS prices\n');
 
-    const rows = scenario.expected.map(([date, baseCommodity, quoteQuantity, comment]) => ({
-      date, baseCommodity, quoteQuantity, quoteCommodity: 'SEK', comment,
+    const rows = scenario.expected.map(([date, baseCommodity, quoteQuantity, comment, quoteCommodity]) => ({
+      date, baseCommodity, quoteQuantity, quoteCommodity: quoteCommodity ?? 'SEK', comment,
     }));
     assert.deepEqual(JSON.parse(exactCommandOutput(directory, process.execPath, [
       cliPath, 'prices', '--file', journalPath, '--format', 'json',
@@ -318,7 +318,7 @@ for (const scenario of priceScenarios) {
     ]);
     assert.equal(csv, 'date,baseCommodity,quoteQuantity,quoteCommodity,comment\n' +
       rows.map((row) =>
-        `${row.date},${row.baseCommodity},${row.quoteQuantity},SEK,${row.comment ?? ''}\n`).join(''));
+        `${row.date},${row.baseCommodity},${row.quoteQuantity},${row.quoteCommodity},${row.comment ?? ''}\n`).join(''));
   });
 }
 

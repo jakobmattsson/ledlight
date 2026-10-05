@@ -56,7 +56,7 @@ module.exports = () => {
     });
   }
 
-  function divideDecimals(left, right, scale) {
+  function divideRoundedDecimals(left, right, scale, tiesToEven) {
     if (right.coefficient === 0n) throw new RangeError('Cannot divide by zero');
     if (!Number.isInteger(scale) || scale < 0) {
       throw new RangeError('Decimal scale must be a non-negative integer');
@@ -68,9 +68,16 @@ module.exports = () => {
     const absoluteNumerator = numerator < 0n ? -numerator : numerator;
     const absoluteDenominator = denominator < 0n ? -denominator : denominator;
     let coefficient = absoluteNumerator / absoluteDenominator;
-    if ((absoluteNumerator % absoluteDenominator) * 2n >= absoluteDenominator) coefficient += 1n;
+    const remainderTwice = (absoluteNumerator % absoluteDenominator) * 2n;
+    if (remainderTwice > absoluteDenominator ||
+        (remainderTwice === absoluteDenominator && (!tiesToEven || coefficient % 2n !== 0n))) {
+      coefficient += 1n;
+    }
     return normalizeDecimal({ coefficient: negative ? -coefficient : coefficient, scale });
   }
+
+  const divideDecimals = (left, right, scale) => divideRoundedDecimals(left, right, scale, false);
+  const divideDecimalsHalfEven = (left, right, scale) => divideRoundedDecimals(left, right, scale, true);
 
   function negateDecimal(decimal) {
     return { coefficient: -decimal.coefficient, scale: decimal.scale };
@@ -141,6 +148,7 @@ module.exports = () => {
     addDecimals,
     compareDecimals,
     divideDecimals,
+    divideDecimalsHalfEven,
     formatDecimal,
     formatDecimalFixed,
     multiplyDecimals,
