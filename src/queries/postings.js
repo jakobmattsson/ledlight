@@ -2,23 +2,14 @@
 
 module.exports = ({
   accountFilter: { accountFilter },
-  apiOptions: { parseOptions },
+  apiOptions: { accounts, dateRange, validateDateRange, parseOptions },
   zod: { z },
 }) => {
 
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' })).default([]),
-    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
-    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
-  }).superRefine((input, context) => {
-    if (input.from && input.to && input.from > input.to) {
-      context.addIssue({
-        code: 'custom',
-        message: `--from date ${input.from} is after --to date ${input.to}`,
-        path: ['from'],
-      });
-    }
-  });
+    accounts,
+    ...dateRange,
+  }).superRefine(validateDateRange);
 
   function queryPostings(database, options, _caches) {
     const { accounts, from, to } = parseOptions(optionsSchema, options, 'postings');

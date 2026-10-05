@@ -104,14 +104,10 @@ module.exports = ({
     command, '--accounts <pattern>', 'include accounts matching a pattern (repeatable)',
     { repeatable: true, apiInput: 'accounts' },
   );
-  const addUsageSelection = (command, noun) => {
-    const option = new Option(
-      '--usage <selection>', `select all, used, or unused ${noun}`,
-    ).choices(['all', 'used', 'unused']).default('used');
-    option.argParser(singleValue('--usage'));
-    option.apiInput = 'usage';
-    return command.addOption(option);
-  };
+  const addUsageSelection = (command, noun) => addValueOption(
+    command, '--usage <selection>', `select all, used, or unused ${noun}`,
+    { choices: ['all', 'used', 'unused'], defaultValue: 'used', apiInput: 'usage' },
+  );
   const addJournal = (command) => addValueOption(
     command, '--file <path>', 'read the journal rooted at this file',
     { required: true, apiInput: 'journalPath' },

@@ -10,7 +10,7 @@ module.exports = ({
     subtractDecimals,
   },
   accountFilter: { accountFilter },
-  apiOptions: { parseOptions },
+  apiOptions: { accounts, dateBasis, dateOption, parseOptions },
   valuationRates: { queryValuationRates },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
@@ -18,9 +18,9 @@ module.exports = ({
 
   const ZERO = parseDecimal('0');
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1)).default([]),
-    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
-    at: z.iso.date({ error: 'Invalid --at date' }).optional(),
+    accounts,
+    dateBasis,
+    at: dateOption,
   });
 
   function reportFilter(options, valuationCommodity) {

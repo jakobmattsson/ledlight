@@ -71,7 +71,7 @@ module.exports = () => {
       };
     }
     const effectiveFrom = options.from ?? values[0].date;
-    const effectiveTo = options.to ?? values.at(-1).date;
+    const effectiveTo = options.to ?? [effectiveFrom, values.at(-1).date].sort().at(-1);
     const previous = [...values].reverse().find((row) => row.date < effectiveFrom);
     const periodValues = values.filter((row) => row.date >= effectiveFrom && row.date <= effectiveTo);
     const openingValue = previous?.value ?? 0;

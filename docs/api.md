@@ -8,12 +8,64 @@ const { openJournal } = require('ledlight');
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
-API option objects reject unknown properties and values of the wrong type.
+API option objects reject unknown properties and values of the wrong type,
+including `null`. Omit the options argument or pass `{}` to use defaults, except
+for `reconciliationEntries`, which requires `accounts`. Even `prices`, which
+has no supported options, rejects supplied options rather than ignoring them.
 
 All account selections use literal substring patterns. A leading `^` anchors a
 pattern to the start of the account name and a trailing `$` anchors it to the
 end. Using both selects one exact account. No other regular-expression syntax
 is recognized; all other characters are matched literally.
+
+## Query parameter conventions
+
+All dates must be valid calendar dates in `YYYY-MM-DD` format; timestamps,
+JavaScript `Date` objects, and `null` are rejected. `from` and `to` are inclusive,
+may be supplied independently, and must satisfy `from <= to` when both are
+present. `at` is an inclusive snapshot cutoff, using the same date validation.
+No omitted date defaults to the current day.
+
+Selection arrays contain non-empty strings. Exact duplicate selections are
+removed, preserving their first occurrence. Empty optional arrays mean no
+restriction. Commodity selections match exact symbols; account selections use
+the shared pattern syntax above. Boolean options accept only booleans and
+all default to `false`.
+
+| Query | Date inputs and meaning | Other inputs |
+| --- | --- | --- |
+| `summary` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `groupBy`, `inValuationCommodity`, `withValuationValue`, `invert`, `includeTotal` |
+| `balanceHistoryReport` | `from`, `to`: select daily closing balances, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `invert` |
+| `unrealizedGains` | `at`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
+| `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
+| `postings` | `from`, `to`: filter posting dates. | `accounts` |
+| `transactions` | No date filter; results include transaction and posting dates. | `accounts`, `id`, `order`, `page`, `pageSize` |
+| `reconciliationEntries` | No date filter; rows use posting dates. | Required `accounts`, `related` |
+| `accounts` | No date filter. | `accounts`, `usage` |
+| `commodities` | No date filter. | `usage` |
+| `tags` | No date filter. | `usage` |
+| `prices` | No date filter; returns all effective price dates. | None |
+
+`dateBasis: 'transaction'` changes the date used for positions or activity;
+market prices always retain their own price dates. Queries without `dateBasis`
+reject it. Adding date filters to more queries or adding date-basis selection to
+`postings` and `investmentPerformance` would extend the public contract.
+
+Existing API/CLI differences are deliberate compatibility constraints:
+
+- Declaration queries default to `usage: 'all'` in the API and `--usage used`
+  in the CLI, where the default matches Ledger.
+- Reconciliation uses the CLI spelling `--account`, while other commands use
+  `--accounts`; both map to the API's `accounts` array.
+- `inValuationCommodity` maps to `--value`. Investment performance uses `--json`,
+  while other formatted reports use `--format json`. Reconciliation emits JSON.
+- Transaction `order` selects forward (`oldest`) or reverse (`newest`) journal
+  order, not a date sort. The API paginates by default; CLI text output includes
+  all matching transactions unless pagination is explicitly requested.
+
+These spellings and defaults remain supported. A future naming migration should
+provide aliases before removing existing spellings. `at` remains distinct from
+`from`/`to` because unrealized gains describe a snapshot rather than period activity.
 
 ## Errors
 
@@ -111,8 +163,11 @@ accounts, and retain exact zero balances. `withValuationValue` adds an exact
 
 ### `journal.balanceHistoryReport(options)`
 
-Options are `from`, `to`, `accounts`, `dateBasis`, and `invert`, with the same
-meanings as in `summary`.
+Options are `from`, `to`, `accounts`, `dateBasis`, and `invert`. The date bounds
+select output days; postings before `from` still contribute to every closing
+balance. Each day uses that day's valuation prices. History ends at the latest
+posting/transaction date (according to `dateBasis`) or price date in the journal,
+or at `to` if earlier. No rows are synthesized beyond the available history.
 
 Returns daily rows sorted by date:
 
@@ -145,6 +200,20 @@ Options are `from`, `to`, `accounts`, `commodities`, and
 `excludeCommodities`. The three selections are arrays of non-empty strings.
 Account values use the shared account-pattern syntax. Commodity inclusion and
 exclusion cannot overlap.
+
+The interval is inclusive and uses posting dates. Earlier positions contribute
+to the opening value, which is the closing value immediately before `from` (or
+the last available value if `from` is beyond the available history). Only cash
+flows inside the interval affect contributions. Missing prices outside the
+interval do not fail the report unless needed to value its opening positions.
+Automatic commodity discovery includes positions on or before `to`, including
+historical positions needed for the opening balance.
+
+Without `from`, the period starts at the first selected posting. Daily points
+end at the latest selected posting or journal price, capped by `to`; an explicit
+later `to` remains the terminal date for return calculations without adding
+synthetic daily points. If `from` is beyond available history and `to` is
+omitted, `to` equals `from` and the daily points are empty.
 
 The result contains:
 
@@ -242,7 +311,11 @@ is an array that selects transactions containing a posting matching any pattern
 while retaining all postings in each selected transaction. `id` selects the transaction with
 that positive integer ID. `order` is `newest` or `oldest` and defaults to
 `oldest`; `page` defaults to `1`, while `pageSize` defaults to `100`. Page values
-and page sizes are positive integers.
+and page sizes are positive integers. `id`, `page`, and `pageSize` also accept
+canonical decimal integer strings such as `'2'`, allowing the CLI to pass them
+without coercing other input types. Zero, fractions, unsafe integers, whitespace,
+and leading zeros are rejected. Pages beyond the result are clamped to the last
+page (or page `1` for an empty result).
 The result contains `order`, the selected `page`, `pageSize`,
 `totalTransactions`, `totalPages`, and `transactions`. Transactions include
 their ordered note text. Postings retain their nullable source `amount`, lot
@@ -304,7 +377,7 @@ Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the
 API call or its result. Commands without an established text format return the
 API result as JSON. The report commands preserve their human-readable formats.
-`balance`, `balance-history`, and `unrealized-gains` accept `--format json`;
+`summary`, `balance-history`, and `unrealized-gains` accept `--format json`;
 `investment-performance` accepts `--json` to return every API field. API option
 names use kebab case on the command line; for example, `withValuationValue` is
 `--with-valuation-value` and `includeTotal` is `--include-total`.

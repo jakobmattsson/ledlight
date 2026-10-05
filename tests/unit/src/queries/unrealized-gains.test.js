@@ -75,7 +75,7 @@ test('rejects unsupported unrealized-gain options and invalid dates', (t) => {
   assert.throws(() => unrealizedGains(databasePath, { unknown: true }),
     /Unknown unrealizedGains option: unknown/u);
   assert.throws(() => unrealizedGains(databasePath, { at: '2024-02-30' }),
-    /Invalid --at date/u);
+    /at must be a valid date/u);
   assert.throws(() => unrealizedGains(databasePath, { from: '2024-01-01' }),
     /Unknown unrealizedGains option: from/u);
   assert.throws(() => unrealizedGains(databasePath, { to: '2024-01-01' }),

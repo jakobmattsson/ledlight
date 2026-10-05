@@ -2,12 +2,12 @@
 
 module.exports = ({
   accountFilter: { accountFilter },
-  apiOptions: { parseOptions },
+  apiOptions: { accounts, usage, parseOptions },
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' })).default([]),
-    usage: z.enum(['all', 'used', 'unused']).default('all'),
+    accounts,
+    usage,
   });
 
   function queryAccounts(database, options, _caches) {

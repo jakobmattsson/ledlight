@@ -464,3 +464,13 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /-V, --version/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
 });
+
+test('validates usage choices and repeated values consistently with other enum options', () => {
+  for (const command of ['accounts', 'commodities', 'tags']) {
+    assert.throws(() => parseArguments([command, '--file', '/journal', '--usage', 'invalid']),
+      /Allowed choices are all, used, unused/u);
+    assert.throws(() => parseArguments([
+      command, '--file', '/journal', '--usage', 'all', '--usage', 'used',
+    ]), /--usage may only be specified once/u);
+  }
+});

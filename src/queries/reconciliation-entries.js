@@ -2,13 +2,12 @@
 
 module.exports = ({
   accountFilter: { accountMatches },
-  apiOptions: { parseOptions },
+  apiOptions: { booleanOption, requiredAccounts, parseOptions },
   zod: { z },
 }) => {
-  const account = z.string().min(1, { error: 'must be a non-empty string' });
   const optionsSchema = z.strictObject({
-    accounts: z.array(account).min(1, { error: 'must contain at least one account' }),
-    related: z.boolean().optional(),
+    accounts: requiredAccounts,
+    related: booleanOption,
   });
 
   function toEntry(row, accountName, related, rowNumber) {
@@ -26,7 +25,7 @@ module.exports = ({
   }
 
   function queryReconciliationEntries(database, options, _caches) {
-    const { accounts, related = false } = parseOptions(
+    const { accounts, related } = parseOptions(
       optionsSchema, options, 'reconciliationEntries',
     );
     const rows = database.prepare(`

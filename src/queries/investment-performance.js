@@ -3,29 +3,18 @@
 module.exports = ({
   accountFilter: { accountFilter },
   publicErrors: { createError, errorCodes },
-  apiOptions: { parseOptions },
+  apiOptions: { accounts, dateRange, stringList, validateDateRange, parseOptions },
   investmentReturns: { calculatePerformance },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 
-  const uniqueStringList = z.array(z.string().min(1))
-    .default([])
-    .transform((values) => [...new Set(values)]);
   const optionsSchema = z.strictObject({
-    accounts: uniqueStringList,
-    commodities: uniqueStringList,
-    excludeCommodities: uniqueStringList,
-    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
-    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
-  }).superRefine((input, context) => {
-    if (input.from && input.to && input.from > input.to) {
-      context.addIssue({
-        code: 'custom',
-        message: `--from date ${input.from} is after --to date ${input.to}`,
-        path: ['from'],
-      });
-    }
+    accounts,
+    commodities: stringList.default([]),
+    excludeCommodities: stringList.default([]),
+    ...dateRange,
+  }).superRefine(validateDateRange).superRefine((input, context) => {
     if (input.commodities.some((commodity) => input.excludeCommodities.includes(commodity))) {
       context.addIssue({
         code: 'custom',
@@ -36,8 +25,8 @@ module.exports = ({
 
   function selectedCommodities(database, options) {
     if (options.commodities.length > 0) return options.commodities;
-    const clauses = [];
-    const parameters = [];
+    const clauses = ["p.report_date <= COALESCE(?, '9999-12-31')"];
+    const parameters = [options.to ?? null];
     if (options.accounts.length > 0) {
       const filter = accountFilter('p.account', options.accounts);
       clauses.push(filter.sql);
@@ -84,8 +73,9 @@ module.exports = ({
       )`;
     const parameters = [
       ...filter.parameters,
-      ...filter.parameters,
       options.to ?? null,
+      ...filter.parameters,
+      options.from ?? null,
     ];
     return database.prepare(`
     WITH RECURSIVE
@@ -127,6 +117,9 @@ module.exports = ({
     FROM positions
     LEFT JOIN valuation_prices
       ON valuation_prices.commodity = positions.commodity AND valuation_prices.date = positions.date
+    WHERE positions.date >= COALESCE(
+      MIN(date(?, '-1 day'), (SELECT value FROM report_end)), '0000-00-00'
+    )
     GROUP BY positions.date
     ORDER BY positions.date
   `).all(...parameters).map((row) => {
@@ -146,7 +139,10 @@ module.exports = ({
       accountParameters.push(...filter.parameters);
     }
     const accountWhere = accountClauses.length > 0 ? `AND ${accountClauses.join(' AND ')}` : '';
-    const parameters = [...commodities, ...commodities, ...accountParameters];
+    const parameters = [
+      ...commodities, ...commodities, ...accountParameters,
+      options.from ?? null, options.to ?? null,
+    ];
     const rows = database.prepare(`
     WITH transaction_values AS (
       SELECT t.entry_id, p.report_date AS date, p.account,
@@ -161,6 +157,8 @@ module.exports = ({
       JOIN transactions AS t ON t.entry_id = p.transaction_id
       LEFT JOIN valuation_prices ON valuation_prices.commodity = r.commodity AND valuation_prices.date = p.report_date
       WHERE 1 = 1 ${accountWhere}
+        AND p.report_date >= COALESCE(?, '0000-00-00')
+        AND p.report_date <= COALESCE(?, '9999-12-31')
       GROUP BY t.entry_id, p.report_date, p.account
     )
     SELECT date,
@@ -188,7 +186,7 @@ module.exports = ({
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const commodities = selectedCommodities(database, reportOptions);
     if (commodities.length === 0) return calculatePerformance([], [], reportOptions, [], valuationCommodity);
-    const values = queryDailyValues(database, { ...reportOptions, from: undefined }, commodities, valuationCommodity);
+    const values = queryDailyValues(database, reportOptions, commodities, valuationCommodity);
     const flows = queryDailyFlows(database, reportOptions, commodities, valuationCommodity);
     return calculatePerformance(values, flows, reportOptions, commodities, valuationCommodity);
   }
