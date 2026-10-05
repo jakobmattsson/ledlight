@@ -143,8 +143,8 @@ module.exports = ({
       commodities(options) {
         return runQuery(queryCommodities, options);
       },
-      prices() {
-        return runQuery(queryPrices, {});
+      prices(options) {
+        return runQuery(queryPrices, options);
       },
       transactions(options) {
         return runQuery(queryTransactions, options);

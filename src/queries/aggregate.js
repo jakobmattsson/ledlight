@@ -9,30 +9,22 @@ module.exports = ({
     parseDecimal,
   },
   accountFilter: { accountFilter },
-  apiOptions: { parseOptions },
+  apiOptions: { accounts, booleanOption, dateBasis, dateRange, validateDateRange, parseOptions },
   valuationRates: { queryValuationRates },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
 
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1)).default([]),
-    dateBasis: z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' }).default('posting'),
-    from: z.iso.date({ error: 'Invalid --from date' }).optional(),
+    accounts,
+    dateBasis,
+    ...dateRange,
     groupBy: z.enum(['account', 'commodity'], { error: 'Invalid groupBy' }).default('account'),
-    includeTotal: z.boolean({ error: 'must be a boolean' }).default(false),
-    inValuationCommodity: z.boolean({ error: 'must be a boolean' }).default(false),
-    invert: z.boolean({ error: 'must be a boolean' }).default(false),
-    to: z.iso.date({ error: 'Invalid --to date' }).optional(),
-    withValuationValue: z.boolean({ error: 'must be a boolean' }).default(false),
-  }).superRefine((input, context) => {
-    if (input.from && input.to && input.from > input.to) {
-      context.addIssue({
-        code: 'custom',
-        message: `--from date ${input.from} is after --to date ${input.to}`,
-        path: ['from'],
-      });
-    }
+    includeTotal: booleanOption,
+    inValuationCommodity: booleanOption,
+    invert: booleanOption,
+    withValuationValue: booleanOption,
+  }).superRefine(validateDateRange).superRefine((input, context) => {
     if (input.inValuationCommodity && input.withValuationValue) {
       context.addIssue({
         code: 'custom',

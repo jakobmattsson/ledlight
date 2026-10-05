@@ -129,3 +129,83 @@ test('calculates annualized XIRR from dated cash flows', () => {
 
   assert.ok(Math.abs(result - 0.1) < 1e-10);
 });
+
+test('limits valuation requirements to the interval and its opening balance', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-performance-interval-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+commodity FUND
+commodity OTHER
+P 2024-01-02 FUND 10 SEK
+P 2024-01-03 FUND 12 SEK
+
+2024-01-01 Acquisition before prices are available
+  Assets:Portfolio  10 FUND
+  Equity:Opening  -10 FUND
+
+2024-01-04 Future acquisition without conversion prices
+  Assets:Portfolio  1 FUND
+  Assets:Portfolio  -1 OTHER
+`);
+  buildDatabase(databasePath, journalPath);
+
+  const options = { accounts: ['Assets:Portfolio'], from: '2024-01-03', to: '2024-01-03' };
+  const result = investmentPerformance(databasePath, options);
+  assert.deepEqual(result.commodities, ['FUND']);
+  assert.equal(result.openingValue, 100);
+  assert.equal(result.endingValue, 120);
+  assert.equal(result.netContributions, 0);
+  assert.equal(result.profitLoss, 20);
+  assert.ok(Math.abs(result.timeWeightedReturn - 0.2) < 1e-12);
+  assert.deepEqual(result.points.map(({ date }) => date), ['2024-01-03']);
+  assert.throws(() => investmentPerformance(databasePath, { ...options, from: '2024-01-02' }),
+    /No price for FUND on or before 2024-01-01/u);
+  assert.throws(() => investmentPerformance(databasePath, { ...options, to: '2024-01-04' }),
+    /No price for OTHER on or before 2024-01-04/u);
+});
+
+test('does not require conversion prices for cash flows before from or after to', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-performance-flows-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+commodity FUND
+commodity OTHER
+P 2024-01-01 FUND 10 SEK
+P 2024-01-02 FUND 11 SEK
+P 2024-01-03 FUND 12 SEK
+
+2024-01-01 Acquisition with unpriced cash flow
+  Assets:Portfolio  10 FUND
+  Assets:Portfolio  -10 OTHER
+
+2024-01-03 Future acquisition with unpriced cash flow
+  Assets:Portfolio  1 FUND
+  Assets:Portfolio  -1 OTHER
+`);
+  buildDatabase(databasePath, journalPath);
+  const result = investmentPerformance(databasePath, {
+    accounts: ['Assets:Portfolio'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02',
+  });
+  assert.equal(result.openingValue, 100);
+  assert.equal(result.endingValue, 110);
+  assert.equal(result.profitLoss, 10);
+  assert.equal(result.netContributions, 0);
+});
+
+test('retains the latest opening balance when from is beyond available history', (t) => {
+  const result = investmentPerformance(buildFixture(t), {
+    accounts: ['Assets:Portfolio'], commodities: ['FUND'], from: '2024-01-10',
+  });
+  assert.equal(result.from, '2024-01-10');
+  assert.equal(result.to, '2024-01-10');
+  assert.equal(result.openingValue, 120);
+  assert.equal(result.endingValue, 120);
+  assert.equal(result.netContributions, 0);
+  assert.deepEqual(result.points, []);
+});

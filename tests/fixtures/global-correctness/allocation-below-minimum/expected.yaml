@@ -1,5 +1,5 @@
 runs:
-  - command: unrealized-gains --at 2024-02-28 --format json
+  - command: unrealized-gains --to 2024-02-28 --format json
     expect:
       exitCode: 0
       result:
@@ -10,7 +10,7 @@ runs:
         - "[IMPOSSIBLE_COST_BASIS] Impossible first sale: Assets:Broker sold 11 FUND with cost 11.99
           USD; allowed range is 12 to 32 USD"
     pendingWarnings: Global accounting diagnostics are not implemented yet.
-  - command: unrealized-gains --at 2024-04-30 --format json
+  - command: unrealized-gains --to 2024-04-30 --format json
     expect:
       exitCode: 0
       result: []

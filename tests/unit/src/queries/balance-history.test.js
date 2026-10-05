@@ -139,11 +139,11 @@ test('rejects invalid intervals and missing historical prices', (t) => {
   const databasePath = buildFixture(t);
   assert.throws(
     () => balanceHistoryReport(databasePath, { from: '2024-02-30' }),
-    /Invalid --from date/u,
+    /from must be a valid date/u,
   );
   assert.throws(
     () => balanceHistoryReport(databasePath, { from: '2024-02-01', to: '2024-01-01' }),
-    /--from date .* is after --to date/u,
+    /from date .* is after to date/u,
   );
   assert.throws(
     () => balanceHistoryReport(databasePath, { dateBasis: 'actual' }),

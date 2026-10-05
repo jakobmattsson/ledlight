@@ -13,7 +13,7 @@ const cliPath = path.resolve(__dirname, '../../src/cli/run.js');
 
 function commandArguments(command) {
   // Fixture commands use this small, explicit grammar; never execute a shell.
-  assert.match(command, /^unrealized-gains --at \d{4}-\d{2}-\d{2} --format json(?: --accounts [\w:.-]+)*$/u);
+  assert.match(command, /^unrealized-gains --to \d{4}-\d{2}-\d{2} --format json(?: --accounts [\w:.-]+)*$/u);
   return command.split(' ');
 }
 

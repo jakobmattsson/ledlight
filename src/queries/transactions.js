@@ -2,7 +2,7 @@
 
 module.exports = ({
   accountFilter: { accountFilter },
-  apiOptions: { parseOptions },
+  apiOptions: { accounts, parseOptions },
   zod: { z },
 }) => {
 
@@ -13,7 +13,7 @@ module.exports = ({
     }, { error: 'must be a positive integer' })
     .transform(Number);
   const optionsSchema = z.strictObject({
-    accounts: z.array(z.string().min(1, { error: 'must be a non-empty string' })).default([]),
+    accounts,
     id: positiveInteger.optional(),
     order: z.enum(['newest', 'oldest'], { error: 'must be newest or oldest' })
       .default('oldest'),

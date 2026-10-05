@@ -100,7 +100,7 @@ test('validates posting query options', (t) => {
   const journal = createProject(t);
 
   assert.throws(() => journal.postings({ from: '2024-02-01', to: '2024-01-01' }),
-    /--from date 2024-02-01 is after --to date 2024-01-01/u);
+    /from date 2024-02-01 is after to date 2024-01-01/u);
   assert.throws(() => journal.postings({ accounts: [''] }),
     /accounts\.0 must be a non-empty string/u);
   assert.throws(() => journal.postings({ unknown: true }),

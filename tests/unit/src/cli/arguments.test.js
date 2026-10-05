@@ -243,7 +243,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
   assert.deepEqual(parseArguments([
     'unrealized-gains',
     '--file', '/journal',
-    '--at', '2024-12-31',
+    '--to', '2024-12-31',
     '--accounts', 'Assets:',
     '--date-basis', 'transaction',
     '--format', 'csv',
@@ -252,7 +252,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
     command: 'unrealized-gains',
     journalPath: '/journal',
     reportOptions: {
-      at: '2024-12-31',
+      to: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction',
     },
@@ -272,7 +272,7 @@ test('parses unrealized gains options and CLI-only output controls', () => {
     () => parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'yaml']),
     /Allowed choices are text, json, csv/u,
   );
-  for (const option of ['--csv', '--json', '--from', '--to']) {
+  for (const option of ['--csv', '--json', '--from', '--at']) {
     assert.throws(
       () => parseArguments(['unrealized-gains', '--file', '/journal', option, '2024-01-01']),
       /Usage:/u,
@@ -401,6 +401,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['aggregate', '--date-basis', 'posting', '--date-basis', 'transaction'],
     ['aggregate', '--group-by', 'currency'],
     ['aggregate', '--unknown'],
+    ['aggregate', '--file', '/journal', '--account', 'Assets:Cash'],
     ['investment-performance', '--commodities'],
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
@@ -451,4 +452,14 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage('aggregate'), /-h, --help/u);
   assert.doesNotMatch(usage(), /-V, --version/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
+});
+
+test('validates usage choices and repeated values consistently with other enum options', () => {
+  for (const command of ['accounts', 'commodities', 'tags']) {
+    assert.throws(() => parseArguments([command, '--file', '/journal', '--usage', 'invalid']),
+      /Allowed choices are all, used, unused/u);
+    assert.throws(() => parseArguments([
+      command, '--file', '/journal', '--usage', 'all', '--usage', 'used',
+    ]), /--usage may only be specified once/u);
+  }
 });

@@ -11,7 +11,7 @@ For example, `allocation-below-minimum/expected.yaml` specifies:
 
 ```yaml
 runs:
-  - command: unrealized-gains --at 2024-02-28 --format json
+  - command: unrealized-gains --to 2024-02-28 --format json
     expect:
       exitCode: 0
       result:
