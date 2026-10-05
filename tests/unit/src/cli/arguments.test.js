@@ -66,7 +66,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   );
   assert.deepEqual(argumentsModule.apiInputCoverage.balanceHistoryReport, {
     command: 'balance-history',
-    inputs: ['journalPath', 'from', 'to', 'accounts', 'dateBasis', 'invert'],
+    inputs: ['journalPath', 'from', 'to', 'accounts', 'dateBasis', 'valuation', 'invert'],
     outputInputs: ['format'],
   });
 });
@@ -177,7 +177,7 @@ test('parses aggregate report options and output format', () => {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:', 'Liabilities:'],
-      dateBasis: 'posting',
+      dateBasis: 'posting', valuation: 'market',
       inValuationCommodity: true,
       invert: true,
       groupBy: 'commodity',
@@ -190,9 +190,24 @@ test('uses aggregate defaults when no options are supplied', () => {
   assert.deepEqual(parseArguments(['aggregate', '--file', '/journal']), {
     command: 'aggregate',
     journalPath: '/journal',
-    reportOptions: { accounts: [], dateBasis: 'posting', groupBy: 'account' },
+    reportOptions: { accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account' },
     output: { format: 'text' },
   });
+});
+
+test('parses valuation choices and explicitly passes the market default', () => {
+  for (const command of ['aggregate', 'balance-history']) {
+    const arguments_ = [command, '--file', '/journal'];
+    assert.equal(parseArguments(arguments_).reportOptions.valuation, 'market');
+    for (const valuation of ['cost', 'market']) {
+      assert.equal(parseArguments([...arguments_, '--valuation', valuation]).reportOptions.valuation, valuation);
+    }
+    assert.throws(() => parseArguments([...arguments_, '--valuation', 'book']),
+      /Allowed choices are cost, market/u);
+    assert.throws(() => parseArguments([...arguments_, '--valuation']), /argument missing/u);
+    assert.throws(() => parseArguments([...arguments_, '--valuation', 'cost', '--valuation', 'market']),
+      /--valuation may only be specified once/u);
+  }
 });
 
 test('uses the CLI configuration file argument when --file is omitted', () => {
@@ -206,7 +221,7 @@ test('uses the CLI configuration file argument when --file is omitted', () => {
   assert.deepEqual(configuredArguments.parseArguments(['aggregate']), {
     command: 'aggregate',
     journalPath: '/configured-journal',
-    reportOptions: { accounts: [], dateBasis: 'posting', groupBy: 'account' },
+    reportOptions: { accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account' },
     output: { format: 'text' },
   });
 });
@@ -228,7 +243,7 @@ test('parses balance history options', () => {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:'],
-      dateBasis: 'transaction',
+      dateBasis: 'transaction', valuation: 'market',
       invert: true,
     },
     output: { format: 'csv' },
@@ -329,7 +344,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
     command: 'aggregate',
     journalPath: '/journal',
     reportOptions: {
-      accounts: [], dateBasis: 'posting', groupBy: 'account', withValuationValue: true,
+      accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account', withValuationValue: true,
     },
     output: { format: 'json' },
   });
@@ -337,7 +352,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
     command: 'aggregate',
     journalPath: '/journal',
     reportOptions: {
-      accounts: [], dateBasis: 'posting', groupBy: 'account',
+      accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account',
       inValuationCommodity: true, includeTotal: true,
     },
     output: { format: 'text' },
@@ -350,7 +365,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
     journalPath: '/journal',
     reportOptions: {
       accounts: ['Assets:Fund', 'Assets:Cash'],
-      dateBasis: 'posting',
+      dateBasis: 'posting', valuation: 'market',
     },
     output: { format: 'json' },
   });

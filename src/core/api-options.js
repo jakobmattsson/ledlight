@@ -12,6 +12,7 @@ module.exports = ({ publicErrors: { createError, errorCodes }, zod: { z } }) => 
   const dateOption = z.iso.date({ error: 'must be a valid date in YYYY-MM-DD format' }).optional();
   const dateRange = { from: dateOption, to: dateOption };
   const usage = z.enum(['all', 'used', 'unused']).default('all');
+  const valuation = z.enum(['cost', 'market'], { error: 'Invalid valuation' }).default('market');
 
   function validateDateRange(input, context) {
     if (input.from && input.to && input.from > input.to) {
@@ -52,6 +53,7 @@ module.exports = ({ publicErrors: { createError, errorCodes }, zod: { z } }) => 
     dateRange,
     stringList,
     usage,
+    valuation,
     validateDateRange,
     parseOptions,
   };

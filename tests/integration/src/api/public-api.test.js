@@ -114,6 +114,50 @@ test('loads SQLite only when a journal is opened', (t) => {
   });
 });
 
+test('selects cost or market valuation consistently through the public API and CLI', (t) => {
+  const { openJournal } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-public-valuation-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000.00 FUND
+account Assets:Fund
+account Equity:Opening
+P 2024-01-01 FUND 150 SEK
+2024-01-01 Buy
+  Assets:Fund  10 FUND {100 SEK}
+  Equity:Opening  -1000 SEK
+`);
+  const journal = openJournal(journalPath);
+  assert.deepEqual(journal.warnings, []);
+  for (const [command, method] of [['aggregate', 'aggregate'], ['balance-history', 'balanceHistoryReport']]) {
+    for (const valuation of [undefined, 'market', 'cost']) {
+      const options = { accounts: ['Assets:Fund'] };
+      const arguments_ = [cliPath, command, '--file', journalPath, '--accounts', 'Assets:Fund', '--format', 'json'];
+      if (command === 'aggregate') {
+        options.inValuationCommodity = true;
+        arguments_.push('--value');
+      }
+      if (valuation !== undefined) {
+        options.valuation = valuation;
+        arguments_.push('--valuation', valuation);
+      }
+      const value = valuation === 'cost' ? '1000' : '1500';
+      const expected = command === 'aggregate'
+        ? [{ account: 'Assets:Fund', quantity: value, commodity: 'SEK' }]
+        : [{ date: '2024-01-01', amount: value, commodity: 'SEK' }];
+      assert.deepEqual(journal[method](options), expected);
+      const cli = spawnSync(process.execPath, arguments_, { cwd: directory, encoding: 'utf8', env: process.env });
+      assert.equal(cli.status, 0, cli.stderr);
+      assert.equal(cli.stderr, '');
+      assert.deepEqual(JSON.parse(cli.stdout), expected);
+    }
+  }
+});
+
 test('returns query data while exposing ingestion warnings through the API and CLI', (t) => {
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-warnings-'));

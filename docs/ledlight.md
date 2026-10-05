@@ -142,6 +142,7 @@ underlying result.
 | `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `balance --group-by DIMENSION` | `options.groupBy` | Group by `account` or `commodity` |
+| `--valuation VALUE` | `options.valuation` | `cost` or `market` for aggregate and balance history; defaults to `market` in both API and CLI |
 | `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
@@ -441,6 +442,20 @@ apply commodity display separators. With `--value`, CSV amounts retain the
 existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the total when requested.
 
+`--valuation market` is the explicit CLI default, matching the API default
+`valuation: 'market'`. Use `--valuation cost` with `--value` or
+`--with-valuation-value` to value holdings using their recorded lot costs.
+Unit and total lot costs are supported; sales subtract the cost of sold units
+and transfers carry the recorded cost. Amounts in the default commodity keep
+their face value. Other commodities require a lot cost in the default commodity;
+missing cost data raises an error instead of using market prices. Market prices
+are not needed in cost mode. The journal still supplies realized gain postings.
+Selecting a valuation method alone does not convert commodity quantities.
+
+```console
+ledlight aggregate --file main.ledger --accounts "^Assets:" --value --valuation cost
+```
+
 The same behavior is available directly through `journal.aggregate`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append totals in commodity order. Without conversion, quantities are summed
@@ -575,10 +590,14 @@ residual warning takes precedence over an equivalent allocation warning.
 
 `balanceHistoryReport` returns one row for every calendar day from the first
 selected posting or transaction date, according to `dateBasis`, through the
-report end. Each row contains `date`, `commodity`, and the exact total market
+report end. Each row contains `date`, `commodity`, and the exact total
 value of the accounts' holdings in the journal default commodity on that day.
-Days without changes remain in the result
-because their market value can still change. The `dateBasis` option is either
+Valuation defaults to `market` in the API and explicitly in the CLI. Use
+`valuation: 'cost'` or `--valuation cost` to accumulate recorded acquisition costs
+with the same rules as aggregate valuation. Days without changes remain in the
+result in both modes, and both use the same report end. Market price changes
+only affect balances in market mode. The dedicated unrealized-gain and investment
+performance reports continue to use market valuation. The `dateBasis` option is either
 `posting` (the default) or `transaction`.
 
 ```js

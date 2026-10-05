@@ -38,8 +38,8 @@ all default to `false`.
 
 | Query | Date inputs and meaning | Other inputs |
 | --- | --- | --- |
-| `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `groupBy`, `inValuationCommodity`, `withValuationValue`, `invert`, `includeTotal` |
-| `balanceHistoryReport` | `from`, `to`: select daily closing balances, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `invert` |
+| `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `groupBy`, `inValuationCommodity`, `withValuationValue`, `invert`, `includeTotal` |
+| `balanceHistoryReport` | `from`, `to`: select daily closing balances, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
 | `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
 | `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
@@ -151,6 +151,7 @@ Options:
 | `to` | string | unbounded | Inclusive end date and valuation date |
 | `accounts` | string[] | `[]` | Account patterns combined with OR |
 | `dateBasis` | `posting` or `transaction` | `posting` | Date used for filtering |
+| `valuation` | `cost` or `market` | `market` | Valuation method when converting or adding valuation values |
 | `groupBy` | `account` or `commodity` | `account` | Result grouping dimension |
 | `inValuationCommodity` | boolean | `false` | Convert and combine rows in the journal default commodity |
 | `withValuationValue` | boolean | `false` | Preserve commodity rows and add `valuationValue` |
@@ -170,11 +171,25 @@ each total also includes the summed `valuationValue` for that commodity. Empty
 reports have no total rows. Conversion to the default commodity is optional;
 with `inValuationCommodity`, there is a single total in that commodity.
 
+`valuation: 'market'` (the default) uses market prices at the valuation cutoff.
+`valuation: 'cost'` uses the signed lot costs recorded on each posting, including
+unit costs (`{...}`) and total costs (`{{...}}`). Sales remove the recorded cost
+of the sold units, not their sale proceeds. Transfers carry their recorded cost.
+Amounts in the default commodity retain their face value. Other commodities
+require a lot cost in the default commodity; missing or differently denominated
+lot costs raise `LEDLIGHT_MISSING_VALUATION_DATA` without falling back to market
+prices. Cost valuation does not require market prices. Without either valuation
+output option, quantities remain unchanged regardless of `valuation`.
+Realized gains continue to come from the journal's sale postings.
+
 ### `journal.balanceHistoryReport(options)`
 
-Options are `from`, `to`, `accounts`, `dateBasis`, and `invert`. The date bounds
+Options are `from`, `to`, `accounts`, `dateBasis`, `valuation`, and `invert`. The date bounds
 select output days; postings before `from` still contribute to every closing
-balance. Each day uses that day's valuation prices. History ends at the latest
+balance. `valuation` accepts `cost` or `market` and defaults to `market`. Market
+valuation uses each day's prices; cost valuation accumulates the recorded lot
+costs with the same rules as `aggregate`, so price changes do not alter balances.
+Both modes use the same date range. History ends at the latest
 posting/transaction date (according to `dateBasis`) or price date in the journal,
 or at `to` if earlier. No rows are synthesized beyond the available history.
 
