@@ -7,13 +7,11 @@ runs:
           quantity: "200"
           commodity: USD
       warnings: []
-    pendingWarnings: Valid transfers and splits currently produce an incorrect INVALID_COMMODITY_TRADE warning.
   - command: unrealized-gains --to 2024-03-31 --format json --accounts Assets:Broker
     expect:
       exitCode: 0
       result: []
       warnings: []
-    pendingWarnings: Valid transfers currently produce an incorrect INVALID_COMMODITY_TRADE warning.
   - command: unrealized-gains --to 2024-03-31 --format json --accounts Assets:OtherBroker
     expect:
       exitCode: 0
@@ -22,4 +20,3 @@ runs:
           quantity: "200"
           commodity: USD
       warnings: []
-    pendingWarnings: Valid transfers currently produce an incorrect INVALID_COMMODITY_TRADE warning.

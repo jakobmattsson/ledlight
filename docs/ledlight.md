@@ -522,6 +522,27 @@ The CLI-only `--format` option replaces the former `--csv` and `--json` flags.
 `--total` appends a presentation row containing the exact sum of all account
 gains; neither option is part of the API contract.
 
+Global accounting validation runs when the journal database is built. Its
+warnings are persisted and exposed by `openJournal().warnings` and every CLI
+command, independent of report dates or account filters:
+
+- `IMPOSSIBLE_COST_BASIS` identifies the first disposal that cannot be explained
+  by the available acquisitions and earlier allocations. It does not prescribe
+  FIFO, LIFO, or average cost. Transfers carry acquisition history between
+  accounts; splits change units while preserving basis.
+- `RESIDUAL_COST_BASIS` identifies closed account/commodity positions with
+  nonzero remaining basis, including offsetting residuals within one account.
+- `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
+  at their recorded acquisition costs.
+
+The validator uses exact rational arithmetic, including fractional allocations.
+Non-terminating bounds are displayed as fractions. It does not infer missing
+basis, round recorded costs into a feasible range, or implement short-sale or
+foreign-currency-basis rules. An impossible history is retained as a diagnostic;
+later disposals cannot erase it or yield invented feasible bounds. Computable
+reports remain available with warnings and exit code zero. A final disposal's
+residual warning takes precedence over an equivalent allocation warning.
+
 ## Balance history
 
 `balanceHistoryReport` returns one row for every calendar day from the first

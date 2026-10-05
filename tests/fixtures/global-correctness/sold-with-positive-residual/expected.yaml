@@ -5,4 +5,3 @@ runs:
       result: []
       warnings:
         - "[RESIDUAL_COST_BASIS] Assets:Broker: zero FUND units retain cost basis 100 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.

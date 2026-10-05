@@ -5,6 +5,7 @@ module.exports = ({
   sqlite: Database,
   decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
   postingResolver: { PostingResolver },
+  globalAccountingValidator: { validateGlobalAccounting },
   journalValidator: { validateJournal },
   journalValuationCommodity: { valuationCommodityFromJournal },
   postingBalanceMaterializer: { materializePostingBalances },
@@ -230,6 +231,9 @@ module.exports = ({
     const storableEntries = journal.entries.filter((entry) =>
       !validation.invalidEntries.has(entry) &&
       (entry.type !== 'transaction' || resolvedTransactions.has(entry)));
+    validateGlobalAccounting(
+      storableEntries, resolvedTransactions, valuationCommodity, validation.warnings,
+    );
     const usage = declarationUsage(storableEntries, resolvedTransactions);
     const resolvedDatabasePath = path.resolve(databasePath);
     const database = new Database(resolvedDatabasePath);

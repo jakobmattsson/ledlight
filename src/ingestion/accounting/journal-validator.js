@@ -2,6 +2,7 @@
 
 module.exports = ({
   decimal: { compareDecimals, parseDecimal },
+  commodityMovements: { carriedMovements },
   ingestionWarning: { createWarning, warningCodes },
   journalValuationCommodity: { valuationCommodityFromJournal },
 }) => {
@@ -110,7 +111,7 @@ module.exports = ({
     }
   }
 
-  function validatePosting(posting, defaultCommodity, warnings) {
+  function validatePosting(posting, defaultCommodity, warnings, carried) {
     let storable = true;
     if (posting.amount) {
       storable = requireCommodity(
@@ -132,7 +133,7 @@ module.exports = ({
         posting.balanceAssertion, 'Balance assertion', posting.location, warnings,
       ) && storable;
     }
-    validateCommodityTrade(posting, defaultCommodity, warnings);
+    if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
     return storable;
   }
 
@@ -170,8 +171,10 @@ module.exports = ({
         }
       } else if (entry.type === 'transaction') {
         validateTransactionDeclarations(entry, declarations, warnings);
+        const carried = new Set(carriedMovements(entry, effectiveDefaultCommodity)
+          .flatMap(({ outgoing, incoming }) => [outgoing, incoming]));
         const postingResults = entry.postings.map((posting) => validatePosting(
-          posting, effectiveDefaultCommodity, warnings,
+          posting, effectiveDefaultCommodity, warnings, carried,
         ));
         if (!postingResults.every(Boolean)) invalidEntries.add(entry);
       } else if (entry.type === 'price') {
