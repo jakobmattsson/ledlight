@@ -268,7 +268,7 @@ is an array that selects transactions containing a posting matching any pattern
 while retaining all postings in each selected transaction. `id` selects the transaction with
 that positive integer ID. `order` is `newest` or `oldest` and defaults to
 `oldest`; `page` defaults to `1`, while `pageSize` defaults to `100`. Page values
-are positive integers, and `pageSize` cannot exceed 100.
+and page sizes are positive integers.
 The result contains `order`, the selected `page`, `pageSize`,
 `totalTransactions`, `totalPages`, and `transactions`. Transactions include
 their ordered note text. Postings retain their nullable source `amount`, lot

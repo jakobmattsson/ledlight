@@ -44,10 +44,14 @@ module.exports = ({
   const definitions = Object.freeze({ ...projectDefinitions });
 
   const collect = (value, previous) => (previous || []).concat(value);
-  const singleValue = (optionName) => (value, previous) => {
-    if (value.startsWith('--')) throw new InvalidArgumentError(`${optionName} expects a value`);
-    if (previous !== undefined) throw new InvalidArgumentError(`${optionName} may only be specified once`);
-    return value;
+  const singleValue = (optionName) => {
+    let supplied = false;
+    return (value) => {
+      if (value.startsWith('--')) throw new InvalidArgumentError(`${optionName} expects a value`);
+      if (supplied) throw new InvalidArgumentError(`${optionName} may only be specified once`);
+      supplied = true;
+      return value;
+    };
   };
   function addValueOption(command, flags, description, settings_) {
     const settings = settings_ ?? {};
@@ -62,6 +66,7 @@ module.exports = ({
       option.argParser(parseValue);
     }
     if (settings.required) option.makeOptionMandatory();
+    if (settings.defaultValue !== undefined) option.default(settings.defaultValue);
     if (settings.apiInput) option.apiInput = settings.apiInput;
     return command.addOption(option);
   }
@@ -196,12 +201,12 @@ module.exports = ({
       apiInput: 'id',
     });
     addValueOption(transactions, '--order <order>', 'sort transactions', {
-      choices: ['newest', 'oldest'], apiInput: 'order',
+      choices: ['newest', 'oldest'], defaultValue: 'oldest', apiInput: 'order',
     });
     addValueOption(transactions, '--page <number>', 'select a page', {
       apiInput: 'page',
     });
-    addValueOption(transactions, '--page-size <number>', 'set the page size (maximum 100)', {
+    addValueOption(transactions, '--page-size <number>', 'set the page size', {
       apiInput: 'pageSize',
     });
     addOutputValueOption(transactions, '--format <format>', 'select the output format', {
@@ -458,7 +463,7 @@ module.exports = ({
       return [prefix, 'accounts', ...filters].join(' ');
     }
     if (parsed.command === 'transactions' &&
-        parsed.options.id === undefined && parsed.options.order === undefined &&
+        parsed.options.id === undefined && parsed.options.order === 'oldest' &&
         parsed.options.page === undefined && parsed.options.pageSize === undefined &&
         parsed.output.format === 'text') {
       const filters = parsed.options.accounts.map(shellArgument);

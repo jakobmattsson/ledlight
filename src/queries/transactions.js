@@ -18,9 +18,7 @@ module.exports = ({
     order: z.enum(['newest', 'oldest'], { error: 'must be newest or oldest' })
       .default('oldest'),
     page: positiveInteger.default(1),
-    pageSize: positiveInteger
-      .refine((value) => value <= 100, { error: 'must not exceed 100' })
-      .default(100),
+    pageSize: positiveInteger.default(100),
   });
 
   function queryTransactions(database, options, _caches) {

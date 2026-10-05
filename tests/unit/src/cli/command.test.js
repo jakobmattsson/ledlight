@@ -331,7 +331,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['transactions', {
       accounts: ['Assets:Cash'], id: '7', order: 'newest', page: '2', pageSize: '10',
     }],
-    ['openJournal', '/journal'], ['commodities', { usage: 'all' }], ['transactions', { accounts: [] }],
+    ['openJournal', '/journal'], ['commodities', { usage: 'all' }],
+    ['transactions', { accounts: [], order: 'oldest' }],
     ['openJournal', '/journal'], ['reconciliationEntries', { accounts: ['Assets:Cash'], related: true }],
   ]);
 });
