@@ -364,6 +364,54 @@ test('collects ingestion warnings before invoking a query', () => {
   assert.deepEqual(calls, ['warnings', 'query']);
 });
 
+test('formats the postings API result in the requested CLI format', () => {
+  const calls = [];
+  const postings = [{
+    postingId: 2,
+    transactionId: 1,
+    transactionDate: '2024-01-01',
+    description: 'Opening',
+    transactionComment: null,
+    transactionNotes: [],
+    postingDate: '2024-01-02',
+    account: 'Assets:Cash',
+    postingComment: null,
+    amount: { quantity: '10', commodity: 'SEK' },
+    lotCost: null,
+    cost: null,
+    balanceAssignment: null,
+    balanceAssertion: null,
+    amounts: [{ quantity: '10', commodity: 'SEK' }],
+  }];
+  const project = {
+    openJournal(journalPath) {
+      calls.push(['openJournal', journalPath]);
+      return {
+        warnings: [],
+        postings(options) {
+          calls.push(['postings', options]);
+          return postings;
+        },
+      };
+    },
+  };
+  const { runReportCommand } = createCommand({
+    project,
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
+
+  assert.deepEqual(JSON.parse(runReportCommand([
+    'postings', '--file', '/journal', '--from', '2024-01-01',
+    '--to', '2024-01-31', '--accounts', 'Assets:', '--format', 'json',
+  ])), postings);
+  assert.deepEqual(calls, [
+    ['openJournal', '/journal'],
+    ['postings', { from: '2024-01-01', to: '2024-01-31', accounts: ['Assets:'] }],
+  ]);
+});
+
 test('--ledger never opens a journal and is available on every command', () => {
   const { runReportCommand } = createCommand({
     project: { openJournal: () => { throw new Error('must not open a journal'); } },
@@ -380,6 +428,7 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['account-postings', '--accounts', 'Assets:Cash'],
     ['account-transactions', '--accounts', 'Assets:Cash'],
     ['transactions'],
+    ['postings'],
     ['print'],
     ['reconciliation-entries', '--account', 'Assets:Cash'],
     ['balance-history'],

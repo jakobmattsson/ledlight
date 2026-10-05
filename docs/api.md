@@ -283,6 +283,24 @@ journal containing the transactions on the selected page.
 `--format json` returns the complete paginated API result, while `--format csv`
 returns one row per posting amount with transaction and posting fields.
 
+### `journal.postings({ from, to, accounts })`
+
+Returns all matching postings in journal order. All options are optional.
+`from` and `to` are inclusive ISO dates applied to the posting date. `accounts`
+is an array of patterns matched against the posting account; an empty array
+selects every account.
+
+Each result contains `postingId`, `postingDate`, `account`, `postingComment`,
+the nullable source `amount`, lot cost, transaction cost, balance assignment,
+and balance assertion, and every resolved amount. It also contains the parent
+transaction's `transactionId`, `transactionDate`, `description`,
+`transactionComment`, and ordered `transactionNotes`.
+
+The `postings` CLI command supports the same filters and defaults to `--format
+text`. `--format json` preserves the nested API result. `--format csv` emits one
+row per resolved amount and includes every source annotation as separate
+columns.
+
 ### `journal.reconciliationEntries({ accounts, related })`
 
 Returns resolved posting amounts for one or more account patterns, ordered

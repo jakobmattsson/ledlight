@@ -129,6 +129,11 @@ underlying result.
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `postings --file PATH` | `openJournal(journalPath).postings(options)` | Postings with parent transaction metadata |
+| `postings --from DATE` | `options.from` | Inclusive posting-date start |
+| `postings --to DATE` | `options.to` | Inclusive posting-date end |
+| `postings --accounts PATTERN` | `options.accounts` | Repeated posting-account selection |
+| `postings --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |

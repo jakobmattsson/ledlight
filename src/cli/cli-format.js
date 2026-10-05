@@ -430,6 +430,76 @@ module.exports = ({
     return formatTransactionsText(report, descriptions);
   }
 
+  function postingCsvRows(postings) {
+    return postings.flatMap((posting) => posting.amounts.map((resolvedAmount) => ({
+      postingId: posting.postingId,
+      transactionId: posting.transactionId,
+      transactionDate: posting.transactionDate,
+      description: posting.description,
+      transactionComment: posting.transactionComment ?? '',
+      transactionNotes: JSON.stringify(posting.transactionNotes),
+      postingDate: posting.postingDate,
+      account: posting.account,
+      postingComment: posting.postingComment ?? '',
+      amountQuantity: posting.amount?.quantity ?? '',
+      amountCommodity: posting.amount?.commodity ?? '',
+      lotCostQuantity: posting.lotCost?.quantity ?? '',
+      lotCostCommodity: posting.lotCost?.commodity ?? '',
+      lotCostIsTotal: posting.lotCost?.isTotal ?? '',
+      costQuantity: posting.cost?.quantity ?? '',
+      costCommodity: posting.cost?.commodity ?? '',
+      costIsTotal: posting.cost?.isTotal ?? '',
+      balanceAssignmentQuantity: posting.balanceAssignment?.quantity ?? '',
+      balanceAssignmentCommodity: posting.balanceAssignment?.commodity ?? '',
+      balanceAssertionQuantity: posting.balanceAssertion?.quantity ?? '',
+      balanceAssertionCommodity: posting.balanceAssertion?.commodity ?? '',
+      resolvedQuantity: resolvedAmount.quantity,
+      resolvedCommodity: resolvedAmount.commodity,
+    })));
+  }
+
+  function formatPostingsCsv(postings) {
+    const fields = [
+      'postingId', 'transactionId', 'transactionDate', 'description', 'transactionComment',
+      'transactionNotes', 'postingDate', 'account', 'postingComment',
+      'amountQuantity', 'amountCommodity', 'lotCostQuantity', 'lotCostCommodity',
+      'lotCostIsTotal', 'costQuantity', 'costCommodity', 'costIsTotal',
+      'balanceAssignmentQuantity', 'balanceAssignmentCommodity',
+      'balanceAssertionQuantity', 'balanceAssertionCommodity',
+      'resolvedQuantity', 'resolvedCommodity',
+    ];
+    const lines = [fields.join(',')];
+    for (const row of postingCsvRows(postings)) {
+      lines.push(fields.map((field) => csvField(row[field])).join(','));
+    }
+    return `${lines.join('\n')}\n`;
+  }
+
+  function formatPostingsText(postings) {
+    if (postings.length === 0) return '';
+    const rows = postingCsvRows(postings).map((row) => ({
+      ...row,
+      transactionNotes: JSON.parse(row.transactionNotes).join(' | '),
+    }));
+    return formatTextTable(rows, [
+      { heading: 'Transaction', value: (row) => row.transactionDate },
+      { heading: 'Posting', value: (row) => row.postingDate },
+      { heading: 'Description', value: (row) => row.description },
+      { heading: 'Account', value: (row) => row.account },
+      { heading: 'Amount', value: (row) => row.resolvedQuantity, align: 'right' },
+      { heading: 'Commodity', value: (row) => row.resolvedCommodity },
+      { heading: 'Transaction comment', value: (row) => row.transactionComment },
+      { heading: 'Notes', value: (row) => row.transactionNotes },
+      { heading: 'Posting comment', value: (row) => row.postingComment },
+    ]);
+  }
+
+  function formatPostings(postings, { format }) {
+    if (format === 'json') return formatJson(postings);
+    if (format === 'csv') return formatPostingsCsv(postings);
+    return formatPostingsText(postings);
+  }
+
   function formatBalanceHistoryHumanReadable(rows, descriptions) {
     const formats = commodityFormats(descriptions);
     const amounts = rows.map((row) =>
@@ -475,6 +545,7 @@ module.exports = ({
     formatAccounts,
     formatCommodities,
     formatPrices,
+    formatPostings,
     formatTags,
     $$private: { parseCommodityFormat },
   };

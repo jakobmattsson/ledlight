@@ -16,6 +16,7 @@ module.exports = ({
     formatAccounts,
     formatCommodities,
     formatPrices,
+    formatPostings,
     formatTags,
   },
 }) => {
@@ -59,6 +60,9 @@ module.exports = ({
       return formatTransactions(
         journal.transactions(options), parsed.output, descriptions,
       );
+    }
+    if (command === 'postings') {
+      return formatPostings(journal.postings(options), parsed.output);
     }
     if (command === 'reconciliation-entries') {
       return formatJson(journal.reconciliationEntries(options));
