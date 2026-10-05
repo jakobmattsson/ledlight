@@ -1,0 +1,32 @@
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-01 FUND 4 USD
+
+2024-01-01 Buy cheap units
+  Assets:Broker  10 FUND {{10 USD}}
+  Assets:Bank  -10 USD
+
+2024-01-02 Buy middle units
+  Assets:Broker  10 FUND {{20 USD}}
+  Assets:Bank  -20 USD
+
+2024-01-03 Buy expensive units
+  Assets:Broker  10 FUND {{30 USD}}
+  Assets:Bank  -30 USD
+
+2024-02-01 Impossible first sale
+  Assets:Broker  -11 FUND {{11.99 USD}} @@ 44 USD
+  Assets:Bank  44 USD
+  Income:CapitalGains  -32.01 USD
+
+2024-04-01 Close the booked remainder
+  Assets:Broker  -19 FUND {{48.01 USD}} @@ 76 USD
+  Assets:Bank  76 USD
+  Income:CapitalGains  -27.99 USD

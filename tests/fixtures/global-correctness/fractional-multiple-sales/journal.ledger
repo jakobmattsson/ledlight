@@ -1,0 +1,24 @@
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-03-01 FUND 120.2 USD
+
+2024-01-01 Fractional purchase
+  Assets:Broker  1.5 FUND {{150.15 USD}}
+  Assets:Bank  -150.15 USD
+
+2024-02-01 First partial sale
+  Assets:Broker  -0.4 FUND {{40.04 USD}} @@ 48.08 USD
+  Assets:Bank  48.08 USD
+  Income:CapitalGains  -8.04 USD
+
+2024-02-02 Second partial sale
+  Assets:Broker  -0.6 FUND {{60.06 USD}} @@ 72.12 USD
+  Assets:Bank  72.12 USD
+  Income:CapitalGains  -12.06 USD

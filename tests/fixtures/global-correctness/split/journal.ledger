@@ -1,0 +1,23 @@
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-02-01 FUND 60 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Change unit count while preserving basis
+  Assets:Broker  -10 FUND {{1000 USD}}
+  Assets:Broker  20 FUND {{1000 USD}}
+
+2024-03-01 Partial sale after the split
+  Assets:Broker  -4 FUND {{200 USD}} @@ 240 USD
+  Assets:Bank  240 USD
+  Income:CapitalGains  -40 USD

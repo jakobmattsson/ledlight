@@ -1,0 +1,19 @@
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-03-01 FUND 100 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Sale with understated realized gain
+  Assets:Broker  -4 FUND {{400 USD}} @@ 700 USD
+  Assets:Bank  700 USD
+  Income:CapitalGains  -200 USD

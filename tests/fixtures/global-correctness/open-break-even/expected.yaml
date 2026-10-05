@@ -1,0 +1,6 @@
+runs:
+  - command: unrealized-gains --at 2024-03-31 --format json
+    expect:
+      exitCode: 0
+      result: []
+      warnings: []
