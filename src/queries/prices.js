@@ -6,6 +6,7 @@ module.exports = ({
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({});
+  const inferredPriceScale = 30;
 
   function queryPrices(database, options, _caches) {
     parseOptions(optionsSchema, options, 'prices');
@@ -46,28 +47,33 @@ module.exports = ({
       WHERE decimal_cmp(quantity, '0') != 0
     `).pluck().all());
     const byKey = new Map();
+    const quoteOrder = new Map();
     for (const event of events) {
       if (!usedCommodities.has(event.baseCommodity)) continue;
+      const pair = `${event.baseCommodity}\u0000${event.quoteCommodity}`;
+      if (!quoteOrder.has(pair)) quoteOrder.set(pair, quoteOrder.size);
       if (event.isTotal) {
         const amount = parseDecimal(event.baseQuantity);
         const absoluteAmount = amount.coefficient < 0n
           ? { ...amount, coefficient: -amount.coefficient }
           : amount;
         event.quoteQuantity = formatDecimal(divideDecimals(
-          parseDecimal(event.quoteQuantity), absoluteAmount, 10,
+          parseDecimal(event.quoteQuantity), absoluteAmount, inferredPriceScale,
         ));
       }
       delete event.sequence;
       delete event.position;
       delete event.isTotal;
       delete event.baseQuantity;
-      const key = `${event.baseCommodity}\u0000${event.date}`;
+      const key = `${pair}\u0000${event.date}`;
       byKey.set(key, event);
     }
     return [...byKey.values()].sort((left, right) =>
       left.date.localeCompare(right.date) ||
       (left.baseCommodity < right.baseCommodity ? -1 :
-        left.baseCommodity > right.baseCommodity ? 1 : 0));
+        left.baseCommodity > right.baseCommodity ? 1 : 0) ||
+      quoteOrder.get(`${left.baseCommodity}\u0000${left.quoteCommodity}`) -
+        quoteOrder.get(`${right.baseCommodity}\u0000${right.quoteCommodity}`));
   }
 
   return { name: 'prices', inputSchema: optionsSchema, execute: queryPrices };

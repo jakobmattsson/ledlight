@@ -19,6 +19,43 @@ account Income:Gains
 
 module.exports = [
   {
+    name: 'independent quote currencies with corrections and first-seen currency order',
+    source: `${declarations}commodity NOK
+  format 1,000.00 NOK
+
+2024-01-01 Purchase
+  Assets:Funds  1 ALPHA {10 SEK}
+  Assets:Cash  -10 SEK
+
+P 2024-01-02 ALPHA 12 NOK
+P 2024-01-02 ALPHA 11 SEK
+P 2024-01-02 ALPHA 13 NOK ; corrected
+P 2024-01-03 ALPHA 14 NOK
+`,
+    expected: [
+      ['2024-01-01', 'ALPHA', '10', null],
+      ['2024-01-02', 'ALPHA', '11', null],
+      ['2024-01-02', 'ALPHA', '13', 'corrected', 'NOK'],
+      ['2024-01-03', 'ALPHA', '14', null, 'NOK'],
+    ],
+    text: '2024-01-01 ALPHA       10.00 SEK\n' +
+      '2024-01-02 ALPHA       11.00 SEK\n' +
+      '2024-01-02 ALPHA       13.00 NOK\n' +
+      '2024-01-03 ALPHA       14.00 NOK\n',
+  },
+  {
+    name: 'total acquisition costs retain more than ten decimal places',
+    source: `${declarations}
+2024-01-01 Purchase
+  Assets:Funds  4096 ALPHA {{1 SEK}}
+  Assets:Cash  -1 SEK
+`,
+    expected: [
+      ['2024-01-01', 'ALPHA', '0.000244140625', null],
+    ],
+    text: '2024-01-01 ALPHA    0.000244140625 SEK\n',
+  },
+  {
     name: 'interleaved commodities and years across included files',
     source: `${declarations}include quotes.ledger
 
