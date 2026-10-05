@@ -1,0 +1,53 @@
+{
+  "description": "The destination receives units without a recorded basis. Do not assume zero basis or certify global correctness, even though the combined unit count is unchanged.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-03-31",
+      "status": "incomplete",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "0",
+          "marketValue": "0",
+          "unrealizedGain": "0"
+        },
+        {
+          "account": "Assets:OtherBroker",
+          "commodity": "FUND",
+          "quantity": "10",
+          "costBasis": null,
+          "marketValue": "1200",
+          "unrealizedGain": null
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1000",
+        "saleProceeds": "0",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "0",
+      "netRealizedGain": "0",
+      "unrealizedGain": null,
+      "economicGain": "200",
+      "resultDifference": null,
+      "issues": [
+        {
+          "kind": "missing-cost-basis",
+          "account": "Assets:OtherBroker",
+          "commodity": "FUND"
+        }
+      ],
+      "unrealizedGains": {
+        "errorIncludes": "has no lot cost"
+      }
+    }
+  ],
+  "currentIngestionWarningCodes": [
+    "INVALID_COMMODITY_TRADE",
+    "INVALID_COMMODITY_TRADE",
+    "UNBALANCED_TRANSACTION"
+  ]
+}

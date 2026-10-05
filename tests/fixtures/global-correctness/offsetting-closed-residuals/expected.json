@@ -1,0 +1,56 @@
+{
+  "description": "Two closed commodities have opposite residual bases in the same account. Account and portfolio totals cancel, but both closed positions must be diagnosed individually.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-03-31",
+      "status": "invalid",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "100",
+          "marketValue": "0",
+          "unrealizedGain": "-100"
+        },
+        {
+          "account": "Assets:Broker",
+          "commodity": "OTHER",
+          "quantity": "0",
+          "costBasis": "-100",
+          "marketValue": "0",
+          "unrealizedGain": "100"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "2000",
+        "saleProceeds": "2000",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "0",
+      "netRealizedGain": "0",
+      "unrealizedGain": "0",
+      "economicGain": "0",
+      "resultDifference": "0",
+      "issues": [
+        {
+          "kind": "residual-basis-with-zero-quantity",
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "amount": "100"
+        },
+        {
+          "kind": "residual-basis-with-zero-quantity",
+          "account": "Assets:Broker",
+          "commodity": "OTHER",
+          "amount": "-100"
+        }
+      ],
+      "unrealizedGains": {
+        "pending": "Report both residuals before aggregating by account or portfolio."
+      }
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

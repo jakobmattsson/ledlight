@@ -1,0 +1,35 @@
+{
+  "description": "The economic result after both fees is 285 USD. Count each fee once, following its explicit expense, capitalized basis, or net proceeds treatment.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-03-31",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "6",
+          "costBasis": "600",
+          "marketValue": "600",
+          "unrealizedGain": "0"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1000",
+        "saleProceeds": "695",
+        "expensedFees": "10"
+      },
+      "bookedRealizedGain": "295",
+      "netRealizedGain": "285",
+      "unrealizedGain": "0",
+      "economicGain": "285",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": []
+      }
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

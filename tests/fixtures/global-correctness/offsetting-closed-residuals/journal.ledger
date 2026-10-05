@@ -1,0 +1,27 @@
+commodity USD
+  default
+commodity FUND
+commodity OTHER
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-03-01 FUND 100 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-01-02 Purchase another commodity
+  Assets:Broker  10 OTHER {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Close first commodity with too little basis
+  Assets:Broker  -10 FUND {{900 USD}} @@ 1000 USD
+  Assets:Bank  1000 USD
+  Income:CapitalGains  -100 USD
+
+2024-02-02 Close second commodity with too much basis
+  Assets:Broker  -10 OTHER {{1100 USD}} @@ 1000 USD
+  Assets:Bank  1000 USD
+  Income:CapitalGains  100 USD

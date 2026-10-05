@@ -1,0 +1,42 @@
+{
+  "description": "Every transaction balances, but a closed position retains basis. A zero-quantity filter must not conceal this error; residual basis must not be presented as genuine unrealized gain.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-03-31",
+      "status": "invalid",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "-100",
+          "marketValue": "0",
+          "unrealizedGain": "100"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1000",
+        "saleProceeds": "1000",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "-100",
+      "netRealizedGain": "-100",
+      "unrealizedGain": "100",
+      "economicGain": "0",
+      "resultDifference": "0",
+      "issues": [
+        {
+          "kind": "residual-basis-with-zero-quantity",
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "amount": "-100"
+        }
+      ],
+      "unrealizedGains": {
+        "pending": "Report the residual basis diagnostic; an empty successful report is insufficient."
+      }
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

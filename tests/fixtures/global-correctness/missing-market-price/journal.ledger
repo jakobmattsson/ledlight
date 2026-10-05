@@ -1,0 +1,11 @@
+commodity USD
+  default
+commodity FUND
+account Assets:Bank
+account Assets:Broker
+
+
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD

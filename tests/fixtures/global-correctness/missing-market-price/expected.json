@@ -1,0 +1,40 @@
+{
+  "description": "An explicit lot cost is not a market quote. Basis can reconcile while market value and unrealized gain remain unknown.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-03-31",
+      "status": "incomplete",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "10",
+          "costBasis": "1000",
+          "marketValue": null,
+          "unrealizedGain": null
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1000",
+        "saleProceeds": "0",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "0",
+      "netRealizedGain": "0",
+      "unrealizedGain": null,
+      "economicGain": null,
+      "resultDifference": null,
+      "issues": [
+        {
+          "kind": "missing-market-price",
+          "commodity": "FUND"
+        }
+      ],
+      "unrealizedGains": {
+        "errorIncludes": "No price for FUND"
+      }
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

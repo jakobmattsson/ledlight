@@ -1,0 +1,69 @@
+{
+  "description": "The fifo allocation changes realized and unrealized results, but their sum is 700 USD. The custom allocation need not identify any original lot.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-01-31",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "10",
+          "costBasis": "1500",
+          "marketValue": "1500",
+          "unrealizedGain": "0"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1500",
+        "saleProceeds": "0",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "0",
+      "netRealizedGain": "0",
+      "unrealizedGain": "0",
+      "economicGain": "0",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": []
+      }
+    },
+    {
+      "at": "2024-03-31",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "6",
+          "costBasis": "1100",
+          "marketValue": "1200",
+          "unrealizedGain": "100"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1500",
+        "saleProceeds": "1000",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "600",
+      "netRealizedGain": "600",
+      "unrealizedGain": "100",
+      "economicGain": "700",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": [
+          {
+            "account": "Assets:Broker",
+            "quantity": "100",
+            "commodity": "USD"
+          }
+        ]
+      }
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

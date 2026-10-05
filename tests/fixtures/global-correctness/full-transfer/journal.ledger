@@ -1,0 +1,16 @@
+commodity USD
+  default
+commodity FUND
+account Assets:Bank
+account Assets:Broker
+account Assets:OtherBroker
+
+P 2024-03-01 FUND 120 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Transfer between owned accounts
+  Assets:Broker  -10 FUND {100 USD}
+  Assets:OtherBroker  10 FUND {100 USD}
