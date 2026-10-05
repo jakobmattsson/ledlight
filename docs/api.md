@@ -111,8 +111,11 @@ accounts, and retain exact zero balances. `withValuationValue` adds an exact
 
 ### `journal.balanceHistoryReport(options)`
 
-Options are `from`, `to`, `accounts`, `dateBasis`, and `invert`, with the same
-meanings as in `aggregate`.
+Options are `from`, `to`, `accounts`, `dateBasis`, and `invert`. The date bounds
+select output days; postings before `from` still contribute to every closing
+balance. Each day uses that day's valuation prices. History ends at the latest
+posting/transaction date (according to `dateBasis`) or price date in the journal,
+or at `to` if earlier. No rows are synthesized beyond the available history.
 
 Returns daily rows sorted by date:
 
