@@ -3,6 +3,7 @@
 module.exports = ({
   decimal: { compareDecimals, parseDecimal },
   commodityMovements: { carriedMovements },
+  costCurrencies: { costCurrenciesFromEntries },
   ingestionWarning: { createWarning, warningCodes },
   journalValuationCommodity: { valuationCommodityFromJournal },
 }) => {
@@ -111,7 +112,7 @@ module.exports = ({
     }
   }
 
-  function validatePosting(posting, defaultCommodity, warnings, carried) {
+  function validatePosting(posting, defaultCommodity, warnings, carried, costCurrencies) {
     let storable = true;
     if (posting.amount) {
       storable = requireCommodity(
@@ -122,17 +123,6 @@ module.exports = ({
       storable = requireCommodity(
         posting.lotCost.amount, 'Lot cost', posting.location, warnings,
       ) && storable;
-      const costCommodity = posting.lotCost.amount.commodity;
-      if (defaultCommodity && costCommodity && costCommodity !== defaultCommodity &&
-          posting.amount?.commodity !== defaultCommodity) {
-        warnings.push(createWarning(
-          warningCodes.FOREIGN_LOT_COST_CURRENCY,
-          `${posting.account}: lot cost in ${costCommodity} must be expressed in ` +
-          `the default commodity ${defaultCommodity}. Unrealized gains omit affected positions; ` +
-          'their totals may be incomplete',
-          posting.location,
-        ));
-      }
     }
     if (posting.cost) {
       storable = requireCommodity(
@@ -144,7 +134,11 @@ module.exports = ({
         posting.balanceAssertion, 'Balance assertion', posting.location, warnings,
       ) && storable;
     }
-    if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
+    const settlement = costCurrencies.has(posting.amount?.commodity) &&
+      !posting.lotCost && !posting.cost;
+    if (!settlement && !carried.has(posting)) {
+      validateCommodityTrade(posting, defaultCommodity, warnings);
+    }
     return storable;
   }
 
@@ -154,6 +148,7 @@ module.exports = ({
     const effectiveDefaultCommodity = defaultCommodity === undefined
       ? valuationCommodityFromJournal(journal, warnings)
       : defaultCommodity;
+    const costCurrencies = costCurrenciesFromEntries(journal.entries, effectiveDefaultCommodity);
     const declarations = {
       accounts: new Set(),
       commodities: new Set(),
@@ -185,7 +180,7 @@ module.exports = ({
         const carried = new Set(carriedMovements(entry, effectiveDefaultCommodity)
           .flatMap(({ outgoing, incoming }) => [outgoing, incoming]));
         const postingResults = entry.postings.map((posting) => validatePosting(
-          posting, effectiveDefaultCommodity, warnings, carried,
+          posting, effectiveDefaultCommodity, warnings, carried, costCurrencies,
         ));
         if (!postingResults.every(Boolean)) invalidEntries.add(entry);
       } else if (entry.type === 'price') {
