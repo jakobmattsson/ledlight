@@ -1,6 +1,8 @@
 commodity USD
+  format 1,000.00 USD
   default
 commodity FUND
+  format 1,000.000 FUND
 account Assets:Bank
 account Assets:Broker
 account Assets:OtherBroker
