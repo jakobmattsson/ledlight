@@ -15,8 +15,8 @@ modules.output.handleBrokenPipe();
 
 try {
   const result = modules.reportCommand.run(process.argv.slice(2));
-  modules.output.writeWarnings(result.warnings);
   modules.output.writeOutput(result.output);
+  modules.output.writeWarnings(result.warnings);
 } catch (error) {
   modules.output.writeError(`${error.message}\n`);
   process.exitCode = 1;
