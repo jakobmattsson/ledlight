@@ -34,7 +34,8 @@
     "!src/ingestion/syntax/reference"
   ],
   "bin": {
-    "ledlight": "src/cli/run.js"
+    "ledlight": "src/cli/run.js",
+    "ledlight-cmp": "scripts/compare-ledger.js"
   },
   "engines": {
     "node": "^22.12.0"
@@ -45,7 +46,6 @@
   "scripts": {
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
-    "compare:ledger": "node scripts/compare-ledger.js",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "test": "worktree-keeper run-tests",

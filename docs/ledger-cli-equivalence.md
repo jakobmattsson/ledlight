@@ -31,16 +31,16 @@ selection, and details do not have direct equivalents.
 Run every verified row against a journal:
 
 ```console
-npm run compare:ledger -- --file /path/to/main.ledger
+ledlight-cmp --file /path/to/main.ledger
 ```
 
 Run one or more rows, select another Ledger executable, or print the runnable
 matrix as a Markdown table:
 
 ```console
-npm run compare:ledger -- --file main.ledger --case accounts --case prices
-npm run compare:ledger -- --file main.ledger --ledger-bin /path/to/ledger
-npm run compare:ledger -- --list
+ledlight-cmp --file main.ledger --case accounts --case prices
+ledlight-cmp --file main.ledger --ledger-bin /path/to/ledger
+ledlight-cmp --list
 ```
 
 The script exits with status 1 if a command fails or a result differs. Every

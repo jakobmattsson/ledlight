@@ -29,7 +29,7 @@ agreement. Run it separately with `npm run test:ledger`; set `LEDGER_BIN` when
 the Ledger 3 executable is not named `ledger`.
 
 See the [Ledger CLI equivalence matrix](ledger-cli-equivalence.md) for the
-verified command pairs and the standalone `compare:ledger` script, which can
+verified command pairs and the standalone `ledlight-cmp` command, which can
 run those comparisons against an arbitrary journal.
 
 The current implementation provides:

@@ -124,6 +124,18 @@ account Equity:Opening
       cwd: projectDirectory,
       env: consumerEnvironment,
     }), 'account,amount,commodity\nAssets:Cash,10,USD\nEquity:Opening,-10,USD\n');
+
+    const comparisonName = process.platform === 'win32' ? 'ledlight-cmp.cmd' : 'ledlight-cmp';
+    const comparisonPath = path.join(consumerDirectory, 'node_modules', '.bin', comparisonName);
+    const comparisonCommand = process.platform === 'win32' ? process.env.ComSpec : comparisonPath;
+    const comparisonArguments = process.platform === 'win32'
+      ? ['/d', '/s', '/c', comparisonPath]
+      : [];
+    assert.ok(comparisonCommand, 'The platform must provide a comparison command');
+    assert.match(run(comparisonCommand, [...comparisonArguments, '--list'], {
+      cwd: projectDirectory,
+      env: consumerEnvironment,
+    }), /^\| Case \| Ledlight \| Ledger \|/u);
   } finally {
     fs.rmSync(temporaryDirectory, { recursive: true, force: true });
   }

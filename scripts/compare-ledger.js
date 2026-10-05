@@ -21,7 +21,7 @@ function loadMatrix() {
 }
 
 function usage() {
-  return `Usage: npm run compare:ledger -- --file <journal> [options]
+  return `Usage: ledlight-cmp --file <journal> [options]
 
 Compare the verified Ledger and Ledlight command equivalents against any journal.
 
