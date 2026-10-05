@@ -76,7 +76,7 @@ test('documents the effective default for every enum option in command help', ()
   for (const command of Object.values(apiCommands)) {
     const parsed = parseArguments([
       command, '--file', '/journal',
-      ...(command === 'reconciliation-entries' ? ['--account', 'Assets:'] : []),
+      ...(command === 'reconciliation-entries' ? ['--accounts', 'Assets:'] : []),
     ]);
     const options = { ...parsed.options, ...parsed.reportOptions, ...parsed.output };
     const helpOptions = usage(command).split(/\n(?= {2}--)/u).slice(1);
@@ -389,11 +389,15 @@ test('maps every remaining API parameter to CLI arguments', () => {
   assert.match(usage('transactions'), /--page-size <number>\s+set the page size/u);
   assert.deepEqual(parseArguments([
     'reconciliation-entries', '--file', '/journal',
-    '--account', 'Assets:Cash', '--account', 'Assets:Bank', '--related',
+    '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank', '--related',
   ]), {
     command: 'reconciliation-entries', journalPath: '/journal',
     options: { accounts: ['Assets:Cash', 'Assets:Bank'], related: true },
   });
+  assert.throws(() => parseArguments([
+    'reconciliation-entries', '--file', '/journal', '--accounts', 'Assets:Cash',
+    '--account', 'Assets:Bank',
+  ]), /unknown option '--account'/u);
 });
 
 test('rejects missing commands, values, duplicate dates, and unknown options', () => {

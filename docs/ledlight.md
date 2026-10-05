@@ -149,7 +149,7 @@ underlying result.
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
-| `reconciliation-entries --account PATTERN` | `options.accounts` | Repeated account-pattern selection |
+| `reconciliation-entries --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `commodities --details` | None | Include API-provided declaration metadata in the output |

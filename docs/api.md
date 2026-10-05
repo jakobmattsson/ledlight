@@ -18,6 +18,9 @@ pattern to the start of the account name and a trailing `$` anchors it to the
 end. Using both selects one exact account. No other regular-expression syntax
 is recognized; all other characters are matched literally.
 
+Every CLI account filter uses the repeatable `--accounts PATTERN` option,
+including `reconciliation-entries`. The singular `--account` is not supported.
+
 ## Query parameter conventions
 
 All dates must be valid calendar dates in `YYYY-MM-DD` format; timestamps,
@@ -55,16 +58,13 @@ Existing API/CLI differences are deliberate compatibility constraints:
 
 - Declaration queries default to `usage: 'all'` in the API and `--usage used`
   in the CLI, where the default matches Ledger.
-- Reconciliation uses the CLI spelling `--account`, while other commands use
-  `--accounts`; both map to the API's `accounts` array.
 - `inValuationCommodity` maps to `--value`. Investment performance uses `--json`,
   while other formatted reports use `--format json`. Reconciliation emits JSON.
 - Transaction `order` selects forward (`oldest`) or reverse (`newest`) journal
   order, not a date sort. The API paginates by default; CLI text output includes
   all matching transactions unless pagination is explicitly requested.
 
-These spellings and defaults remain supported. A future naming migration should
-provide aliases before removing existing spellings. `at` remains distinct from
+These spellings and defaults remain supported. `at` remains distinct from
 `from`/`to` because unrealized gains describe a snapshot rather than period activity.
 
 ## Errors

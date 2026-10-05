@@ -202,7 +202,7 @@ module.exports = ({
       'misc',
     );
     addJournal(reconciliationEntries);
-    addValueOption(reconciliationEntries, '--account <pattern>', 'select matching accounts (repeatable)', {
+    addValueOption(reconciliationEntries, '--accounts <pattern>', 'select matching accounts (repeatable)', {
       repeatable: true, required: true, apiInput: 'accounts',
     });
     addBooleanOption(
@@ -381,7 +381,7 @@ module.exports = ({
       };
     }
     if (commandName === 'reconciliation-entries') {
-      return { ...common, options: compact({ accounts: options.account, related: options.related || undefined }) };
+      return { ...common, options: compact({ accounts: options.accounts, related: options.related || undefined }) };
     }
     const reportOptions = compact({
       from: options.from, to: options.to, at: options.at, accounts: options.accounts || [],

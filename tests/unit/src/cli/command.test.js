@@ -316,7 +316,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     '2024-01-03 Shop\n    Assets:Cash                            -5.00 SEK\n',
   );
   assert.deepEqual(run([
-    'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',
+    'reconciliation-entries', '--file', '/journal', '--accounts', 'Assets:Cash', '--related',
   ]), ['entries']);
   assert.deepEqual(calls, [
     ['openJournal', '/journal'], ['accounts', { accounts: [], usage: 'used' }],
