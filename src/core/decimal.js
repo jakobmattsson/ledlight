@@ -110,32 +110,6 @@ module.exports = () => {
     return negative && coefficient !== 0n ? `-${digits}` : digits;
   }
 
-  function formatDecimalFixedHalfTowardPositiveInfinity(decimal, scale) {
-    if (!Number.isInteger(scale) || scale < 0) throw new RangeError('Decimal scale must be a non-negative integer');
-    let coefficient = decimal.coefficient;
-    if (decimal.scale < scale) {
-      coefficient *= powerOfTen(scale - decimal.scale);
-    } else if (decimal.scale > scale) {
-      const divisor = powerOfTen(decimal.scale - scale);
-      const negative = coefficient < 0n;
-      const absolute = negative ? -coefficient : coefficient;
-      let rounded = absolute / divisor;
-      const doubledRemainder = (absolute % divisor) * 2n;
-      if (doubledRemainder > divisor || (doubledRemainder === divisor && !negative)) {
-        rounded += 1n;
-      }
-      coefficient = negative ? -rounded : rounded;
-    }
-
-    const negative = coefficient < 0n;
-    let digits = (negative ? -coefficient : coefficient).toString();
-    if (scale > 0) {
-      digits = digits.padStart(scale + 1, '0');
-      digits = `${digits.slice(0, -scale)}.${digits.slice(-scale)}`;
-    }
-    return negative && coefficient !== 0n ? `-${digits}` : digits;
-  }
-
   function compareDecimals(left, right) {
     const aligned = alignDecimals(left, right);
     return aligned.left < aligned.right ? -1 : Number(aligned.left > aligned.right);
@@ -169,7 +143,6 @@ module.exports = () => {
     divideDecimals,
     formatDecimal,
     formatDecimalFixed,
-    formatDecimalFixedHalfTowardPositiveInfinity,
     multiplyDecimals,
     negateDecimal,
     parseDecimal,

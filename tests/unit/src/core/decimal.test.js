@@ -8,7 +8,6 @@ const {
   divideDecimals,
   formatDecimal,
   formatDecimalFixed,
-  formatDecimalFixedHalfTowardPositiveInfinity,
   parseDecimal,
   registerDecimalFunctions,
 } = resolveRepositoryModule("src/core/decimal.js");
@@ -18,13 +17,6 @@ test('rounds exact decimal values to a fixed number of places', () => {
   assert.equal(formatDecimalFixed(parseDecimal('1.004'), 2), '1.00');
   assert.equal(formatDecimalFixed(parseDecimal('1.005'), 2), '1.01');
   assert.equal(formatDecimalFixed(parseDecimal('-1.005'), 2), '-1.01');
-});
-
-test('can round exact halfway values toward positive infinity for Ledger-compatible output', () => {
-  assert.equal(formatDecimalFixedHalfTowardPositiveInfinity(parseDecimal('1.005'), 2), '1.01');
-  assert.equal(formatDecimalFixedHalfTowardPositiveInfinity(parseDecimal('-1.005'), 2), '-1.00');
-  assert.equal(formatDecimalFixedHalfTowardPositiveInfinity(parseDecimal('1.006'), 2), '1.01');
-  assert.equal(formatDecimalFixedHalfTowardPositiveInfinity(parseDecimal('-1.006'), 2), '-1.01');
 });
 
 test('divides exact decimal values to a bounded scale', () => {
