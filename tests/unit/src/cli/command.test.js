@@ -168,7 +168,7 @@ test('delegates report behavior to the public Node API and only formats results'
   );
   assert.equal(
     runReportCommand([
-      'unrealized-gains', '--file', '/journal', '--format', 'csv', '--total',
+      'unrealized-gains', '--file', '/journal', '--format', 'csv', '--include-total',
     ]),
     'account,amount,commodity\nAssets:Broker,12.50,USD\nTotal,12.50,USD\n',
   );

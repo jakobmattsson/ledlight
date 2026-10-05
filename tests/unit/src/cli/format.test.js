@@ -150,6 +150,29 @@ test('appends an exact total without mutating report rows', () => {
   assert.deepEqual(appendTotal([]), []);
 });
 
+test('formats commodity totals together below a single separator', () => {
+  const input = [
+    { account: 'Assets:A', quantity: '1', commodity: 'USD' },
+    { account: 'Assets:B', quantity: '2', commodity: 'FUND' },
+    { account: 'Assets:C', quantity: '3', commodity: 'USD' },
+  ];
+  const result = appendTotal(input);
+  assert.deepEqual(result.slice(-2), [
+    { account: 'Total', quantity: '2', commodity: 'FUND', isTotal: true },
+    { account: 'Total', quantity: '4', commodity: 'USD', isTotal: true },
+  ]);
+  assert.equal(formatAggregateText(result, false, [], 'account'),
+    '1 USD   Assets:A\n' +
+    '2 FUND  Assets:B\n' +
+    '3 USD   Assets:C\n' +
+    '------\n' +
+    '2 FUND  Total\n' +
+    '4 USD   Total\n');
+  assert.equal(formatCsv(result, false),
+    'account,amount,commodity\nAssets:A,1,USD\nAssets:B,2,FUND\nAssets:C,3,USD\n' +
+    'Total,2,FUND\nTotal,4,USD\n');
+});
+
 test('formats balance history', () => {
   const balanceRows = [
     { date: '2024-01-01', amount: '2.005', commodity: 'USD' },

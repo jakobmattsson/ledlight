@@ -157,7 +157,7 @@ underlying result.
 | `balance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `balance-history --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `unrealized-gains --total` | None | Append a presentation-only sum of all gain rows |
+| `unrealized-gains --include-total` | None | Append a presentation-only sum of all gain rows |
 | `investment-performance --json` | None | Output encoding only |
 | `--version` | None | CLI package metadata |
 | `--help` | None | Top-level command list |
@@ -433,7 +433,7 @@ By default, the command prints right-aligned amounts and commodities followed
 by left-aligned account names. Human-readable output uses each
 commodity's declared `format` precision and separators. With `--value`, it
 converts every amount to the journal's default commodity. Add `--include-total`
-to append an exact total in any output format. `--format csv` prints RFC-style escaped CSV
+to append an exact total for each reported commodity in any output format. `--format csv` prints RFC-style escaped CSV
 with the columns `account,amount,commodity`. Commodity grouping omits the
 `account` column. CSV uses canonical, ungrouped decimal values and does not
 apply commodity display separators. With `--value`, CSV amounts retain the
@@ -442,9 +442,13 @@ existing exact two-decimal rounding behavior.
 
 The same behavior is available directly through `journal.aggregate`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
-append the total row. `includeTotal` requires `inValuationCommodity: true`, so
-the quantities have one common commodity. The CLI requests this total only with
-`--include-total`; human-readable output formats the row with a separator.
+append totals in commodity order. Without conversion, quantities are summed
+separately for each commodity; no default commodity or valuation prices are
+needed. With `inValuationCommodity: true`, the result has a single total in the
+default commodity. Exact zero totals are retained, and empty reports have no
+total rows. The CLI requests totals only with `--include-total`; human-readable
+output puts a separator before the totals. This flag is also used by
+`unrealized-gains`.
 Valued account reports use Ledger's 20-character amount column, an unlabeled
 total, and `0` for zero amounts. CSV and JSON retain the total's account label.
 
@@ -510,7 +514,7 @@ commodity, and omit zero gains. Losses are returned as negative quantities.
 ledlight unrealized-gains --file main.ledger
 ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "^Assets:Broker"
 ledlight unrealized-gains --file main.ledger --format csv
-ledlight unrealized-gains --file main.ledger --total
+ledlight unrealized-gains --file main.ledger --include-total
 ```
 
 The API accepts `to`, `accounts`, and `dateBasis`. The CLI exposes these as
@@ -521,7 +525,7 @@ cancel when a lot is sold, leaving only unrealized gains or losses on the
 remaining position.
 
 The CLI-only `--format` option replaces the former `--csv` and `--json` flags.
-`--total` appends a presentation row containing the exact sum of all account
+`--include-total` appends a presentation row containing the exact sum of all account
 gains; neither option is part of the API contract.
 
 Global accounting validation runs when the journal database is built. Its

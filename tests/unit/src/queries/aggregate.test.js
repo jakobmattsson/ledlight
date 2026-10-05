@@ -174,10 +174,60 @@ test('applies inversion and totals as public report options', (t) => {
       quantity: '-20',
     },
   ]);
-  assert.throws(
-    () => aggregate(databasePath, { includeTotal: true }),
-    /includeTotal requires inValuationCommodity/u,
-  );
+});
+
+test('totals each commodity exactly without a default commodity or prices', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity-totals-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `2024-01-01 First holding
+  Assets:A  0.1 FUND
+  Assets:A  10.000000000000000001 USD
+  Equity:Opening  -0.1 FUND
+  Equity:Opening  -10.000000000000000001 USD
+
+2024-01-02 Second holding
+  Assets:B  0.2 FUND
+  Assets:B  -2 USD
+  Equity:Opening  -0.2 FUND
+  Equity:Opening  2 USD
+`);
+  buildDatabase(databasePath, journalPath);
+
+  const options = { accounts: ['Assets:'], includeTotal: true };
+  const rows = aggregate(databasePath, options);
+  assert.deepEqual(rows, [
+    { account: 'Assets:A', commodity: 'FUND', quantity: '0.1' },
+    { account: 'Assets:A', commodity: 'USD', quantity: '10.000000000000000001' },
+    { account: 'Assets:B', commodity: 'FUND', quantity: '0.2' },
+    { account: 'Assets:B', commodity: 'USD', quantity: '-2' },
+    { account: 'Total', commodity: 'FUND', quantity: '0.3', isTotal: true },
+    { account: 'Total', commodity: 'USD', quantity: '8.000000000000000001', isTotal: true },
+  ]);
+  assert.deepEqual(aggregate(databasePath, { ...options, invert: true }).slice(-2), [
+    { account: 'Total', commodity: 'FUND', quantity: '-0.3', isTotal: true },
+    { account: 'Total', commodity: 'USD', quantity: '-8.000000000000000001', isTotal: true },
+  ]);
+  assert.deepEqual(aggregate(databasePath, { ...options, to: '2024-01-01' }).slice(-2), [
+    { account: 'Total', commodity: 'FUND', quantity: '0.1', isTotal: true },
+    { account: 'Total', commodity: 'USD', quantity: '10.000000000000000001', isTotal: true },
+  ]);
+  assert.deepEqual(aggregate(databasePath, { includeTotal: true }).slice(-2), [
+    { account: 'Total', commodity: 'FUND', quantity: '0', isTotal: true },
+    { account: 'Total', commodity: 'USD', quantity: '0', isTotal: true },
+  ]);
+  assert.deepEqual(aggregate(databasePath, { ...options, accounts: ['Missing:'] }), []);
+});
+
+test('includes valuation values in commodity totals and inverts both amounts', (t) => {
+  const databasePath = buildFixture(t);
+  assert.deepEqual(aggregate(databasePath, {
+    to: '2024-01-01', withValuationValue: true, includeTotal: true, invert: true,
+  }).filter((row) => row.isTotal), [
+    { account: 'Total', commodity: 'FUND', quantity: '-2', valuationValue: '-20', isTotal: true },
+    { account: 'Total', commodity: 'SEK', quantity: '20', valuationValue: '20', isTotal: true },
+  ]);
 });
 
 test('uses the journal default commodity instead of assuming SEK', (t) => {

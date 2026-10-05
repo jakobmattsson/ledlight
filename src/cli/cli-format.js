@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  reportTotals: { appendTotal },
   decimal: {
     addDecimals,
     formatDecimal,
@@ -11,20 +12,6 @@ module.exports = ({
     divideDecimalsHalfEven,
   },
 }) => {
-
-  function appendTotal(rows) {
-    if (rows.length === 0) return rows;
-    const quantity = rows.reduce(
-      (sum, row) => addDecimals(sum, parseDecimal(row.quantity)),
-      parseDecimal('0'),
-    );
-    return [...rows, {
-      account: 'Total',
-      quantity: formatDecimal(quantity),
-      commodity: rows[0].commodity,
-      isTotal: true,
-    }];
-  }
 
   function csvField(value) {
     const text = String(value);
@@ -150,7 +137,7 @@ module.exports = ({
           : `${separator}${fraction.padEnd(fractionWidth)}`;
       const commodity = hasAccounts ? row.commodity.padEnd(commodityWidth) : row.commodity;
       const amountColumn = `${integerColumn}${fractionColumn} ${commodity}`;
-      if (row.isTotal) {
+      if (row.isTotal && !reportRows[index - 1]?.isTotal) {
         lines.push('-'.repeat(amountColumn.length));
       }
       lines.push(hasAccounts ? `${amountColumn}  ${row.account}` : amountColumn);
