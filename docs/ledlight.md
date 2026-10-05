@@ -541,6 +541,17 @@ command, independent of report dates or account filters:
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
   at their recorded acquisition costs.
+- `SALE_PROCEEDS_MISMATCH` identifies a transaction whose sale prices cannot be
+  reconciled with its monetary postings. Sales use `@`/`@@`, simultaneous purchases
+  use their lot costs, and internal transfers and splits are excluded. The net
+  settlement must equal a subset of the transaction's default-currency postings,
+  allowing half the declared monetary step for rounding. This accommodates
+  separate fees, net proceeds, and realized losses without assuming account names.
+  Because accounts have no type metadata, this is a necessary consistency check,
+  not proof of correct classification: an accidental matching subset can pass.
+  Cross-currency trades and annotated monetary postings are not checked. The
+  subset search stops after 100,000 distinct states; an inconclusive search does
+  not emit a mismatch warning.
 
 The validator uses exact rational arithmetic, including fractional allocations.
 A recorded total disposal cost may be rounded either down or up to the adjacent

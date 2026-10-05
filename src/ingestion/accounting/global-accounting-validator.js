@@ -4,6 +4,7 @@ module.exports = ({
   rational: { zero, parse, add, neg, cmp, format },
   commodityMovements: { annotatedTotal, carriedMovements },
   allocationHistory: { AllocationHistory },
+  saleProceedsValidator: { validateSaleProceeds },
   ingestionWarning: { createWarning, warningCodes },
 }) => {
   function validateGlobalAccounting(entries, resolvedTransactions, valuationCommodity, warnings) {
@@ -30,6 +31,8 @@ module.exports = ({
     for (const transaction of transactions) {
       const resolved = resolvedTransactions.get(transaction);
       const pairs = carriedMovements(transaction, valuationCommodity);
+      validateSaleProceeds(transaction, resolved, valuationCommodity,
+        new Set(pairs.flatMap(({ outgoing, incoming }) => [outgoing, incoming])), roundingUnit, warnings);
       for (const pair of pairs) {
         const commodity = pair.outgoing.amount.commodity;
         const source = historyFor(pair.outgoing.account, commodity);
