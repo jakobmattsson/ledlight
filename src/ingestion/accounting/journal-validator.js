@@ -122,6 +122,17 @@ module.exports = ({
       storable = requireCommodity(
         posting.lotCost.amount, 'Lot cost', posting.location, warnings,
       ) && storable;
+      const costCommodity = posting.lotCost.amount.commodity;
+      if (defaultCommodity && costCommodity && costCommodity !== defaultCommodity &&
+          posting.amount?.commodity !== defaultCommodity) {
+        warnings.push(createWarning(
+          warningCodes.FOREIGN_LOT_COST_CURRENCY,
+          `${posting.account}: lot cost in ${costCommodity} must be expressed in ` +
+          `the default commodity ${defaultCommodity}. Unrealized gains omit affected positions; ` +
+          'their totals may be incomplete',
+          posting.location,
+        ));
+      }
     }
     if (posting.cost) {
       storable = requireCommodity(

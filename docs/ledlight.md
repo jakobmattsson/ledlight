@@ -512,9 +512,13 @@ cost. Results are grouped by account, expressed in the journal default
 commodity, and omit zero gains. Losses are returned as negative quantities.
 
 Lot costs for selected open positions must be expressed in the journal default
-commodity. A missing lot cost or one in another currency causes an error instead
-of a gain calculated from incompatible currencies. This includes costs on both
-acquisitions and disposals contributing to an open position. Prices alone cannot
+commodity. Ingestion records a `FOREIGN_LOT_COST_CURRENCY` warning for costs in
+another currency, visible in every report regardless of account or date filters.
+The gain report omits affected account/commodity positions instead of failing or
+mixing currencies. Its account sums and total include only the remaining positions
+and may be incomplete, as the warning explains. This includes costs on both
+acquisitions and disposals contributing to an open position. Missing lot costs on
+other open positions still cause an error. Prices alone cannot
 identify the original acquisition exchange rates for later disposals or transfers;
 record the acquisition basis in the default commodity explicitly. Closed positions
 are omitted before checking their lot costs.
@@ -549,6 +553,9 @@ command, independent of report dates or account filters:
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
   at their recorded acquisition costs.
+- `FOREIGN_LOT_COST_CURRENCY` identifies lot costs outside the journal default
+  commodity. These postings remain available to other reports, but affected
+  positions are omitted from unrealized gains, making its totals potentially incomplete.
 
 The validator uses exact rational arithmetic, including fractional allocations.
 A recorded total disposal cost may be rounded either down or up to the adjacent

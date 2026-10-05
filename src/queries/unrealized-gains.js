@@ -69,19 +69,12 @@ module.exports = ({
     `).all(valuationCommodity, ...filter.parameters);
   }
 
-  function validateCostBases(positions, valuationCommodity) {
+  function validateCostBases(positions) {
     for (const position of positions) {
       if (position.missing_lot_cost) {
         throw new Error(
           `Cannot calculate unrealized gain for ${position.account}: ` +
           `${position.missing_lot_cost} has no lot cost`,
-        );
-      }
-      if (position.foreign_lot_cost_commodity) {
-        throw new Error(
-          `Cannot calculate unrealized gain for ${position.account}: ` +
-          `${position.commodity} has lot cost in ${position.foreign_lot_cost_commodity}; ` +
-          `lot costs must be expressed in ${valuationCommodity}`,
         );
       }
     }
@@ -110,8 +103,9 @@ module.exports = ({
   function queryUnrealizedGains(database, options, { valuationPriceCache }) {
     const reportOptions = parseOptions(optionsSchema, options, 'unrealizedGains');
     const valuationCommodity = valuationCommodityFromDatabase(database);
-    const positions = queryPositions(database, reportOptions, valuationCommodity);
-    validateCostBases(positions, valuationCommodity);
+    const positions = queryPositions(database, reportOptions, valuationCommodity)
+      .filter((position) => !position.foreign_lot_cost_commodity);
+    validateCostBases(positions);
     const rates = queryValuationRates(
       database,
       reportOptions.to,

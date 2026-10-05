@@ -52,7 +52,7 @@ test('exposes stable error code strings instead of public error classes', (t) =>
   );
 });
 
-test('rejects foreign acquisition costs instead of silently reporting them in the default currency', (t) => {
+test('persists foreign lot cost warnings for every report and rebuilds older caches', (t) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-foreign-basis-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -79,27 +79,45 @@ P 2024-01-01 USD 2 SEK
   Assets:USD
 `);
   const journal = openJournal(journalPath);
-  assert.deepEqual(journal.warnings, []);
+  const message = 'Assets:Stock: lot cost in USD must be expressed in the default commodity SEK. ' +
+    'Unrealized gains omit affected positions; their totals may be incomplete';
+  assert.deepEqual(journal.warnings.map(({ code, message }) => ({ code, message })), [{
+    code: 'FOREIGN_LOT_COST_CURRENCY', message,
+  }]);
+  assert.equal(journal.warnings[0].instances[0].line, 19);
+  assert.deepEqual(openJournal(journalPath).warnings, journal.warnings);
+  const Database = require(sqliteModulePath);
+  const previousCache = new Database(journal.databasePath);
+  try {
+    previousCache.prepare("UPDATE database_metadata SET value = '22' WHERE key = 'schema_version'").run();
+    previousCache.prepare('DELETE FROM ingestion_warnings').run();
+  } finally {
+    previousCache.close();
+  }
+  const rebuilt = openJournal(journalPath);
+  assert.equal(rebuilt.rebuilt, true);
+  assert.deepEqual(rebuilt.warnings, journal.warnings);
   assert.deepEqual(journal.aggregate({ inValuationCommodity: true, includeTotal: true }).at(-1), {
     account: 'Total', commodity: 'SEK', isTotal: true, quantity: '10',
   });
   assert.deepEqual(journal.balanceHistoryReport(), [
     { date: '2024-01-01', amount: '10', commodity: 'SEK' },
   ]);
-  const message = 'Cannot calculate unrealized gain for Assets:Stock: STOCK has lot cost in USD; ' +
-    'lot costs must be expressed in SEK';
-  assert.throws(() => journal.unrealizedGains(), { message });
-  const result = spawnSync(process.execPath, [
-    cliPath, 'unrealized-gains', '--include-total', '--format', 'json', '--file', journalPath,
-  ], {
-    cwd: directory,
-    encoding: 'utf8',
-    env: { ...process.env, LEDLIGHT_CACHE_HOME: cacheDirectory },
-  });
-  assert.ifError(result.error);
-  assert.equal(result.status, 1);
-  assert.equal(result.stdout, '');
-  assert.equal(result.stderr, `${message}\n`);
+  assert.deepEqual(journal.unrealizedGains(), []);
+  for (const command of ['aggregate', 'balance-history', 'unrealized-gains', 'accounts']) {
+    const result = spawnSync(process.execPath, [
+      cliPath, command, '--format', 'json', '--file', journalPath,
+    ], {
+      cwd: directory,
+      encoding: 'utf8',
+      env: { ...process.env, LEDLIGHT_CACHE_HOME: cacheDirectory },
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(Array.isArray(JSON.parse(result.stdout)));
+    if (command === 'unrealized-gains') assert.deepEqual(JSON.parse(result.stdout), []);
+    assert.equal(result.stderr.split('\n')[0], `[FOREIGN_LOT_COST_CURRENCY] ${message}`);
+  }
 
   fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(
     '1 STOCK {10 USD}\n  Assets:USD\n',

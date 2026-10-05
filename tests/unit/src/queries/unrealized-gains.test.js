@@ -79,7 +79,7 @@ test('uses the snapshot date for positions, prices, and account selection', (t) 
 });
 
 for (const cost of ['{10 USD}', '{{10 USD}}']) {
-  test(`rejects foreign lot costs ${cost} within a mixed-currency position`, (t) => {
+  test(`omits positions with foreign lot costs ${cost} while preserving supported positions`, (t) => {
     const databasePath = buildFixture(t, `commodity SEK
   default
   format 1,000.00 SEK
@@ -112,12 +112,12 @@ P 2024-01-01 USD 2 SEK
       { account: 'Assets:Broker', quantity: '20', commodity: 'SEK' },
       { account: 'Assets:Other', quantity: '10', commodity: 'SEK' },
     ]);
-    assert.throws(() => unrealizedGains(databasePath, {
+    assert.deepEqual(unrealizedGains(databasePath, {
       to: '2024-02-01', accounts: ['^Assets:Broker$'],
-    }), {
-      message: 'Cannot calculate unrealized gain for Assets:Broker: STOCK has lot cost in USD; ' +
-        'lot costs must be expressed in SEK',
-    });
+    }), []);
+    assert.deepEqual(unrealizedGains(databasePath, {
+      to: '2024-02-01', accounts: ['^Assets:Broker$', '^Assets:Other$'],
+    }), [{ account: 'Assets:Other', quantity: '10', commodity: 'SEK' }]);
     assert.deepEqual(unrealizedGains(databasePath, {
       to: '2024-02-01', accounts: ['^Assets:Other$'],
     }), [{ account: 'Assets:Other', quantity: '10', commodity: 'SEK' }]);

@@ -256,3 +256,23 @@ test('does not apply the trade annotation rule to default commodities or zero qu
   assert.deepEqual(validateJournal(parseTrade('1 SEK')).warnings, []);
   assert.deepEqual(validateJournal(parseTrade('-1 SEK')).warnings, []);
 });
+
+test('warns about foreign lot cost currencies without discarding the transaction', () => {
+  for (const annotation of ['{10 USD}', '{{10 USD}}']) {
+    for (const amount of [`1 FUND ${annotation}`, `-1 FUND ${annotation} @ 12 USD`]) {
+      const journal = parseTrade(amount);
+      const result = validateJournal(journal);
+      assert.deepEqual(result.warnings.filter(({ code }) => code === 'FOREIGN_LOT_COST_CURRENCY'), [{
+        code: 'FOREIGN_LOT_COST_CURRENCY',
+        message: 'Assets:Fund: lot cost in USD must be expressed in the default commodity SEK. ' +
+          'Unrealized gains omit affected positions; their totals may be incomplete',
+        source: 'fixture.ledger',
+        line: 9,
+        column: 3,
+        startLine: 9,
+        endLine: 9,
+      }]);
+      assert.equal(result.invalidEntries.size, 0);
+    }
+  }
+});
