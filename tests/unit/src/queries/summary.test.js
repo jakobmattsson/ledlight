@@ -233,10 +233,10 @@ test('preserves commodity totals while adding exact valuation values for code co
 
 test('rejects invalid intervals and missing valuation price chains', (t) => {
   const databasePath = buildFixture(t);
-  assert.throws(() => summary(databasePath, { from: '2024-02-30' }), /Invalid --from date/);
+  assert.throws(() => summary(databasePath, { from: '2024-02-30' }), /from must be a valid date/);
   assert.throws(
     () => summary(databasePath, { from: '2024-02-01', to: '2024-01-01' }),
-    /--from date .* is after --to date/,
+    /from date .* is after to date/,
   );
   assert.throws(
     () => summary(databasePath, { dateBasis: 'actual' }),

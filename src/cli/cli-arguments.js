@@ -104,14 +104,10 @@ module.exports = ({
     command, '--accounts <pattern>', 'include accounts matching a pattern (repeatable)',
     { repeatable: true, apiInput: 'accounts' },
   );
-  const addUsageSelection = (command, noun) => {
-    const option = new Option(
-      '--usage <selection>', `select all, used, or unused ${noun}`,
-    ).choices(['all', 'used', 'unused']).default('used');
-    option.argParser(singleValue('--usage'));
-    option.apiInput = 'usage';
-    return command.addOption(option);
-  };
+  const addUsageSelection = (command, noun) => addValueOption(
+    command, '--usage <selection>', `select all, used, or unused ${noun}`,
+    { choices: ['all', 'used', 'unused'], defaultValue: 'used', apiInput: 'usage' },
+  );
   const addJournal = (command) => addValueOption(
     command, '--file <path>', 'read the journal rooted at this file',
     { required: true, apiInput: 'journalPath' },
@@ -239,7 +235,7 @@ module.exports = ({
       'reports',
     );
     addJournal(unrealizedGains);
-    addDateOption(unrealizedGains, '--at <date>', 'show gains at YYYY-MM-DD', 'at');
+    addDateOption(unrealizedGains, '--to <date>', 'include positions and prices on or before YYYY-MM-DD', 'to');
     addAccountPatterns(unrealizedGains); addDateBasisOption(unrealizedGains);
     addOutputValueOption(unrealizedGains, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
@@ -369,7 +365,7 @@ module.exports = ({
       };
     }
     const reportOptions = compact({
-      from: options.from, to: options.to, at: options.at, accounts: options.accounts || [],
+      from: options.from, to: options.to, accounts: options.accounts || [],
       dateBasis: options.dateBasis, invert: options.invert || undefined,
     });
     if (commandName === 'summary') {

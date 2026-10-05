@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports = ({
-  apiOptions: { parseOptions },
+  apiOptions: { usage, parseOptions },
   zod: { z },
 }) => {
   const optionsSchema = z.strictObject({
-    usage: z.enum(['all', 'used', 'unused']).default('all'),
+    usage,
   });
 
   function queryCommodities(database, options, _caches) {

@@ -75,7 +75,7 @@ test('rejects unsupported or repeated configuration settings', (t) => {
   const configurationPath = path.join(workingDirectory, '.ledlightrc');
   const configuredArguments = configuration(home, workingDirectory);
 
-  fs.writeFileSync(configurationPath, '--account Assets:Cash\n');
+  fs.writeFileSync(configurationPath, '--accounts Assets:Cash\n');
   assert.throws(() => configuredArguments.apply(['summary']), /only supports the --file option/u);
 
   fs.writeFileSync(configurationPath, '--file first.ledger\n--file second.ledger\n');
