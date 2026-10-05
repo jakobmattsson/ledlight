@@ -1,0 +1,138 @@
+{
+  "description": "Sale proceeds may be far above or below acquisition cost. Only recorded acquisitions determine the allocation bounds; no tax metadata or exemption participates.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-02-28",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "6",
+          "costBasis": "600",
+          "marketValue": "6000",
+          "unrealizedGain": "5400"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1000",
+        "saleProceeds": "4000",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "3600",
+      "netRealizedGain": "3600",
+      "unrealizedGain": "5400",
+      "economicGain": "9000",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": [
+          {
+            "account": "Assets:Broker",
+            "quantity": "5400",
+            "commodity": "USD"
+          }
+        ]
+      }
+    },
+    {
+      "at": "2024-03-31",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "3",
+          "costBasis": "300",
+          "marketValue": "150",
+          "unrealizedGain": "-150"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1000",
+        "saleProceeds": "4150",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "3450",
+      "netRealizedGain": "3450",
+      "unrealizedGain": "-150",
+      "economicGain": "3300",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": [
+          {
+            "account": "Assets:Broker",
+            "quantity": "-150",
+            "commodity": "USD"
+          }
+        ]
+      }
+    },
+    {
+      "at": "2024-04-30",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "0",
+          "marketValue": "0",
+          "unrealizedGain": "0"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "1000",
+        "saleProceeds": "5050",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "4050",
+      "netRealizedGain": "4050",
+      "unrealizedGain": "0",
+      "economicGain": "4050",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": []
+      }
+    }
+  ],
+  "costBasisChecks": [
+    {
+      "transaction": "High-price sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "4",
+      "costBasis": "400",
+      "minimum": "400",
+      "maximum": "400",
+      "outcome": "feasible",
+      "explanation": "Every acquired unit cost 100. Proceeds of 4000 cannot justify removing 800; the only possible four-unit basis is 400."
+    },
+    {
+      "transaction": "Low-price sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "3",
+      "costBasis": "300",
+      "minimum": "300",
+      "maximum": "300",
+      "outcome": "feasible",
+      "explanation": "The sale price can be below acquisition cost. This valid disposal realizes a loss of 150."
+    },
+    {
+      "transaction": "Final sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "3",
+      "costBasis": "300",
+      "minimum": "300",
+      "maximum": "300",
+      "outcome": "feasible",
+      "explanation": "Consume the final three units at their unchanged historical cost."
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

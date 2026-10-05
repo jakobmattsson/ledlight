@@ -1,0 +1,186 @@
+{
+  "description": "Keep all feasible interpretations of the prefix. The paired fixtures share the same first sale but require opposite remaining extremes.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-02-28",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "20",
+          "costBasis": "40",
+          "marketValue": "80",
+          "unrealizedGain": "40"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "40",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "20",
+      "netRealizedGain": "20",
+      "unrealizedGain": "40",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": [
+          {
+            "account": "Assets:Broker",
+            "quantity": "40",
+            "commodity": "USD"
+          }
+        ]
+      }
+    },
+    {
+      "at": "2024-03-31",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "10",
+          "costBasis": "30",
+          "marketValue": "40",
+          "unrealizedGain": "10"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "80",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "50",
+      "netRealizedGain": "50",
+      "unrealizedGain": "10",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": [
+          {
+            "account": "Assets:Broker",
+            "quantity": "10",
+            "commodity": "USD"
+          }
+        ]
+      }
+    },
+    {
+      "at": "2024-04-30",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "0",
+          "marketValue": "0",
+          "unrealizedGain": "0"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "120",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "60",
+      "netRealizedGain": "60",
+      "unrealizedGain": "0",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": []
+      }
+    }
+  ],
+  "costBasisChecks": [
+    {
+      "transaction": "Ambiguous first sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "10",
+      "costBasis": "20",
+      "minimum": "10",
+      "maximum": "30",
+      "outcome": "feasible",
+      "explanation": "Either ten middle units or five cheap and five expensive units can explain this basis."
+    },
+    {
+      "transaction": "Second sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "10",
+      "costBasis": "10",
+      "minimum": "10",
+      "maximum": "30",
+      "outcome": "feasible",
+      "explanation": "Both extremes are still feasible over the set of histories consistent with the prefix; do not retain only one guessed inventory."
+    },
+    {
+      "transaction": "Final sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "10",
+      "costBasis": "30",
+      "minimum": "30",
+      "maximum": "30",
+      "outcome": "feasible",
+      "explanation": "Consume exactly the remainder implied by both prior sales."
+    }
+  ],
+  "currentIngestionWarningCodes": [],
+  "allocationWitnesses": [
+    {
+      "description": "One feasible explanation consumes all middle-cost units first. Another explanation of that prefix alone is five cheap plus five expensive units; committing to that alternative would wrongly reject this continuation.",
+      "purchases": [
+        {
+          "transaction": "Buy cheap units",
+          "quantity": "10",
+          "unitCost": "1"
+        },
+        {
+          "transaction": "Buy middle units",
+          "quantity": "10",
+          "unitCost": "2"
+        },
+        {
+          "transaction": "Buy expensive units",
+          "quantity": "10",
+          "unitCost": "3"
+        }
+      ],
+      "sales": [
+        {
+          "transaction": "Ambiguous first sale",
+          "allocations": [
+            "0",
+            "10",
+            "0"
+          ]
+        },
+        {
+          "transaction": "Second sale",
+          "allocations": [
+            "10",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "transaction": "Final sale",
+          "allocations": [
+            "0",
+            "0",
+            "10"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -15,7 +15,10 @@ canonical verification with `npm test`.
 
 - Reconcile units and carrying cost separately for each account and commodity.
 - Acquisitions add basis; disposals remove the explicitly booked basis. The
-  allocation method is outside the scope of this check.
+  allocation method is outside the scope of this check, but the full sequence
+  must admit at least one feasible allocation of the available acquisition costs.
+  See [allocation feasibility](ALLOCATION.md) for quantity-aware bounds,
+  chronological constraints, and additional scenarios.
 - Transfers carry both units and basis between accounts. They do not create
   realized results, and they cancel when both accounts are in scope.
 - Splits and reverse splits change units without changing total basis. These
@@ -38,7 +41,9 @@ canonical verification with `npm test`.
 The total-result identity alone is not proof of correctness: an invalid closed
 position can retain a residual basis that offsets an incorrect realized gain.
 The closed-position rule is an additional requirement. Likewise, offsetting
-errors must not disappear simply because their portfolio sum is zero.
+errors must not disappear simply because their portfolio sum is zero. Even zero
+residual basis at full liquidation does not erase an impossible earlier disposal.
+Allocation feasibility is an additional requirement beyond these identities.
 
 ## Expected output format
 
@@ -80,11 +85,22 @@ strings; no machine floating-point tolerance is part of the contract.
   Their warnings are recorded as a known limitation, with TODO tests requiring
   recognition of valid non-sale adjustments; adding fictitious sale prices to
   these fixtures would hide the limitation.
+- `costBasisChecks` specifies proposed per-disposal feasibility outcomes and
+  exact minimum and maximum **total** disposal costs, conditional on all earlier
+  entries. Its transaction descriptions identify unique postings in the journal.
+  Each check explains the hand-derived bounds. See [ALLOCATION.md](ALLOCATION.md)
+  for the complete meaning of the contract.
+- `allocationWitnesses`, when present, gives concrete fractional allocations
+  that explain a valid sequence. The runner checks their amounts, acquisition
+  capacities, and ordering. These prove existence, not the optimality of bounds;
+  the test runner does not implement a feasibility or optimization solver.
 
 The runner verifies ingestion, booked quantities, cash flows, income, fees,
 fixture arithmetic, and supported report output. Future global diagnostics and
-known report gaps appear as explicit TODO tests. Passing this suite therefore
-does not mean the new global reconciliation rules have been implemented.
+known report gaps appear as explicit TODO tests. Both acceptance and rejection
+by the future allocation validator also appear as named TODOs. Passing this
+suite therefore does not mean the new global reconciliation rules have been
+implemented.
 
 ## Scenarios and expected results
 
@@ -119,6 +135,10 @@ each directory's `expected.json`.
 | `transfer-without-basis` | 0 | Unknown | 200 | Incomplete; destination basis missing |
 | `missing-market-price` | 0 | Unknown | Unknown | Incomplete valuation; basis known |
 
+The additional 16 `allocation-*` scenarios are listed with their expected bounds
+and outcomes in [ALLOCATION.md](ALLOCATION.md). Together these directories contain
+40 standalone scenarios.
+
 ## Scope
 
 These are complete-history, long-position examples with no opening holdings,
@@ -132,3 +152,8 @@ history. Such cases need additional explicit fixtures and accounting rules.
 No fixture asks Ledlight to enforce FIFO, LIFO, average cost, tax treatment, or
 transaction-level lot matching. The method names describe how the example's
 author chose the disposal basis; Ledlight receives the resulting postings.
+
+Tax rules and tax reporting are outside Ledlight's scope. A deduction in an
+external tax calculation cannot change the historical basis removed from a
+position. No tax tags, tax methods, exemption flags, or alternative tax-derived
+lot costs participate in these scenarios or in their intended validation.

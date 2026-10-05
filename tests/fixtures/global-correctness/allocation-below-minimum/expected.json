@@ -1,0 +1,96 @@
+{
+  "description": "One cent beyond an attainable endpoint is invalid even though the book balances and the later complete sale leaves zero units and basis. A later sale cannot erase an earlier error.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-02-28",
+      "status": "invalid",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "19",
+          "costBasis": "48.01",
+          "marketValue": "76",
+          "unrealizedGain": "27.99"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "44",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "32.01",
+      "netRealizedGain": "32.01",
+      "unrealizedGain": "27.99",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [
+        {
+          "kind": "impossible-cost-basis",
+          "transaction": "Impossible first sale",
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "amount": "11.99",
+          "minimum": "12",
+          "maximum": "32"
+        }
+      ],
+      "unrealizedGains": {
+        "pending": "Surface the impossible historical allocation; numerical report rows alone do not certify this history."
+      }
+    },
+    {
+      "at": "2024-04-30",
+      "status": "invalid",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "0",
+          "marketValue": "0",
+          "unrealizedGain": "0"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "120",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "60",
+      "netRealizedGain": "60",
+      "unrealizedGain": "0",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [
+        {
+          "kind": "impossible-cost-basis",
+          "transaction": "Impossible first sale",
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "amount": "11.99",
+          "minimum": "12",
+          "maximum": "32"
+        }
+      ],
+      "unrealizedGains": {
+        "pending": "Surface the impossible historical allocation; numerical report rows alone do not certify this history."
+      }
+    }
+  ],
+  "costBasisChecks": [
+    {
+      "transaction": "Impossible first sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "11",
+      "costBasis": "11.99",
+      "minimum": "12",
+      "maximum": "32",
+      "outcome": "infeasible",
+      "explanation": "Available costs are ten units each at 1, 2 and 3. The exact interval is [12,32], not [11,33]."
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

@@ -1,0 +1,58 @@
+{
+  "description": "A later purchase must not retroactively justify an impossible earlier disposal, even if the final inventory and result balance. Same-day entries retain journal order.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-04-30",
+      "status": "invalid",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "0",
+          "marketValue": "0",
+          "unrealizedGain": "0"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "40",
+        "saleProceeds": "80",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "40",
+      "netRealizedGain": "40",
+      "unrealizedGain": "0",
+      "economicGain": "40",
+      "resultDifference": "0",
+      "issues": [
+        {
+          "kind": "impossible-cost-basis",
+          "transaction": "Sale before expensive purchase",
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "amount": "10",
+          "minimum": "5",
+          "maximum": "5"
+        }
+      ],
+      "unrealizedGains": {
+        "pending": "Surface the impossible historical allocation; numerical report rows alone do not certify this history."
+      }
+    }
+  ],
+  "costBasisChecks": [
+    {
+      "transaction": "Sale before expensive purchase",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "5",
+      "costBasis": "10",
+      "minimum": "5",
+      "maximum": "5",
+      "outcome": "infeasible",
+      "explanation": "At this exact point in journal order only ten units at 1 have been acquired. The later units at 3 are unavailable, regardless of the report date."
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

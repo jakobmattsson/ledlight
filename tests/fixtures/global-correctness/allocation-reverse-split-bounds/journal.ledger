@@ -1,0 +1,30 @@
+commodity USD
+  default
+commodity FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-03-01 FUND 8 USD
+
+2024-01-01 Cheap acquisition
+  Assets:Broker  10 FUND {{10 USD}}
+  Assets:Bank  -10 USD
+
+2024-01-02 Expensive acquisition
+  Assets:Broker  10 FUND {{30 USD}}
+  Assets:Bank  -30 USD
+
+2024-02-01 One-for-two reverse split
+  Assets:Broker  -20 FUND {{40 USD}}
+  Assets:Broker  10 FUND {{40 USD}}
+
+2024-03-01 Sale at adjusted lower bound
+  Assets:Broker  -6 FUND {{16 USD}} @@ 48 USD
+  Assets:Bank  48 USD
+  Income:CapitalGains  -32 USD
+
+2024-04-01 Final sale at a loss
+  Assets:Broker  -4 FUND {{24 USD}} @@ 8 USD
+  Assets:Bank  8 USD
+  Income:CapitalGains  16 USD

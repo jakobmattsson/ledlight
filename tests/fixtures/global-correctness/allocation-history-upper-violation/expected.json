@@ -1,0 +1,141 @@
+{
+  "description": "The second sale lies inside the original ten-unit range [10,30], but is impossible after the first sale. Full liquidation later still cannot repair the historical violation.",
+  "valuationCommodity": "USD",
+  "snapshots": [
+    {
+      "at": "2024-02-28",
+      "status": "balanced",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "19",
+          "costBasis": "28",
+          "marketValue": "76",
+          "unrealizedGain": "48"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "44",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "12",
+      "netRealizedGain": "12",
+      "unrealizedGain": "48",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [],
+      "unrealizedGains": {
+        "rows": [
+          {
+            "account": "Assets:Broker",
+            "quantity": "48",
+            "commodity": "USD"
+          }
+        ]
+      }
+    },
+    {
+      "at": "2024-03-31",
+      "status": "invalid",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "9",
+          "costBasis": "8",
+          "marketValue": "36",
+          "unrealizedGain": "28"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "84",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "32",
+      "netRealizedGain": "32",
+      "unrealizedGain": "28",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [
+        {
+          "kind": "impossible-cost-basis",
+          "transaction": "Impossible second sale",
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "amount": "20",
+          "minimum": "10",
+          "maximum": "19"
+        }
+      ],
+      "unrealizedGains": {
+        "pending": "Surface the impossible historical allocation; numerical report rows alone do not certify this history."
+      }
+    },
+    {
+      "at": "2024-04-30",
+      "status": "invalid",
+      "positions": [
+        {
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "quantity": "0",
+          "costBasis": "0",
+          "marketValue": "0",
+          "unrealizedGain": "0"
+        }
+      ],
+      "flows": {
+        "purchaseCost": "60",
+        "saleProceeds": "120",
+        "expensedFees": "0"
+      },
+      "bookedRealizedGain": "60",
+      "netRealizedGain": "60",
+      "unrealizedGain": "0",
+      "economicGain": "60",
+      "resultDifference": "0",
+      "issues": [
+        {
+          "kind": "impossible-cost-basis",
+          "transaction": "Impossible second sale",
+          "account": "Assets:Broker",
+          "commodity": "FUND",
+          "amount": "20",
+          "minimum": "10",
+          "maximum": "19"
+        }
+      ],
+      "unrealizedGains": {
+        "pending": "Surface the impossible historical allocation; numerical report rows alone do not certify this history."
+      }
+    }
+  ],
+  "costBasisChecks": [
+    {
+      "transaction": "First sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "11",
+      "costBasis": "32",
+      "minimum": "12",
+      "maximum": "32",
+      "outcome": "feasible",
+      "explanation": "The first allocation is exactly an admissible endpoint."
+    },
+    {
+      "transaction": "Impossible second sale",
+      "account": "Assets:Broker",
+      "commodity": "FUND",
+      "quantity": "10",
+      "costBasis": "20",
+      "minimum": "10",
+      "maximum": "19",
+      "outcome": "infeasible",
+      "explanation": "Condition on the first sale: ten units at 1 and nine at 2 remain."
+    }
+  ],
+  "currentIngestionWarningCodes": []
+}

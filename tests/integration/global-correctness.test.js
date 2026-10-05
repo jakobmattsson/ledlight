@@ -9,7 +9,7 @@ const { resolveQuery, resolveRepositoryModule } = require('../support/repository
 
 const { buildDatabase } = resolveRepositoryModule('src/ingestion/database/database.js').$$private;
 const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
-const { addDecimals, subtractDecimals, parseDecimal, formatDecimal } =
+const { addDecimals, subtractDecimals, multiplyDecimals, compareDecimals, parseDecimal, formatDecimal } =
   resolveRepositoryModule('src/core/decimal.js');
 const fixtures = path.resolve(__dirname, '../fixtures/global-correctness');
 
@@ -21,6 +21,20 @@ function sum(values) {
 
 function subtract(left, right) {
   return formatDecimal(subtractDecimals(parseDecimal(left), parseDecimal(right)));
+}
+
+function multiply(left, right) {
+  return formatDecimal(multiplyDecimals(parseDecimal(left), parseDecimal(right)));
+}
+
+function compare(left, right) {
+  return compareDecimals(parseDecimal(left), parseDecimal(right));
+}
+
+function postingBasis(posting) {
+  return posting.lotCost.isTotal
+    ? posting.lotCost.quantity
+    : multiply(posting.amount.quantity.replace(/^-/, ''), posting.lotCost.quantity);
 }
 
 for (const name of fs.readdirSync(fixtures).filter((name) =>
@@ -46,6 +60,58 @@ for (const name of fs.readdirSync(fixtures).filter((name) =>
       return readDatabase(databasePath, (database) => resolveQuery(name).execute(
         database, options, { valuationPriceCache: new Map() },
       ));
+    }
+
+    if (expected.costBasisChecks) {
+      const postings = query('postings', {});
+      for (const check of expected.costBasisChecks) {
+        const matches = postings.filter((posting) => posting.description === check.transaction &&
+          posting.account === check.account && posting.amount?.commodity === check.commodity);
+        assert.equal(matches.length, 1, `Unique disposal for ${check.transaction}`);
+        const [posting] = matches;
+        assert.equal(posting.amount.quantity, subtract('0', check.quantity));
+        assert.equal(posting.lotCost.commodity, expected.valuationCommodity);
+        assert.equal(postingBasis(posting), check.costBasis);
+        assert.ok(compare(check.minimum, check.maximum) <= 0);
+        const inside = compare(check.costBasis, check.minimum) >= 0 &&
+          compare(check.costBasis, check.maximum) <= 0;
+        assert.equal(check.outcome, inside ? 'feasible' : 'infeasible');
+        assert.ok(check.explanation.length > 0);
+        await t.test(`${check.outcome}: ${check.transaction}, basis ${check.costBasis}, allowed ` +
+          `[${check.minimum}, ${check.maximum}]`, {
+          todo: 'Specification for the future allocation validator; bounds are hand-derived, not computed by Ledlight.',
+        });
+      }
+
+      // Check supplied existence witnesses without implementing a search or bounds solver.
+      for (const witness of expected.allocationWitnesses || []) {
+        const purchases = witness.purchases.map((purchase) => {
+          const matches = postings.filter((posting) => posting.description === purchase.transaction &&
+            posting.account === 'Assets:Broker' && posting.amount?.commodity === 'FUND');
+          assert.equal(matches.length, 1);
+          const [posting] = matches;
+          assert.equal(posting.amount.quantity, purchase.quantity);
+          assert.equal(postingBasis(posting), multiply(purchase.quantity, purchase.unitCost));
+          return { ...purchase, postingIndex: postings.indexOf(posting), consumed: '0' };
+        });
+        for (const sale of witness.sales) {
+          const check = expected.costBasisChecks.find(({ transaction }) => transaction === sale.transaction);
+          assert.ok(check, `Witness disposal ${sale.transaction} has an expected constraint`);
+          assert.equal(sale.allocations.length, purchases.length);
+          assert.equal(sum(sale.allocations), check.quantity);
+          assert.equal(sum(sale.allocations.map((quantity, index) =>
+            multiply(quantity, purchases[index].unitCost))), check.costBasis);
+          const saleIndex = postings.findIndex((posting) => posting.description === sale.transaction &&
+            posting.account === check.account);
+          for (const [index, quantity] of sale.allocations.entries()) {
+            const purchase = purchases[index];
+            assert.ok(compare(quantity, '0') >= 0);
+            if (compare(quantity, '0') > 0) assert.ok(purchase.postingIndex < saleIndex);
+            purchase.consumed = sum([purchase.consumed, quantity]);
+            assert.ok(compare(purchase.consumed, purchase.quantity) <= 0);
+          }
+        }
+      }
     }
 
     for (const snapshot of expected.snapshots) {
