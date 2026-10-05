@@ -552,6 +552,12 @@ command, independent of report dates or account filters:
   by the available acquisitions and earlier allocations. It does not prescribe
   FIFO, LIFO, or average cost. Transfers carry acquisition history between
   accounts; splits change units while preserving basis.
+- `NEGATIVE_POSTING_DATE_HOLDING` identifies a negative end-of-day holding per
+  account and non-default commodity using explicit posting dates, falling back
+  to transaction dates. It warns when a day's net outflow creates or increases
+  a negative holding, even if the acquisition history is valid by transaction
+  date. Same-day movements are netted before checking. Different trade and
+  settlement dates are allowed when both timelines remain feasible.
 - `RESIDUAL_COST_BASIS` identifies closed account/commodity positions with
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
