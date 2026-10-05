@@ -3,7 +3,7 @@
 module.exports = ({
   project,
   packageMetadata: { version },
-  cliArguments: { ledgerCommand, parseArguments, usage },
+  cliArguments: { parseArguments, usage },
   cliFormat: {
     appendTotal,
     formatCsv,
@@ -123,7 +123,6 @@ module.exports = ({
       return `${usage(arguments_[0])}\n`;
     }
     const parsed = parseArguments(arguments_);
-    if (parsed.ledger) return `${ledgerCommand(parsed)}\n`;
     return [
       'summary',
       'balance-history',

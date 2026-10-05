@@ -94,11 +94,6 @@ module.exports = ({
     option.outputInput = settings.outputInput;
     return command.addOption(option);
   };
-  const addCliBooleanOption = (command, flags, description) => {
-    const option = new Option(flags, description);
-    option.cliInput = true;
-    return command.addOption(option);
-  };
   const addDateOption = (command, flags, description, apiInput) =>
     addValueOption(command, flags, description, { apiInput });
   const addDateBasisOption = (command) => addValueOption(
@@ -310,11 +305,6 @@ module.exports = ({
         .filter((option) => option.mandatory)
         .map((option) => option.flags);
       command.usage(`${mandatoryOptions.join(' ')} [options]`);
-      addCliBooleanOption(
-        command,
-        '--ledger',
-        'show the equivalent standalone Ledger command',
-      );
       command.addOption(new Option('--help', 'show command help'));
     }
     program.addOption(new Option('--version', 'show the package version'));
@@ -338,7 +328,7 @@ module.exports = ({
   function commandCoverage() {
     return Object.fromEntries(createProgram().commands.map((command) => {
       for (const option of command.options.filter((candidate) =>
-        candidate.attributeName() !== 'help' && !candidate.cliInput)) {
+        candidate.attributeName() !== 'help')) {
         if (Boolean(option.apiInput) === Boolean(option.outputInput)) {
           throw new Error(
             `CLI option ${option.flags} must declare exactly one API or output input`,
@@ -459,28 +449,7 @@ module.exports = ({
     if (parsed.output?.ledgerCompatible && parsed.output.format !== 'text') {
       throw new Error('--ledger-compatible requires --format text');
     }
-    return selectedCommand.options.ledger ? { ...parsed, ledger: true } : parsed;
-  }
-  function shellArgument(value) {
-    if (/^[A-Za-z0-9_./:@%+=,-]+$/u.test(value)) return value;
-    return `'${value.replaceAll("'", "'\\''")}'`;
-  }
-  function ledgerCommand(parsed) {
-    const prefix = `ledger --args-only --no-pager --file ${shellArgument(parsed.journalPath)}`;
-    if (parsed.command === 'accounts' &&
-        parsed.options.usage === 'used' &&
-        !parsed.output.details && parsed.output.format === 'text') {
-      const filters = parsed.options.accounts.map(shellArgument);
-      return [prefix, 'accounts', ...filters].join(' ');
-    }
-    if (parsed.command === 'transactions' &&
-        parsed.options.id === undefined && parsed.options.order === 'oldest' &&
-        parsed.options.page === undefined && parsed.options.pageSize === undefined &&
-        parsed.output.format === 'text') {
-      const filters = parsed.options.accounts.map(shellArgument);
-      return [prefix, 'print', ...filters].join(' ');
-    }
-    return 'No ledger equivalent command exists';
+    return parsed;
   }
   const apiInputCoverage = commandCoverage();
   const apiCommands = Object.freeze(Object.fromEntries(
@@ -497,5 +466,5 @@ module.exports = ({
       throw new Error(`CLI inputs do not cover the ${operation} API contract`);
     }
   }
-  return { apiCommands, apiInputCoverage, ledgerCommand, parseArguments, usage };
+  return { apiCommands, apiInputCoverage, parseArguments, usage };
 };

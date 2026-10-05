@@ -10,7 +10,7 @@ const argumentsModule = createArguments({
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
 });
-const { apiCommands, ledgerCommand, parseArguments, usage } = argumentsModule;
+const { apiCommands, parseArguments, usage } = argumentsModule;
 
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
@@ -176,33 +176,6 @@ test('uses summary defaults when no options are supplied', () => {
     reportOptions: { accounts: [] },
     output: { format: 'text' },
   });
-});
-
-test('parses --ledger as a CLI-only mode and renders supported base commands', () => {
-  const accounts = parseArguments(['accounts', '--file', "/journals/O'Brien books.ledger", '--ledger']);
-  assert.deepEqual(accounts, {
-    command: 'accounts',
-    journalPath: "/journals/O'Brien books.ledger",
-    options: { accounts: [], usage: 'used' },
-    output: { details: false, format: 'text' },
-    ledger: true,
-  });
-  assert.equal(
-    ledgerCommand(accounts),
-    "ledger --args-only --no-pager --file '/journals/O'\\''Brien books.ledger' accounts",
-  );
-
-  const transactions = parseArguments(['transactions', '--file', '/journal', '--ledger']);
-  assert.equal(transactions.output.ledgerCompatible, false);
-  assert.equal(ledgerCommand(transactions), 'ledger --args-only --no-pager --file /journal print');
-  assert.equal(ledgerCommand(parseArguments([
-    'accounts', '--file', '/journal', '--accounts', '^Assets:Cash$',
-    '--accounts', "Expenses:O'Brien", '--ledger',
-  ])), "ledger --args-only --no-pager --file /journal accounts '^Assets:Cash$' 'Expenses:O'\\''Brien'");
-  assert.equal(ledgerCommand(parseArguments([
-    'transactions', '--file', '/journal', '--accounts', 'Assets:Cash',
-    '--accounts', 'Expenses:Food', '--ledger',
-  ])), 'ledger --args-only --no-pager --file /journal print Assets:Cash Expenses:Food');
 });
 
 test('uses the CLI configuration file argument when --file is omitted', () => {
@@ -475,10 +448,6 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     /Return measures:[\s\S]*Time-weighted return[\s\S]*end of the day[\s\S]*Money-weighted return \(total\)[\s\S]*first to the last[\s\S]*Money-weighted return \(annualized\)[\s\S]*present value/u,
   );
   assert.match(usage('summary'), /--help\s+show command help/u);
-  assert.match(
-    usage('summary'),
-    /--ledger\s+show the equivalent standalone Ledger command/u,
-  );
   assert.doesNotMatch(usage('summary'), /-h, --help/u);
   assert.doesNotMatch(usage(), /-V, --version/u);
   assert.throws(() => usage('missing'), /Unknown command: missing/u);
