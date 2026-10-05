@@ -84,7 +84,7 @@ its own warning, including blocks in included files.
 Report methods are called on the object returned by `openJournal()` and accept
 an optional `options` object.
 
-### `journal.summary(options)`
+### `journal.aggregate(options)`
 
 Options:
 
@@ -112,7 +112,7 @@ accounts, and retain exact zero balances. `withValuationValue` adds an exact
 ### `journal.balanceHistoryReport(options)`
 
 Options are `from`, `to`, `accounts`, `dateBasis`, and `invert`, with the same
-meanings as in `summary`.
+meanings as in `aggregate`.
 
 Returns daily rows sorted by date:
 

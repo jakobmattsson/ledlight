@@ -169,8 +169,8 @@ module.exports = ({
     ];
   }
 
-  function querySummary(database, options, { valuationPriceCache }) {
-    const reportOptions = parseOptions(optionsSchema, options, 'summary');
+  function queryAggregate(database, options, { valuationPriceCache }) {
+    const reportOptions = parseOptions(optionsSchema, options, 'aggregate');
     const commodityTotals = queryCommodityTotals(database, reportOptions);
     const rows = reportOptions.inValuationCommodity
       ? queryValuationTotals(database, reportOptions, commodityTotals, valuationPriceCache)
@@ -180,5 +180,5 @@ module.exports = ({
     return transformRows(rows, reportOptions);
   }
 
-  return { name: 'summary', inputSchema: optionsSchema, execute: querySummary };
+  return { name: 'aggregate', inputSchema: optionsSchema, execute: queryAggregate };
 };

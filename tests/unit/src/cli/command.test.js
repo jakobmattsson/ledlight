@@ -69,8 +69,8 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
 test('delegates report behavior to the public Node API and only formats results', () => {
   const calls = [];
   const journal = {
-    summary(options) {
-      calls.push({ operation: 'summary', options });
+    aggregate(options) {
+      calls.push({ operation: 'aggregate', options });
       if (options.groupBy === 'commodity') {
         return [{ quantity: '-10', commodity: 'USD' }];
       }
@@ -129,8 +129,8 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.doesNotMatch(topLevelHelp, /Usage: ledlight aggregate/u);
   assert.equal(runReportCommand([]), topLevelHelp);
   assert.match(
-    runReportCommand(['summary', '--help']),
-    /^Usage: ledlight summary[\s\S]*--accounts <pattern>/u,
+    runReportCommand(['aggregate', '--help']),
+    /^Usage: ledlight aggregate[\s\S]*--accounts <pattern>/u,
   );
   assert.equal(runReportCommand(['--version']), '1.2.3\n');
   assert.throws(() => runReportCommand(['-V']), /unknown option '-V'/u);
@@ -146,13 +146,13 @@ test('delegates report behavior to the public Node API and only formats results'
 
   assert.match(
     runReportCommand([
-      'summary', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
+      'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
     ]),
     /-10\.00 USD.*Total/u,
   );
   assert.equal(
     runReportCommand([
-      'summary', '--file', '/journal', '--accounts', 'Assets:',
+      'aggregate', '--file', '/journal', '--accounts', 'Assets:',
       '--group-by', 'commodity', '--format', 'csv',
     ]),
     'amount,commodity\n-10,USD\n',
@@ -175,7 +175,7 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.deepEqual(calls, [
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'summary',
+      operation: 'aggregate',
       options: {
         accounts: ['Assets:'],
         dateBasis: 'posting',
@@ -188,7 +188,7 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'commodities', options: { usage: 'all' } },
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'summary',
+      operation: 'aggregate',
       options: {
         accounts: ['Assets:'], dateBasis: 'posting', groupBy: 'commodity', includeTotal: false,
       },

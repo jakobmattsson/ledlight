@@ -153,13 +153,13 @@ const scenarios = [
   {
     name: 'plain posting summaries with implicit postings',
     fixture: 'basic',
-    ledlightArguments: ['summary', '--format', 'csv'],
+    ledlightArguments: ['aggregate', '--format', 'csv'],
     ledgerArguments: { options: [], queries: [] },
   },
   {
     name: 'posting summaries with unit and total lot costs',
     fixture: 'lot-cost',
-    ledlightArguments: ['summary', '--format', 'csv'],
+    ledlightArguments: ['aggregate', '--format', 'csv'],
     ledgerArguments: { options: [], queries: [] },
   },
   {
@@ -171,14 +171,14 @@ const scenarios = [
   {
     name: 'inverted account-prefix selection',
     fixture: 'basic',
-    ledlightArguments: ['summary', '--accounts', 'Expenses:', '--invert', '--format', 'csv'],
+    ledlightArguments: ['aggregate', '--accounts', 'Expenses:', '--invert', '--format', 'csv'],
     ledgerArguments: { options: ['--invert'], queries: ['^Expenses:'] },
   },
   {
     name: 'included files, an inclusive interval, and multiple account prefixes',
     fixture: 'includes',
     ledlightArguments: [
-      'summary',
+      'aggregate',
       '--from', '2024-01-01',
       '--to', '2024-01-31',
       '--accounts', 'Assets:',
@@ -193,7 +193,7 @@ const scenarios = [
   {
     name: 'latest-price valuation in the journal default commodity',
     fixture: 'valuation',
-    ledlightArguments: ['summary', '--accounts', 'Assets:Investments', '--value', '--format', 'csv'],
+    ledlightArguments: ['aggregate', '--accounts', 'Assets:Investments', '--value', '--format', 'csv'],
     ledgerArguments: {
       options: ['--exchange', 'USD'],
       queries: ['^Assets:Investments'],
@@ -202,7 +202,7 @@ const scenarios = [
   {
     name: 'older resolvable prices when newer indirect quotes are unusable',
     fixture: 'valuation-selection',
-    ledlightArguments: ['summary', '--accounts', 'Assets:', '--value', '--format', 'csv'],
+    ledlightArguments: ['aggregate', '--accounts', 'Assets:', '--value', '--format', 'csv'],
     ledgerArguments: {
       options: ['--exchange', 'USD'],
       queries: ['^Assets:'],

@@ -10,18 +10,18 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { execute: querySummary } = resolveQuery('summary');
+const { execute: queryAggregate } = resolveQuery('aggregate');
 const { buildDatabase } = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
 const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
 
-function summary(databasePath, options, caches) {
+function aggregate(databasePath, options, caches) {
   const queryCaches = caches ?? { valuationPriceCache: new Map() };
   return readDatabase(databasePath,
-    (database) => querySummary(database, options, queryCaches));
+    (database) => queryAggregate(database, options, queryCaches));
 }
 
 function buildFixture(t) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-summary-'));
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-aggregate-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -54,12 +54,12 @@ P 2024-01-02 NOK 1.1 SEK
 test('aggregates exact amounts through an inclusive upper date', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, { to: '2024-01-01' }), [
+  assert.deepEqual(aggregate(databasePath, { to: '2024-01-01' }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '100.000000000000000001' },
     { account: 'Assets:Fund', commodity: 'FUND', quantity: '2' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-120.000000000000000001' },
   ]);
-  assert.deepEqual(summary(databasePath, { to: '2024-01-02' }), [
+  assert.deepEqual(aggregate(databasePath, { to: '2024-01-02' }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '150' },
     { account: 'Assets:Fund', commodity: 'FUND', quantity: '2' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-170' },
@@ -69,15 +69,15 @@ test('aggregates exact amounts through an inclusive upper date', (t) => {
 test('supports open and closed date intervals', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, { from: '2024-01-02', to: '2024-01-02' }), [
+  assert.deepEqual(aggregate(databasePath, { from: '2024-01-02', to: '2024-01-02' }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '49.999999999999999999' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-49.999999999999999999' },
   ]);
-  assert.deepEqual(summary(databasePath, { from: '2024-01-02' }), [
+  assert.deepEqual(aggregate(databasePath, { from: '2024-01-02' }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '1049.999999999999999999' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-1049.999999999999999999' },
   ]);
-  assert.deepEqual(summary(databasePath, {}), [
+  assert.deepEqual(aggregate(databasePath, {}), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '1150' },
     { account: 'Assets:Fund', commodity: 'FUND', quantity: '2' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-1170' },
@@ -87,20 +87,20 @@ test('supports open and closed date intervals', (t) => {
 test('combines literal account patterns with OR and supports anchors', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     to: '2024-01-02',
     accounts: ['Cash$', '^Equity:'],
   }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '150' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-170' },
   ]);
-  assert.deepEqual(summary(databasePath, { accounts: ['Assets:%'] }), []);
+  assert.deepEqual(aggregate(databasePath, { accounts: ['Assets:%'] }), []);
 });
 
 test('can group matching accounts by commodity', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     to: '2024-01-02',
     accounts: ['Assets:'],
     groupBy: 'commodity',
@@ -108,7 +108,7 @@ test('can group matching accounts by commodity', (t) => {
     { commodity: 'FUND', quantity: '2' },
     { commodity: 'SEK', quantity: '150' },
   ]);
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     to: '2024-01-02',
     accounts: ['Assets:'],
     groupBy: 'commodity',
@@ -121,12 +121,12 @@ test('can group matching accounts by commodity', (t) => {
 test('values every commodity in the journal default using prices at the upper date', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, { to: '2024-01-01', inValuationCommodity: true }), [
+  assert.deepEqual(aggregate(databasePath, { to: '2024-01-01', inValuationCommodity: true }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '100.000000000000000001' },
     { account: 'Assets:Fund', commodity: 'SEK', quantity: '20' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-120.000000000000000001' },
   ]);
-  assert.deepEqual(summary(databasePath, { to: '2024-01-02', inValuationCommodity: true }), [
+  assert.deepEqual(aggregate(databasePath, { to: '2024-01-02', inValuationCommodity: true }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '150' },
     { account: 'Assets:Fund', commodity: 'SEK', quantity: '20' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-170' },
@@ -137,7 +137,7 @@ test('uses materialized valuation rates without loading raw price history', (t) 
   const databasePath = buildFixture(t);
   const valuationPriceCache = new Map();
 
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     to: '2024-01-02',
     accounts: ['Assets:Fund'],
     inValuationCommodity: true,
@@ -151,7 +151,7 @@ test('uses materialized valuation rates without loading raw price history', (t) 
 test('uses the latest available price when no upper date is supplied', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, { accounts: ['Assets:Fund'], inValuationCommodity: true }), [
+  assert.deepEqual(aggregate(databasePath, { accounts: ['Assets:Fund'], inValuationCommodity: true }), [
     { account: 'Assets:Fund', commodity: 'SEK', quantity: '20' },
   ]);
 });
@@ -159,7 +159,7 @@ test('uses the latest available price when no upper date is supplied', (t) => {
 test('applies inversion and totals as public report options', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     to: '2024-01-02',
     accounts: ['Assets:Fund'],
     inValuationCommodity: true,
@@ -175,7 +175,7 @@ test('applies inversion and totals as public report options', (t) => {
     },
   ]);
   assert.throws(
-    () => summary(databasePath, { includeTotal: true }),
+    () => aggregate(databasePath, { includeTotal: true }),
     /includeTotal requires inValuationCommodity/u,
   );
 });
@@ -196,7 +196,7 @@ P 2024-01-01 FUND 12 USD
 
   const build = buildDatabase(databasePath, journalPath);
   assert.equal(build.valuationCommodity, 'USD');
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     accounts: ['Assets:'],
     inValuationCommodity: true,
   }), [
@@ -207,7 +207,7 @@ P 2024-01-01 FUND 12 USD
 test('preserves commodity totals while adding exact valuation values for code consumers', (t) => {
   const databasePath = buildFixture(t);
 
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     to: '2024-01-02',
     accounts: ['Assets:'],
     withValuationValue: true,
@@ -226,39 +226,39 @@ test('preserves commodity totals while adding exact valuation values for code co
     },
   ]);
   assert.throws(
-    () => summary(databasePath, { inValuationCommodity: true, withValuationValue: true }),
+    () => aggregate(databasePath, { inValuationCommodity: true, withValuationValue: true }),
     /cannot be used together/u,
   );
 });
 
 test('rejects invalid intervals and missing valuation price chains', (t) => {
   const databasePath = buildFixture(t);
-  assert.throws(() => summary(databasePath, { from: '2024-02-30' }), /Invalid --from date/);
+  assert.throws(() => aggregate(databasePath, { from: '2024-02-30' }), /Invalid --from date/);
   assert.throws(
-    () => summary(databasePath, { from: '2024-02-01', to: '2024-01-01' }),
+    () => aggregate(databasePath, { from: '2024-02-01', to: '2024-01-01' }),
     /--from date .* is after --to date/,
   );
   assert.throws(
-    () => summary(databasePath, { dateBasis: 'actual' }),
+    () => aggregate(databasePath, { dateBasis: 'actual' }),
     /Invalid dateBasis/u,
   );
   assert.throws(
-    () => summary(databasePath, { invert: 'true' }),
+    () => aggregate(databasePath, { invert: 'true' }),
     /invert must be a boolean/u,
   );
   assert.throws(
-    () => summary(databasePath, { groupBy: 'currency' }),
+    () => aggregate(databasePath, { groupBy: 'currency' }),
     /Invalid groupBy/u,
   );
   assert.throws(
-    () => summary(databasePath, {
+    () => aggregate(databasePath, {
       groupBy: 'commodity', inValuationCommodity: true, includeTotal: true,
     }),
     /includeTotal cannot be used when grouping by commodity/u,
   );
   assert.throws(
-    () => summary(databasePath, { account: 'Assets:' }),
-    /Unknown summary option: account/u,
+    () => aggregate(databasePath, { account: 'Assets:' }),
+    /Unknown aggregate option: account/u,
   );
 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-unpriced-'));
@@ -273,7 +273,7 @@ test('rejects invalid intervals and missing valuation price chains', (t) => {
 `);
   buildDatabase(unpricedDatabasePath, journalPath);
   assert.throws(
-    () => summary(unpricedDatabasePath, { to: '2024-01-01', inValuationCommodity: true }),
+    () => aggregate(unpricedDatabasePath, { to: '2024-01-01', inValuationCommodity: true }),
     /No price for OTHER/,
   );
 });
@@ -294,7 +294,7 @@ P 2024-01-01 NOK 0.5 FUND
   buildDatabase(databasePath, journalPath);
 
   assert.throws(
-    () => summary(databasePath, { to: '2024-01-01', inValuationCommodity: true }),
+    () => aggregate(databasePath, { to: '2024-01-01', inValuationCommodity: true }),
     /Circular price chain while converting FUND to SEK/u,
   );
 });
@@ -310,20 +310,20 @@ test('uses posting dates by default and can use transaction dates', (t) => {
 `);
   buildDatabase(databasePath, journalPath);
 
-  assert.deepEqual(summary(databasePath, { to: '2024-01-02' }), [
+  assert.deepEqual(aggregate(databasePath, { to: '2024-01-02' }), [
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-10' },
   ]);
-  assert.deepEqual(summary(databasePath, { from: '2024-01-03' }), [
+  assert.deepEqual(aggregate(databasePath, { from: '2024-01-03' }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '10' },
   ]);
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     dateBasis: 'transaction',
     to: '2024-01-02',
   }), [
     { account: 'Assets:Cash', commodity: 'SEK', quantity: '10' },
     { account: 'Equity:Opening', commodity: 'SEK', quantity: '-10' },
   ]);
-  assert.deepEqual(summary(databasePath, {
+  assert.deepEqual(aggregate(databasePath, {
     dateBasis: 'transaction',
     from: '2024-01-03',
   }), []);
