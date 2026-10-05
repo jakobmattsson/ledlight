@@ -218,9 +218,9 @@ properties are not currently exposed.
 
 ### `journal.prices()`
 
-Returns Ledger's effective market prices for used commodities. Explicit prices
-replace inferred prices on the same date, repeated explicit prices use the last
-value, and lot or transaction costs contribute inferred prices:
+Returns Ledger's effective market prices for used commodities. The last price
+encountered for a commodity and date wins, whether explicit or inferred from
+lot or transaction costs:
 
 ```js
 {
@@ -233,6 +233,7 @@ value, and lot or transaction costs contribute inferred prices:
 ```
 
 `comment` is a string or `null`. Quantities remain exact decimal strings.
+Rows sort by ascending date, then base commodity. Dates use `YYYY-MM-DD`.
 
 ### `journal.transactions({ accounts, id, order, page, pageSize })`
 

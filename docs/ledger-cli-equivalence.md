@@ -6,11 +6,11 @@ makes the missing equivalents visible.
 
 | Ledlight command | Exact Ledger equivalent | Runnable case |
 | --- | --- | --- |
-| `accounts --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL accounts` | `accounts` |
-| `tags --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL tags` | `tags` |
-| `commodities --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL commodities` | `commodities` |
-| `prices --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL prices` | `prices` |
-| `transactions --ledger-compatible --file JOURNAL` | `ledger --args-only --no-pager --file JOURNAL print` | `transactions` |
+| `accounts --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL accounts` | `accounts` |
+| `tags --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL tags` | `tags` |
+| `commodities --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL commodities` | `commodities` |
+| `prices --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL prices --sort date,account` | `prices` |
+| `transactions --ledger-compatible --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL print` | `transactions` |
 | `balance` | No exact equivalent | — |
 | `unrealized-gains` | No exact equivalent | — |
 | `balance-history` | No exact equivalent | — |
@@ -22,6 +22,11 @@ options are equivalent only where separately documented or tested. In
 particular, `accounts` filters and `transactions --accounts` map to Ledger
 query arguments, while Ledlight-only output formats, pagination, declaration
 selection, and details do not have direct equivalents.
+
+The shared Ledger baseline uses ISO dates (`--date-format %Y-%m-%d`) for all
+commands. Prices sort by ascending date, then base commodity. Ledger's
+`account` sort key represents the base commodity in its prices report;
+`--sort date,account` makes the output deterministic even for same-day prices.
 
 ## Compare an arbitrary journal
 

@@ -313,7 +313,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
   });
   assert.equal(
     runReportCommand(['transactions', '--file', '/journal']),
-    '2024/01/03 Shop\n    Assets:Cash                            -5.00 SEK\n',
+    '2024-01-03 Shop\n    Assets:Cash                            -5.00 SEK\n',
   );
   assert.deepEqual(run([
     'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',

@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const priceScenarios = require('../../../support/price-scenarios');
 
 const repositoryRoot = path.resolve(__dirname, '../../../..');
 const cliPath = path.join(repositoryRoot, 'src/cli/run.js');
@@ -95,7 +96,7 @@ function runLedlight(projectDirectory, arguments_) {
 
 function runLedger(projectDirectory, { options, queries }) {
   const output = execFileSync(ledgerBinary, [
-    '--args-only',
+    '--args-only', '--date-format', '%Y-%m-%d',
     '--file',
     'journal.ledger',
     ...options,
@@ -121,7 +122,7 @@ test('Ledger-compatible transactions match the exact Ledger print output', (t) =
   const projectDirectory = temporaryProject(t, 'basic');
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const ledgerOutput = execFileSync(ledgerBinary, [
-    '--args-only', '--file', journalPath, 'print',
+    '--args-only', '--date-format', '%Y-%m-%d', '--file', journalPath, 'print',
   ], { cwd: projectDirectory, encoding: 'utf8' });
   const ledlightOutput = execFileSync(process.execPath, [
     cliPath, 'transactions', '--ledger-compatible', '--file', journalPath,
@@ -138,7 +139,7 @@ test('transactions matches Ledger print formatting across included files', (t) =
   const projectDirectory = temporaryProject(t, 'print-formatting');
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
-    '--args-only', '--no-pager', '--file', journalPath, 'print',
+    '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath, 'print',
   ]);
   const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
     cliPath, 'transactions', '--ledger-compatible', '--file', journalPath,
@@ -169,7 +170,7 @@ account Income:Other
 `);
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
-    '--args-only', '--no-pager', '--file', journalPath, 'print',
+    '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath, 'print',
   ]);
   const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
     cliPath, 'transactions', '--ledger-compatible', '--file', journalPath,
@@ -247,7 +248,7 @@ test('accounts defaults to the exact Ledger accounts output', (t) => {
   const projectDirectory = temporaryProject(t, 'basic');
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const ledgerOutput = execFileSync(ledgerBinary, [
-    '--args-only', '--file', journalPath, 'accounts',
+    '--args-only', '--date-format', '%Y-%m-%d', '--file', journalPath, 'accounts',
   ], { cwd: projectDirectory, encoding: 'utf8' });
   const ledlightOutput = execFileSync(process.execPath, [
     cliPath, 'accounts', '--file', journalPath,
@@ -296,7 +297,8 @@ P 2024-01-01 FUND 10 USD
     ['transactions', 'print'],
   ]) {
     const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
-      '--args-only', '--no-pager', '--file', journalPath, ledgerCommandName,
+      '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath, ledgerCommandName,
+      ...(ledgerCommandName === 'prices' ? ['--sort', 'date,account'] : []),
     ]);
     const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
       cliPath, ledlightCommand, '--file', journalPath,
@@ -315,6 +317,54 @@ P 2024-01-01 FUND 10 USD
   ]), 'UNUSED\n');
 });
 
+for (const scenario of priceScenarios) {
+  test(`prices matches Ledger: ${scenario.name}`, (t) => {
+    const directory = temporaryJournal(t, scenario.source);
+    for (const [name, source] of Object.entries(scenario.files ?? {})) {
+      fs.writeFileSync(path.join(directory, name), source);
+    }
+    const journalPath = path.join(directory, 'journal.ledger');
+    const ledgerOutput = exactCommandOutput(directory, ledgerBinary, [
+      '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath, 'prices', '--sort', 'date,account',
+    ]);
+    const ledlightOutput = exactCommandOutput(directory, process.execPath, [
+      cliPath, 'prices', '--file', journalPath,
+    ]);
+    assert.equal(ledgerOutput, scenario.text);
+    assert.equal(ledlightOutput, ledgerOutput);
+    assert.equal(exactCommandOutput(directory, process.execPath, [
+      path.join(repositoryRoot, 'scripts/compare-ledger.js'),
+      '--file', journalPath, '--case', 'prices', '--ledger-bin', ledgerBinary,
+    ]), 'PASS prices\n');
+
+    const rows = scenario.expected.map(([date, baseCommodity, quoteQuantity, comment]) => ({
+      date, baseCommodity, quoteQuantity, quoteCommodity: 'SEK', comment,
+    }));
+    assert.deepEqual(JSON.parse(exactCommandOutput(directory, process.execPath, [
+      cliPath, 'prices', '--file', journalPath, '--format', 'json',
+    ])), rows);
+    const csv = exactCommandOutput(directory, process.execPath, [
+      cliPath, 'prices', '--file', journalPath, '--format', 'csv',
+    ]);
+    assert.equal(csv, 'date,baseCommodity,quoteQuantity,quoteCommodity,comment\n' +
+      rows.map((row) =>
+        `${row.date},${row.baseCommodity},${row.quoteQuantity},SEK,${row.comment ?? ''}\n`).join(''));
+  });
+}
+
+test('the comparison matrix applies ISO dates to every Ledger command', (t) => {
+  const directory = temporaryProject(t, 'basic');
+  const comparisonPath = path.join(repositoryRoot, 'scripts/compare-ledger.js');
+  const matrix = exactCommandOutput(directory, process.execPath, [comparisonPath, '--list']);
+  const ledgerCommands = matrix.split('\n').filter((line) => line.includes('`ledger '));
+  assert.equal(ledgerCommands.length, 5);
+  for (const command of ledgerCommands) assert.match(command, /--date-format %Y-%m-%d/u);
+  assert.equal(exactCommandOutput(directory, process.execPath, [
+    comparisonPath, '--file', path.join(directory, 'journal.ledger'),
+    '--ledger-bin', ledgerBinary,
+  ]), 'PASS accounts\nPASS tags\nPASS commodities\nPASS prices\nPASS transactions\n');
+});
+
 test('transactions does not apply the API page limit to default text output', (t) => {
   const transactions = Array.from({ length: 101 }, (_, index) => `
 2024-01-01 Entry ${index + 1}
@@ -329,7 +379,7 @@ account Equity:Opening
 ${transactions}`);
   const journalPath = path.join(projectDirectory, 'journal.ledger');
   const ledgerOutput = exactCommandOutput(projectDirectory, ledgerBinary, [
-    '--args-only', '--no-pager', '--file', journalPath, 'print',
+    '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath, 'print',
   ]);
   const ledlightOutput = exactCommandOutput(projectDirectory, process.execPath, [
     cliPath, 'transactions', '--file', journalPath,
@@ -351,7 +401,7 @@ test('accounts accepts multiple filters matching Ledger query syntax', (t) => {
     '--accounts', '^Assets:', '--accounts', '^Expenses:',
   ];
   const expectedOutput = execFileSync(ledgerBinary, [
-    '--args-only', '--no-pager', '--file', journalPath,
+    '--args-only', '--date-format', '%Y-%m-%d', '--no-pager', '--file', journalPath,
     'accounts', '^Assets:', '^Expenses:',
   ], commonOptions);
   const ledlightOutput = execFileSync(process.execPath, [cliPath, ...arguments_], commonOptions);

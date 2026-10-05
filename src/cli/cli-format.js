@@ -299,7 +299,7 @@ module.exports = ({
     const lines = rows.map((row) => {
       const quantity = formatPriceQuantity(row.quoteQuantity, row.quoteCommodity, formats, false);
       const amount = `${quantity} ${row.quoteCommodity}`;
-      return `${row.date.replaceAll('-', '/')} ${row.baseCommodity.padEnd(8)} ` +
+      return `${row.date} ${row.baseCommodity.padEnd(8)} ` +
         amount.padStart(12);
     });
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
@@ -416,7 +416,7 @@ module.exports = ({
     const formats = commodityFormats(descriptions);
     const lines = [];
     for (const transaction of report.transactions) {
-      const date = transaction.transactionDate.replaceAll('-', '/');
+      const date = transaction.transactionDate;
       const header = `${date} ${transaction.description}`;
       const inlineTransactionComment = transaction.comment === null
         ? ''

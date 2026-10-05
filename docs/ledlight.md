@@ -105,6 +105,9 @@ used names and omit unused declarations. `commodities --details` includes each
 selected declaration's comment, format, default status, and usage status.
 Prices expose the effective market price database, including inferred
 transaction prices and last-price-wins deduplication for a commodity and date.
+All price output formats sort by ascending date, then base commodity, matching
+Ledger with `--sort date,account`. Price and transaction text output use ISO
+dates (`YYYY-MM-DD`), matching Ledger with `--date-format %Y-%m-%d`.
 
 ### CLI to API parity
 
