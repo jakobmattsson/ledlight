@@ -432,20 +432,19 @@ ledlight aggregate --file main.ledger --accounts "^Assets:" \
 By default, the command prints right-aligned amounts and commodities followed
 by left-aligned account names. Human-readable output uses each
 commodity's declared `format` precision and separators. With `--value`, it
-converts every amount to the journal's default commodity and ends with an exact
-total. `--format csv` omits the total and instead prints RFC-style escaped CSV
+converts every amount to the journal's default commodity. Add `--include-total`
+to append an exact total in any output format. `--format csv` prints RFC-style escaped CSV
 with the columns `account,amount,commodity`. Commodity grouping omits the
 `account` column. CSV uses canonical, ungrouped decimal values and does not
 apply commodity display separators. With `--value`, CSV amounts retain the
 existing exact two-decimal rounding behavior.
-`--invert` negates every reported amount, including the human-readable total.
+`--invert` negates every reported amount, including the total when requested.
 
 The same behavior is available directly through `journal.aggregate`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append the total row. `includeTotal` requires `inValuationCommodity: true`, so
-the quantities have one common commodity. The CLI requests this total for
-human-readable `--value` output and formats the row with a separator; CSV output
-uses the account rows only.
+the quantities have one common commodity. The CLI requests this total only with
+`--include-total`; human-readable output formats the row with a separator.
 
 Human-readable reports that pair numeric results with hierarchical labels put
 the numeric column first and right-align it, then put the label column second

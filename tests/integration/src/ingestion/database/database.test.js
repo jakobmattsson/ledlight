@@ -490,12 +490,25 @@ account Equity:Opening
   );
   assert.equal(
     roundedHumanReadable,
+    '     2.01 SEK  Assets:Cash,Main\n10,000.00 SEK  Assets:LongAccount\n',
+  );
+
+  const roundedHumanReadableWithTotal = execFileSync(
+    process.execPath,
+    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--include-total'],
+    { cwd: directory, encoding: 'utf8', env: process.env },
+  );
+  assert.equal(
+    roundedHumanReadableWithTotal,
     '     2.01 SEK  Assets:Cash,Main\n10,000.00 SEK  Assets:LongAccount\n-------------\n10,002.01 SEK  Total\n',
   );
 
   const invertedHumanReadable = execFileSync(
     process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--invert'],
+    [
+      cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:',
+      '--value', '--invert', '--include-total',
+    ],
     { cwd: directory, encoding: 'utf8', env: process.env },
   );
   assert.equal(
