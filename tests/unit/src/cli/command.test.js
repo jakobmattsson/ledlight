@@ -147,6 +147,7 @@ test('delegates report behavior to the public Node API and only formats results'
   assert.match(
     runReportCommand([
       'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
+      '--include-total',
     ]),
     /-10\.00 USD.*Total/u,
   );
@@ -190,7 +191,7 @@ test('delegates report behavior to the public Node API and only formats results'
     {
       operation: 'aggregate',
       options: {
-        accounts: ['Assets:'], dateBasis: 'posting', groupBy: 'commodity', includeTotal: false,
+        accounts: ['Assets:'], dateBasis: 'posting', groupBy: 'commodity',
       },
     },
     { operation: 'openJournal', journalPath: '/journal' },
@@ -211,6 +212,41 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'openJournal', journalPath: '/journal' },
     { operation: 'unrealizedGains', options: { accounts: [], dateBasis: 'posting' } },
   ]);
+});
+
+test('aggregate includes a total only when requested in every output format', () => {
+  const calls = [];
+  const { runReportCommand } = createCommand({
+    project: {
+      openJournal: () => ({
+        aggregate(options) {
+          calls.push(options);
+          const rows = [{ account: 'Assets:Cash', quantity: '10', commodity: 'USD' }];
+          if (options.includeTotal) {
+            rows.push({ account: 'Total', quantity: '10', commodity: 'USD', isTotal: true });
+          }
+          return rows;
+        },
+        commodities: () => [],
+      }),
+    },
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
+
+  for (const format of ['text', 'csv', 'json']) {
+    const arguments_ = ['aggregate', '--file', '/journal', '--value', '--format', format];
+    const output = runReportCommand(arguments_);
+    assert.match(output, /Assets:Cash/u);
+    assert.doesNotMatch(output, /Total/u);
+    assert.equal(calls.at(-1).includeTotal, undefined);
+
+    const outputWithTotal = runReportCommand([...arguments_, '--include-total']);
+    assert.match(outputWithTotal, /Assets:Cash/u);
+    assert.match(outputWithTotal, /Total/u);
+    assert.equal(calls.at(-1).includeTotal, true);
+  }
 });
 
 test('delegates non-report commands to the corresponding journal operations', () => {

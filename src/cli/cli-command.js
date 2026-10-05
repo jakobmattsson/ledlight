@@ -90,13 +90,7 @@ module.exports = ({
         ? formatBalanceHistoryCsv(rows)
         : formatBalanceHistoryHumanReadable(rows, journal.commodities({ usage: 'all' }));
     }
-    const aggregateOptions = {
-      ...reportOptions,
-      includeTotal: reportOptions.includeTotal ??
-        (output.format === 'text' && reportOptions.groupBy !== 'commodity' &&
-          reportOptions.inValuationCommodity),
-    };
-    const rows = journal.aggregate(aggregateOptions);
+    const rows = journal.aggregate(reportOptions);
     if (output.format === 'json') return formatJson(rows);
     return output.format === 'csv'
       ? formatCsv(rows, reportOptions.inValuationCommodity, reportOptions.groupBy)
