@@ -41,7 +41,10 @@ See [the Ledlight documentation](docs/ledlight.md) for the supported syntax,
 reports, and CLI, and the [Node.js API reference](docs/api.md) for the complete
 consumer surface. Supported runtimes, module formats, native platforms, and
 compatibility guarantees are defined in the
-[package support policy](docs/package.md). Proposed follow-up work is tracked
-in the [improvement backlog](docs/improvements.md).
+[package support policy](docs/package.md). The
+[Ledger CLI equivalence matrix](docs/ledger-cli-equivalence.md) shows which
+commands can be compared and provides a script for checking any journal.
+Proposed follow-up work is tracked in the
+[improvement backlog](docs/improvements.md).
 
 Ledlight is available under the [MIT License](LICENSE).

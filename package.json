@@ -25,14 +25,17 @@
   },
   "files": [
     "docs/api.md",
+    "docs/ledger-cli-equivalence.md",
     "docs/ledlight.md",
     "docs/package.md",
     "index.js",
+    "scripts",
     "src",
     "!src/ingestion/syntax/reference"
   ],
   "bin": {
-    "ledlight": "src/cli/run.js"
+    "ledlight": "src/cli/run.js",
+    "ledlight-cmp": "scripts/compare-ledger.js"
   },
   "engines": {
     "node": "^22.12.0"
@@ -55,7 +58,9 @@
     "awilix": "^13.0.5",
     "better-sqlite3": "11.7.0",
     "commander": "^13.1.0",
+    "diff": "^9.0.0",
     "env-paths": "2.2.1",
+    "yaml": "^2.9.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

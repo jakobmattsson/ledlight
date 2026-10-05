@@ -1,0 +1,20 @@
+baseline:
+  ledger: --args-only --no-pager --file <journal>
+  ledlight: --file <journal>
+
+commands:
+  accounts:
+    ledlight: accounts
+    ledger: accounts
+  tags:
+    ledlight: tags
+    ledger: tags
+  commodities:
+    ledlight: commodities
+    ledger: commodities
+  prices:
+    ledlight: prices
+    ledger: prices
+  transactions:
+    ledlight: transactions --format text
+    ledger: print
