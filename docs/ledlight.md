@@ -130,7 +130,6 @@ underlying result.
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `transactions --ledger-compatible` | None | Match Ledger's text rounding and zero-amount output |
 | `postings --file PATH` | `openJournal(journalPath).postings(options)` | Postings with parent transaction metadata |
 | `postings --from DATE` | `options.from` | Inclusive posting-date start |
 | `postings --to DATE` | `options.to` | Inclusive posting-date end |
@@ -294,12 +293,6 @@ positive quantity may have both annotations when both prices are zero. This
 represents a cost-free acquisition that still needs an explicit zero transaction
 price to balance. Zero quantities are exempt because they do not acquire or
 dispose of a commodity.
-
-`transactions --ledger-compatible` supports byte-compatible comparisons with
-`ledger print`. It renders explicit zero posting amounts as bare `0` and rounds
-exact halfway values toward positive infinity. Normal Ledlight text keeps the
-commodity on zero amounts and rounds halfway values away from zero. The option
-only accepts text output and does not change stored amounts or calculations.
 
 ### Zero-cost acquisitions
 
