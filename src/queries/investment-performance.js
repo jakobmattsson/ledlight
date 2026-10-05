@@ -1,10 +1,11 @@
 'use strict';
 
 module.exports = ({
-  accountFilter: { accountFilter },
+  accountFilter: { accountFilter, accountMatches },
   publicErrors: { createError, errorCodes },
   apiOptions: { accounts, dateRange, stringList, validateDateRange, parseOptions },
   investmentReturns: { calculatePerformance },
+  investmentFlows: { calculateFlows },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
   zod: { z },
 }) => {
@@ -131,54 +132,51 @@ module.exports = ({
   }
 
   function queryDailyFlows(database, options, commodities, valuationCommodity) {
-    const accountClauses = [];
-    const accountParameters = [];
-    if (options.accounts.length > 0) {
-      const filter = accountFilter('p.account', options.accounts);
-      accountClauses.push(filter.sql);
-      accountParameters.push(...filter.parameters);
-    }
-    const accountWhere = accountClauses.length > 0 ? `AND ${accountClauses.join(' AND ')}` : '';
-    const parameters = [
-      ...commodities, ...commodities, ...accountParameters,
-      options.from ?? null, options.to ?? null,
-    ];
+    const filter = selectionFilter(options, commodities, 'r');
     const rows = database.prepare(`
-    WITH transaction_values AS (
-      SELECT t.entry_id, p.report_date AS date, p.account,
-        decimal_sum(CASE WHEN r.commodity IN (${commodities.map(() => '?').join(', ')})
-          THEN decimal_mul(r.quantity, valuation_prices.rate) ELSE '0' END) AS selected_value,
-        decimal_sum(CASE WHEN r.commodity NOT IN (${commodities.map(() => '?').join(', ')})
-          THEN decimal_mul(r.quantity, valuation_prices.rate) ELSE '0' END) AS unselected_value,
-        MIN(CASE WHEN valuation_prices.rate IS NULL AND decimal_cmp(r.quantity, '0') != 0
-          THEN r.commodity END) AS missing_commodity
-      FROM resolved_posting_amounts AS r
-      JOIN postings AS p ON p.id = r.posting_id
-      JOIN transactions AS t ON t.entry_id = p.transaction_id
-      LEFT JOIN valuation_prices ON valuation_prices.commodity = r.commodity AND valuation_prices.date = p.report_date
-      WHERE 1 = 1 ${accountWhere}
-        AND p.report_date >= COALESCE(?, '0000-00-00')
-        AND p.report_date <= COALESCE(?, '9999-12-31')
-      GROUP BY t.entry_id, p.report_date, p.account
-    )
-    SELECT date,
-      decimal_sum(CASE
-        WHEN decimal_cmp(selected_value, '0') = 0 THEN '0'
-        WHEN decimal_cmp(unselected_value, '0') != 0 THEN decimal_mul(unselected_value, '-1')
-        ELSE selected_value
-      END) AS flow,
-      MIN(missing_commodity) AS missing_commodity
-    FROM transaction_values
-    WHERE decimal_cmp(selected_value, '0') != 0
-    GROUP BY date
-    ORDER BY date
-  `).all(...parameters);
-    return rows.map((row) => {
-      if (row.missing_commodity) {
-        throw createError(errorCodes.MISSING_VALUATION_DATA, `No price for ${row.missing_commodity} on or before ${row.date} can convert a cash flow to ${valuationCommodity}`);
-      }
-      return { date: row.date, flow: Number(row.flow) };
+      WITH selected_transactions AS (
+        SELECT DISTINCT p.transaction_id
+        FROM resolved_posting_amounts AS r
+        JOIN postings AS p ON p.id = r.posting_id
+        WHERE ${filter.sql}
+          AND p.report_date >= COALESCE(?, '0000-00-00')
+          AND p.report_date <= COALESCE(?, '9999-12-31')
+      )
+      SELECT p.*, r.quantity, r.commodity,
+        market.rate AS market_rate, lot.rate AS lot_rate, price.rate AS cost_rate
+      FROM postings AS p
+      JOIN selected_transactions AS selected ON selected.transaction_id = p.transaction_id
+      JOIN resolved_posting_amounts AS r ON r.posting_id = p.id
+      LEFT JOIN valuation_prices AS market
+        ON market.commodity = r.commodity AND market.date = p.report_date
+      LEFT JOIN valuation_prices AS lot
+        ON lot.commodity = p.lot_cost_commodity AND lot.date = p.report_date
+      LEFT JOIN valuation_prices AS price
+        ON price.commodity = p.cost_commodity AND price.date = p.report_date
+      ORDER BY p.transaction_id, p.position, r.position
+    `).all(...filter.parameters, options.from ?? null, options.to ?? null);
+    const selected = new Set(commodities);
+    const annotation = (quantity, commodity, total) => quantity === null ? null : {
+      amount: { quantity, commodity }, total: Boolean(total),
+    };
+    const postings = rows.map((row) => {
+      const selectedAccount = options.accounts.length === 0 ||
+        options.accounts.some((pattern) => accountMatches(row.account, pattern));
+      return {
+        transactionId: row.transaction_id,
+        date: row.report_date,
+        account: row.account,
+        amount: { quantity: row.quantity, commodity: row.commodity },
+        lotCost: annotation(row.lot_cost_quantity, row.lot_cost_commodity, row.lot_cost_is_total),
+        cost: annotation(row.cost_quantity, row.cost_commodity, row.cost_is_total),
+        marketRate: row.market_rate,
+        lotRate: row.lot_rate,
+        costRate: row.cost_rate,
+        selectedAccount,
+        selected: selectedAccount && selected.has(row.commodity),
+      };
     });
+    return calculateFlows(postings, options, valuationCommodity);
   }
 
   function queryInvestmentPerformance(database, options, _caches) {
