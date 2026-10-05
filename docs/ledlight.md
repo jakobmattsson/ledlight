@@ -135,7 +135,6 @@ underlying result.
 | `postings --to DATE` | `options.to` | Inclusive posting-date end |
 | `postings --accounts PATTERN` | `options.accounts` | Repeated posting-account selection |
 | `postings --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `reconciliation-entries --file PATH` | `openJournal(journalPath).reconciliationEntries(options)` | Direct or related entries for matching accounts |
 | `--file PATH` | `journalPath` | Root journal file |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
@@ -149,8 +148,6 @@ underlying result.
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
-| `reconciliation-entries --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
-| `reconciliation-entries --related` | `options.related` | Return other postings from matching transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `commodities --details` | None | Include API-provided declaration metadata in the output |
 | `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |

@@ -9,17 +9,17 @@ const { openJournal } = require('ledlight');
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
 API option objects reject unknown properties and values of the wrong type,
-including `null`. Omit the options argument or pass `{}` to use defaults, except
-for `reconciliationEntries`, which requires `accounts`. Even `prices`, which
-has no supported options, rejects supplied options rather than ignoring them.
+including `null`. Omit the options argument or pass `{}` to use defaults. Even
+`prices`, which has no supported options, rejects supplied options rather than
+ignoring them.
 
 All account selections use literal substring patterns. A leading `^` anchors a
 pattern to the start of the account name and a trailing `$` anchors it to the
 end. Using both selects one exact account. No other regular-expression syntax
 is recognized; all other characters are matched literally.
 
-Every CLI account filter uses the repeatable `--accounts PATTERN` option,
-including `reconciliation-entries`. The singular `--account` is not supported.
+Every CLI account filter uses the repeatable `--accounts PATTERN` option.
+The singular `--account` is not supported.
 
 ## Query parameter conventions
 
@@ -44,7 +44,6 @@ all default to `false`.
 | `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
 | `transactions` | No date filter; results include transaction and posting dates. | `accounts`, `id`, `order`, `page`, `pageSize` |
-| `reconciliationEntries` | No date filter; rows use posting dates. | Required `accounts`, `related` |
 | `accounts` | No date filter. | `accounts`, `usage` |
 | `commodities` | No date filter. | `usage` |
 | `tags` | No date filter. | `usage` |
@@ -60,7 +59,7 @@ Existing API/CLI differences are deliberate compatibility constraints:
 - Declaration queries default to `usage: 'all'` in the API and `--usage used`
   in the CLI, where the default matches Ledger.
 - `inValuationCommodity` maps to `--value`. Investment performance uses `--json`,
-  while other formatted reports use `--format json`. Reconciliation emits JSON.
+  while other formatted reports use `--format json`.
 - Transaction `order` selects forward (`oldest`) or reverse (`newest`) journal
   order, not a date sort. The API paginates by default; CLI text output includes
   all matching transactions unless pagination is explicitly requested.
@@ -345,7 +344,10 @@ Each result contains `postingId`, `postingDate`, `account`, `postingComment`,
 the nullable source `amount`, lot cost, transaction cost, balance assignment,
 and balance assertion, and every resolved amount. It also contains the parent
 transaction's `transactionId`, `transactionDate`, `description`,
-`transactionComment`, and ordered `transactionNotes`.
+`transactionComment`, and ordered `transactionNotes`. `filename` identifies the
+source file containing the transaction, including when it was loaded through an
+`include`. `transactionSourceLine` is the one-based line number of the transaction
+header in that file, not the posting line.
 
 Each resolved amount is `{ quantity, commodity, balance }`. `balance` is the
 exact running balance for that posting's account and commodity after applying
@@ -355,20 +357,12 @@ the journal database is rebuilt.
 The `postings` CLI command supports the same filters and defaults to `--format
 text`. `--format json` preserves the nested API result. `--format csv` emits one
 row per resolved amount and includes every source annotation as separate
-columns.
+columns, including `filename` and `transactionSourceLine`. Text output also
+includes both source fields.
 
-### `journal.reconciliationEntries({ accounts, related })`
-
-Returns resolved posting amounts for one or more account patterns, ordered
-by posting date and journal position. `accounts` must be a non-empty array of
-non-empty strings. `related` defaults to `false`; when true, the result instead
-contains the other postings from transactions involving each selected pattern.
-
-Each row contains `date`, `amount`, `description`, `commodity`, `account`,
-`filename`, `sourceLine`, and `row`. Related rows also contain
-`postingAccount`, which identifies the other posting's account. `amount` is an
-exact decimal string, `account` is the selected pattern, and `row` is the
-one-based position in the complete ordered posting-amount result.
+For reconciliation, use the resolved `amounts` rather than the nullable source
+`amount`. To select counterpart postings, fetch all postings and group them by
+`transactionId`; filtering by account first would discard those counterparts.
 
 ## Command-line parity
 

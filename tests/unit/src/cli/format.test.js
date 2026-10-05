@@ -371,6 +371,8 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
 test('formats complete posting rows as text, JSON, and flat CSV', () => {
   const postings = [{
     postingId: 8,
+    filename: '/books/included, journal.ledger',
+    transactionSourceLine: 12,
     transactionId: 7,
     transactionDate: '2024-01-02',
     description: 'Buy, fund',
@@ -401,9 +403,15 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
     'transactionNotes,postingDate,account,postingComment,amountQuantity,amountCommodity,' +
     'lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,' +
     'balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,' +
-    'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance\n' +
+    'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance,' +
+    'filename,transactionSourceLine\n' +
     '8,7,2024-01-02,"Buy, fund",imported,"[""Project: Savings""]",2024-01-03,' +
-    'Assets:Fund,[2024-01-03] broker,10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25\n',
+    'Assets:Fund,[2024-01-03] broker,10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25,' +
+    '"/books/included, journal.ledger",12\n',
+  );
+  assert.match(
+    formatPostings(postings, { format: 'text' }),
+    /\/books\/included, journal\.ledger\s+12/u,
   );
   assert.equal(formatPostings([], { format: 'text' }), '');
 });

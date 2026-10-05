@@ -195,22 +195,6 @@ module.exports = ({
     addOutputValueOption(postings, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
-    const reconciliationEntries = registerCommand(
-      program.command('reconciliation-entries')
-        .description('show entries for reconciling matching accounts'),
-      'reconciliationEntries',
-      'misc',
-    );
-    addJournal(reconciliationEntries);
-    addValueOption(reconciliationEntries, '--accounts <pattern>', 'select matching accounts (repeatable)', {
-      repeatable: true, required: true, apiInput: 'accounts',
-    });
-    addBooleanOption(
-      reconciliationEntries,
-      '--related',
-      'show other postings from the selected accounts\' transactions',
-      'related',
-    );
     const summary = registerCommand(
       program.command('summary').description('summarize postings'),
       'summary',
@@ -379,9 +363,6 @@ module.exports = ({
         }),
         output: { format: options.format },
       };
-    }
-    if (commandName === 'reconciliation-entries') {
-      return { ...common, options: compact({ accounts: options.accounts, related: options.related || undefined }) };
     }
     const reportOptions = compact({
       from: options.from, to: options.to, accounts: options.accounts || [],

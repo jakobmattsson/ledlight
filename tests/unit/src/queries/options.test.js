@@ -80,7 +80,7 @@ test('shared selections and booleans have consistent validation and duplicate ha
       assert.deepEqual(journal[name]({ accounts: ['Assets:', 'Assets:'] }),
         journal[name]({ accounts: ['Assets:'] }), name);
     }
-    for (const field of ['invert', 'related', 'inValuationCommodity', 'withValuationValue', 'includeTotal']
+    for (const field of ['invert', 'inValuationCommodity', 'withValuationValue', 'includeTotal']
       .filter((key) => key in inputSchema.shape)) {
       invalidInput(() => journal[name]({ accounts: ['Assets:'], [field]: 'false' }),
         /must be a boolean/u);

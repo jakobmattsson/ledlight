@@ -6,9 +6,6 @@ module.exports = ({ publicErrors: { createError, errorCodes }, zod: { z } }) => 
   const stringList = z.array(nonEmptyString)
     .transform((values) => [...new Set(values)]);
   const accounts = stringList.default([]);
-  const requiredAccounts = z.array(nonEmptyString)
-    .min(1, { error: 'must contain at least one account' })
-    .transform((values) => [...new Set(values)]);
   const booleanOption = z.boolean({ error: 'must be a boolean' }).default(false);
   const dateBasis = z.enum(['posting', 'transaction'], { error: 'Invalid dateBasis' })
     .default('posting');
@@ -49,7 +46,6 @@ module.exports = ({ publicErrors: { createError, errorCodes }, zod: { z } }) => 
 
   return {
     accounts,
-    requiredAccounts,
     booleanOption,
     dateBasis,
     dateOption,
