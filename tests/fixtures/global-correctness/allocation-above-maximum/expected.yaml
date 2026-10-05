@@ -9,7 +9,6 @@ runs:
       warnings:
         - "[IMPOSSIBLE_COST_BASIS] Impossible first sale: Assets:Broker sold 11 FUND with cost 32.01
           USD; allowed range is 12 to 32 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.
   - command: unrealized-gains --to 2024-04-30 --format json
     expect:
       exitCode: 0
@@ -17,4 +16,3 @@ runs:
       warnings:
         - "[IMPOSSIBLE_COST_BASIS] Impossible first sale: Assets:Broker sold 11 FUND with cost 32.01
           USD; allowed range is 12 to 32 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.

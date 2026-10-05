@@ -20,7 +20,6 @@ runs:
           commodity: USD
       warnings:
         - "[IMPOSSIBLE_COST_BASIS] Impossible first sale: Assets:Broker sold 11 FUND with cost 11.99 USD; allowed range is 12 to 32 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.
 ```
 
 The journal balances, but selling eleven units cannot consume less than 12 USD
@@ -49,17 +48,13 @@ and add `--file tests/fixtures/global-correctness/<scenario>/journal.ledger`.
   line on stderr; stdout must be empty. Unknown basis or market value must not
   be replaced with zero. The current CLI emits the fatal error without ingestion
   warnings, which these error scenarios preserve.
-- `pendingWarnings` explains a known warning-behavior gap. Only that run's warning
-  assertion is marked TODO. Exit codes, errors and result rows remain active
-  assertions, including numerical results for invalid accounting histories.
 
-`IMPOSSIBLE_COST_BASIS`, `RESIDUAL_COST_BASIS`, and `RESULT_MISMATCH` and their
-messages specify intended future CLI diagnostics, not implemented production
-behavior. Valid transfers and splits should not produce trade warnings; the
-current spurious `INVALID_COMMODITY_TRADE` warning is also covered by TODO
-assertions. These are real comparisons against desired output, not empty TODO
-placeholders. Remove `pendingWarnings` when the implementation satisfies the
-contract. The format and wording can be revised deliberately with that API work.
+All warning expectations are active assertions. Warnings cover the complete
+journal, independently of the command, account filters, and report dates.
+Consequently an earlier snapshot can include a warning about a later disposal.
+`IMPOSSIBLE_COST_BASIS`, `RESIDUAL_COST_BASIS`, and `RESULT_MISMATCH` are shared
+ingestion diagnostics persisted in the journal cache. Valid transfers and splits
+preserve basis without producing `INVALID_COMMODITY_TRADE` warnings.
 
 The output policy is explicit: computable booked results remain visible with
 warnings for invalid accounting. A report without warnings is the intended
@@ -81,10 +76,9 @@ a successful report does not expose its computed disposal interval. Boundary
 acceptance and rejection scenarios test observable consequences; exact successful
 intervals and allocation witnesses remain explanatory calculations.
 
-The fixtures specify future global correctness and allocation validation without
-implementing either. Passing the suite while warning TODOs remain does not mean
-these controls exist. See [ALLOCATION.md](ALLOCATION.md) for history-dependent
-bounds, proportional allocations, chronological order, transfers and splits.
+The fixtures verify global correctness and allocation validation. See
+[ALLOCATION.md](ALLOCATION.md) for history-dependent bounds, proportional
+allocations, chronological order, transfers and splits.
 
 ## Scenarios and expected results
 

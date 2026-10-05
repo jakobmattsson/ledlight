@@ -5,12 +5,11 @@ and costs explain every disposal, in order, with all relevant movements and
 adjustments accounted for? The validator must neither select a particular lot
 method nor require that sold whole shares identify particular original shares.
 
-These are specifications for future behavior. No production solver or global
-validation API is introduced by these fixtures. `expected.yaml` specifies actual
-`unrealized-gains` commands with expected rows, warnings, errors and exit codes.
-The integration test executes those commands; unfinished warning behavior has
-TODO assertions. Hand-derived bounds and witness allocations are retained in each
-scenario's `NOTES.md` as explanations.
+These scenarios exercise the shared ingestion validator. `expected.yaml`
+specifies actual `unrealized-gains` commands with exact rows, warnings, errors,
+and exit codes; every assertion is active. Warnings always cover the complete
+journal, even when the report selects an earlier snapshot. Hand-derived bounds
+and witness allocations remain in each scenario's `NOTES.md`.
 
 ## Bounds and history
 
@@ -50,9 +49,9 @@ Invalid histories still produce booked unrealized-gain rows when calculable,
 with `IMPOSSIBLE_COST_BASIS` warnings identifying the offending transaction,
 account, commodity, sold quantity, recorded cost and allowed total-cost range.
 An empty report after liquidation must retain the historical warning. Valid
-histories require exact result rows and `warnings: []`. This specifies the
-warning behavior without implementing the validator. Successful reports need
-not expose their internal intervals or a chosen allocation.
+histories require exact result rows and `warnings: []`. The validator uses exact
+rational constraints to preserve all feasible histories. Successful reports
+need not expose their internal intervals or a chosen allocation.
 
 ## Scenarios
 

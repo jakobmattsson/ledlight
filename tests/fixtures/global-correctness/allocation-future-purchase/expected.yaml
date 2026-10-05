@@ -9,7 +9,6 @@ runs:
       warnings:
         - "[IMPOSSIBLE_COST_BASIS] Sale before expensive purchase: Assets:Broker sold 5 FUND with
           cost 10 USD; allowed range is 5 to 5 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.
   - command: unrealized-gains --to 2024-04-30 --format json
     expect:
       exitCode: 0
@@ -17,4 +16,3 @@ runs:
       warnings:
         - "[IMPOSSIBLE_COST_BASIS] Sale before expensive purchase: Assets:Broker sold 5 FUND with
           cost 10 USD; allowed range is 5 to 5 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.

@@ -6,7 +6,9 @@ runs:
         - account: Assets:Broker
           quantity: "48"
           commodity: USD
-      warnings: []
+      warnings:
+        - "[IMPOSSIBLE_COST_BASIS] Impossible second sale: Assets:Broker sold 10 FUND with cost 20
+          USD; allowed range is 10 to 19 USD"
   - command: unrealized-gains --to 2024-03-31 --format json
     expect:
       exitCode: 0
@@ -17,7 +19,6 @@ runs:
       warnings:
         - "[IMPOSSIBLE_COST_BASIS] Impossible second sale: Assets:Broker sold 10 FUND with cost 20
           USD; allowed range is 10 to 19 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.
   - command: unrealized-gains --to 2024-04-30 --format json
     expect:
       exitCode: 0
@@ -25,4 +26,3 @@ runs:
       warnings:
         - "[IMPOSSIBLE_COST_BASIS] Impossible second sale: Assets:Broker sold 10 FUND with cost 20
           USD; allowed range is 10 to 19 USD"
-    pendingWarnings: Global accounting diagnostics are not implemented yet.

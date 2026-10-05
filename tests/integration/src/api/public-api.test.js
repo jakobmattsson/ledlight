@@ -207,3 +207,46 @@ test('groups repeated warnings and exposes only their first ten instances', (t) 
   assert.equal(cli.stderr.match(/^ {2}.*journal\.ledger:\d+:\d+$/gmu)?.length, 10);
   assert.match(cli.stderr, /\[UNDECLARED_COMMODITY\] Commodity FUND must be declared before use/u);
 });
+
+test('exposes full-history accounting diagnostics on open and across cached report commands', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-global-warnings-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, `commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Assets:Broker
+account Assets:Bank
+P 2024-01-01 FUND 100 USD
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {{1000 USD}}
+  Assets:Bank  -1000 USD
+2024-02-01 Bankruptcy with missing cost disposal
+  Assets:Broker  -10 FUND {{0 USD}} @@ 0 USD
+`);
+  const { openJournal } = require(ledlightPath);
+  const journal = openJournal(journalPath);
+  assert.deepEqual(journal.warnings.map(({ code, message }) => ({ code, message })), [{
+    code: 'RESIDUAL_COST_BASIS',
+    message: 'Assets:Broker: zero FUND units retain cost basis 1000 USD',
+  }]);
+  assert.deepEqual(openJournal(journalPath).warnings, journal.warnings);
+  const Database = require(sqliteModulePath);
+  const previousCache = new Database(journal.databasePath);
+  previousCache.prepare("UPDATE database_metadata SET value = '20' WHERE key = 'schema_version'").run();
+  previousCache.prepare('DELETE FROM ingestion_warnings').run();
+  previousCache.close();
+  assert.deepEqual(openJournal(journalPath).warnings, journal.warnings,
+    'opening an older cache must rebuild it with global accounting diagnostics');
+  for (const command of ['balance-history', 'unrealized-gains', 'aggregate', 'accounts']) {
+    const arguments_ = [cliPath, command, '--file', journalPath, '--format', 'json'];
+    if (command !== 'accounts') arguments_.push('--to', '2024-01-01', '--accounts', '^Assets:Bank$');
+    const cli = spawnSync(process.execPath, arguments_, {
+      cwd: directory, encoding: 'utf8', env: process.env,
+    });
+    assert.equal(cli.status, 0, cli.stderr);
+    assert.match(cli.stderr, /\[RESIDUAL_COST_BASIS\] Assets:Broker: zero FUND units retain cost basis 1000 USD/u);
+  }
+});

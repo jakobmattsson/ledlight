@@ -35,7 +35,7 @@ for (const name of fs.readdirSync(fixtures).filter((name) =>
     assert.ok(Array.isArray(expected.runs) && expected.runs.length > 0);
 
     for (const run of expected.runs) {
-      await t.test(run.command, async (t) => {
+      await t.test(run.command, () => {
         const { expect } = run;
         assert.ok([0, 1].includes(expect.exitCode));
         assert.ok(Array.isArray(expect.warnings));
@@ -66,13 +66,8 @@ for (const name of fs.readdirSync(fixtures).filter((name) =>
           assert.deepEqual(errors, [expect.error]);
         }
 
-        // Only warning behavior is pending. Rows, failures, and exit codes always run.
-        if (run.pendingWarnings) {
-          assert.equal(typeof run.pendingWarnings, 'string');
-          await t.test('expected warnings', { todo: run.pendingWarnings }, () => {
-            assert.deepEqual(warnings, expect.warnings);
-          });
-        } else assert.deepEqual(warnings, expect.warnings);
+        assert.equal(run.pendingWarnings, undefined, 'All warning expectations must be active');
+        assert.deepEqual(warnings, expect.warnings);
       });
     }
   });
