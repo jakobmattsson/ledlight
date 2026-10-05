@@ -127,6 +127,7 @@ underlying result.
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `transactions --ledger-compatible` | None | Match Ledger's text rounding and zero-amount output |
 | `postings --file PATH` | `openJournal(journalPath).postings(options)` | Postings with parent transaction metadata |
 | `postings --from DATE` | `options.from` | Inclusive posting-date start |
 | `postings --to DATE` | `options.to` | Inclusive posting-date end |
@@ -275,6 +276,11 @@ the warnings on the opened journal, grouped by code and message with at most ten
 locations per group. The CLI writes a human-readable version of that list to
 stderr and keeps query output on stdout.
 
+Every commodity declaration must include an explicit `format` property. A
+declaration without one produces a `MISSING_COMMODITY_FORMAT` warning. Requiring
+the format prevents display precision from changing when a later amount happens
+to contain more decimal places.
+
 Accounts, commodities, and tags must be declared before their first use in
 journal traversal order. Each use before its declaration produces an
 `UNDECLARED_ACCOUNT`, `UNDECLARED_COMMODITY`, or `UNDECLARED_TAG` warning at
@@ -296,6 +302,12 @@ positive quantity may have both annotations when both prices are zero. This
 represents a cost-free acquisition that still needs an explicit zero transaction
 price to balance. Zero quantities are exempt because they do not acquire or
 dispose of a commodity.
+
+`transactions --ledger-compatible` supports byte-compatible comparisons with
+`ledger print`. It renders explicit zero posting amounts as bare `0` and rounds
+exact halfway values toward positive infinity. Normal Ledlight text keeps the
+commodity on zero amounts and rounds halfway values away from zero. The option
+only accepts text output and does not change stored amounts or calculations.
 
 ### Zero-cost acquisitions
 

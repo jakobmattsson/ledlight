@@ -3,9 +3,13 @@ commodity USD
   format 1,000.00 USD
 
 commodity FUND
+  format 1000 FUND
 commodity NOK
+  format 1,000.00 NOK
 commodity GBP
+  format 1,000.00 GBP
 commodity BOND
+  format 1000 BOND
 account Assets:Investments
 account Assets:Bonds
 account Equity:Opening
