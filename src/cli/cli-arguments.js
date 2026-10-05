@@ -190,8 +190,7 @@ module.exports = ({
       repeatable: true, required: true, apiInput: 'accounts',
     });
     const transactions = registerCommand(
-      program.command('transactions').alias('print')
-        .description('show transactions'),
+      program.command('transactions').description('show transactions'),
       'transactions',
       'raw',
     );
@@ -289,7 +288,7 @@ module.exports = ({
     const performance = registerCommand(
       program.command('investment-performance').description('show investment performance'),
       'investmentPerformance',
-      'misc',
+      'reports',
     );
     performance[HELP_DETAILS] = `Return measures:
   Time-weighted return

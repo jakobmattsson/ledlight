@@ -194,8 +194,8 @@ test('parses --ledger as a CLI-only mode and renders supported base commands', (
     "ledger --args-only --no-pager --file '/journals/O'\\''Brien books.ledger' accounts",
   );
 
-  const print = parseArguments(['print', '--file', '/journal', '--ledger']);
-  assert.equal(ledgerCommand(print), 'ledger --args-only --no-pager --file /journal print');
+  const transactions = parseArguments(['transactions', '--file', '/journal', '--ledger']);
+  assert.equal(ledgerCommand(transactions), 'ledger --args-only --no-pager --file /journal print');
   assert.equal(ledgerCommand(parseArguments([
     'accounts', '--file', '/journal', '--accounts', '^Assets:Cash$',
     '--accounts', "Expenses:O'Brien", '--ledger',
@@ -392,10 +392,6 @@ test('maps every remaining API parameter to CLI arguments', () => {
     command: 'postings', journalPath: '/journal',
     options: { accounts: [] }, output: { format: 'text' },
   });
-  assert.deepEqual(parseArguments(['print', '--file', '/journal']), {
-    command: 'transactions', journalPath: '/journal',
-    options: { accounts: [], order: 'oldest' }, output: { format: 'text' },
-  });
   assert.match(
     usage('transactions'),
     /--order <order>\s+sort transactions \(choices: "newest", "oldest", default:\s+"oldest"\)/u,
@@ -416,6 +412,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['account-balances'],
     ['aggregate'],
     ['ledger-transactions', '--file', '/journal'],
+    ['print', '--file', '/journal'],
     ['summary', '--from'],
     ['summary', '--from', '--value'],
     ['summary', '--to', '2024-01-01', '--to', '2024-02-01'],
@@ -438,26 +435,26 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /ledlight <command> --help/u);
   assert.match(
     usage(),
-    /raw:\n {2}accounts\s+show used accounts[\s\S]* {2}tags\s+show used tags[\s\S]* {2}commodities\s+show used commodities[\s\S]* {2}prices\s+show market prices[\s\S]* {2}transactions\|print\s+show transactions/u,
+    /raw:\n {2}accounts\s+show used accounts[\s\S]* {2}tags\s+show used tags[\s\S]* {2}commodities\s+show used commodities[\s\S]* {2}prices\s+show market prices[\s\S]* {2}transactions\s+show transactions/u,
   );
   assert.match(
     usage(),
-    /reports:\n {2}summary\s+summarize postings[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}unrealized-gains\s+show unrealized investment gains/u,
+    /reports:\n {2}summary\s+summarize postings[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}unrealized-gains\s+show unrealized investment gains[\s\S]* {2}investment-performance\s+show investment performance/u,
   );
   assert.match(
     usage(),
-    /misc:[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /misc:/u,
   );
   assert.doesNotMatch(usage(), /Commands:/u);
-  assert.match(usage(), /transactions\|print\s+show transactions/u);
+  assert.match(usage(), /transactions\s+show transactions/u);
+  assert.doesNotMatch(usage(), /transactions\|print/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
   assert.doesNotMatch(usage(), /Usage: ledlight aggregate/u);
   assert.doesNotMatch(usage(), /--accounts <pattern>/u);
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('summary'), /^Usage: ledlight summary --file <path> \[options\]/u);
-  assert.match(usage('print'), /^Usage: ledlight transactions\|print --file <path> \[options\]/u);
-  assert.match(usage('print'), /--accounts <pattern>.*repeatable/u);
+  assert.throws(() => usage('print'), /Unknown command: print/u);
   assert.match(usage('summary'), /--file <path>\s+\(REQUIRED\) read the journal rooted at this file/u);
   assert.match(usage('summary'), /--accounts <pattern>.*repeatable/u);
   assert.match(
