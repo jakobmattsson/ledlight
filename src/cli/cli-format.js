@@ -5,6 +5,7 @@ module.exports = ({
     addDecimals,
     formatDecimal,
     formatDecimalFixed,
+    formatDecimalFixedHalfTowardPositiveInfinity,
     parseDecimal,
     compareDecimals,
     divideDecimals,
@@ -61,10 +62,13 @@ module.exports = ({
     };
   }
 
-  function formatDeclaredQuantity(quantity, format) {
+  function formatDeclaredQuantity(quantity, format, ledgerCompatible) {
     const parsedFormat = parseCommodityFormat(format);
     if (!parsedFormat) return quantity;
-    const fixed = formatDecimalFixed(parseDecimal(quantity), parsedFormat.scale);
+    const formatFixed = ledgerCompatible
+      ? formatDecimalFixedHalfTowardPositiveInfinity
+      : formatDecimalFixed;
+    const fixed = formatFixed(parseDecimal(quantity), parsedFormat.scale);
     const [integer, fraction] = fixed.split('.');
     const negative = integer.startsWith('-');
     const digits = negative ? integer.slice(1) : integer;
@@ -75,7 +79,7 @@ module.exports = ({
     return `${negative ? '-' : ''}${grouped}${decimal}`;
   }
 
-  function formatPriceQuantity(quantity, commodity, formats) {
+  function formatPriceQuantity(quantity, commodity, formats, ledgerCompatible) {
     const format = formats.get(commodity);
     if (!format) return quantity;
     const parsedFormat = parseCommodityFormat(format);
@@ -83,7 +87,10 @@ module.exports = ({
     const point = quantity.indexOf('.');
     const sourceScale = point < 0 ? 0 : quantity.length - point - 1;
     const scale = Math.max(sourceScale, parsedFormat.scale);
-    const fixed = formatDecimalFixed(parseDecimal(quantity), scale);
+    const formatFixed = ledgerCompatible
+      ? formatDecimalFixedHalfTowardPositiveInfinity
+      : formatDecimalFixed;
+    const fixed = formatFixed(parseDecimal(quantity), scale);
     const [integer, fraction] = fixed.split('.');
     const grouped = parsedFormat.groupingSeparator === null
       ? integer
@@ -91,9 +98,9 @@ module.exports = ({
     return fraction === undefined ? grouped : `${grouped}.${fraction}`;
   }
 
-  function displayQuantity(quantity, commodity, formats, fallbackScale) {
+  function displayQuantity(quantity, commodity, formats, fallbackScale, ledgerCompatible) {
     const format = formats.get(commodity);
-    if (format) return formatDeclaredQuantity(quantity, format);
+    if (format) return formatDeclaredQuantity(quantity, format, ledgerCompatible);
     const fallback = fallbackScale === null
       ? quantity
       : formatDecimalFixed(parseDecimal(quantity), fallbackScale);
@@ -121,6 +128,7 @@ module.exports = ({
         row.commodity,
         formats,
         inValuationCommodity ? 2 : null,
+        false,
       ),
     }));
     const hasAccounts = groupBy !== 'commodity';
@@ -289,7 +297,7 @@ module.exports = ({
     }
     const formats = commodityFormats(descriptions);
     const lines = rows.map((row) => {
-      const quantity = formatPriceQuantity(row.quoteQuantity, row.quoteCommodity, formats);
+      const quantity = formatPriceQuantity(row.quoteQuantity, row.quoteCommodity, formats, false);
       const amount = `${quantity} ${row.quoteCommodity}`;
       return `${row.date.replaceAll('-', '/')} ${row.baseCommodity.padEnd(8)} ` +
         amount.padStart(12);
@@ -324,15 +332,20 @@ module.exports = ({
     return `${lines.join('\n')}\n`;
   }
 
-  function formatPostingAmount(amount, formats) {
+  function formatPostingAmount(amount, formats, ledgerCompatible) {
+    if (ledgerCompatible && compareDecimals(parseDecimal(amount.quantity), parseDecimal('0')) === 0) {
+      return '0';
+    }
     const quantity = formats.has(amount.commodity)
-      ? displayQuantity(amount.quantity, amount.commodity, formats, null)
+      ? displayQuantity(amount.quantity, amount.commodity, formats, null, ledgerCompatible)
       : amount.quantity;
     return `${quantity} ${amount.commodity}`;
   }
 
-  function formatAnnotationAmount(amount, formats) {
-    return `${formatPriceQuantity(amount.quantity, amount.commodity, formats)} ` +
+  function formatAnnotationAmount(amount, formats, ledgerCompatible) {
+    return `${formatPriceQuantity(
+      amount.quantity, amount.commodity, formats, ledgerCompatible,
+    )} ` +
       amount.commodity;
   }
 
@@ -341,14 +354,17 @@ module.exports = ({
     return point < 0 ? 0 : quantity.length - point - 1;
   }
 
-  function formatPostingExpression(posting, formats) {
+  function formatPostingExpression(posting, formats, ledgerCompatible) {
     const expressions = [];
     let amountText = null;
-    if (posting.amount !== null) amountText = formatPostingAmount(posting.amount, formats);
-    else if (posting.balanceAssignment !== null) {
+    if (posting.amount !== null) {
+      amountText = formatPostingAmount(posting.amount, formats, ledgerCompatible);
+    } else if (posting.balanceAssignment !== null) {
       const inferredAmount = posting.amounts.find((amount) =>
         amount.commodity === posting.balanceAssignment.commodity);
-      if (inferredAmount) amountText = formatPostingAmount(inferredAmount, formats);
+      if (inferredAmount) {
+        amountText = formatPostingAmount(inferredAmount, formats, ledgerCompatible);
+      }
     }
     if (amountText !== null) expressions.push(amountText);
     if (posting.lotCost !== null) {
@@ -366,26 +382,34 @@ module.exports = ({
           quantity: formatDecimal(unitCost),
           commodity: posting.lotCost.commodity,
         };
-        expressions.push(`{${formatAnnotationAmount(lotCost, formats)}}`);
+        expressions.push(`{${formatAnnotationAmount(lotCost, formats, ledgerCompatible)}}`);
       } else {
-        expressions.push(`{${formatAnnotationAmount(posting.lotCost, formats)}}`);
+        expressions.push(`{${formatAnnotationAmount(
+          posting.lotCost, formats, ledgerCompatible,
+        )}}`);
       }
     }
     if (posting.cost !== null) {
       expressions.push(
-        `${posting.cost.isTotal ? '@@' : '@'} ${formatAnnotationAmount(posting.cost, formats)}`,
+        `${posting.cost.isTotal ? '@@' : '@'} ${formatAnnotationAmount(
+          posting.cost, formats, ledgerCompatible,
+        )}`,
       );
     }
     if (posting.balanceAssignment !== null) {
-      expressions.push(`= ${formatAnnotationAmount(posting.balanceAssignment, formats)}`);
+      expressions.push(`= ${formatAnnotationAmount(
+        posting.balanceAssignment, formats, ledgerCompatible,
+      )}`);
     }
     if (posting.balanceAssertion !== null) {
-      expressions.push(`= ${formatAnnotationAmount(posting.balanceAssertion, formats)}`);
+      expressions.push(`= ${formatAnnotationAmount(
+        posting.balanceAssertion, formats, ledgerCompatible,
+      )}`);
     }
     return { text: expressions.join(' '), amountWidth: amountText?.length ?? 0 };
   }
 
-  function formatTransactionsText(report, descriptions) {
+  function formatTransactionsText(report, descriptions, ledgerCompatible) {
     const accountColumnWidth = 34;
     const amountColumnWidth = 12;
     const maximumPostingLineWidth = 61;
@@ -427,7 +451,7 @@ module.exports = ({
           lines.push(`    ; ${positionedNotes[noteIndex].text}`);
           noteIndex += 1;
         }
-        const formattedExpression = formatPostingExpression(posting, formats);
+        const formattedExpression = formatPostingExpression(posting, formats, ledgerCompatible);
         const expression = index === elidedAmountIndex ? '' : formattedExpression.text;
         const alignmentWidth = posting.lotCost !== null || posting.cost !== null
           ? expression.length
@@ -466,10 +490,10 @@ module.exports = ({
     return `${lines.join('\n')}\n`;
   }
 
-  function formatTransactions(report, { format }, descriptions) {
+  function formatTransactions(report, { format, ledgerCompatible }, descriptions) {
     if (format === 'json') return formatJson(report);
     if (format === 'csv') return formatTransactionsCsv(report);
-    return formatTransactionsText(report, descriptions);
+    return formatTransactionsText(report, descriptions, ledgerCompatible);
   }
 
   function postingCsvRows(postings) {
@@ -545,7 +569,7 @@ module.exports = ({
   function formatBalanceHistoryHumanReadable(rows, descriptions) {
     const formats = commodityFormats(descriptions);
     const amounts = rows.map((row) =>
-      displayQuantity(row.amount, row.commodity, formats, 2));
+      displayQuantity(row.amount, row.commodity, formats, 2, false));
     const amountWidth = Math.max(0, ...amounts.map((amount) => amount.length));
     const lines = rows.map((row, index) =>
       `${row.date}  ${amounts[index].padStart(amountWidth)} ${row.commodity}`);
@@ -554,7 +578,9 @@ module.exports = ({
 
   function formatInvestmentPerformance(report, descriptions) {
     const formats = commodityFormats(descriptions);
-    const money = (value) => `${displayQuantity(String(value), report.valuationCommodity, formats, 2)} ${report.valuationCommodity}`;
+    const money = (value) => `${displayQuantity(
+      String(value), report.valuationCommodity, formats, 2, false,
+    )} ${report.valuationCommodity}`;
     const percent = (value) => value === null ? 'n/a' : `${(value * 100).toFixed(2)} %`;
     return [
       `Investment performance from ${report.from ?? 'n/a'} to ${report.to ?? 'n/a'}`,

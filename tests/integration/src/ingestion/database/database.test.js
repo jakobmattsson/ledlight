@@ -278,8 +278,10 @@ test('stores non-default commodity trades and reports invalid annotations as war
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity SEK
+  format 1,000.00 SEK
   default
 commodity FUND
+  format 1000.00 FUND
 account Assets:Fund
 account Assets:Cash
 2024-01-01 Invalid purchase
@@ -300,6 +302,7 @@ test('stores a zero-value non-default commodity acquisition', (t) => {
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity SEK
+  format 1,000.00 SEK
   default
 2024-01-01 Free subscription rights
   Assets:Rights  420 RIGHT {0 SEK} @ 0 SEK
@@ -331,8 +334,10 @@ test('uses the first default commodity and warns about every later declaration',
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, `commodity USD
+  format 1,000.00 USD
   default
 commodity EUR
+  format 1,000.00 EUR
   default
 `);
 
@@ -340,12 +345,12 @@ commodity EUR
   assert.equal(result.valuationCommodity, 'USD');
   assert.deepEqual(result.warnings, [{
     code: 'MULTIPLE_DEFAULT_COMMODITIES',
-    message: `Multiple commodity declarations are marked default; using the first at ${journalPath}:2:3`,
+    message: `Multiple commodity declarations are marked default; using the first at ${journalPath}:3:3`,
     source: journalPath,
-    line: 4,
+    line: 6,
     column: 3,
-    startLine: 4,
-    endLine: 4,
+    startLine: 6,
+    endLine: 6,
   }]);
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());

@@ -121,6 +121,7 @@ test('returns query data while exposing ingestion warnings through the API and C
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(journalPath, `commodity SEK
+  format 1,000.00 SEK
   default
 account Assets:Cash
 account Equity:Opening
@@ -147,7 +148,7 @@ account Equity:Opening
       startLine: journal.warnings[0].instances[0].startLine,
       endLine: journal.warnings[0].instances[0].endLine,
     },
-    { source: fs.realpathSync.native(journalPath), startLine: 5, endLine: 7 },
+    { source: fs.realpathSync.native(journalPath), startLine: 6, endLine: 8 },
   );
   assert.equal(Object.isFrozen(journal.warnings), true);
   assert.equal(Object.isFrozen(journal.warnings[0]), true);
@@ -168,8 +169,8 @@ account Equity:Opening
   ]);
   assert.match(cli.stderr, /^\[SYNTAX_ERROR\] /u);
   assert.match(cli.stderr, new RegExp(
-    `${journalPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&')}:5:1 ` +
-    '\\(affected lines 5-7\\)',
+    `${journalPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&')}:6:1 ` +
+    '\\(affected lines 6-8\\)',
     'u',
   ));
   assert.match(cli.stderr, /\n\[BALANCE_ASSERTION_FAILED\] /u);
@@ -184,7 +185,9 @@ test('groups repeated warnings and exposes only their first ten instances', (t) 
   const journalPath = path.join(directory, 'journal.ledger');
   const prices = Array.from({ length: 12 }, (_value, index) =>
     `P 2024-01-${String(index + 1).padStart(2, '0')} FUND 1 SEK`);
-  fs.writeFileSync(journalPath, ['commodity SEK', '  default', ...prices, ''].join('\n'));
+  fs.writeFileSync(journalPath, [
+    'commodity SEK', '  format 1,000.00 SEK', '  default', ...prices, '',
+  ].join('\n'));
 
   const journal = ledlight.openJournal(journalPath);
   assert.equal(journal.warnings.length, 1);
@@ -192,7 +195,7 @@ test('groups repeated warnings and exposes only their first ten instances', (t) 
   assert.equal(journal.warnings[0].message, 'Commodity FUND must be declared before use');
   assert.equal(journal.warnings[0].instances.length, 10);
   assert.deepEqual(journal.warnings[0].instances.map(({ line }) => line), [
-    3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
   ]);
 
   const cli = spawnSync(process.execPath, [cliPath, 'accounts', '--file', journalPath], {

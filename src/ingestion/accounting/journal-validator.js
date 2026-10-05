@@ -157,6 +157,12 @@ module.exports = ({
           'commodity', entry.symbol, declarations.commodities, entry.location, warnings,
         )) {
           invalidEntries.add(entry);
+        } else if (!entry.properties.some(({ name }) => name === 'format')) {
+          warnings.push(createWarning(
+            warningCodes.MISSING_COMMODITY_FORMAT,
+            `Commodity ${entry.symbol} must declare a format property`,
+            entry.location,
+          ));
         }
       } else if (entry.type === 'tag') {
         if (!declare('tag', entry.name, declarations.tags, entry.location, warnings)) {

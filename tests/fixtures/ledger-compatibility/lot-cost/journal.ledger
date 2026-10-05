@@ -1,6 +1,8 @@
 commodity USD
   default
+  format 1,000.00 USD
 commodity AAPL
+  format 1000 AAPL
 account Assets:Broker
 account Assets:Bank
 account Income:Capital Gains

@@ -16,5 +16,5 @@ commands:
     ledlight: prices
     ledger: prices
   transactions:
-    ledlight: transactions --format text
+    ledlight: transactions --format text --ledger-compatible
     ledger: print

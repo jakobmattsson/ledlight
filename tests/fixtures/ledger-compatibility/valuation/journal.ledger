@@ -3,6 +3,7 @@ commodity USD
   format 1,000.00 USD
 
 commodity FUND
+  format 1000 FUND
 account Assets:Investments
 account Assets:Cash
 

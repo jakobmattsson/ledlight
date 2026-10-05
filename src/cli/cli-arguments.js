@@ -211,6 +211,12 @@ module.exports = ({
     addOutputValueOption(transactions, '--format <format>', 'select the output format', {
       choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
     });
+    addOutputBooleanOption(
+      transactions,
+      '--ledger-compatible',
+      'match Ledger rounding and zero-amount text output',
+      'ledgerCompatible',
+    );
     const postings = registerCommand(
       program.command('postings').description('show postings'),
       'postings',
@@ -403,7 +409,10 @@ module.exports = ({
           accounts: options.accounts || [], id: options.id, order: options.order,
           page: options.page, pageSize: options.pageSize,
         }),
-        output: { format: options.format },
+        output: {
+          format: options.format,
+          ledgerCompatible: options.ledgerCompatible || false,
+        },
       };
     }
     if (commandName === 'postings') {
@@ -468,6 +477,9 @@ module.exports = ({
     }
     if (!selectedCommand) throw new Error(usage());
     const parsed = parsedResult(selectedCommand.name, selectedCommand.options);
+    if (parsed.output?.ledgerCompatible && parsed.output.format !== 'text') {
+      throw new Error('--ledger-compatible requires --format text');
+    }
     return selectedCommand.options.ledger ? { ...parsed, ledger: true } : parsed;
   }
   function shellArgument(value) {
