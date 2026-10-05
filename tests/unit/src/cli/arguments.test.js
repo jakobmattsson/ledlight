@@ -18,7 +18,6 @@ test('defines one CLI command for every journal operation', () => {
     balanceHistoryReport: 'balance-history',
     unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
-    accountTransactions: 'account-transactions',
     accounts: 'accounts',
     tags: 'tags',
     commodities: 'commodities',
@@ -353,10 +352,6 @@ test('maps every remaining API parameter to CLI arguments', () => {
     ]),
     /Allowed choices are text, json, csv/u,
   );
-  assert.deepEqual(parseArguments(['account-transactions', '--file', '/journal', '--accounts', 'Assets:Cash', '--accounts', 'Assets:Bank']), {
-    command: 'account-transactions', journalPath: '/journal',
-    options: { accounts: ['Assets:Cash', 'Assets:Bank'] },
-  });
   assert.deepEqual(parseArguments([
     'transactions', '--file', '/journal', '--accounts', 'Assets:Cash',
     '--accounts', 'Assets:Bank',

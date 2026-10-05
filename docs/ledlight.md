@@ -119,7 +119,6 @@ underlying result.
 | `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
-| `account-transactions --file PATH` | `openJournal(journalPath).accountTransactions(options)` | Matching-account transactions |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
 | `tags --file PATH` | `openJournal(journalPath).tags()` | Used tags |
 | `commodities --file PATH` | `openJournal(journalPath).commodities()` | Used commodities |

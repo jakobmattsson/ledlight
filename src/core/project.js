@@ -18,10 +18,6 @@ module.exports = ({
     return definition;
   };
   const {
-    inputSchema: accountTransactionsOptionsSchema,
-    execute: queryAccountTransactions,
-  } = query('accountTransactions');
-  const {
     inputSchema: summaryOptionsSchema,
     execute: querySummary,
   } = query('summary');
@@ -72,7 +68,6 @@ module.exports = ({
     balanceHistoryReport: { inputs: journalInputs(balanceHistoryOptionsSchema) },
     unrealizedGains: { inputs: journalInputs(unrealizedGainsOptionsSchema) },
     investmentPerformance: { inputs: journalInputs(investmentPerformanceOptionsSchema) },
-    accountTransactions: { inputs: journalInputs(accountTransactionsOptionsSchema) },
     accounts: { inputs: journalInputs(accountsOptionsSchema) },
     tags: { inputs: journalInputs(tagsOptionsSchema) },
     commodities: { inputs: journalInputs(commoditiesOptionsSchema) },
@@ -132,9 +127,6 @@ module.exports = ({
     return {
       ...current,
       warnings,
-      accountTransactions(options) {
-        return runQuery(queryAccountTransactions, options);
-      },
       summary(options) {
         return runQuery(querySummary, options);
       },

@@ -170,15 +170,6 @@ module.exports = ({
         choices: ['text', 'json', 'csv'], defaultValue: 'text', outputInput: 'format',
       });
     }
-    const accountTransactions = registerCommand(
-      program.command('account-transactions').description('show transactions for matching accounts'),
-      'accountTransactions',
-      'misc',
-    );
-    addJournal(accountTransactions);
-    addValueOption(accountTransactions, '--accounts <pattern>', 'select matching accounts (repeatable)', {
-      repeatable: true, required: true, apiInput: 'accounts',
-    });
     const transactions = registerCommand(
       program.command('transactions').alias('print')
         .description('show transactions'),
@@ -385,7 +376,6 @@ module.exports = ({
     if (commandName === 'prices') {
       return { ...common, output: { format: options.format } };
     }
-    if (commandName === 'account-transactions') return { ...common, options: { accounts: options.accounts } };
     if (commandName === 'transactions') {
       return {
         ...common,

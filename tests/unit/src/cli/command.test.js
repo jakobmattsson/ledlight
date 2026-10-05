@@ -211,7 +211,6 @@ test('delegates report behavior to the public Node API and only formats results'
 test('delegates non-report commands to the corresponding journal operations', () => {
   const calls = [];
   const journal = {
-    accountTransactions(options) { calls.push(['accountTransactions', options]); return ['transactions']; },
     accounts(options) {
       calls.push(['accounts', options]);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
@@ -268,7 +267,6 @@ test('delegates non-report commands to the corresponding journal operations', ()
   });
   const run = (arguments_) => JSON.parse(runReportCommand(arguments_));
 
-  assert.deepEqual(run(['account-transactions', '--file', '/journal', '--accounts', 'Assets:Cash']), ['transactions']);
   assert.equal(runReportCommand(['accounts', '--file', '/journal']), 'Assets:Cash\n');
   assert.deepEqual(run([
     'accounts', '--file', '/journal', '--accounts', 'Assets:Cash', '--details', '--format', 'json',
@@ -316,7 +314,6 @@ test('delegates non-report commands to the corresponding journal operations', ()
     'reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash', '--related',
   ]), ['entries']);
   assert.deepEqual(calls, [
-    ['openJournal', '/journal'], ['accountTransactions', { accounts: ['Assets:Cash'] }],
     ['openJournal', '/journal'], ['accounts', { accounts: [], usage: 'used' }],
     ['openJournal', '/journal'], ['accounts', {
       accounts: ['Assets:Cash'], usage: 'used',
@@ -422,7 +419,6 @@ test('--ledger never opens a journal and is available on every command', () => {
     ['commodities'],
     ['prices'],
     ['summary'],
-    ['account-transactions', '--accounts', 'Assets:Cash'],
     ['transactions'],
     ['postings'],
     ['print'],

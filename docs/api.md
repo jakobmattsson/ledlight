@@ -172,14 +172,6 @@ improvement backlog.
 
 ## Additional journal queries
 
-### `journal.accountTransactions({ accounts })`
-
-Returns newest-first transactions containing postings to matching accounts.
-`accounts` is a non-empty array and matches any supplied pattern.
-Each transaction contains identity and description fields plus `postings`.
-Each posting contains `postingDate` and exact amount rows with the running
-`balance` for that posting's account and commodity.
-
 ### `journal.accounts({ accounts, usage })`
 
 Returns one row per declared account in Ledger order. The optional `accounts`
