@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791320322793,
+  "lastUpdate": 1791323140197,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -233,6 +233,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 12.194817,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "311d52327def96be39fa474ecb9aaf5fb86b4a25",
+          "message": "Merge pull request #86 from jakobmattsson/codex/readme-doc-links\n\nRequire root README links for every docs file",
+          "timestamp": "2026-10-06T23:45:16+02:00",
+          "tree_id": "4f7900234edf658b24564495ec4581142fb9fd4f",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/311d52327def96be39fa474ecb9aaf5fb86b4a25"
+        },
+        "date": 1791323139626,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1674.241969,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 11.638597,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 10.536123,
             "unit": "ms"
           }
         ]
