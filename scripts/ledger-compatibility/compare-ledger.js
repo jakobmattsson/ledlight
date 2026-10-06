@@ -10,7 +10,7 @@ const YAML = require('yaml');
 
 const MAX_OUTPUT_BYTES = 256 * 1024 * 1024;
 
-const repositoryRoot = path.resolve(__dirname, '..');
+const repositoryRoot = path.resolve(__dirname, '../..');
 const ledlightCli = path.join(repositoryRoot, 'src/cli/run.js');
 const matrixPath = path.join(__dirname, 'ledger-compatibility-matrix.yaml');
 

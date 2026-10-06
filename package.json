@@ -33,7 +33,7 @@
   ],
   "bin": {
     "ledlight": "src/cli/run.js",
-    "ledlight-cmp": "scripts/compare-ledger.js"
+    "ledlight-cmp": "scripts/ledger-compatibility/compare-ledger.js"
   },
   "engines": {
     "node": "^22.12.0"
