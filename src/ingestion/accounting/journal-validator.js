@@ -91,13 +91,13 @@ module.exports = ({
     if (!posting.amount || !defaultCommodity) return;
     if (posting.amount.commodity === defaultCommodity) {
       for (const [label, annotation] of [
-        ['Lot cost', posting.lotCost], ['Transaction price', posting.cost],
+        ['lot cost', posting.lotCost], ['transaction price', posting.cost],
       ]) {
         if (annotation && annotation.amount.commodity !== defaultCommodity) {
           warnings.push(createWarning(
             warningCodes.INVALID_COMMODITY_TRADE,
-            `${label} on a ${defaultCommodity} posting must be expressed in the ` +
-              `default commodity ${defaultCommodity}, not ${annotation.amount.commodity}`,
+            `A ${defaultCommodity} posting cannot have a ${label} in ` +
+              `${annotation.amount.commodity}. Amounts in the default commodity are valued at face value.`,
             posting.location,
           ));
         }

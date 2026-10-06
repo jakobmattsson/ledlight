@@ -30,6 +30,6 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
-[INVALID_COMMODITY_TRADE] Lot cost on a SEK posting must be expressed in the default commodity SEK, not EUR
+[INVALID_COMMODITY_TRADE] A SEK posting cannot have a lot cost in EUR. Amounts in the default commodity are valued at face value.
   {{JOURNAL_PATH}}:10:3
   {{JOURNAL_PATH}}:11:3
