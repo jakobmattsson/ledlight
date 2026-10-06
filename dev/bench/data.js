@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791293720236,
+  "lastUpdate": 1791317003656,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -77,6 +77,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 13.125474,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36e2061b23753437e6620ccfd5ab626bf6a96e9a",
+          "message": "Merge pull request #82 from jakobmattsson/codex/cost-balance-invariant\n\nDiagnose foreign costs on default-currency postings",
+          "timestamp": "2026-10-06T22:02:57+02:00",
+          "tree_id": "c7cc85ccff57d298a9f7cdee1c8938b79646a0db",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/36e2061b23753437e6620ccfd5ab626bf6a96e9a"
+        },
+        "date": 1791317002663,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 2543.003925,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.711253,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 8.998897,
             "unit": "ms"
           }
         ]
