@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791317003656,
+  "lastUpdate": 1791318015862,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -116,6 +116,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 8.998897,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5b01df0292c3c01a6bf655b6617a236314708911",
+          "message": "Merge pull request #83 from jakobmattsson/codex/move-ohm-reference-to-tests\n\nMove Ohm reference parser into test support",
+          "timestamp": "2026-10-06T22:19:51+02:00",
+          "tree_id": "655a033659c32f20f0017a9c9b2d31e3dc807259",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/5b01df0292c3c01a6bf655b6617a236314708911"
+        },
+        "date": 1791318015443,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 2037.708234,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.50882,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 12.606747,
             "unit": "ms"
           }
         ]
