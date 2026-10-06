@@ -44,7 +44,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       'docs/ledger-cli-equivalence.md',
       'docs/ledlight.md',
       'docs/package.md',
-      'index.js',
+      'src/index.js',
       'package.json',
       'scripts/compare-ledger.js',
       'scripts/ledger-compatibility-matrix.yaml',
