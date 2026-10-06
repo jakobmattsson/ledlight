@@ -181,6 +181,9 @@ lot costs raise `LEDLIGHT_MISSING_VALUATION_DATA` without falling back to market
 prices. Cost valuation does not require market prices. Without either valuation
 output option, quantities remain unchanged regardless of `valuation`.
 Realized gains continue to come from the journal's sale postings.
+Lot costs and transaction prices on default-commodity postings must also be
+expressed in the default commodity; ingestion warns with `INVALID_COMMODITY_TRADE`
+when an annotation uses another commodity.
 
 ### `journal.balanceHistoryReport(options)`
 
@@ -214,8 +217,9 @@ accounts are omitted and losses are negative. Rows are sorted by account.
 
 All lot costs contributing to a selected open position must be expressed in
 the journal default commodity. Ingestion records `FOREIGN_LOT_COST_CURRENCY`
-warnings for costs in another currency, available through `journal.warnings`
-and every CLI report. The gain report omits affected account/commodity positions;
+warnings for non-default commodity positions with costs in another currency.
+They are available through `journal.warnings` and every CLI report. The gain
+report omits affected account/commodity positions;
 account sums and the CLI total cover only the remaining positions and may be
 incomplete. The report does not infer historical exchange rates or lot allocations.
 Missing lot costs on other open positions still cause an error. Closed positions

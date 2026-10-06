@@ -88,7 +88,22 @@ module.exports = ({
   }
 
   function validateCommodityTrade(posting, defaultCommodity, warnings) {
-    if (!posting.amount || !defaultCommodity || posting.amount.commodity === defaultCommodity) return;
+    if (!posting.amount || !defaultCommodity) return;
+    if (posting.amount.commodity === defaultCommodity) {
+      for (const [label, annotation] of [
+        ['Lot cost', posting.lotCost], ['Transaction price', posting.cost],
+      ]) {
+        if (annotation && annotation.amount.commodity !== defaultCommodity) {
+          warnings.push(createWarning(
+            warningCodes.INVALID_COMMODITY_TRADE,
+            `${label} on a ${defaultCommodity} posting must be expressed in the ` +
+              `default commodity ${defaultCommodity}, not ${annotation.amount.commodity}`,
+            posting.location,
+          ));
+        }
+      }
+      return;
+    }
     const sign = compareDecimals(parseDecimal(posting.amount.quantity), ZERO);
     const isZeroValueAcquisition = posting.lotCost && posting.cost &&
       compareDecimals(parseDecimal(posting.lotCost.amount.quantity), ZERO) === 0 &&

@@ -30,6 +30,3 @@ account Equity:Opening
 
 [INVALID_COMMODITY_TRADE] Lot cost expressed in the posting commodity SEK must value one SEK at exactly one SEK
   {{JOURNAL_PATH}}:8:3
-
-[COST_BALANCE_MISMATCH] Transaction cost balance is -100 SEK; the balance and balance-history reports at cost using transaction dates require zero
-  {{JOURNAL_PATH}}:7:1

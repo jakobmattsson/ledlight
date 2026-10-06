@@ -1,4 +1,4 @@
-A Ledger-valid transaction can balance in EUR while cost reports in SEK do not balance.
+Foreign costs on default-commodity postings are diagnosed at their source.
 
 ========== API ==========
 
@@ -14,7 +14,7 @@ commodity EUR
 account Assets:Cash
 account Equity:Opening
 
-2024-01-01 Foreign cost annotations on SEK postings
+2024-01-01 Foreign costs on SEK postings
   Assets:Cash  100 SEK {2 EUR}
   Equity:Opening  -200 SEK {1 EUR}
 
@@ -30,5 +30,6 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
-[COST_BALANCE_MISMATCH] Transaction cost balance is -100 SEK; the balance and balance-history reports at cost using transaction dates require zero
-  {{JOURNAL_PATH}}:9:1
+[INVALID_COMMODITY_TRADE] Lot cost on a SEK posting must be expressed in the default commodity SEK, not EUR
+  {{JOURNAL_PATH}}:10:3
+  {{JOURNAL_PATH}}:11:3
