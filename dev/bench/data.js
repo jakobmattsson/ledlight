@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791318015862,
+  "lastUpdate": 1791319008047,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -155,6 +155,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 12.606747,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ab90061caf649693fb911efdb544febccacb49d",
+          "message": "Merge pull request #84 from jakobmattsson/codex/price-directive-mode\n\nExpose price directives and strict Ledger text parser",
+          "timestamp": "2026-10-06T22:36:25+02:00",
+          "tree_id": "7000327a93cf058cd976828cc5bb6179bb2bd330",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/8ab90061caf649693fb911efdb544febccacb49d"
+        },
+        "date": 1791319007625,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1904.38763,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.022234,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 12.157288,
             "unit": "ms"
           }
         ]
