@@ -199,16 +199,25 @@ function parseCase(fileName) {
   };
 }
 
-function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
-  const temporaryDirectory = fs.realpathSync.native(
+function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCache) {
+  // FILE inputs are immutable, so identical cases can reuse the built SQLite cache.
+  // Heredoc inputs keep their separate stdin path and cleanup behavior.
+  const fixtureKey = fixtureCache && file !== undefined
+    ? JSON.stringify([file, files])
+    : undefined;
+  const cachedDirectory = fixtureKey === undefined ? undefined : fixtureCache.get(fixtureKey);
+  const temporaryDirectory = cachedDirectory ?? fs.realpathSync.native(
     fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-case-')),
   );
   const journalPath = path.join(temporaryDirectory, 'journal.ledger');
-  if (file !== undefined) fs.writeFileSync(journalPath, file);
-  for (const [relativePath, content] of Object.entries(files)) {
-    const destination = path.join(temporaryDirectory, relativePath);
-    fs.mkdirSync(path.dirname(destination), { recursive: true });
-    fs.writeFileSync(destination, content);
+  if (!cachedDirectory) {
+    if (file !== undefined) fs.writeFileSync(journalPath, file);
+    for (const [relativePath, content] of Object.entries(files)) {
+      const destination = path.join(temporaryDirectory, relativePath);
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      fs.writeFileSync(destination, content);
+    }
+    if (fixtureKey !== undefined) fixtureCache.set(fixtureKey, temporaryDirectory);
   }
   const container = createRepositoryContainer();
   container.register({
@@ -279,7 +288,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
   } finally {
     remaining = fs.readdirSync(temporaryDirectory)
       .filter((name) => name.startsWith('ledlight-stdin-'));
-    fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+    if (fixtureKey === undefined) fs.rmSync(temporaryDirectory, { recursive: true, force: true });
   }
   if (remaining.length > 0) {
     throw new Error(`CLI stdin storage was not removed: ${remaining.join(', ')}`);

@@ -7,11 +7,17 @@ const test = require('node:test');
 const { parseCase, runCase } = require('../../../support/cli-case');
 
 const directory = path.resolve(__dirname, '../../../cases/cli');
+const fixtureCache = new Map();
+test.after(() => {
+  for (const fixtureDirectory of fixtureCache.values()) {
+    fs.rmSync(fixtureDirectory, { recursive: true, force: true });
+  }
+});
 
 for (const fileName of fs.readdirSync(directory).filter((name) => name.endsWith('.case')).sort()) {
   test(fileName, () => {
     const expected = parseCase(path.join(directory, fileName));
-    const { actual, journalPath, temporaryDirectory } = runCase(expected);
+    const { actual, journalPath, temporaryDirectory } = runCase(expected, fixtureCache);
     const resolvePaths = (value) => value
       ?.replaceAll('{{JOURNAL_PATH}}', journalPath)
       .replace(/\{\{FILE:([^}]+)\}\}/gu, (_match, name) => path.join(temporaryDirectory, name));
