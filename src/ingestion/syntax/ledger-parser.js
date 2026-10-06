@@ -157,6 +157,9 @@ module.exports = ({
 
   /** Fast runtime parser. Its behavior is checked against ledger.ohm. */
   function parseStrict(sourceText, options, lineOffset) {
+    if (typeof sourceText !== 'string') {
+      throw createError(errorCodes.INVALID_API_INPUT, 'Ledger source text must be a string', TypeError);
+    }
     const result = optionsSchema.safeParse(options ?? {});
     if (!result.success) {
       throw createError(
@@ -302,5 +305,5 @@ module.exports = ({
     };
   }
 
-  return { parse, $$private: { parseStrict } };
+  return { parse, parseStrict, $$private: { parseStrict } };
 };

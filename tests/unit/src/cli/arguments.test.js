@@ -154,7 +154,16 @@ test('parses listing output formats and unused declaration selection', () => {
   assert.deepEqual(parseArguments(['prices', '--file', '/journal']), {
     command: 'prices',
     journalPath: '/journal',
+    options: { mode: 'effective' },
     output: { format: 'text' },
+  });
+  assert.deepEqual(parseArguments([
+    'prices', '--file', '/journal', '--mode', 'directives', '--format', 'json',
+  ]), {
+    command: 'prices',
+    journalPath: '/journal',
+    options: { mode: 'directives' },
+    output: { format: 'json' },
   });
 });
 

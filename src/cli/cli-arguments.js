@@ -153,7 +153,11 @@ module.exports = ({
         program.command(name).description(description), operation, 'raw',
       );
       addJournal(command);
-      if (name !== 'prices') {
+      if (name === 'prices') {
+        addValueOption(command, '--mode <mode>', 'select effective prices or journal price directives', {
+          choices: ['effective', 'directives'], defaultValue: 'effective', apiInput: 'mode',
+        });
+      } else {
         addUsageSelection(command, `${name} declarations`);
       }
       if (name === 'commodities') {
@@ -349,7 +353,11 @@ module.exports = ({
       };
     }
     if (commandName === 'prices') {
-      return { ...common, output: { format: options.format } };
+      return {
+        ...common,
+        options: { mode: options.mode },
+        output: { format: options.format },
+      };
     }
     if (commandName === 'transactions') {
       return {

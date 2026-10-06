@@ -2,6 +2,12 @@
 
 const { createRepositoryContainer } = require('./composition/repository-container');
 
-const { openJournal } = createRepositoryContainer().resolve('project');
+const container = createRepositoryContainer();
+const { openJournal } = container.resolve('project');
+const { parseStrict } = container.resolve('ledgerParser');
 
-module.exports = { openJournal };
+function parseLedgerText(sourceText, options) {
+  return parseStrict(sourceText, options);
+}
+
+module.exports = { openJournal, parseLedgerText };

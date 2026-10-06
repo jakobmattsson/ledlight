@@ -20,8 +20,27 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
   delete require.cache[sqliteModulePath];
 
   const ledlight = require(ledlightPath);
-  assert.deepEqual(Object.keys(ledlight), ['openJournal']);
+  assert.deepEqual(Object.keys(ledlight), ['openJournal', 'parseLedgerText']);
   assert.equal(require.cache[sqliteModulePath], undefined);
+});
+
+test('rejects malformed Ledger text instead of returning a partial AST', () => {
+  const { parseLedgerText } = require(ledlightPath);
+  assert.throws(
+    () => parseLedgerText('account Assets:Cash\n2024-02-30 Bad date\n  Assets:Cash  1 SEK\n', {
+      source: 'planned.ledger',
+    }),
+    (error) => error.code === 'LEDLIGHT_SYNTAX' && error.source === 'planned.ledger' &&
+      error.line === 2,
+  );
+  assert.throws(
+    () => parseLedgerText(123),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+  );
+  assert.throws(
+    () => parseLedgerText('account Assets:Cash\n', { unknown: true }),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+  );
 });
 
 test('exposes stable error code strings instead of public error classes', (t) => {

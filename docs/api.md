@@ -1,17 +1,16 @@
 # Node.js API reference
 
-Ledlight is a CommonJS module. The package root exports only `openJournal`:
+Ledlight is a CommonJS module. The package root exports `openJournal` and
+`parseLedgerText`:
 
 ```js
-const { openJournal } = require('ledlight');
+const { openJournal, parseLedgerText } = require('ledlight');
 ```
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
 API option objects reject unknown properties and values of the wrong type,
-including `null`. Omit the options argument or pass `{}` to use defaults. Even
-`prices`, which has no supported options, rejects supplied options rather than
-ignoring them.
+including `null`. Omit the options argument or pass `{}` to use defaults.
 
 All account selections use literal substring patterns. A leading `^` anchors a
 pattern to the start of the account name and a trailing `$` anchors it to the
@@ -47,7 +46,7 @@ all default to `false`.
 | `accounts` | No date filter. | `accounts`, `usage` |
 | `commodities` | No date filter. | `usage` |
 | `tags` | No date filter. | `usage` |
-| `prices` | No date filter; returns all effective price dates. | None |
+| `prices` | No date filter. | `mode`: `effective` or `directives` |
 
 `dateBasis: 'transaction'` changes the date used for positions or activity;
 market prices always retain their own price dates. Queries without `dateBasis`
@@ -84,6 +83,57 @@ Consumers should compare `error.code` with these strings and should not depend
 on a Ledlight-specific error class or inspect message text. Syntax errors also
 expose `source`, `line`, and `column`; an underlying SQLite code is preserved as
 `sqliteCode` when available.
+
+## Parsing Ledger text
+
+### `parseLedgerText(sourceText, options)`
+
+Parse a Ledger string into a syntax tree without reading files, following
+`include` directives, opening a database, or performing accounting validation.
+`sourceText` must be a string. The optional `options` object accepts only
+`source`, a string used in locations and syntax errors; it defaults to
+`'<input>'`. The parser is strict: malformed or unsupported syntax throws
+`LEDLIGHT_SYNTAX` at the first error and never returns a partial tree. It does
+not use the warning and recovery behavior of `openJournal`.
+
+The result is `{ source, entries }`. `entries` preserves source order. Every
+entry has `type` and `location: { source, line, column }`, with one-based line
+and column numbers. Comments are `string | null`. Amounts are
+`{ quantity: string, commodity: string }`; the original decimal precision is
+preserved in `quantity`. Entry shapes are:
+
+| Type | Fields |
+| --- | --- |
+| `include` | `path`, `comment`, `location` |
+| `account`, `tag` | `name`, `comment`, `location` |
+| `commodity` | `symbol`, `properties`, `comment`, `location` |
+| `price` | `date`, `commodity`, `price` (amount), `comment`, `location` |
+| `transaction` | `date`, `description`, `postings`, `notes`, `comment`, `location`; optional `tags` |
+
+Commodity `properties` is an array of `{ name, value, comment, location }`;
+`value` is a string or `null`. A transaction posting contains `type: 'posting'`,
+`account`, `amount`, `lotCost`, `cost`, `balanceAssignment`,
+`balanceAssertion`, `postingDate`, `comment`, and `location`, plus optional
+`tags`. The amount, balance assignment, and balance assertion fields are an
+amount or `null`. `lotCost` and `cost` are `{ total: boolean, amount }` or
+`null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A note
+is `{ text, key, value, location }`, plus optional `tags`; `key` and `value`
+are strings or `null`. Tags are `{ name, value }`, where `value` may be `null`.
+
+For example:
+
+```js
+const ast = parseLedgerText(
+  '2024-01-02 Buy shares\n  ; Generated-ID trade-1\n  Assets:Broker  2 STOCK {8 SEK}\n  Assets:Cash  -16 SEK\n',
+  { source: 'proposed.ledger' },
+);
+const transaction = ast.entries[0];
+console.log(transaction.notes[0].text); // Generated-ID trade-1
+console.log(transaction.postings[0].lotCost.amount.quantity); // 8
+```
+
+This API parses text only. Callers retain responsibility for merging source
+blocks and validating the resulting journal before publishing it.
 
 ## Opening a journal
 
@@ -336,9 +386,10 @@ booleans. A later duplicate commodity declaration produces a warning and is
 not stored, so the first declaration supplies the metadata. Other commodity
 properties are not currently exposed.
 
-### `journal.prices()`
+### `journal.prices({ mode })`
 
-Returns Ledger's effective market prices for used commodities. The last price
+`mode` defaults to `effective`, which returns Ledger's effective market prices
+for used commodities. The last price
 encountered for a base commodity, quote commodity, and date wins, whether explicit
 or inferred from lot or transaction costs:
 
@@ -357,6 +408,14 @@ strings; inferred unit prices are calculated to thirty decimal places. Text
 output follows Ledger's display precision for inferred prices, while API, JSON,
 and CSV quantities retain their calculation precision.
 Rows sort by ascending date, then base commodity. Dates use `YYYY-MM-DD`.
+
+`mode: 'directives'` returns every explicit `P` directive from the journal,
+including prices for unused commodities and earlier prices superseded on the
+same day. It does not infer prices from transactions. Rows sort by base
+commodity, then ascending date, then journal source order. The result fields
+are the same as in effective mode, and `quoteQuantity` retains the source
+decimal string. This order lets consumers apply their own last-directive-wins
+rule for each commodity and date.
 
 ### `journal.transactions({ accounts, id, order, page, pageSize })`
 
@@ -446,6 +505,8 @@ csv`. Text tag and commodity output contains one name per line. With
 every field returned by `journal.commodities(options)`. Text price output
 contains one price per line with an ISO date. JSON and
 CSV retain every field returned by `journal.prices()`.
+`prices --mode directives` selects explicit journal price directives; the
+default `--mode effective` preserves the Ledger-compatible price listing.
 
 CLI commands preserve the query result on stdout and emit a human-readable
 summary of the journal's warnings on stderr when it is non-empty. No warning

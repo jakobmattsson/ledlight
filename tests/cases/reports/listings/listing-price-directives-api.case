@@ -1,0 +1,47 @@
+The API returns every explicit price directive in commodity, date, and source order.
+
+========== API ==========
+
+prices({ mode: 'directives' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+commodity UNUSED
+account Assets:Fund
+account Equity:Opening
+P 2024-01-02 FUND 12 SEK ; first
+P 2024-01-01 UNUSED 4 SEK ; unused
+P 2024-01-02 FUND 13 SEK ; corrected
+
+2024-01-03 Purchase
+  Assets:Fund  1 FUND {10 SEK}
+  Equity:Opening  -10 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "date": "2024-01-02",
+    "baseCommodity": "FUND",
+    "quoteQuantity": "12",
+    "quoteCommodity": "SEK",
+    "comment": "first"
+  },
+  {
+    "date": "2024-01-02",
+    "baseCommodity": "FUND",
+    "quoteQuantity": "13",
+    "quoteCommodity": "SEK",
+    "comment": "corrected"
+  },
+  {
+    "date": "2024-01-01",
+    "baseCommodity": "UNUSED",
+    "quoteQuantity": "4",
+    "quoteCommodity": "SEK",
+    "comment": "unused"
+  }
+]
