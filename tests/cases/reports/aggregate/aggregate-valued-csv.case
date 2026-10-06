@@ -1,0 +1,23 @@
+Aggregate valued csv formatting.
+
+========== CLI ==========
+
+ledlight aggregate --accounts Assets: --value --format csv
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash,Main
+account Assets:LongAccount
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash,Main  2.005 SEK
+  Assets:LongAccount  10000 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+account,amount,commodity
+"Assets:Cash,Main",2.01,SEK
+Assets:LongAccount,10000.00,SEK

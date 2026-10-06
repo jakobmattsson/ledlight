@@ -1,0 +1,132 @@
+postings accepts leap day as to.
+
+========== API ==========
+
+postings({ to: '2024-02-29' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 1,
+    "transactionId": 4,
+    "transactionDate": "2024-02-28",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 5,
+    "description": "Opening",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-02-28",
+    "account": "Assets:Cash",
+    "postingComment": null,
+    "amount": {
+      "quantity": "10",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "10",
+        "commodity": "SEK",
+        "balance": "10"
+      }
+    ]
+  },
+  {
+    "postingId": 2,
+    "transactionId": 4,
+    "transactionDate": "2024-02-28",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 5,
+    "description": "Opening",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-02-28",
+    "account": "Equity:Opening",
+    "postingComment": null,
+    "amount": null,
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-10",
+        "commodity": "SEK",
+        "balance": "-10"
+      }
+    ]
+  },
+  {
+    "postingId": 3,
+    "transactionId": 5,
+    "transactionDate": "2024-02-29",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 8,
+    "description": "Leap day",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-02-29",
+    "account": "Assets:Cash",
+    "postingComment": null,
+    "amount": {
+      "quantity": "2",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "2",
+        "commodity": "SEK",
+        "balance": "12"
+      }
+    ]
+  },
+  {
+    "postingId": 4,
+    "transactionId": 5,
+    "transactionDate": "2024-02-29",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 8,
+    "description": "Leap day",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-02-29",
+    "account": "Equity:Opening",
+    "postingComment": null,
+    "amount": null,
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-2",
+        "commodity": "SEK",
+        "balance": "-12"
+      }
+    ]
+  }
+]

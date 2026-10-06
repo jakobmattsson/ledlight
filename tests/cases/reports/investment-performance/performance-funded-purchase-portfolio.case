@@ -1,0 +1,57 @@
+A purchase funded by selected portfolio cash is not a new contribution.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['^Assets:'] })
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.00 FUND
+account Assets:Broker
+account Assets:Other
+account Assets:Cash
+account Assets:Unrelated
+account Equity:Opening
+account Income:Gains
+account Expenses:Fees
+2024-01-01 Deposit
+  Assets:Cash  100 USD
+  Equity:Opening  -100 USD
+2024-01-01 Purchase
+  Assets:Broker  1 FUND {{100 USD}}
+  Assets:Cash  -100 USD
+P 2024-01-01 FUND 120 USD
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-01",
+  "to": "2024-01-01",
+  "commodities": [
+    "FUND",
+    "USD"
+  ],
+  "valuationCommodity": "USD",
+  "openingValue": 0,
+  "endingValue": 120,
+  "netContributions": 100,
+  "profitLoss": 20,
+  "timeWeightedReturn": 0.19999999999999996,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-01",
+      "value": 120,
+      "netContributions": 100,
+      "profitLoss": 20,
+      "timeWeightedReturn": 0.19999999999999996,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}

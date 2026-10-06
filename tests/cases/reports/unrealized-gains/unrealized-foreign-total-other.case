@@ -1,0 +1,45 @@
+An unaffected account still reports its gain.
+
+========== API ==========
+
+unrealizedGains({ to: '2024-02-01', accounts: ['^Assets:Other$'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Broker
+account Assets:Other
+account Assets:Cash
+account Income:Gains
+P 2024-01-01 STOCK 30 SEK
+P 2024-01-01 USD 2 SEK
+
+2024-01-01 Purchase
+  Assets:Broker  2 STOCK {20 SEK}
+  Assets:Other  1 STOCK {20 SEK}
+  Assets:Cash  -60 SEK
+
+2024-02-01 Disposal with foreign basis
+  Assets:Broker  -1 STOCK {{10 USD}} @ 15 USD
+  Assets:Cash
+
+2024-03-01 Close position
+  Assets:Broker  -1 STOCK {20 SEK} @ 30 SEK
+  Assets:Cash  30 SEK
+  Income:Gains  -10 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Other",
+    "quantity": "10",
+    "commodity": "SEK"
+  }
+]

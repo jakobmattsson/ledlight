@@ -1,0 +1,30 @@
+Transactions reject unsupported sort orders.
+
+========== API ==========
+
+transactions({ order: 'sideways', page: 1, pageSize: 2 })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+account Expenses:Shop
+
+2024-01-01 First
+  Assets:Cash  10 SEK
+  Equity:Opening  -10 SEK
+
+2024-01-02 Second
+  Assets:Cash  20 SEK
+  Equity:Opening  -20 SEK
+
+2024-01-03 Shop | Third  ; imported
+  ; Project: Home
+  Assets:Cash  -5 SEK  ; card
+  Expenses:Shop
+
+========== ERROR ==========
+
+order must be newest or oldest

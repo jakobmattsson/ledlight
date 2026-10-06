@@ -1,0 +1,25 @@
+A valuation without a price throws through both CLI and API.
+
+========== CLI ==========
+
+ledlight aggregate --value <<'LEDGER'
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+account Assets:Cash
+
+2024-01-01 Purchase
+  Assets:Stock  10 STOCK {10 SEK}
+  Assets:Cash  -100 SEK
+LEDGER
+
+========== API ==========
+
+aggregate({ inValuationCommodity: true })
+
+========== ERROR ==========
+
+No price for STOCK on or before 9999-12-31 can convert it to SEK

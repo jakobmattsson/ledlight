@@ -1,0 +1,38 @@
+Twelve repeated warnings expose only the first ten locations.
+
+========== CLI ==========
+
+ledlight accounts <<'LEDGER'
+commodity SEK
+  format 1,000.00 SEK
+  default
+P 2024-01-01 FUND 1 SEK
+P 2024-01-02 FUND 1 SEK
+P 2024-01-03 FUND 1 SEK
+P 2024-01-04 FUND 1 SEK
+P 2024-01-05 FUND 1 SEK
+P 2024-01-06 FUND 1 SEK
+P 2024-01-07 FUND 1 SEK
+P 2024-01-08 FUND 1 SEK
+P 2024-01-09 FUND 1 SEK
+P 2024-01-10 FUND 1 SEK
+P 2024-01-11 FUND 1 SEK
+P 2024-01-12 FUND 1 SEK
+LEDGER
+
+========== OUTPUT ==========
+
+
+========== WARNINGS ==========
+
+[UNDECLARED_COMMODITY] Commodity FUND must be declared before use
+  <stdin>:4:1
+  <stdin>:5:1
+  <stdin>:6:1
+  <stdin>:7:1
+  <stdin>:8:1
+  <stdin>:9:1
+  <stdin>:10:1
+  <stdin>:11:1
+  <stdin>:12:1
+  <stdin>:13:1

@@ -1,0 +1,56 @@
+Global correctness: allocation-lower-bound (run 1).
+The first eleven-unit sale may remove exactly the minimum 12 USD. Subsequent
+sales must respect the tighter remaining bounds and consume the full 60 USD
+basis.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-02-28 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-01 FUND 4 USD
+
+2024-01-01 Buy cheap units
+  Assets:Broker  10 FUND {{10 USD}}
+  Assets:Bank  -10 USD
+
+2024-01-02 Buy middle units
+  Assets:Broker  10 FUND {{20 USD}}
+  Assets:Bank  -20 USD
+
+2024-01-03 Buy expensive units
+  Assets:Broker  10 FUND {{30 USD}}
+  Assets:Bank  -30 USD
+
+2024-02-01 First sale
+  Assets:Broker  -11 FUND {{12 USD}} @@ 44 USD
+  Assets:Bank  44 USD
+  Income:CapitalGains  -32 USD
+
+2024-03-01 Second sale
+  Assets:Broker  -10 FUND {{21 USD}} @@ 40 USD
+  Assets:Bank  40 USD
+  Income:CapitalGains  -19 USD
+
+2024-04-01 Final sale
+  Assets:Broker  -9 FUND {{27 USD}} @@ 36 USD
+  Assets:Bank  36 USD
+  Income:CapitalGains  -9 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Broker",
+    "quantity": "28",
+    "commodity": "USD"
+  }
+]

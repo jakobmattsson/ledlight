@@ -1,0 +1,54 @@
+A single-day range includes both endpoints and retains opening balances where relevant.
+
+========== API ==========
+
+postings({ accounts: ['Assets:'], from: '2024-02-29', to: '2024-02-29' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 3,
+    "transactionId": 5,
+    "transactionDate": "2024-02-29",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 8,
+    "description": "Leap day",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-02-29",
+    "account": "Assets:Cash",
+    "postingComment": null,
+    "amount": {
+      "quantity": "2",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "2",
+        "commodity": "SEK",
+        "balance": "12"
+      }
+    ]
+  }
+]

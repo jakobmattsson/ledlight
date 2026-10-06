@@ -1,0 +1,32 @@
+The API returns the expected default market valuation without a CLI command.
+
+========== API ==========
+
+aggregate({ accounts: ['Assets:Fund'], inValuationCommodity: true })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000.00 FUND
+account Assets:Fund
+account Equity:Opening
+P 2024-01-01 FUND 150 SEK
+2024-01-01 Buy
+  Assets:Fund  10 FUND {100 SEK}
+  Equity:Opening  -1000 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Fund",
+    "commodity": "SEK",
+    "quantity": "1500"
+  }
+]
+
+========== WARNINGS ==========
+

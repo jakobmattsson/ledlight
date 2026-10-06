@@ -9,15 +9,10 @@
 // node src/cli/run.js unrealized-gains --file main.ledger --accounts "Assets:"
 
 const { loadCliModules } = require('./cli-modules');
+const { executeCli } = require('./execute-cli');
 
 const modules = loadCliModules();
 modules.output.handleBrokenPipe();
 
-try {
-  const result = modules.reportCommand.run(process.argv.slice(2));
-  modules.output.writeOutput(result.output);
-  modules.output.writeWarnings(result.warnings);
-} catch (error) {
-  modules.output.writeError(`${error.message}\n`);
-  process.exitCode = 1;
-}
+const exitCode = executeCli(modules, process.argv.slice(2));
+if (exitCode !== 0) process.exitCode = exitCode;

@@ -1,0 +1,31 @@
+A sale posted after the acquisition has no negative holding warning.
+
+========== API ==========
+
+aggregate({ accounts: ['^Assets:Fund$'], to: '2024-01-02' })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Cash
+account Assets:Fund
+
+2024-01-01 Buy fund
+  Assets:Fund  1 FUND {100 SEK} ; [2024-01-03]
+  Assets:Cash  -100 SEK
+
+2024-01-02 Sell fund
+  Assets:Fund  -1 FUND {100 SEK} @ 100 SEK ; [2024-01-04]
+  Assets:Cash  100 SEK
+
+========== OUTPUT ==========
+
+[]
+
+========== WARNINGS ==========
+
+

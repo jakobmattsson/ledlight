@@ -1,0 +1,23 @@
+aggregate market valuation matches the public journal API.
+
+========== CLI ==========
+
+ledlight aggregate --accounts Assets:Fund --format json --value --valuation market
+
+========== API ==========
+
+aggregate({ accounts: ['Assets:Fund'], inValuationCommodity: true, valuation: 'market' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000.00 FUND
+account Assets:Fund
+account Equity:Opening
+P 2024-01-01 FUND 150 SEK
+2024-01-01 Buy
+  Assets:Fund  10 FUND {100 SEK}
+  Equity:Opening  -1000 SEK

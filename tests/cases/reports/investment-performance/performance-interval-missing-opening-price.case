@@ -1,0 +1,26 @@
+An unpriced opening balance prevents performance calculation.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Portfolio'], from: '2024-01-02', to: '2024-01-03' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+commodity OTHER
+P 2024-01-02 FUND 10 SEK
+P 2024-01-03 FUND 12 SEK
+
+2024-01-01 Acquisition before prices are available
+  Assets:Portfolio  10 FUND
+  Equity:Opening  -10 FUND
+
+2024-01-04 Future acquisition without conversion prices
+  Assets:Portfolio  1 FUND
+  Assets:Portfolio  -1 OTHER
+
+========== ERROR ==========
+
+No price for FUND on or before 2024-01-01 can convert it to SEK

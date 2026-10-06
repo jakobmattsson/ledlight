@@ -1,0 +1,31 @@
+Global correctness: full-transfer (run 2).
+Moving the entire holding carries its units and basis to the destination. The
+empty source has no sale gain, while combined basis and unrealized gain remain
+unchanged.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json --accounts Assets:Broker <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Assets:OtherBroker
+
+P 2024-03-01 FUND 120 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Transfer between owned accounts
+  Assets:Broker  -10 FUND {100 USD}
+  Assets:OtherBroker  10 FUND {100 USD}
+LEDGER
+
+========== OUTPUT ==========
+
+[]

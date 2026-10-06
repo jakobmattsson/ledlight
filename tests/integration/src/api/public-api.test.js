@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../support/repository-container');
-const { execFileSync, spawnSync } = require('node:child_process');
+const { execFileSync } = require('node:child_process');
 const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
@@ -101,41 +101,12 @@ P 2024-01-01 USD 2 SEK
   const rebuilt = openJournal(journalPath);
   assert.equal(rebuilt.rebuilt, true);
   assert.deepEqual(rebuilt.warnings, journal.warnings);
-  assert.deepEqual(journal.aggregate({ inValuationCommodity: true, includeTotal: true }).at(-1), {
-    account: 'Total', commodity: 'SEK', isTotal: true, quantity: '10',
-  });
-  assert.deepEqual(journal.balanceHistoryReport(), [
-    { date: '2024-01-01', amount: '10', commodity: 'SEK' },
-  ]);
-  assert.deepEqual(journal.unrealizedGains(), []);
-  for (const command of ['aggregate', 'balance-history', 'unrealized-gains', 'accounts']) {
-    const result = spawnSync(process.execPath, [
-      cliPath, command, '--format', 'json', '--file', journalPath,
-    ], {
-      cwd: directory,
-      encoding: 'utf8',
-      env: { ...process.env, LEDLIGHT_CACHE_HOME: cacheDirectory },
-    });
-    assert.ifError(result.error);
-    assert.equal(result.status, 0, result.stderr);
-    assert.ok(Array.isArray(JSON.parse(result.stdout)));
-    if (command === 'unrealized-gains') assert.deepEqual(JSON.parse(result.stdout), []);
-    assert.equal(result.stderr.split('\n')[0], `[FOREIGN_LOT_COST_CURRENCY] ${message}`);
-  }
-
   fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(
     '1 STOCK {10 USD}\n  Assets:USD\n',
     '1 STOCK {20 SEK}\n  Assets:USD  -10 USD {2 SEK} @ 2 SEK\n',
   ));
   const correctedJournal = openJournal(journalPath);
   assert.deepEqual(correctedJournal.warnings, []);
-  assert.deepEqual(correctedJournal.unrealizedGains(), [
-    { account: 'Assets:Stock', quantity: '10', commodity: 'SEK' },
-  ]);
-  assert.equal(correctedJournal.aggregate({
-    inValuationCommodity: true, includeTotal: true,
-  }).at(-1).quantity, '10');
-  assert.equal(correctedJournal.balanceHistoryReport().at(-1).amount, '10');
 });
 
 test('prints CLI help and the public package version without opening a project', () => {
@@ -172,76 +143,7 @@ test('loads SQLite only when a journal is opened', (t) => {
     'every journal operation must have a CLI command',
   );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
-  assert.deepEqual(journal.postings(), []);
-  assert.deepEqual(journal.aggregate(), []);
-  assert.deepEqual(journal.balanceHistoryReport(), []);
-  assert.deepEqual(journal.unrealizedGains(), []);
   assert.equal(Object.hasOwn(journal, 'reconciliationEntries'), false);
-  assert.deepEqual(journal.commodities(), [{
-    commodity: 'SEK',
-    comment: null,
-    format: null,
-    isDefault: true,
-    used: false,
-  }]);
-  assert.deepEqual(journal.investmentPerformance(), {
-    from: null,
-    to: null,
-    commodities: [],
-    valuationCommodity: 'SEK',
-    openingValue: 0,
-    endingValue: 0,
-    netContributions: 0,
-    profitLoss: 0,
-    timeWeightedReturn: null,
-    moneyWeightedReturn: null,
-    moneyWeightedReturnTotal: null,
-    points: [],
-  });
-});
-
-test('selects cost or market valuation consistently through the public API and CLI', (t) => {
-  const { openJournal } = require(ledlightPath);
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-public-valuation-'));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const journalPath = path.join(directory, 'journal.ledger');
-  fs.writeFileSync(journalPath, `commodity SEK
-  default
-  format 1,000.00 SEK
-commodity FUND
-  format 1,000.00 FUND
-account Assets:Fund
-account Equity:Opening
-P 2024-01-01 FUND 150 SEK
-2024-01-01 Buy
-  Assets:Fund  10 FUND {100 SEK}
-  Equity:Opening  -1000 SEK
-`);
-  const journal = openJournal(journalPath);
-  assert.deepEqual(journal.warnings, []);
-  for (const [command, method] of [['aggregate', 'aggregate'], ['balance-history', 'balanceHistoryReport']]) {
-    for (const valuation of [undefined, 'market', 'cost']) {
-      const options = { accounts: ['Assets:Fund'] };
-      const arguments_ = [cliPath, command, '--file', journalPath, '--accounts', 'Assets:Fund', '--format', 'json'];
-      if (command === 'aggregate') {
-        options.inValuationCommodity = true;
-        arguments_.push('--value');
-      }
-      if (valuation !== undefined) {
-        options.valuation = valuation;
-        arguments_.push('--valuation', valuation);
-      }
-      const value = valuation === 'cost' ? '1000' : '1500';
-      const expected = command === 'aggregate'
-        ? [{ account: 'Assets:Fund', quantity: value, commodity: 'SEK' }]
-        : [{ date: '2024-01-01', amount: value, commodity: 'SEK' }];
-      assert.deepEqual(journal[method](options), expected);
-      const cli = spawnSync(process.execPath, arguments_, { cwd: directory, encoding: 'utf8', env: process.env });
-      assert.equal(cli.status, 0, cli.stderr);
-      assert.equal(cli.stderr, '');
-      assert.deepEqual(JSON.parse(cli.stdout), expected);
-    }
-  }
 });
 
 test('returns query data while exposing ingestion warnings through the API and CLI', (t) => {
@@ -263,9 +165,6 @@ account Equity:Opening
 `);
 
   const journal = ledlight.openJournal(journalPath);
-  assert.deepEqual(journal.aggregate({ accounts: ['Assets:'] }), [
-    { account: 'Assets:Cash', quantity: '10', commodity: 'SEK' },
-  ]);
   assert.deepEqual(journal.warnings.map(({ code }) => code), [
     'SYNTAX_ERROR',
     'BALANCE_ASSERTION_FAILED',
@@ -289,22 +188,6 @@ account Equity:Opening
     'warnings must remain available when the current database is reused',
   );
 
-  const cli = spawnSync(process.execPath, [
-    cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--format', 'json',
-  ], { cwd: directory, encoding: 'utf8', env: process.env });
-  assert.equal(cli.status, 0);
-  assert.deepEqual(JSON.parse(cli.stdout), [
-    { account: 'Assets:Cash', quantity: '10', commodity: 'SEK' },
-  ]);
-  assert.match(cli.stderr, /^\[SYNTAX_ERROR\] /u);
-  assert.match(cli.stderr, new RegExp(
-    `${journalPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&')}:6:1 ` +
-    '\\(affected lines 6-8\\)',
-    'u',
-  ));
-  assert.match(cli.stderr, /\n\[BALANCE_ASSERTION_FAILED\] /u);
-  assert.match(cli.stderr, /\n\[UNBALANCED_TRANSACTION\] /u);
-  assert.doesNotMatch(cli.stderr, /^\s*\{/u);
 });
 
 test('groups repeated warnings and exposes only their first ten instances', (t) => {
@@ -327,15 +210,6 @@ test('groups repeated warnings and exposes only their first ten instances', (t) 
     4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
   ]);
 
-  const cli = spawnSync(process.execPath, [cliPath, 'accounts', '--file', journalPath], {
-    cwd: directory,
-    encoding: 'utf8',
-    env: process.env,
-  });
-  assert.equal(cli.status, 0);
-  assert.equal(cli.stdout, '');
-  assert.equal(cli.stderr.match(/^ {2}.*journal\.ledger:\d+:\d+$/gmu)?.length, 10);
-  assert.match(cli.stderr, /\[UNDECLARED_COMMODITY\] Commodity FUND must be declared before use/u);
 });
 
 test('exposes full-history accounting diagnostics on open and across cached report commands', (t) => {
@@ -370,13 +244,4 @@ P 2024-01-01 FUND 100 USD
   previousCache.close();
   assert.deepEqual(openJournal(journalPath).warnings, journal.warnings,
     'opening an older cache must rebuild it with global accounting diagnostics');
-  for (const command of ['balance-history', 'unrealized-gains', 'aggregate', 'accounts']) {
-    const arguments_ = [cliPath, command, '--file', journalPath, '--format', 'json'];
-    if (command !== 'accounts') arguments_.push('--to', '2024-01-01', '--accounts', '^Assets:Bank$');
-    const cli = spawnSync(process.execPath, arguments_, {
-      cwd: directory, encoding: 'utf8', env: process.env,
-    });
-    assert.equal(cli.status, 0, cli.stderr);
-    assert.match(cli.stderr, /\[RESIDUAL_COST_BASIS\] Assets:Broker: zero FUND units retain cost basis 1000 USD/u);
-  }
 });

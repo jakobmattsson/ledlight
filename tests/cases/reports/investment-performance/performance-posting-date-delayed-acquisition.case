@@ -1,0 +1,45 @@
+Posting dates determine when an acquisition enters the performance series.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Portfolio'], commodities: ['FUND'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+P 2024-02-01 FUND 10 SEK
+
+2024-01-01 Backdated acquisition
+  Assets:Portfolio  10 FUND {{100 SEK}} ; [2024-02-01]
+  Equity:Opening  -100 SEK
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-02-01",
+  "to": "2024-02-01",
+  "commodities": [
+    "FUND"
+  ],
+  "valuationCommodity": "SEK",
+  "openingValue": 0,
+  "endingValue": 100,
+  "netContributions": 100,
+  "profitLoss": 0,
+  "timeWeightedReturn": 0,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-02-01",
+      "value": 100,
+      "netContributions": 100,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}

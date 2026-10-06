@@ -1,9 +1,0 @@
-runs:
-  - command: unrealized-gains --to 2024-03-31 --format json
-    expect:
-      exitCode: 0
-      result:
-        - account: Assets:Broker
-          quantity: "-200"
-          commodity: USD
-      warnings: []

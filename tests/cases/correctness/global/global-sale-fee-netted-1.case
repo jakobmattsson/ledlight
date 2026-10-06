@@ -1,0 +1,33 @@
+Global correctness: sale-fee-netted (run 1).
+A sale fee netted against proceeds changes realized gain without changing
+acquisition basis. The total economic result remains 285 USD.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Expenses:Fees
+account Income:CapitalGains
+
+P 2024-03-01 FUND 100 USD
+
+2024-01-01 Purchase including a ten dollar fee
+  Assets:Broker  10 FUND {{1000 USD}}
+  Assets:Bank  -1010 USD
+  Expenses:Fees  10 USD
+
+2024-02-01 Sale including a five dollar fee
+  Assets:Broker  -4 FUND {{400 USD}} @@ 695 USD
+  Assets:Bank  695 USD
+  Income:CapitalGains  -295 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[]

@@ -1,0 +1,82 @@
+Owned commodities are discovered and exclusions remove unrelated holdings.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:'], excludeCommodities: ['SEK', 'HOME'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+commodity HOME
+P 2024-01-01 FUND 10 SEK
+P 2024-01-02 FUND 11 SEK
+P 2024-01-03 FUND 12 SEK
+P 2024-01-01 HOME 1000 SEK
+
+2024-01-01 Buy fund
+  Assets:Portfolio  -100 SEK
+  Assets:Portfolio  10 FUND {10 SEK}
+  Assets:Unrelated cash  500 SEK
+  Equity:Opening  -500 SEK
+
+2024-01-01 Buy home
+  Assets:Home  -1000 SEK
+  Assets:Home  1 HOME {1000 SEK}
+
+2024-01-02 Buy more fund
+  Assets:Portfolio  -55 SEK
+  Assets:Portfolio  5 FUND {11 SEK}
+
+2024-01-03 Sell fund
+  Assets:Portfolio  60 SEK
+  Assets:Portfolio  -5 FUND {11 SEK} @ 12 SEK
+  Income:Capital Gains  -5 SEK
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-01",
+  "to": "2024-01-03",
+  "commodities": [
+    "FUND"
+  ],
+  "valuationCommodity": "SEK",
+  "openingValue": 0,
+  "endingValue": 120,
+  "netContributions": 95,
+  "profitLoss": 25,
+  "timeWeightedReturn": 0.19999999999999996,
+  "moneyWeightedReturn": 208336102815037.12,
+  "moneyWeightedReturnTotal": 0.19800597410546317,
+  "points": [
+    {
+      "date": "2024-01-01",
+      "value": 100,
+      "netContributions": 100,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    },
+    {
+      "date": "2024-01-02",
+      "value": 165,
+      "netContributions": 155,
+      "profitLoss": 10,
+      "timeWeightedReturn": 0.10000000000000009,
+      "moneyWeightedReturn": 1283305624567353.2,
+      "moneyWeightedReturnTotal": 0.10000000010392554
+    },
+    {
+      "date": "2024-01-03",
+      "value": 120,
+      "netContributions": 95,
+      "profitLoss": 25,
+      "timeWeightedReturn": 0.19999999999999996,
+      "moneyWeightedReturn": 208336102815037.12,
+      "moneyWeightedReturnTotal": 0.19800597410546317
+    }
+  ]
+}

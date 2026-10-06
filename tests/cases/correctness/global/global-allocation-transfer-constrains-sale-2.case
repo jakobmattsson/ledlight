@@ -1,0 +1,70 @@
+Global correctness: allocation-transfer-constrains-sale (run 2).
+Transferred basis constrains each depot separately. A destination sale booked
+at 77 USD is too cheap even though the source depot still holds cheaper units.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-04-30 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Assets:OtherBroker
+account Expenses:Fees
+account Income:CapitalGains
+
+P 2024-03-01 FUND 15 USD
+
+2024-01-01 Purchase including ten dollar fee
+  Assets:Broker  10 FUND {{110 USD}}
+  Assets:Bank  -110 USD
+
+2024-01-02 Purchase including twenty dollar fee
+  Assets:Broker  10 FUND {{220 USD}}
+  Assets:Bank  -220 USD
+
+2024-02-01 Transfer eight units with carried basis
+  Assets:Broker  -8 FUND {{154 USD}}
+  Assets:OtherBroker  8 FUND {{154 USD}}
+
+2024-03-01 Two-for-one split across both accounts
+  Assets:Broker  -12 FUND {{176 USD}}
+  Assets:Broker  24 FUND {{176 USD}}
+  Assets:OtherBroker  -8 FUND {{154 USD}}
+  Assets:OtherBroker  16 FUND {{154 USD}}
+
+2024-04-01 Destination sale
+  Assets:OtherBroker  -10 FUND {{77 USD}} @@ 150 USD
+  Assets:Bank  147 USD
+  Income:CapitalGains  -73 USD
+  Expenses:Fees  3 USD
+
+2024-04-02 Source sale
+  Assets:Broker  -10 FUND {{66 USD}} @@ 150 USD
+  Assets:Bank  148 USD
+  Income:CapitalGains  -84 USD
+  Expenses:Fees  2 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Broker",
+    "quantity": "100",
+    "commodity": "USD"
+  },
+  {
+    "account": "Assets:OtherBroker",
+    "quantity": "13",
+    "commodity": "USD"
+  }
+]
+
+========== WARNINGS ==========
+
+[IMPOSSIBLE_COST_BASIS] Destination sale: Assets:OtherBroker sold 10 FUND with cost 77 USD; allowed range is 87.99 to 110 USD
+  <stdin>:33:3

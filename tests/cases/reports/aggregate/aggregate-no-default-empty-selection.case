@@ -1,0 +1,23 @@
+A missing account selection produces no rows or totals.
+
+========== API ==========
+
+aggregate({ accounts: ['Missing:'], includeTotal: true })
+
+========== FILE ==========
+
+2024-01-01 First holding
+  Assets:A  0.1 FUND
+  Assets:A  10.000000000000000001 USD
+  Equity:Opening  -0.1 FUND
+  Equity:Opening  -10.000000000000000001 USD
+
+2024-01-02 Second holding
+  Assets:B  0.2 FUND
+  Assets:B  -2 USD
+  Equity:Opening  -0.2 FUND
+  Equity:Opening  2 USD
+
+========== OUTPUT ==========
+
+[]

@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { execFileSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 const Database = require('better-sqlite3');
 const { pathsForJournal } = resolveRepositoryModule("src/core/cache-paths.js");
 const {
@@ -439,9 +439,17 @@ account Equity:Opening
 `);
   const { databasePath } = pathsForJournal(journalPath);
 
-  const first = execFileSync(process.execPath, [
-    cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
-  ], { cwd: directory, encoding: 'utf8', env: process.env });
+  function runAggregate() {
+    const result = spawnSync(process.execPath, [
+      cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
+    ], { cwd: directory, encoding: 'utf8', env: process.env });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /^\[MISSING_COMMODITY_FORMAT\] Commodity SEK must declare a format property/u);
+    return result.stdout;
+  }
+
+  const first = runAggregate();
   assert.equal(first, '1 SEK  Assets:Cash,Main\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
@@ -455,76 +463,9 @@ account Equity:Opening
   Assets:LongAccount  10000 SEK
   Equity:Opening
 `);
-  const second = execFileSync(
-    process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:'],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
+  const second = runAggregate();
   assert.equal(second, '     2.005 SEK  Assets:Cash,Main\n10,000     SEK  Assets:LongAccount\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
-  const csv = execFileSync(
-    process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--format', 'csv'],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
-  assert.equal(
-    csv,
-    'account,amount,commodity\n"Assets:Cash,Main",2.005,SEK\nAssets:LongAccount,10000,SEK\n',
-  );
 
-  const roundedCsv = execFileSync(
-    process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--format', 'csv'],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
-  assert.equal(
-    roundedCsv,
-    'account,amount,commodity\n"Assets:Cash,Main",2.01,SEK\nAssets:LongAccount,10000.00,SEK\n',
-  );
-
-  const roundedHumanReadable = execFileSync(
-    process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value'],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
-  assert.equal(
-    roundedHumanReadable,
-    '            2.01 SEK  Assets:Cash,Main\n       10,000.00 SEK  Assets:LongAccount\n',
-  );
-
-  const roundedHumanReadableWithTotal = execFileSync(
-    process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--value', '--include-total'],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
-  assert.equal(
-    roundedHumanReadableWithTotal,
-    '            2.01 SEK  Assets:Cash,Main\n       10,000.00 SEK  Assets:LongAccount\n' +
-    '--------------------\n       10,002.01 SEK\n',
-  );
-
-  const invertedHumanReadable = execFileSync(
-    process.execPath,
-    [
-      cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:',
-      '--value', '--invert', '--include-total',
-    ],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
-  assert.equal(
-    invertedHumanReadable,
-    '           -2.01 SEK  Assets:Cash,Main\n      -10,000.00 SEK  Assets:LongAccount\n' +
-    '--------------------\n      -10,002.01 SEK\n',
-  );
-
-  const invertedCsv = execFileSync(
-    process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--invert', '--format', 'csv'],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
-  assert.equal(
-    invertedCsv,
-    'account,amount,commodity\n"Assets:Cash,Main",-2.005,SEK\nAssets:LongAccount,-10000,SEK\n',
-  );
 });

@@ -1,0 +1,47 @@
+Ledger and Ledlight produce the same included interval balances.
+
+========== CLI ==========
+
+ledlight aggregate --from 2024-01-01 --to 2024-01-31 --accounts Assets: --accounts Expenses:
+
+========== LEDGER-CLI ==========
+
+ledger --args-only --date-format %Y-%m-%d --no-pager --sort account --begin 2024-01-01 --end 2024-02-01 balance --flat --no-total --format '%12(display_total)  %(account)\n' '^Assets:' '^Expenses:'
+
+========== FILE ==========
+
+commodity EUR
+  default
+  format 1,000.00 EUR
+account Assets:Bank
+account Equity:Opening
+account Expenses:Food
+account Income:Salary
+account Expenses:Utilities
+
+include entries/*.ledger
+
+========== FILE entries/2024-02.ledger ==========
+
+2024-02-01 Salary
+  Assets:Bank  2300 EUR
+  Income:Salary
+
+2024-02-10 Utilities
+  Expenses:Utilities  110.55 EUR
+  Assets:Bank
+
+========== FILE entries/2024-01.ledger ==========
+
+2024-01-05 Bank | Opening balance
+  Assets:Bank  1500.25 EUR
+  Equity:Opening
+
+2024-01-20 Groceries
+  Expenses:Food  75.20 EUR
+  Assets:Bank
+
+========== OUTPUT ==========
+
+1,425.05 EUR  Assets:Bank
+   75.20 EUR  Expenses:Food

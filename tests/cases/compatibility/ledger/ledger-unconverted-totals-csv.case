@@ -1,0 +1,29 @@
+Unconverted totals in csv format.
+
+========== CLI ==========
+
+ledlight aggregate --accounts '^Assets:' --include-total --format csv
+
+========== FILE ==========
+
+2024-01-01 Opening
+  Assets:A  0.1 FUND
+  Assets:A  10 USD
+  Equity:Opening  -0.1 FUND
+  Equity:Opening  -10 USD
+
+2024-01-02 Additional holding
+  Assets:B  0.2 FUND
+  Assets:B  -2 USD
+  Equity:Opening  -0.2 FUND
+  Equity:Opening  2 USD
+
+========== OUTPUT ==========
+
+account,amount,commodity
+Assets:A,0.1,FUND
+Assets:A,10,USD
+Assets:B,0.2,FUND
+Assets:B,-2,USD
+Total,0.3,FUND
+Total,8,USD

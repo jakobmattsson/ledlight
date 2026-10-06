@@ -1,0 +1,31 @@
+Sale price @@ 121 USD cannot be explained by monetary postings.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Holdings
+account Bank
+account Result
+account Fees
+account Other
+P 2024-01-01 FUND 100 USD
+2024-01-01 Purchase
+  Holdings  10 FUND {100 USD}
+  Bank  -1000 USD
+2024-01-02 Sale
+  Holdings  -1 FUND {100 USD} @@ 121 USD
+  Bank  120 USD
+  Result  -20 USD
+
+========== WARNINGS ==========
+
+[SALE_PROCEEDS_MISMATCH] Sale: recorded trade prices require settlement of 121 USD, which cannot be explained by the monetary postings, including separately posted fees
+  {{JOURNAL_PATH}}:15:1

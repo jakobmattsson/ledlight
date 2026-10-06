@@ -1,0 +1,56 @@
+Declared accounts include usage and transaction counts.
+
+========== API ==========
+
+accounts()
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND ; fund
+  format 1,000.0000 FUND
+commodity FUND ; duplicate
+commodity UNUSED
+commodity EUR
+commodity NOK
+tag Declared
+tag Declared ; duplicate
+tag Receipt
+tag Reviewed
+tag Source
+account Assets:Fund ; primary
+account Assets:Fund ; duplicate
+account Assets:Unused
+account Equity:Opening
+P 2024-01-02 FUND 12.5 SEK ; closing
+P 2024-01-01 EUR 11 NOK
+P 2024-01-02 FUND 13 SEK ; corrected
+
+2024-01-03 Tagged ; :Reviewed:
+  ; Source: import.csv
+  Assets:Fund  1 FUND {10 SEK} ; Receipt: 42
+  Equity:Opening  -10 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Fund",
+    "comment": "primary",
+    "used": true,
+    "transactionCount": 1
+  },
+  {
+    "account": "Assets:Unused",
+    "comment": null,
+    "used": false,
+    "transactionCount": 0
+  },
+  {
+    "account": "Equity:Opening",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  }
+]

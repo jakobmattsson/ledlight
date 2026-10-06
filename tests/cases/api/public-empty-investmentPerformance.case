@@ -1,0 +1,28 @@
+A journal without transactions returns the expected investmentPerformance result.
+
+========== API ==========
+
+investmentPerformance()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+
+========== OUTPUT ==========
+
+{
+  "from": null,
+  "to": null,
+  "commodities": [],
+  "valuationCommodity": "SEK",
+  "openingValue": 0,
+  "endingValue": 0,
+  "netContributions": 0,
+  "profitLoss": 0,
+  "timeWeightedReturn": null,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": []
+}

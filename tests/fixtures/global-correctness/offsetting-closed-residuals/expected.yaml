@@ -1,8 +1,0 @@
-runs:
-  - command: unrealized-gains --to 2024-03-31 --format json
-    expect:
-      exitCode: 0
-      result: []
-      warnings:
-        - "[RESIDUAL_COST_BASIS] Assets:Broker: zero FUND units retain cost basis 100 USD"
-        - "[RESIDUAL_COST_BASIS] Assets:Broker: zero OTHER units retain cost basis -100 USD"

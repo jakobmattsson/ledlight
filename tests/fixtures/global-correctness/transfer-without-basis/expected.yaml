@@ -1,6 +1,0 @@
-runs:
-  - command: unrealized-gains --to 2024-03-31 --format json
-    expect:
-      exitCode: 1
-      error: "Cannot calculate unrealized gain for Assets:OtherBroker: FUND has no lot cost"
-      warnings: []

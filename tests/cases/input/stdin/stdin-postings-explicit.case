@@ -1,0 +1,83 @@
+The postings command reads explicit standard input.
+
+========== CLI ==========
+
+ledlight postings --format json --file - <<'LEDGER'
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+account Assets:Cash
+P 2024-01-01 STOCK 12 SEK
+
+2024-01-01 Purchase
+  Assets:Stock  10 STOCK {10 SEK}
+  Assets:Cash  -100 SEK
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 1,
+    "transactionId": 6,
+    "transactionDate": "2024-01-01",
+    "filename": "<stdin>",
+    "transactionSourceLine": 10,
+    "description": "Purchase",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-01-01",
+    "account": "Assets:Stock",
+    "postingComment": null,
+    "amount": {
+      "quantity": "10",
+      "commodity": "STOCK"
+    },
+    "lotCost": {
+      "quantity": "10",
+      "commodity": "SEK",
+      "isTotal": false
+    },
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "10",
+        "commodity": "STOCK",
+        "balance": "10"
+      }
+    ]
+  },
+  {
+    "postingId": 2,
+    "transactionId": 6,
+    "transactionDate": "2024-01-01",
+    "filename": "<stdin>",
+    "transactionSourceLine": 10,
+    "description": "Purchase",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-01-01",
+    "account": "Assets:Cash",
+    "postingComment": null,
+    "amount": {
+      "quantity": "-100",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-100",
+        "commodity": "SEK",
+        "balance": "-100"
+      }
+    ]
+  }
+]

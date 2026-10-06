@@ -1,0 +1,45 @@
+Unsupported aggregate valuation modes are rejected.
+
+========== API ==========
+
+aggregate({ valuation: 'book' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+commodity GIFT
+P 2024-01-01 FUND 100 SEK
+P 2024-01-02 FUND 150 SEK
+P 2024-01-08 FUND 10 SEK
+
+2024-01-01 Buy first lot
+  Assets:Broker  10 FUND {100 SEK}
+  Assets:Cash  -1000 SEK
+
+2024-01-03 Buy second lot
+  Assets:Broker  2 FUND {{240 SEK}}
+  Assets:Cash  -240 SEK
+
+2024-01-04 Sell part of first lot
+  Assets:Broker  -4 FUND {{400 SEK}} @@ 600 SEK ; [2024-01-05]
+  Assets:Cash  600 SEK
+  Income:Gains  -200 SEK
+
+2024-01-06 Transfer remaining first-lot units
+  Assets:Broker  -2 FUND {{200 SEK}}
+  Assets:Other  2 FUND {{200 SEK}}
+
+2024-01-07 Close broker position
+  Assets:Broker  -6 FUND {{640 SEK}} @ 140 SEK
+  Assets:Cash  840 SEK
+  Income:Gains  -200 SEK
+
+2024-01-08 Receive zero-cost units
+  Assets:Other  2 GIFT {0 SEK} @ 0 SEK
+  Assets:Cash  0 SEK
+
+========== ERROR ==========
+
+valuation Invalid valuation

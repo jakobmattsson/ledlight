@@ -49,7 +49,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "test": "worktree-keeper run-tests",
-    "test:ledger": "node --test tests/integration/src/cli/ledger-cli-compatibility.test.js",
+    "test:ledger": "node --test tests/integration/src/cases.test.js tests/integration/src/cli/compare-ledger-script.test.js",
     "test:package": "node --test tests/package/package.test.js",
     "test:unit": "node --test 'tests/unit/**/*.test.js'",
     "test:integration": "node --test 'tests/integration/**/*.test.js'"
@@ -66,6 +66,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
+    "espree": "^10.4.0",
     "globals": "^17.12.0",
     "ohm-js": "17.5.0",
     "worktree-keeper": "0.7.2"

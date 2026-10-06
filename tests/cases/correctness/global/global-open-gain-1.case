@@ -1,0 +1,31 @@
+Global correctness: open-gain (run 1).
+An open holding with market value above its remaining basis produces a
+positive unrealized gain.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+
+P 2024-03-01 FUND 120 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Broker",
+    "quantity": "200",
+    "commodity": "USD"
+  }
+]

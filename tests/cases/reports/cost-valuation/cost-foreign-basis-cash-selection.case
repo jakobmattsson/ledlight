@@ -1,0 +1,30 @@
+Selecting only supported cash does not require the fund basis.
+
+========== API ==========
+
+aggregate({ valuation: 'cost', accounts: ['Assets:Cash'], inValuationCommodity: true })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+commodity EUR
+P 2024-01-01 FUND 10 SEK
+P 2024-01-01 EUR 12 SEK
+2024-01-01 Opening cash
+  Assets:Cash  5 SEK
+  Equity:Opening
+2024-01-02 Missing acquisition cost
+  Assets:Fund  1 FUND {2 EUR}
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "5"
+  }
+]

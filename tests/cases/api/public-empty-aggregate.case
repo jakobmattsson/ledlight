@@ -1,0 +1,15 @@
+A journal without transactions returns the expected aggregate result.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+
+========== OUTPUT ==========
+
+[]

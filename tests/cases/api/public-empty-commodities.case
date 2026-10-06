@@ -1,0 +1,23 @@
+A journal without transactions returns the expected commodities result.
+
+========== API ==========
+
+commodities()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+
+========== OUTPUT ==========
+
+[
+  {
+    "commodity": "SEK",
+    "comment": null,
+    "format": null,
+    "isDefault": true,
+    "used": false
+  }
+]

@@ -1,0 +1,25 @@
+The accounts command reads explicit standard input.
+
+========== CLI ==========
+
+ledlight accounts --format json --file - <<'LEDGER'
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+account Assets:Cash
+P 2024-01-01 STOCK 12 SEK
+
+2024-01-01 Purchase
+  Assets:Stock  10 STOCK {10 SEK}
+  Assets:Cash  -100 SEK
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  "Assets:Cash",
+  "Assets:Stock"
+]

@@ -1,0 +1,61 @@
+Global correctness: allocation-history-upper-violation (run 2).
+The first sale removes the maximum feasible basis and tightens the next sale’s
+upper bound. The second sale’s 20 USD basis is then impossible despite a
+balanced final history.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-01 FUND 4 USD
+
+2024-01-01 Buy cheap units
+  Assets:Broker  10 FUND {{10 USD}}
+  Assets:Bank  -10 USD
+
+2024-01-02 Buy middle units
+  Assets:Broker  10 FUND {{20 USD}}
+  Assets:Bank  -20 USD
+
+2024-01-03 Buy expensive units
+  Assets:Broker  10 FUND {{30 USD}}
+  Assets:Bank  -30 USD
+
+2024-02-01 First sale
+  Assets:Broker  -11 FUND {{32 USD}} @@ 44 USD
+  Assets:Bank  44 USD
+  Income:CapitalGains  -12 USD
+
+2024-03-01 Impossible second sale
+  Assets:Broker  -10 FUND {{20 USD}} @@ 40 USD
+  Assets:Bank  40 USD
+  Income:CapitalGains  -20 USD
+
+2024-04-01 Close the booked remainder
+  Assets:Broker  -9 FUND {{8 USD}} @@ 36 USD
+  Assets:Bank  36 USD
+  Income:CapitalGains  -28 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Broker",
+    "quantity": "28",
+    "commodity": "USD"
+  }
+]
+
+========== WARNINGS ==========
+
+[IMPOSSIBLE_COST_BASIS] Impossible second sale: Assets:Broker sold 10 FUND with cost 20 USD; allowed range is 10 to 19.01 USD
+  <stdin>:30:3

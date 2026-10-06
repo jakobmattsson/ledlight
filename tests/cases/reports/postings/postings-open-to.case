@@ -1,0 +1,27 @@
+Posting filters accept an open lower date bound.
+
+========== API ==========
+
+postings({ to: '2024-01-01' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+
+2024-01-02 Buy fund  ; imported
+  ; Project: Savings
+  Assets:Cash  -100 SEK  ; [2024-01-03] card
+  Assets:Fund  10 FUND {10 SEK} @ 100 SEK
+
+2024-01-04 Opening balance
+  Assets:Cash  20 SEK = 20 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[]

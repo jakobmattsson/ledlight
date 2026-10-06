@@ -1,0 +1,165 @@
+transactions selects a single account pattern.
+
+========== API ==========
+
+transactions({ accounts: ['Assets:'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+{
+  "order": "oldest",
+  "page": 1,
+  "pageSize": 100,
+  "totalTransactions": 3,
+  "totalPages": 1,
+  "transactions": [
+    {
+      "transactionId": 4,
+      "transactionDate": "2024-02-28",
+      "description": "Opening",
+      "comment": null,
+      "notes": [],
+      "postings": [
+        {
+          "postingDate": "2024-02-28",
+          "account": "Assets:Cash",
+          "comment": null,
+          "amount": {
+            "quantity": "10",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "10",
+              "commodity": "SEK"
+            }
+          ]
+        },
+        {
+          "postingDate": "2024-02-28",
+          "account": "Equity:Opening",
+          "comment": null,
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "-10",
+              "commodity": "SEK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "transactionId": 5,
+      "transactionDate": "2024-02-29",
+      "description": "Leap day",
+      "comment": null,
+      "notes": [],
+      "postings": [
+        {
+          "postingDate": "2024-02-29",
+          "account": "Assets:Cash",
+          "comment": null,
+          "amount": {
+            "quantity": "2",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "2",
+              "commodity": "SEK"
+            }
+          ]
+        },
+        {
+          "postingDate": "2024-02-29",
+          "account": "Equity:Opening",
+          "comment": null,
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "-2",
+              "commodity": "SEK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "transactionId": 6,
+      "transactionDate": "2024-03-01",
+      "description": "Following day",
+      "comment": null,
+      "notes": [],
+      "postings": [
+        {
+          "postingDate": "2024-03-01",
+          "account": "Assets:Cash",
+          "comment": null,
+          "amount": {
+            "quantity": "3",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "3",
+              "commodity": "SEK"
+            }
+          ]
+        },
+        {
+          "postingDate": "2024-03-01",
+          "account": "Equity:Opening",
+          "comment": null,
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "-3",
+              "commodity": "SEK"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

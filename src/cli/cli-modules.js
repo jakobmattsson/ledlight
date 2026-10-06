@@ -46,6 +46,7 @@ function loadCliModules(directory) {
     .filter((registrationName) => !repositoryModuleNames.has(registrationName))) {
     modules[name] = container.resolve(name);
   }
+  modules.cliFormat = container.resolve('cliFormat');
   return modules;
 }
 

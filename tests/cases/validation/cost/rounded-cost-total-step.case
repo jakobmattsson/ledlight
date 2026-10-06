@@ -1,0 +1,31 @@
+The monetary step applies to total basis rather than each unit.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Assets:Broker
+account Assets:Cash
+account Income:Gains
+P 2024-01-01 FUND 1 USD
+
+2024-01-01 Purchase
+  Assets:Broker  6 FUND {{2 USD}}
+  Assets:Cash  -2 USD
+
+2024-02-01 Sale
+  Assets:Broker  -3 FUND {0.33 USD} @@ 1 USD
+  Assets:Cash  1 USD
+  Income:Gains  -0.01 USD
+
+========== WARNINGS ==========
+
+[IMPOSSIBLE_COST_BASIS] Sale: Assets:Broker sold 3 FUND with cost 0.99 USD; allowed range is 1 to 1 USD
+  {{JOURNAL_PATH}}:16:3
