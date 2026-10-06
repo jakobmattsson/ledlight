@@ -64,6 +64,8 @@ commands can be compared and provides a script for checking any journal.
 See the [benchmark history](https://jakobmattsson.github.io/ledlight/dev/bench/)
 for CI performance trends and the [benchmark notes](docs/benchmark.md) for the
 fixture and measurement method.
+The [acquisition-cost allocation guide](docs/allocation-feasibility.md) explains
+how Ledlight checks whether recorded sales have a feasible cost basis.
 Proposed follow-up work is tracked in the
 [improvement backlog](docs/improvements.md).
 
