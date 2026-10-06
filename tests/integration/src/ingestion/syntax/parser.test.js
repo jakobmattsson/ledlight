@@ -11,12 +11,6 @@ const parse = runtimeParser.$$private.parseStrict;
 const referenceParser = resolveReferenceParser().$$private;
 const ohmParser = { parse: referenceParser.parseStrict };
 
-function parseConformant(sourceText, source) {
-  const document = parseRecovering(sourceText, { source });
-  assert.deepEqual(document, referenceParser.parse(sourceText, { source }));
-  return document;
-}
-
 test('skips every malformed top-level block and continues parsing', () => {
   const sourceText = `account Assets:Declared
 2024-01-01 Broken amount
@@ -47,60 +41,7 @@ tag Imported
   }
 });
 
-test('parses transactions without losing decimal precision', () => {
-  const document = parseConformant(`2024-01-29 Investment ; imported
-    Assets:Broker Account  8.000000000000000001 SECURITY @ 7786.140669608098 SEK ; exact cost
-    Assets:Cash  = 67683.20 SEK
-    Equity:Opening
-`, 'fixture.ledger');
-
-  assert.equal(document.entries.length, 1);
-  const transaction = document.entries[0];
-  assert.deepEqual(
-    {
-      date: transaction.date,
-      description: transaction.description,
-      comment: transaction.comment,
-    },
-    { date: '2024-01-29', description: 'Investment', comment: 'imported' },
-  );
-  assert.deepEqual(transaction.postings[0].amount, { quantity: '8.000000000000000001', commodity: 'SECURITY' });
-  assert.deepEqual(transaction.postings[0].cost, {
-    total: false,
-    amount: { quantity: '7786.140669608098', commodity: 'SEK' },
-  });
-  assert.deepEqual(transaction.postings[1].balanceAssignment, { quantity: '67683.20', commodity: 'SEK' });
-  assert.equal(transaction.postings[2].amount, null);
-});
-
-test('treats former transaction status and code syntax as description text', () => {
-  for (const metadata of ['*', '!', '(trade-1)']) {
-    const sourceText = `2024-01-29 ${metadata} Investment\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
-    const transaction = parseConformant(sourceText, 'fixture.ledger').entries[0];
-    assert.equal(transaction.description, `${metadata} Investment`);
-    assert.equal('status' in transaction, false);
-    assert.equal('code' in transaction, false);
-  }
-});
-
-test('keeps pipe-separated transaction text as one description', () => {
-  const sourceText = '2024-01-29 Shop | Groceries\n  Assets:Cash  1 SEK\n  Equity:Opening\n';
-  const transaction = parseConformant(sourceText, 'fixture.ledger').entries[0];
-
-  assert.equal(transaction.description, 'Shop | Groceries');
-  assert.equal('payee' in transaction, false);
-  assert.equal('narration' in transaction, false);
-});
-
-test('uses semicolons as the only top-level comment marker', () => {
-  const document = parseConformant(`; top-level comment
-2024-01-01 Transaction
-  Assets:Cash  1 SEK
-  Equity:Opening
-`, 'fixture.ledger');
-
-  assert.equal(document.entries.length, 1);
-
+test('rejects other top-level comment markers', () => {
   for (const marker of ['#', '%', ':']) {
     const sourceText = `${marker} not a comment\n2024-01-01 Transaction\n  Assets:Cash  1 SEK\n  Equity:Opening\n`;
     assert.throws(() => parse(sourceText, { source: 'bad.ledger' }),
@@ -108,17 +49,6 @@ test('uses semicolons as the only top-level comment marker', () => {
     assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
       (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
   }
-});
-
-test('does not interpret other indented markers as comments', () => {
-  const document = parseConformant(`2024-01-01 Transaction
-  # not a comment
-  Assets:Cash  1 SEK
-  Equity:Opening
-`, 'fixture.ledger');
-
-  assert.equal(document.entries[0].notes.length, 0);
-  assert.equal(document.entries[0].postings[0].account, '# not a comment');
 });
 
 test('requires a transaction description', () => {
@@ -129,28 +59,6 @@ test('requires a transaction description', () => {
     assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
       (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
   }
-});
-
-test('parses unit and total lot costs, transaction costs, and balance assertions', () => {
-  const document = parseConformant(`2024-01-01 Trade
-    Assets:Unit Lot  2 FUND {250 SEK} @ 300 SEK
-    Assets:Total Lot  3.5 FUND {{875 SEK}} @@ 1000.25 SEK
-    Assets:Cash  -1000.25 SEK = 2500.00 SEK
-`, 'fixture.ledger');
-
-  const transaction = document.entries[0];
-  assert.equal(transaction.date, '2024-01-01');
-  assert.deepEqual(transaction.postings[0].lotCost, {
-    total: false,
-    amount: { quantity: '250', commodity: 'SEK' },
-  });
-  assert.equal(transaction.postings[0].cost.total, false);
-  assert.deepEqual(transaction.postings[1].lotCost, {
-    total: true,
-    amount: { quantity: '875', commodity: 'SEK' },
-  });
-  assert.equal(transaction.postings[1].cost.total, true);
-  assert.deepEqual(transaction.postings[2].balanceAssertion, { quantity: '2500.00', commodity: 'SEK' });
 });
 
 test('rejects mismatched lot cost braces', () => {
@@ -175,77 +83,6 @@ test('rejects slash date separators', () => {
     assert.throws(() => ohmParser.parse(sourceText, { source: 'bad.ledger' }),
       (error) => error instanceof SyntaxError && error.code === errorCodes.SYNTAX);
   }
-});
-
-test('does not interpret a slash-separated comment value as a posting date', () => {
-  const document = parseConformant(`2024-01-01 Trade
-  Assets:Cash  1 SEK ; [2024/01/02] imported
-  Equity:Opening
-`, 'fixture.ledger');
-
-  assert.equal(document.entries[0].postings[0].postingDate, null);
-  assert.equal(document.entries[0].postings[0].comment, '[2024/01/02] imported');
-});
-
-test('parses canonical integer, signed, and decimal quantities', () => {
-  const document = parseConformant(`2024-01-01 Canonical numbers
-  Assets:Zero  0 SEK
-  Assets:Positive  +1 SEK
-  Assets:Negative  -1.25 SEK
-`, 'fixture.ledger');
-
-  assert.deepEqual(document.entries[0].postings.map((posting) => posting.amount.quantity), [
-    '0', '+1', '-1.25',
-  ]);
-});
-
-test('parses posting comments with and without preceding whitespace', () => {
-  const document = parseConformant(`2024-01-01 Posting comments
-  Assets:Compact  1 SEK;compact
-  Assets:Spaced  -1 SEK ; spaced
-`, 'fixture.ledger');
-
-  assert.deepEqual(document.entries[0].postings.map((posting) => posting.comment), [
-    'compact', 'spaced',
-  ]);
-});
-
-test('parses transaction and posting tags without consuming comment text', () => {
-  const document = parseConformant(`2024-01-01 Tagged ; :reviewed:imported: bank statement
-  ; Source: bank export
-  Assets:Cash  1 SEK ; Receipt: 1234
-  Equity:Opening  -1 SEK ; :balanced: complete
-`, 'fixture.ledger');
-
-  const transaction = document.entries[0];
-  assert.equal(transaction.comment, ':reviewed:imported: bank statement');
-  assert.deepEqual(transaction.tags, [
-    { name: 'reviewed', value: null },
-    { name: 'imported', value: null },
-    { name: 'Source', value: 'bank export' },
-  ]);
-  assert.deepEqual(transaction.notes[0], {
-    text: 'Source: bank export',
-    key: 'Source',
-    value: 'bank export',
-    tags: [{ name: 'Source', value: 'bank export' }],
-    location: { source: 'fixture.ledger', line: 2, column: 3 },
-  });
-  assert.deepEqual(transaction.postings.map(({ comment, tags }) => ({ comment, tags })), [
-    { comment: 'Receipt: 1234', tags: [{ name: 'Receipt', value: '1234' }] },
-    { comment: ':balanced: complete', tags: [{ name: 'balanced', value: null }] },
-  ]);
-});
-
-test('does not recognize embedded, whitespace, or typed tags', () => {
-  const document = parseConformant(`2024-01-01 Untagged ; ordinary :embedded:
-  Assets:Cash  1 SEK ; :two words:
-  Equity:Opening  -1 SEK ; Key:: value
-`, 'fixture.ledger');
-
-  assert.equal('tags' in document.entries[0], false);
-  assert.equal('tags' in document.entries[0].postings[0], false);
-  assert.equal('tags' in document.entries[0].postings[1], false);
 });
 
 test('rejects unsupported auxiliary transaction dates', () => {
@@ -302,58 +139,7 @@ test('rejects quoted and otherwise invalid commodity symbols', () => {
   }
 });
 
-test('allows trailing whitespace on a commodity directive without a comment', () => {
-  const document = parseConformant('commodity USD   \n', 'fixture.ledger');
-
-  assert.equal(document.entries[0].symbol, 'USD');
-  assert.equal(document.entries[0].comment, null);
-});
-
-test('parses declarations, commodity properties, prices, and source notes', () => {
-  const document = parseConformant(`account Assets:Cash
-tag Source
-commodity SEK ; Swedish krona
-  format 1,000.00 SEK
-  default
-P 2024-01-01 FUND 123.45 SEK ; closing
-
-2024-01-01 Opening
-  ; Source: statement.csv:4
-  Assets:Cash  1 SEK
-  Equity:Opening
-`, 'fixture.ledger');
-
-  assert.deepEqual(document.entries.map((entry) => entry.type), ['account', 'tag', 'commodity', 'price', 'transaction']);
-  assert.deepEqual(document.entries[2].properties.map(({ name, value }) => ({ name, value })), [
-    { name: 'format', value: '1,000.00 SEK' },
-    { name: 'default', value: null },
-  ]);
-  assert.equal(document.entries[2].comment, 'Swedish krona');
-  assert.deepEqual(document.entries[3].price, { quantity: '123.45', commodity: 'SEK' });
-  assert.deepEqual(document.entries[4].notes[0], {
-    text: 'Source: statement.csv:4',
-    key: 'Source',
-    value: 'statement.csv:4',
-    tags: [{ name: 'Source', value: 'statement.csv:4' }],
-    location: { source: 'fixture.ledger', line: 9, column: 3 },
-  });
-});
-
-test('requires canonical commodity formats', () => {
-  const document = parseConformant(`commodity SEK
-  format 1,000.00 SEK
-commodity BTC
-  format 1000.00000000 BTC
-commodity JPY
-  format 1,000 JPY
-`, 'fixture.ledger');
-
-  assert.deepEqual(document.entries.map(({ symbol, properties }) => ({ symbol, format: properties[0].value })), [
-    { symbol: 'SEK', format: '1,000.00 SEK' },
-    { symbol: 'BTC', format: '1000.00000000 BTC' },
-    { symbol: 'JPY', format: '1,000 JPY' },
-  ]);
-
+test('rejects noncanonical commodity formats', () => {
   for (const format of [
     'SEK 1,000.00',
     '1,000.00SEK',
@@ -374,13 +160,7 @@ commodity JPY
   }
 });
 
-test('allows top-level blank lines but rejects them within transaction and commodity bodies', () => {
-  parseConformant(`2024-01-01 Opening
-  Assets:Cash  1 SEK
-
-commodity SEK
-`, 'fixture.ledger');
-
+test('rejects blank lines within transaction and commodity bodies', () => {
   for (const sourceText of [
     '2024-01-01 Opening\n\n  Assets:Cash  1 SEK\n',
     '2024-01-01 Opening\n  Assets:Cash  1 SEK\n\n  Equity:Opening\n',

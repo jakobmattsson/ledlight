@@ -1,0 +1,106 @@
+========== TEXT ==========
+2024-01-01 Tagged ; :reviewed:imported: bank statement
+  ; Source: bank export
+  Assets:Cash  1 SEK ; Receipt: 1234
+  Equity:Opening  -1 SEK ; :balanced: complete
+========== JSON ==========
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-01",
+      "description": "Tagged",
+      "comment": ":reviewed:imported: bank statement",
+      "tags": [
+        {
+          "name": "reviewed",
+          "value": null
+        },
+        {
+          "name": "imported",
+          "value": null
+        },
+        {
+          "name": "Source",
+          "value": "bank export"
+        }
+      ],
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": "Receipt: 1234",
+          "tags": [
+            {
+              "name": "Receipt",
+              "value": "1234"
+            }
+          ],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": {
+            "quantity": "-1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": ":balanced: complete",
+          "tags": [
+            {
+              "name": "balanced",
+              "value": null
+            }
+          ],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 4,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [
+        {
+          "text": "Source: bank export",
+          "key": "Source",
+          "value": "bank export",
+          "tags": [
+            {
+              "name": "Source",
+              "value": "bank export"
+            }
+          ],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
+          }
+        }
+      ],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    }
+  ]
+}

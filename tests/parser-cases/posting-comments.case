@@ -1,0 +1,62 @@
+========== TEXT ==========
+2024-01-01 Posting comments
+  Assets:Compact  1 SEK;compact
+  Assets:Spaced  -1 SEK ; spaced
+========== JSON ==========
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-01",
+      "description": "Posting comments",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Compact",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": "compact",
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Spaced",
+          "amount": {
+            "quantity": "-1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": "spaced",
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    }
+  ]
+}

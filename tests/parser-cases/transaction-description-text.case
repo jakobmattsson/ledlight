@@ -1,0 +1,215 @@
+========== TEXT ==========
+2024-01-29 * Investment
+  Assets:Cash  1 SEK
+  Equity:Opening
+2024-01-29 ! Investment
+  Assets:Cash  1 SEK
+  Equity:Opening
+2024-01-29 (trade-1) Investment
+  Assets:Cash  1 SEK
+  Equity:Opening
+2024-01-29 Shop | Groceries
+  Assets:Cash  1 SEK
+  Equity:Opening
+========== JSON ==========
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-29",
+      "description": "* Investment",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-29",
+      "description": "! Investment",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 5,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 6,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-29",
+      "description": "(trade-1) Investment",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 8,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 9,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 7,
+        "column": 1
+      }
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-29",
+      "description": "Shop | Groceries",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 11,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 12,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 10,
+        "column": 1
+      }
+    }
+  ]
+}
