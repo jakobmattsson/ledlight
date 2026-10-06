@@ -1,0 +1,13 @@
+An API-only valuation raises an exception when no default commodity exists.
+
+========== API ==========
+
+aggregate({ inValuationCommodity: true });
+
+========== FILE ==========
+
+account Assets:Cash
+
+========== ERROR ==========
+
+The journal does not declare a default commodity for valuation

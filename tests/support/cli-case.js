@@ -10,10 +10,11 @@ const createReportCommand = require('../../src/cli/modules/report-command');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],
-  ['========== FILE ==========', 'file'],
   ['========== API ==========', 'api'],
-  ['========== STDOUT ==========', 'stdout'],
-  ['========== STDERR ==========', 'stderr'],
+  ['========== FILE ==========', 'file'],
+  ['========== OUTPUT ==========', 'output'],
+  ['========== WARNINGS ==========', 'warnings'],
+  ['========== ERROR ==========', 'error'],
 ]);
 
 function parseArguments(command) {
@@ -101,13 +102,15 @@ function parseCase(fileName) {
     throw new Error(`${fileName}: provide exactly one of a LEDGER heredoc or FILE section`);
   }
   journal ??= sections.file;
-  if (!Object.hasOwn(sections, 'stdout') &&
-      !Object.hasOwn(sections, 'stderr') &&
+  if (!Object.hasOwn(sections, 'output') &&
+      !Object.hasOwn(sections, 'warnings') &&
+      !Object.hasOwn(sections, 'error') &&
       !Object.hasOwn(sections, 'api')) {
-    throw new Error(`${fileName}: expected STDOUT, STDERR, or API`);
+    throw new Error(`${fileName}: expected OUTPUT, WARNINGS, ERROR, or API`);
   }
-  if (cli === undefined && sections.stdout === undefined && sections.stderr === undefined) {
-    throw new Error(`${fileName}: an API-only case needs STDOUT or STDERR`);
+  if (cli === undefined && sections.output === undefined &&
+      sections.warnings === undefined && sections.error === undefined) {
+    throw new Error(`${fileName}: an API-only case needs OUTPUT, WARNINGS, or ERROR`);
   }
   let api;
   if (Object.hasOwn(sections, 'api')) {
@@ -115,7 +118,10 @@ function parseCase(fileName) {
     if (statement === '') throw new Error(`${fileName}: API needs a JavaScript statement`);
     api = { statement: new vm.Script(statement, { filename: fileName }) };
   }
-  return { arguments_, journal, file: !heredoc, api, stdout: sections.stdout, stderr: sections.stderr };
+  return {
+    arguments_, journal, file: !heredoc, api,
+    output: sections.output, warnings: sections.warnings, error: sections.error,
+  };
 }
 
 function runCase({ arguments_, journal, file, api }) {
@@ -132,19 +138,19 @@ function runCase({ arguments_, journal, file, api }) {
     reportCommand: createReportCommand(container.cradle),
     cliFormat: container.resolve('cliFormat'),
   };
-  let actual;
+  const actual = { output: '', warnings: '', error: '' };
   let remaining;
   try {
     if (arguments_) {
       try {
         const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
         const result = modules.reportCommand.run(cliArguments);
-        actual = {
-          stdout: result.output,
-          stderr: modules.cliFormat.formatWarnings(result.warnings),
-        };
+        actual.output = result.output;
+        actual.warnings = modules.cliFormat.formatWarnings(result.warnings);
+        actual.cliExitCode = 0;
       } catch (error) {
-        actual = { stdout: '', stderr: `${error.message}\n` };
+        actual.error = `${error.message}\n`;
+        actual.cliExitCode = 1;
       }
     }
     if (api) {
@@ -158,14 +164,12 @@ function runCase({ arguments_, journal, file, api }) {
         if (apiResult === undefined) throw new Error('API statement did not return a result');
         if (arguments_) actual.apiResult = apiResult;
         else {
-          actual = {
-            stdout: `${JSON.stringify(apiResult, null, 2)}\n`,
-            stderr: modules.cliFormat.formatWarnings(journalApi.warnings),
-          };
+          actual.output = `${JSON.stringify(apiResult, null, 2)}\n`;
+          actual.warnings = modules.cliFormat.formatWarnings(journalApi.warnings);
         }
       } catch (error) {
-        if (arguments_) throw error;
-        actual = { stdout: '', stderr: `${error.message}\n` };
+        actual.apiError = `${error.message}\n`;
+        if (!arguments_) actual.error = actual.apiError;
       }
     }
   } finally {

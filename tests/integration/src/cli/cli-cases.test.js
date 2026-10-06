@@ -23,10 +23,19 @@ for (const fileName of fs.readdirSync(directory).filter((name) => name.endsWith(
   test(fileName, () => {
     const expected = parseCase(path.join(directory, fileName));
     const actual = runCase(expected);
-    if (expected.stdout !== undefined) assert.equal(actual.stdout, expected.stdout);
-    if (expected.stderr !== undefined) assert.equal(actual.stderr, expected.stderr);
+    if (expected.output !== undefined) assert.equal(actual.output, expected.output);
+    if (expected.warnings !== undefined) assert.equal(actual.warnings, expected.warnings);
+    assert.equal(actual.error, expected.error ?? '');
+    if (expected.arguments_) assert.equal(actual.cliExitCode, expected.error === undefined ? 0 : 1);
     if (expected.api && expected.arguments_) {
-      assert.deepEqual(presentedApiResult(expected, actual.apiResult), JSON.parse(actual.stdout));
+      if (expected.error !== undefined) assert.equal(actual.apiError, expected.error);
+      else {
+        assert.equal(actual.apiError, undefined);
+        assert.deepEqual(presentedApiResult(expected, actual.apiResult), JSON.parse(actual.output));
+      }
+    }
+    if (expected.api && !expected.arguments_) {
+      assert.equal(actual.apiError, expected.error);
     }
   });
 }

@@ -1,4 +1,4 @@
-A valuation without a price fails on stderr.
+A valuation without a price throws through both CLI and API.
 
 ========== CLI ==========
 
@@ -16,6 +16,10 @@ account Assets:Cash
   Assets:Cash  -100 SEK
 LEDGER
 
-========== STDERR ==========
+========== API ==========
+
+aggregate({ inValuationCommodity: true });
+
+========== ERROR ==========
 
 No price for STOCK on or before 9999-12-31 can convert it to SEK

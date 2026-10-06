@@ -4,6 +4,10 @@ aggregate cost valuation matches the public journal API.
 
 ledlight aggregate --accounts Assets:Fund --format json --value --valuation cost
 
+========== API ==========
+
+aggregate({ accounts: ['Assets:Fund'], inValuationCommodity: true, valuation: 'cost' })
+
 ========== FILE ==========
 
 commodity SEK
@@ -18,7 +22,7 @@ P 2024-01-01 FUND 150 SEK
   Assets:Fund  10 FUND {100 SEK}
   Equity:Opening  -1000 SEK
 
-========== STDOUT ==========
+========== OUTPUT ==========
 
 [
   {
@@ -27,7 +31,3 @@ P 2024-01-01 FUND 150 SEK
     "quantity": "1000"
   }
 ]
-
-========== API ==========
-
-aggregate({ accounts: ['Assets:Fund'], inValuationCommodity: true, valuation: 'cost' })

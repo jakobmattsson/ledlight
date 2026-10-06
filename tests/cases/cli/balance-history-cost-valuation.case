@@ -4,6 +4,10 @@ balance-history cost valuation matches the public journal API.
 
 ledlight balance-history --accounts Assets:Fund --format json --valuation cost
 
+========== API ==========
+
+balanceHistoryReport({ accounts: ['Assets:Fund'], valuation: 'cost' })
+
 ========== FILE ==========
 
 commodity SEK
@@ -18,7 +22,7 @@ P 2024-01-01 FUND 150 SEK
   Assets:Fund  10 FUND {100 SEK}
   Equity:Opening  -1000 SEK
 
-========== STDOUT ==========
+========== OUTPUT ==========
 
 [
   {
@@ -27,7 +31,3 @@ P 2024-01-01 FUND 150 SEK
     "commodity": "SEK"
   }
 ]
-
-========== API ==========
-
-balanceHistoryReport({ accounts: ['Assets:Fund'], valuation: 'cost' })

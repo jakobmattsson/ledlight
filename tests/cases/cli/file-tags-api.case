@@ -4,6 +4,10 @@ A file-backed tag listing agrees with the public API after CLI name formatting.
 
 ledlight tags --format json
 
+========== API ==========
+
+tags({});
+
 ========== FILE ==========
 
 commodity SEK
@@ -18,12 +22,8 @@ account Equity:Opening
   Assets:Cash  100 SEK
   Equity:Opening
 
-========== STDOUT ==========
+========== OUTPUT ==========
 
 [
   "Imported"
 ]
-
-========== API ==========
-
-tags({});

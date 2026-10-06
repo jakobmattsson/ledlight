@@ -4,6 +4,10 @@ balance-history market valuation matches the public journal API.
 
 ledlight balance-history --accounts Assets:Fund --format json --valuation market
 
+========== API ==========
+
+balanceHistoryReport({ accounts: ['Assets:Fund'], valuation: 'market' })
+
 ========== FILE ==========
 
 commodity SEK
@@ -17,7 +21,3 @@ P 2024-01-01 FUND 150 SEK
 2024-01-01 Buy
   Assets:Fund  10 FUND {100 SEK}
   Equity:Opening  -1000 SEK
-
-========== API ==========
-
-balanceHistoryReport({ accounts: ['Assets:Fund'], valuation: 'market' })
