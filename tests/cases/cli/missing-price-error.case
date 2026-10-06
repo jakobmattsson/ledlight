@@ -18,7 +18,7 @@ LEDGER
 
 ========== API ==========
 
-aggregate({ inValuationCommodity: true });
+aggregate({ inValuationCommodity: true })
 
 ========== ERROR ==========
 

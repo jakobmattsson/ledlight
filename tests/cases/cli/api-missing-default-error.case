@@ -2,7 +2,7 @@ An API-only valuation raises an exception when no default commodity exists.
 
 ========== API ==========
 
-aggregate({ inValuationCommodity: true });
+aggregate({ inValuationCommodity: true })
 
 ========== FILE ==========
 

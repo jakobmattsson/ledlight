@@ -26,7 +26,7 @@ OUTPUT and WARNINGS are optional; an empty section asserts an empty value.
 Whitespace and final newlines in present sections are compared exactly.
 
 `========== API ==========` contains one journal method call, such as
-`aggregate({ accounts: ['^Assets:'] });` or `tags({});`. Write it as a JavaScript
+`aggregate({ accounts: ['^Assets:'] })` or `tags({})`. Write it as a JavaScript
 statement. With CLI, the test compares the API result with the CLI's JSON
 output. For accounts, tags, and commodities, this comparison uses the CLI's
 name-only representation unless `--details` is present. Use JSON CLI output

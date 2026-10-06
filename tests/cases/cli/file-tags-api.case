@@ -6,7 +6,7 @@ ledlight tags --format json
 
 ========== API ==========
 
-tags({});
+tags({})
 
 ========== FILE ==========
 
