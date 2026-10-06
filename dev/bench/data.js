@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791319008047,
+  "lastUpdate": 1791320322793,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -194,6 +194,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 12.157288,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c070b04750eda63ed8acb1a1b41d7a49fb0b4eb2",
+          "message": "Merge pull request #85 from jakobmattsson/codex/verify-parser-cases-with-ohm\n\nVerify parser cases against Ohm reference parser",
+          "timestamp": "2026-10-06T22:58:16+02:00",
+          "tree_id": "2349e450d7596ce785941e66c808fa6a6bdb573f",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/c070b04750eda63ed8acb1a1b41d7a49fb0b4eb2"
+        },
+        "date": 1791320320786,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1619.643732,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.011726,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 12.194817,
             "unit": "ms"
           }
         ]
