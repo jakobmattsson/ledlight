@@ -109,14 +109,43 @@ test('balances a sale at total lot cost', () => {
   assert.doesNotThrow(() => new PostingResolver().resolve(transaction));
 });
 
-test('allows calculated unit-cost residuals within explicit amount precision', () => {
-  const transaction = parseTransaction(`2024-01-01 Rounded cost
-  Assets:Fund  1.234 FUND @ 2.00 SEK
+for (const cost of ['{2.00 SEK}', '@ 2.00 SEK', '{{2.468 SEK}}', '@@ 2.468 SEK']) {
+  test(`warns about a sub-cent residual with exact cost ${cost}`, () => {
+    const transaction = parseTransaction(`2024-01-01 Rounded payment
+  Assets:Fund  1.234 FUND ${cost}
   Assets:Cash  -2.47 SEK
 `);
 
-  assert.doesNotThrow(() => new PostingResolver().resolve(transaction));
-});
+    const { result, warnings } = resolveWithWarnings(transaction);
+    assert.equal(result[1][0].quantity, '-2.47');
+    assert.deepEqual(warnings.map(({ code, message }) => ({ code, message })), [{
+      code: 'UNBALANCED_TRANSACTION',
+      message: 'Transaction does not balance: -0.002 SEK',
+    }]);
+  });
+
+  test(`balances exact cost ${cost} with an explicit rounding posting`, () => {
+    const transaction = parseTransaction(`2024-01-01 Rounded payment
+  Assets:Fund  1.234 FUND ${cost}
+  Assets:Cash  -2.47 SEK
+  Expenses:Rounding  0.002 SEK
+`);
+
+    assert.deepEqual(resolveWithWarnings(transaction).warnings, []);
+  });
+
+  test(`assigns the full residual of exact cost ${cost} to an implicit posting`, () => {
+    const transaction = parseTransaction(`2024-01-01 Rounded payment
+  Assets:Fund  1.234 FUND ${cost}
+  Assets:Cash  -2.47 SEK
+  Expenses:Rounding
+`);
+
+    const { result, warnings } = resolveWithWarnings(transaction);
+    assert.deepEqual(warnings, []);
+    assert.deepEqual(result[2], [{ quantity: '0.002', commodity: 'SEK' }]);
+  });
+}
 
 test('warns about calculated unit-cost residuals outside explicit amount precision', () => {
   const transaction = parseTransaction(`2024-01-01 Incorrect cost
@@ -137,7 +166,7 @@ test('does not treat residuals from a costed posting as a commodity exchange', (
   assert.match(resolveWithWarnings(transaction).warnings[0].message, /1 SEK, -1 USD/u);
 });
 
-test('does not apply cost tolerance to ordinary explicit amounts', () => {
+test('requires ordinary explicit amounts to balance exactly', () => {
   const transaction = parseTransaction(`2024-01-01 Unbalanced
   Assets:Cash  1 SEK
   Equity:Opening  -0.6 SEK
