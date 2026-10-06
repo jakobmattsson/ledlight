@@ -297,16 +297,31 @@ test('warns when a cost in the posting commodity changes its nominal value', () 
   }
 });
 
-test('allows nominal unit and total costs and costs expressed in another commodity', () => {
+test('allows nominal costs on the default commodity and default-currency costs on other commodities', () => {
   for (const posting of [
     '100 SEK {1.00 SEK}', '100 SEK {{100.00 SEK}}',
     '-100 SEK {1 SEK}', '-100 SEK {{100 SEK}}', '-100 SEK {{-100 SEK}}',
     '100 SEK @ 1 SEK', '100 SEK @@ 100 SEK',
     '-100 SEK @ 1 SEK', '-100 SEK @@ 100 SEK', '-100 SEK @@ -100 SEK',
     '0 SEK {1 SEK}', '0 SEK {{0 SEK}}',
-    '100 FUND {2 SEK}', '100 SEK @ 2 FUND',
+    '100 FUND {2 SEK}',
   ]) {
     assert.deepEqual(validateJournal(parseTrade(posting)).warnings, [], posting);
+  }
+});
+
+test('warns when a default-commodity posting has a cost in another commodity', () => {
+  for (const [posting, label] of [
+    ['100 SEK {2 FUND}', 'lot cost'],
+    ['100 SEK {{200 FUND}}', 'lot cost'],
+    ['100 SEK @ 2 FUND', 'transaction price'],
+    ['100 SEK @@ 200 FUND', 'transaction price'],
+  ]) {
+    const result = validateJournal(parseTrade(posting));
+    assert.deepEqual(result.warnings.map(({ code }) => code), ['INVALID_COMMODITY_TRADE']);
+    assert.equal(result.warnings[0].message,
+      `A SEK posting cannot have a ${label} in FUND. ` +
+        'Amounts in the default commodity are valued at face value.');
   }
 });
 

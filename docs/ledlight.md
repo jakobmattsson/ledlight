@@ -626,9 +626,13 @@ command, independent of report dates or account filters:
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
   at their recorded acquisition costs.
-- `FOREIGN_LOT_COST_CURRENCY` identifies lot costs outside the journal default
-  commodity. These postings remain available to other reports, but affected
-  positions are omitted from unrealized gains, making its totals potentially incomplete.
+- `FOREIGN_LOT_COST_CURRENCY` identifies non-default commodity postings with lot
+  costs outside the journal default commodity. These postings remain available
+  to other reports, but affected positions are omitted from unrealized gains,
+  making its totals potentially incomplete.
+- `INVALID_COMMODITY_TRADE` also identifies default-commodity postings with a
+  lot cost or transaction price in another commodity. Cost reports retain the
+  posting's face value in the default commodity.
 - `SALE_PROCEEDS_MISMATCH` identifies a transaction whose sale prices cannot be
   reconciled with its monetary postings. Sales use `@`/`@@`, simultaneous purchases
   use their lot costs, and internal transfers and splits are excluded. The net
