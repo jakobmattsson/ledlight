@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
-const vm = require('node:vm');
 const { asValue } = require('awilix');
+const espree = require('espree');
 const { createRepositoryContainer } = require('../../src/composition/repository-container');
 const createReportCommand = require('../../src/cli/modules/report-command');
 const { executeCli } = require('../../src/cli/execute-cli');
@@ -47,6 +47,47 @@ function parseArguments(command) {
   if (quote) throw new Error('Unclosed command quote');
   if (started) args.push(token);
   return args;
+}
+
+function apiLiteral(node) {
+  if (node.type === 'Literal' && !node.regex && typeof node.value !== 'bigint') {
+    return node.value;
+  }
+  if (node.type === 'UnaryExpression' && node.operator === '-' &&
+      node.argument.type === 'Literal' && typeof node.argument.value === 'number') {
+    return -node.argument.value;
+  }
+  if (node.type === 'ArrayExpression' && node.elements.every((element) => element !== null)) {
+    return node.elements.map(apiLiteral);
+  }
+  if (node.type === 'ObjectExpression') {
+    return Object.fromEntries(node.properties.map((property) => {
+      if (property.type !== 'Property' || property.kind !== 'init' || property.computed ||
+          property.method || property.shorthand ||
+          (property.key.type !== 'Identifier' &&
+            (property.key.type !== 'Literal' || typeof property.key.value !== 'string'))) {
+        throw new Error('API arguments must be JavaScript literals');
+      }
+      const key = property.key.type === 'Identifier' ? property.key.name : property.key.value;
+      return [key, apiLiteral(property.value)];
+    }));
+  }
+  throw new Error('API arguments must be JavaScript literals');
+}
+
+function parseApi(statement) {
+  if (statement.endsWith(';')) throw new Error('API statement must not end with a semicolon');
+  const program = espree.parse(statement, { ecmaVersion: 'latest' });
+  const expression = program.body[0]?.expression;
+  if (program.body.length !== 1 || expression?.type !== 'CallExpression' ||
+      expression.optional || expression.callee.type !== 'Identifier' ||
+      expression.arguments.length > 1) {
+    throw new Error('API must be a journal method call with at most one literal argument');
+  }
+  return {
+    method: expression.callee.name,
+    args: expression.arguments.map(apiLiteral),
+  };
 }
 
 function parseCase(fileName) {
@@ -146,7 +187,11 @@ function parseCase(fileName) {
   if (Object.hasOwn(sections, 'api')) {
     const statement = sections.api.trim();
     if (statement === '') throw new Error(`${fileName}: API needs a JavaScript statement`);
-    api = { statement: new vm.Script(statement, { filename: fileName }) };
+    try {
+      api = parseApi(statement);
+    } catch (error) {
+      throw new Error(`${fileName}: ${error.message}`, { cause: error });
+    }
   }
   return {
     cliArgs, ledgerArgs, heredoc, file: sections.file, files, api,
@@ -218,10 +263,11 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
       const resultText = { output: '', warnings: '', error: '' };
       try {
         const journalApi = container.resolve('project').openJournal(journalPath);
-        const bindings = Object.fromEntries(Object.entries(journalApi)
-          .filter(([, value]) => typeof value === 'function')
-          .map(([name, method]) => [name, method.bind(journalApi)]));
-        const apiResult = api.statement.runInNewContext(bindings, { timeout: 1000 });
+        const method = journalApi[api.method];
+        if (!Object.hasOwn(journalApi, api.method) || typeof method !== 'function') {
+          throw new Error(`Unknown API method: ${api.method}`);
+        }
+        const apiResult = method(...api.args);
         if (apiResult === undefined) throw new Error('API statement did not return a result');
         resultText.output = modules.cliFormat.formatJson(apiResult);
         resultText.warnings = modules.cliFormat.formatWarnings(journalApi.warnings);
@@ -241,4 +287,4 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
   return { actual, journalPath, temporaryDirectory };
 }
 
-module.exports = { parseCase, runCase };
+module.exports = { parseApi, parseCase, runCase };

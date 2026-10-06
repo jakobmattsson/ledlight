@@ -38,8 +38,11 @@ The runner substitutes those paths before the exact comparison.
 
 `========== API ==========` contains one journal method call, such as
 `aggregate({ accounts: ['^Assets:'] })` or `tags({})`. Write it as a JavaScript
-statement. The API result is formatted as JSON OUTPUT, and journal warnings
-become WARNINGS. When a case contains both CLI and API, each path is compared
+statement with JSON-like literal arguments: strings, numbers, booleans, null,
+arrays, and objects with quoted or unquoted keys. Expressions such as
+`new Date(...)` are not supported. Date options are ISO calendar-date strings
+in `YYYY-MM-DD` form. The API result is formatted as JSON OUTPUT, and journal
+warnings become WARNINGS. When a case contains both CLI and API, each path is compared
 independently with the same OUTPUT, WARNINGS, and ERROR sections. Include only
 the expectations relevant to the case.
 
