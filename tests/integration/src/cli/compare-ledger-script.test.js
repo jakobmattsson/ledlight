@@ -6,10 +6,11 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { parseCase } = require('../../../support/case');
 
 const root = path.resolve(__dirname, '../../../..');
 const script = path.join(root, 'scripts/compare-ledger.js');
-const fixture = path.join(root, 'tests/fixtures/ledger-compatibility/basic/journal.ledger');
+const fixture = path.join(root, 'tests/cases/compatibility/ledger/ledger-basic-accounts.case');
 const ledgerBinary = process.env.LEDGER_BIN ?? 'ledger';
 
 function withJournal(t, source) {
@@ -32,7 +33,7 @@ function runComparison(directory, args) {
 }
 
 test('comparison matrix applies ISO dates to every Ledger command', (t) => {
-  const { directory, journal } = withJournal(t, fs.readFileSync(fixture, 'utf8'));
+  const { directory, journal } = withJournal(t, parseCase(fixture).file);
   const matrix = runComparison(directory, ['--list']);
   assert.equal(matrix.stderr, '');
   const ledgerCommands = matrix.stdout.split('\n').filter((line) => line.includes('`ledger '));
