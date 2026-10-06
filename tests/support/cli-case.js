@@ -145,12 +145,20 @@ function runCase({ cliArgs, heredoc, file, api }) {
       const args = file === undefined
         ? cliArgs
         : [cliArgs[0], '--file', journalPath, ...cliArgs.slice(1)];
-      const result = executeCli(modules.reportCommand, args);
+      let output = '';
+      let stderr = '';
+      const exitCode = executeCli({
+        ...modules,
+        output: {
+          writeOutput: (value) => { output += value; },
+          writeError: (value) => { stderr += value; },
+        },
+      }, args);
       actual.cli = {
-        output: result.output,
-        warnings: modules.cliFormat.formatWarnings(result.warnings),
-        error: result.error,
-        exitCode: result.exitCode,
+        output,
+        warnings: exitCode === 0 ? stderr : '',
+        error: exitCode === 1 ? stderr : '',
+        exitCode,
       };
     }
     if (api) {

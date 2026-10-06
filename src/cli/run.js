@@ -14,9 +14,5 @@ const { executeCli } = require('./execute-cli');
 const modules = loadCliModules();
 modules.output.handleBrokenPipe();
 
-const result = executeCli(modules.reportCommand, process.argv.slice(2));
-modules.output.writeOutput(result.output);
-const warnings = modules.cliFormat.formatWarnings(result.warnings);
-if (warnings !== '') modules.output.writeError(warnings);
-if (result.error !== '') modules.output.writeError(result.error);
-if (result.exitCode !== 0) process.exitCode = result.exitCode;
+const exitCode = executeCli(modules, process.argv.slice(2));
+if (exitCode !== 0) process.exitCode = exitCode;
