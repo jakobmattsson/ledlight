@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791323190490,
+  "lastUpdate": 1791323268798,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -311,6 +311,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 12.001108,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "404bc631165efb92097ce84894ad50adde0252d7",
+          "message": "Merge pull request #88 from jakobmattsson/codex/cli-command-modules\n\nOrganize CLI commands into individual modules",
+          "timestamp": "2026-10-06T23:47:23+02:00",
+          "tree_id": "4916086d880066cef5c2bd3150570173834c3fdf",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/404bc631165efb92097ce84894ad50adde0252d7"
+        },
+        "date": 1791323267858,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1522.791349,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 10.506863,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 7.798435,
             "unit": "ms"
           }
         ]
