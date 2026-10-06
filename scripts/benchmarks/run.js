@@ -13,7 +13,7 @@ const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-benchmark-'));
 const journalPath = path.join(directory, 'synthetic.ledger');
 const cacheDirectory = path.join(directory, 'cache');
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
-const { openJournal } = require('..');
+const { openJournal } = require('../..');
 
 function elapsedMilliseconds(operation) {
   const start = process.hrtime.bigint();

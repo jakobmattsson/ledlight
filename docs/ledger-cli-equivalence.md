@@ -60,7 +60,7 @@ integration suite also tests semantic balance and unrealized-gain compatibility
 using normalized result rows for additional currencies and report options.
 
 The executable matrix lives in
-`scripts/ledger-compatibility-matrix.yaml`. Its `baseline` values contain the
-arguments shared by every command, while each entry under `commands` contains
-only the command-specific parts. Add a command there when another
-equivalence becomes runnable, and update this overview at the same time.
+`scripts/ledger-compatibility/ledger-compatibility-matrix.yaml`. Its `baseline`
+values contain the arguments shared by every command, while each entry under
+`commands` contains only the command-specific parts. Add a command there when
+another equivalence becomes runnable, and update this overview at the same time.
