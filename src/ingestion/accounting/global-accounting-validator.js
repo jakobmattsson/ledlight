@@ -7,8 +7,42 @@ module.exports = ({
   saleProceedsValidator: { validateSaleProceeds },
   ingestionWarning: { createWarning, warningCodes },
 }) => {
+  function validatePostingDateHoldings(resolvedTransactions, valuationCommodity, warnings) {
+    const positions = new Map();
+    for (const [transaction, resolved] of resolvedTransactions) {
+      transaction.postings.forEach((posting, index) => {
+        for (const amount of resolved[index]) {
+          if (amount.commodity === valuationCommodity) continue;
+          const key = JSON.stringify([posting.account, amount.commodity]);
+          if (!positions.has(key)) positions.set(key, new Map());
+          const days = positions.get(key);
+          const date = posting.postingDate || transaction.date;
+          if (!days.has(date)) days.set(date, { quantity: zero });
+          const day = days.get(date);
+          const quantity = parse(amount.quantity);
+          day.quantity = add(day.quantity, quantity);
+          if (quantity.n < 0n) day.location = posting.location;
+        }
+      });
+    }
+    for (const [key, days] of positions) {
+      const [account, commodity] = JSON.parse(key);
+      let balance = zero;
+      // Reports expose daily positions, so same-day movements are netted first.
+      for (const [date, day] of [...days].sort(([left], [right]) => left.localeCompare(right))) {
+        balance = add(balance, day.quantity);
+        if (balance.n < 0n && day.quantity.n < 0n) {
+          warnings.push(createWarning(warningCodes.NEGATIVE_POSTING_DATE_HOLDING,
+            `${account}: holding is ${format(balance)} ${commodity} on ${date} ` +
+            'using posting dates; disposals must not precede available acquisitions', day.location));
+        }
+      }
+    }
+  }
+
   function validateGlobalAccounting(entries, resolvedTransactions, valuationCommodity, warnings) {
     if (!valuationCommodity) return;
+    validatePostingDateHoldings(resolvedTransactions, valuationCommodity, warnings);
     const declaration = entries.find((entry) =>
       entry.type === 'commodity' && entry.symbol === valuationCommodity);
     const declaredFormat = declaration?.properties.find(({ name }) => name === 'format')?.value;

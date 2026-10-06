@@ -44,10 +44,15 @@ test('warns for both an assignment acquisition and its implicit commodity counte
   Holdings  = 2 FUND
   Opening
 `);
-  assert.equal(warnings.length, 2);
+  assert.deepEqual(warnings.map(({ code }) => code), [
+    'INVALID_COMMODITY_TRADE', 'INVALID_COMMODITY_TRADE', 'NEGATIVE_POSTING_DATE_HOLDING',
+  ]);
   assert.match(warnings[0].message, /Positive FUND posting/u);
   assert.match(warnings[1].message, /Negative FUND posting/u);
-  assert.deepEqual(warnings.map(({ line }) => line), [11, 12]);
+  assert.deepEqual(warnings.map(({ line }) => line), [11, 12, 12]);
+  assert.equal(warnings[2].message,
+    'Opening: holding is -2 FUND on 2024-01-01 using posting dates; ' +
+    'disposals must not precede available acquisitions');
   const rows = readDatabase(databasePath, (database) => aggregate(database,
     { accounts: ['^Holdings$'], inValuationCommodity: true }, { valuationPriceCache: new Map() }));
   assert.deepEqual(rows, [{ account: 'Holdings', commodity: 'USD', quantity: '200' }]);
