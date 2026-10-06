@@ -1,8 +1,4 @@
-A file-backed tag listing agrees with the public API after CLI name formatting.
-
-========== CLI ==========
-
-ledlight tags --format json
+A file-backed API tag listing returns complete tag records.
 
 ========== API ==========
 
@@ -25,5 +21,8 @@ account Equity:Opening
 ========== OUTPUT ==========
 
 [
-  "Imported"
+  {
+    "tag": "Imported",
+    "used": true
+  }
 ]

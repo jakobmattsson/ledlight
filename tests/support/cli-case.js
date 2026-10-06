@@ -138,23 +138,25 @@ function runCase({ arguments_, journal, file, api }) {
     reportCommand: createReportCommand(container.cradle),
     cliFormat: container.resolve('cliFormat'),
   };
-  const actual = { output: '', warnings: '', error: '' };
+  const actual = {};
   let remaining;
   try {
     if (arguments_) {
+      const resultText = { output: '', warnings: '', error: '', exitCode: 0 };
       try {
         const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
         const result = modules.reportCommand.run(cliArguments);
-        actual.output = result.output;
-        actual.warnings = modules.cliFormat.formatWarnings(result.warnings);
-        actual.cliExitCode = 0;
+        resultText.output = result.output;
+        resultText.warnings = modules.cliFormat.formatWarnings(result.warnings);
       } catch (error) {
-        actual.error = `${error.message}\n`;
-        actual.cliExitCode = 1;
+        resultText.error = `${error.message}\n`;
+        resultText.exitCode = 1;
       }
+      actual.cli = resultText;
     }
     if (api) {
       if (!file) fs.writeFileSync(journalPath, journal);
+      const resultText = { output: '', warnings: '', error: '' };
       try {
         const journalApi = container.resolve('project').openJournal(journalPath);
         const bindings = Object.fromEntries(Object.entries(journalApi)
@@ -162,15 +164,12 @@ function runCase({ arguments_, journal, file, api }) {
           .map(([name, method]) => [name, method.bind(journalApi)]));
         const apiResult = api.statement.runInNewContext(bindings, { timeout: 1000 });
         if (apiResult === undefined) throw new Error('API statement did not return a result');
-        if (arguments_) actual.apiResult = apiResult;
-        else {
-          actual.output = `${JSON.stringify(apiResult, null, 2)}\n`;
-          actual.warnings = modules.cliFormat.formatWarnings(journalApi.warnings);
-        }
+        resultText.output = modules.cliFormat.formatJson(apiResult);
+        resultText.warnings = modules.cliFormat.formatWarnings(journalApi.warnings);
       } catch (error) {
-        actual.apiError = `${error.message}\n`;
-        if (!arguments_) actual.error = actual.apiError;
+        resultText.error = `${error.message}\n`;
       }
+      actual.api = resultText;
     }
   } finally {
     remaining = fs.readdirSync(temporaryDirectory)

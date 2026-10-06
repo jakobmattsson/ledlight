@@ -1,10 +1,10 @@
 # CLI transcript cases
 
 Each `.case` file in this directory runs as one integration test in the current
-process. Any text before the first section is a human-readable comment; it
-needs no `#` prefix. Put one blank line immediately before and after every
-`========== NAME ==========` heading. The reader removes those surrounding
-blank lines before using the section content.
+process. Text before the first section is a human-readable comment. Put one
+blank line immediately before and after every `========== NAME ==========`
+heading. The reader removes those surrounding blank lines before using the
+section content.
 
 `========== CLI ==========` contains a `ledlight` command. It is optional when
 an API section is present. Command arguments support quoted strings and
@@ -27,12 +27,10 @@ Whitespace and final newlines in present sections are compared exactly.
 
 `========== API ==========` contains one journal method call, such as
 `aggregate({ accounts: ['^Assets:'] })` or `tags({})`. Write it as a JavaScript
-statement. With CLI, the test compares the API result with the CLI's JSON
-output. For accounts, tags, and commodities, this comparison uses the CLI's
-name-only representation unless `--details` is present. Use JSON CLI output
-when including API. Without CLI, the API result becomes JSON OUTPUT and journal
-warnings become WARNINGS. An API section can be used without a fixed OUTPUT
-expectation when CLI is present.
+statement. The API result is formatted as JSON OUTPUT, and journal warnings
+become WARNINGS. When a case contains both CLI and API, each path is compared
+independently with the same OUTPUT, WARNINGS, and ERROR sections. Include only
+the expectations relevant to the case.
 
 The reader accepts sections in any order. By convention, write them as CLI,
 API, FILE, OUTPUT, WARNINGS, then ERROR, omitting unused sections.
