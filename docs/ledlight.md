@@ -42,12 +42,13 @@ The current implementation provides:
 - recursive `include` handling, including the repository's `*.txt` glob; and
 - a SHA-256 manifest of all source files loaded through the include tree.
 
-The public API is exported from the package root using `src/core/project.js`:
+The public API is exported from the package root:
 
 ```js
-const { openJournal } = require('ledlight');
+const { openJournal, parseLedgerText } = require('ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
+const ast = parseLedgerText('account Assets:Cash\n');
 ```
 
 See the [Node.js API reference](api.md) for every exported operation, journal

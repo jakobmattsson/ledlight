@@ -1,9 +1,10 @@
 # Node.js API reference
 
-Ledlight is a CommonJS module. The package root exports only `openJournal`:
+Ledlight is a CommonJS module. The package root exports `openJournal` and
+`parseLedgerText`:
 
 ```js
-const { openJournal } = require('ledlight');
+const { openJournal, parseLedgerText } = require('ledlight');
 ```
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
@@ -82,6 +83,57 @@ Consumers should compare `error.code` with these strings and should not depend
 on a Ledlight-specific error class or inspect message text. Syntax errors also
 expose `source`, `line`, and `column`; an underlying SQLite code is preserved as
 `sqliteCode` when available.
+
+## Parsing Ledger text
+
+### `parseLedgerText(sourceText, options)`
+
+Parse a Ledger string into a syntax tree without reading files, following
+`include` directives, opening a database, or performing accounting validation.
+`sourceText` must be a string. The optional `options` object accepts only
+`source`, a string used in locations and syntax errors; it defaults to
+`'<input>'`. The parser is strict: malformed or unsupported syntax throws
+`LEDLIGHT_SYNTAX` at the first error and never returns a partial tree. It does
+not use the warning and recovery behavior of `openJournal`.
+
+The result is `{ source, entries }`. `entries` preserves source order. Every
+entry has `type` and `location: { source, line, column }`, with one-based line
+and column numbers. Comments are `string | null`. Amounts are
+`{ quantity: string, commodity: string }`; the original decimal precision is
+preserved in `quantity`. Entry shapes are:
+
+| Type | Fields |
+| --- | --- |
+| `include` | `path`, `comment`, `location` |
+| `account`, `tag` | `name`, `comment`, `location` |
+| `commodity` | `symbol`, `properties`, `comment`, `location` |
+| `price` | `date`, `commodity`, `price` (amount), `comment`, `location` |
+| `transaction` | `date`, `description`, `postings`, `notes`, `comment`, `location`; optional `tags` |
+
+Commodity `properties` is an array of `{ name, value, comment, location }`;
+`value` is a string or `null`. A transaction posting contains `type: 'posting'`,
+`account`, `amount`, `lotCost`, `cost`, `balanceAssignment`,
+`balanceAssertion`, `postingDate`, `comment`, and `location`, plus optional
+`tags`. The amount, balance assignment, and balance assertion fields are an
+amount or `null`. `lotCost` and `cost` are `{ total: boolean, amount }` or
+`null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A note
+is `{ text, key, value, location }`, plus optional `tags`; `key` and `value`
+are strings or `null`. Tags are `{ name, value }`, where `value` may be `null`.
+
+For example:
+
+```js
+const ast = parseLedgerText(
+  '2024-01-02 Buy shares\n  ; Generated-ID trade-1\n  Assets:Broker  2 STOCK {8 SEK}\n  Assets:Cash  -16 SEK\n',
+  { source: 'proposed.ledger' },
+);
+const transaction = ast.entries[0];
+console.log(transaction.notes[0].text); // Generated-ID trade-1
+console.log(transaction.postings[0].lotCost.amount.quantity); // 8
+```
+
+This API parses text only. Callers retain responsibility for merging source
+blocks and validating the resulting journal before publishing it.
 
 ## Opening a journal
 
