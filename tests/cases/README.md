@@ -1,7 +1,8 @@
-# CLI transcript cases
+# Case tests
 
-Each `.case` file in this directory runs as one integration test in the current
-process. Text before the first section is a human-readable comment. Put one
+Each `.case` file anywhere under this directory runs as one integration test in
+the current process. Organize cases in subdirectories by behavior. Text before
+the first section is a human-readable comment. Put one
 blank line immediately before and after every `========== NAME ==========`
 heading. The reader removes those surrounding blank lines before using the
 section content.

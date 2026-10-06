@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseApi } = require('../../../support/cli-case');
+const { parseApi } = require('../../support/case');
 
 test('parses a journal method call with JSON-like JavaScript literals', () => {
   assert.deepEqual(parseApi("aggregate({ from: '2024-02-29', accounts: ['Assets:'], " +

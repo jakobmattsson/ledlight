@@ -4,9 +4,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { parseCase, runCase } = require('../../../support/cli-case');
+const { parseCase, runCase } = require('../../support/case');
 
-const directory = path.resolve(__dirname, '../../../cases/cli');
+const directory = path.resolve(__dirname, '../../cases');
 const fixtureCache = new Map();
 test.after(() => {
   for (const fixtureDirectory of fixtureCache.values()) {
@@ -14,9 +14,18 @@ test.after(() => {
   }
 });
 
-for (const fileName of fs.readdirSync(directory).filter((name) => name.endsWith('.case')).sort()) {
-  test(fileName, () => {
-    const expected = parseCase(path.join(directory, fileName));
+function listCases(caseDirectory) {
+  return fs.readdirSync(caseDirectory, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(caseDirectory, entry.name);
+    if (entry.isDirectory()) return listCases(fullPath);
+    return entry.isFile() && entry.name.endsWith('.case') ? [fullPath] : [];
+  });
+}
+
+for (const fileName of listCases(directory).sort()) {
+  const caseName = path.relative(directory, fileName).split(path.sep).join('/');
+  test(caseName, () => {
+    const expected = parseCase(fileName);
     const { actual, journalPath, temporaryDirectory } = runCase(expected, fixtureCache);
     const resolvePaths = (value) => value
       ?.replaceAll('{{JOURNAL_PATH}}', journalPath)

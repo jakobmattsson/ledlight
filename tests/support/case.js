@@ -207,7 +207,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
     : undefined;
   const cachedDirectory = fixtureKey === undefined ? undefined : fixtureCache.get(fixtureKey);
   const temporaryDirectory = cachedDirectory ?? fs.realpathSync.native(
-    fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-case-')),
+    fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-case-')),
   );
   const journalPath = path.join(temporaryDirectory, 'journal.ledger');
   if (!cachedDirectory) {
