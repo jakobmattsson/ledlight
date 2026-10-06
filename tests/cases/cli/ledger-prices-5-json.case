@@ -4,6 +4,10 @@ Prices json output: interleaved commodities and years across included files.
 
 ledlight prices --format json
 
+========== API ==========
+
+prices()
+
 ========== FILE ==========
 
 commodity SEK

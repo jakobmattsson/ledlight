@@ -1,0 +1,136 @@
+Postings preserve transaction source locations from included files.
+
+========== API ==========
+
+postings()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Expenses:Food
+include included.ledger
+
+2024-01-02 Lunch
+  Assets:Cash  -20 SEK
+  Expenses:Food
+
+========== FILE included.ledger ==========
+
+; Imported transactions
+
+2024-01-01 Breakfast
+  Assets:Cash  -10 SEK
+  Expenses:Food
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 1,
+    "transactionId": 4,
+    "transactionDate": "2024-01-01",
+    "filename": "{{FILE:included.ledger}}",
+    "transactionSourceLine": 3,
+    "description": "Breakfast",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-01-01",
+    "account": "Assets:Cash",
+    "postingComment": null,
+    "amount": {
+      "quantity": "-10",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-10",
+        "commodity": "SEK",
+        "balance": "-10"
+      }
+    ]
+  },
+  {
+    "postingId": 2,
+    "transactionId": 4,
+    "transactionDate": "2024-01-01",
+    "filename": "{{FILE:included.ledger}}",
+    "transactionSourceLine": 3,
+    "description": "Breakfast",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-01-01",
+    "account": "Expenses:Food",
+    "postingComment": null,
+    "amount": null,
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "10",
+        "commodity": "SEK",
+        "balance": "10"
+      }
+    ]
+  },
+  {
+    "postingId": 3,
+    "transactionId": 5,
+    "transactionDate": "2024-01-02",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Lunch",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-01-02",
+    "account": "Assets:Cash",
+    "postingComment": null,
+    "amount": {
+      "quantity": "-20",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-20",
+        "commodity": "SEK",
+        "balance": "-30"
+      }
+    ]
+  },
+  {
+    "postingId": 4,
+    "transactionId": 5,
+    "transactionDate": "2024-01-02",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Lunch",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-01-02",
+    "account": "Expenses:Food",
+    "postingComment": null,
+    "amount": null,
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "20",
+        "commodity": "SEK",
+        "balance": "30"
+      }
+    ]
+  }
+]

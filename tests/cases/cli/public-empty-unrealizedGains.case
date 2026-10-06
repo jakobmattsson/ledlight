@@ -1,0 +1,15 @@
+A journal without transactions returns the expected unrealizedGains result.
+
+========== API ==========
+
+unrealizedGains()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+
+========== OUTPUT ==========
+
+[]

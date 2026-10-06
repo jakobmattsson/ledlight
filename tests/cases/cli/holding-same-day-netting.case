@@ -1,0 +1,28 @@
+Same-day posting movements are netted even when disposal appears first.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Cash
+account Assets:Fund
+
+2024-01-04 Buy fund
+  Assets:Fund  1 FUND {100 SEK} ; [2024-01-03]
+  Assets:Cash  -100 SEK
+
+2024-01-02 Sell fund
+  Assets:Fund  -1 FUND {100 SEK} @ 100 SEK ; [2024-01-03]
+  Assets:Cash  100 SEK
+
+========== WARNINGS ==========
+
+[IMPOSSIBLE_COST_BASIS] Sell fund: Assets:Fund sold 1 FUND with cost 100 SEK; insufficient acquired units are available
+  {{JOURNAL_PATH}}:14:3

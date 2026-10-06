@@ -1,0 +1,26 @@
+Transaction-date filtering includes both postings on the transaction date.
+
+========== API ==========
+
+aggregate({ dateBasis: 'transaction', to: '2024-01-02' })
+
+========== FILE ==========
+
+2024-01-01 Delayed posting
+  Assets:Cash  10 SEK ; [2024-01-03]
+  Equity:Opening  -10 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "10"
+  },
+  {
+    "account": "Equity:Opening",
+    "commodity": "SEK",
+    "quantity": "-10"
+  }
+]

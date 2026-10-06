@@ -1,0 +1,59 @@
+investmentPerformance accepts leap day as to.
+
+========== API ==========
+
+investmentPerformance({ to: '2024-02-29' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-02-28",
+  "to": "2024-02-29",
+  "commodities": [
+    "SEK"
+  ],
+  "valuationCommodity": "SEK",
+  "openingValue": 0,
+  "endingValue": 0,
+  "netContributions": 0,
+  "profitLoss": 0,
+  "timeWeightedReturn": null,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-02-28",
+      "value": 0,
+      "netContributions": 0,
+      "profitLoss": 0,
+      "timeWeightedReturn": null,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    },
+    {
+      "date": "2024-02-29",
+      "value": 0,
+      "netContributions": 0,
+      "profitLoss": 0,
+      "timeWeightedReturn": null,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}

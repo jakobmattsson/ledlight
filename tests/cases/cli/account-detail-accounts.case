@@ -1,0 +1,64 @@
+Account listing preserves Ledger order, usage, comments, and transaction counts.
+
+========== API ==========
+
+accounts()
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+account Assets:Closed
+account Assets:Closed:Child
+account Assets:Unused  ; Kept for future use
+account Equity:Opening
+
+2023-01-01 Open account
+  Assets:Closed  10 SEK
+  Equity:Opening  -10 SEK
+  Assets:Closed  2 FUND {1 SEK}
+  Equity:Opening  -2 SEK
+
+2023-01-02 Close account
+  Assets:Closed  -10 SEK
+  Equity:Opening  10 SEK
+  Assets:Closed  -2 FUND {1 SEK} @ 1 SEK
+  Equity:Opening  2 SEK
+
+2023-01-03 Child account activity
+  Assets:Closed:Child  1 SEK
+  Equity:Opening  -1 SEK
+
+2023-01-02 Deferred posting
+  Assets:Closed  1 SEK  ; [2023-01-04]
+  Equity:Opening  -1 SEK  ; [2023-01-04]
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Closed:Child",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  },
+  {
+    "account": "Assets:Closed",
+    "comment": null,
+    "used": true,
+    "transactionCount": 3
+  },
+  {
+    "account": "Assets:Unused",
+    "comment": "Kept for future use",
+    "used": false,
+    "transactionCount": 0
+  },
+  {
+    "account": "Equity:Opening",
+    "comment": null,
+    "used": true,
+    "transactionCount": 4
+  }
+]

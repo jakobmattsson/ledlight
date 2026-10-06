@@ -1,0 +1,51 @@
+Only prices needed for the selected interval and opening balance are required.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Portfolio'], from: '2024-01-03', to: '2024-01-03' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+commodity OTHER
+P 2024-01-02 FUND 10 SEK
+P 2024-01-03 FUND 12 SEK
+
+2024-01-01 Acquisition before prices are available
+  Assets:Portfolio  10 FUND
+  Equity:Opening  -10 FUND
+
+2024-01-04 Future acquisition without conversion prices
+  Assets:Portfolio  1 FUND
+  Assets:Portfolio  -1 OTHER
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-03",
+  "to": "2024-01-03",
+  "commodities": [
+    "FUND"
+  ],
+  "valuationCommodity": "SEK",
+  "openingValue": 100,
+  "endingValue": 120,
+  "netContributions": 0,
+  "profitLoss": 20,
+  "timeWeightedReturn": 0.19999999999999996,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-03",
+      "value": 120,
+      "netContributions": 0,
+      "profitLoss": 20,
+      "timeWeightedReturn": 0.19999999999999996,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+A balance assignment validates its resolved reduction.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Holdings
+account Bank
+account Opening
+P 2024-01-01 FUND 100 USD
+2024-01-01 Purchase
+  Holdings  2 FUND {100 USD}
+  Bank  -200 USD
+
+2024-01-02 Reduce holdings
+  Holdings  = 1 FUND
+  Opening
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] Negative FUND posting must use both a lot cost ({...} or {{...}}) and a transaction price (@ or @@); the default commodity is USD
+  {{JOURNAL_PATH}}:15:3
+
+[INVALID_COMMODITY_TRADE] Positive FUND posting must use a lot cost ({...} or {{...}}) and no transaction price (@ or @@), except when both prices are zero; the default commodity is USD
+  {{JOURNAL_PATH}}:16:3

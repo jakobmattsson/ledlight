@@ -101,26 +101,12 @@ P 2024-01-01 USD 2 SEK
   const rebuilt = openJournal(journalPath);
   assert.equal(rebuilt.rebuilt, true);
   assert.deepEqual(rebuilt.warnings, journal.warnings);
-  assert.deepEqual(journal.aggregate({ inValuationCommodity: true, includeTotal: true }).at(-1), {
-    account: 'Total', commodity: 'SEK', isTotal: true, quantity: '10',
-  });
-  assert.deepEqual(journal.balanceHistoryReport(), [
-    { date: '2024-01-01', amount: '10', commodity: 'SEK' },
-  ]);
-  assert.deepEqual(journal.unrealizedGains(), []);
   fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(
     '1 STOCK {10 USD}\n  Assets:USD\n',
     '1 STOCK {20 SEK}\n  Assets:USD  -10 USD {2 SEK} @ 2 SEK\n',
   ));
   const correctedJournal = openJournal(journalPath);
   assert.deepEqual(correctedJournal.warnings, []);
-  assert.deepEqual(correctedJournal.unrealizedGains(), [
-    { account: 'Assets:Stock', quantity: '10', commodity: 'SEK' },
-  ]);
-  assert.equal(correctedJournal.aggregate({
-    inValuationCommodity: true, includeTotal: true,
-  }).at(-1).quantity, '10');
-  assert.equal(correctedJournal.balanceHistoryReport().at(-1).amount, '10');
 });
 
 test('prints CLI help and the public package version without opening a project', () => {
@@ -157,32 +143,7 @@ test('loads SQLite only when a journal is opened', (t) => {
     'every journal operation must have a CLI command',
   );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
-  assert.deepEqual(journal.postings(), []);
-  assert.deepEqual(journal.aggregate(), []);
-  assert.deepEqual(journal.balanceHistoryReport(), []);
-  assert.deepEqual(journal.unrealizedGains(), []);
   assert.equal(Object.hasOwn(journal, 'reconciliationEntries'), false);
-  assert.deepEqual(journal.commodities(), [{
-    commodity: 'SEK',
-    comment: null,
-    format: null,
-    isDefault: true,
-    used: false,
-  }]);
-  assert.deepEqual(journal.investmentPerformance(), {
-    from: null,
-    to: null,
-    commodities: [],
-    valuationCommodity: 'SEK',
-    openingValue: 0,
-    endingValue: 0,
-    netContributions: 0,
-    profitLoss: 0,
-    timeWeightedReturn: null,
-    moneyWeightedReturn: null,
-    moneyWeightedReturnTotal: null,
-    points: [],
-  });
 });
 
 test('returns query data while exposing ingestion warnings through the API and CLI', (t) => {
@@ -204,9 +165,6 @@ account Equity:Opening
 `);
 
   const journal = ledlight.openJournal(journalPath);
-  assert.deepEqual(journal.aggregate({ accounts: ['Assets:'] }), [
-    { account: 'Assets:Cash', quantity: '10', commodity: 'SEK' },
-  ]);
   assert.deepEqual(journal.warnings.map(({ code }) => code), [
     'SYNTAX_ERROR',
     'BALANCE_ASSERTION_FAILED',

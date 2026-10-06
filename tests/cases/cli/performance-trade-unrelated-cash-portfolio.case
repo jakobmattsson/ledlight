@@ -1,0 +1,69 @@
+Moving settlement cash among selected accounts or adding unrelated cash does not change instrument performance.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['^Assets:'], commodities: ['FUND'] })
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.00 FUND
+account Assets:Broker
+account Assets:Other
+account Assets:Cash
+account Assets:Unrelated
+account Equity:Opening
+account Income:Gains
+account Expenses:Fees
+2024-01-01 Purchase
+  Assets:Broker  1 FUND {100 USD}
+  Assets:Cash  -100 USD
+  Assets:Unrelated  500 USD
+  Equity:Opening  -500 USD
+P 2024-01-01 FUND 120 USD
+2024-01-02 Sale
+  Assets:Broker  -0.5 FUND {100 USD} @ 130 USD
+  Assets:Cash  65 USD
+  Income:Gains  -15 USD
+P 2024-01-02 FUND 140 USD
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-01",
+  "to": "2024-01-02",
+  "commodities": [
+    "FUND"
+  ],
+  "valuationCommodity": "USD",
+  "openingValue": 0,
+  "endingValue": 70,
+  "netContributions": 35,
+  "profitLoss": 35,
+  "timeWeightedReturn": 0.34999999999999987,
+  "moneyWeightedReturn": 3.731002132170442e+47,
+  "moneyWeightedReturnTotal": 0.34999999997063236,
+  "points": [
+    {
+      "date": "2024-01-01",
+      "value": 120,
+      "netContributions": 100,
+      "profitLoss": 20,
+      "timeWeightedReturn": 0.19999999999999996,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    },
+    {
+      "date": "2024-01-02",
+      "value": 70,
+      "netContributions": 35,
+      "profitLoss": 35,
+      "timeWeightedReturn": 0.34999999999999987,
+      "moneyWeightedReturn": 3.731002132170442e+47,
+      "moneyWeightedReturnTotal": 0.34999999997063236
+    }
+  ]
+}

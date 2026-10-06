@@ -1,0 +1,48 @@
+A partial sale changes the remaining unrealized gain.
+
+========== API ==========
+
+unrealizedGains({ to: '2024-02-02' })
+
+========== FILE ==========
+
+commodity USD
+  default
+P 2024-01-01 AAPL 100 USD
+P 2024-01-01 BOND 50 USD
+P 2024-01-01 ETF 50 USD
+P 2024-02-01 AAPL 120 USD
+P 2024-02-01 BOND 40 USD
+P 2024-02-01 ETF 60 USD
+
+2024-01-01 Buy shares
+  Assets:Broker  10 AAPL {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-01-01 Buy ETF
+  Assets:Broker  1 ETF {50 USD}
+  Assets:Bank  -50 USD
+
+2024-01-01 Buy bonds
+  Assets:Bonds  2 BOND {{100 USD}}
+  Assets:Bank  -100 USD
+
+2024-02-02 Partial share sale
+  Assets:Broker  -4 AAPL {100 USD} @ 130 USD
+  Assets:Bank  520 USD
+  Income:Capital Gains  -120 USD
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Bonds",
+    "quantity": "-20",
+    "commodity": "USD"
+  },
+  {
+    "account": "Assets:Broker",
+    "quantity": "130",
+    "commodity": "USD"
+  }
+]

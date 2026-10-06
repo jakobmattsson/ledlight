@@ -4,6 +4,10 @@ Prices json output: inferred purchase and total sale display precision preserves
 
 ledlight prices --format json
 
+========== API ==========
+
+prices()
+
 ========== FILE ==========
 
 commodity SEK

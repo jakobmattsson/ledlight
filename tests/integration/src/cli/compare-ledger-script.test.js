@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -20,20 +20,28 @@ function withJournal(t, source) {
   return { directory, journal };
 }
 
+function runComparison(directory, args) {
+  const result = spawnSync(process.execPath, [script, ...args], {
+    cwd: directory,
+    encoding: 'utf8',
+    env: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(directory, 'cache') },
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  return result;
+}
+
 test('comparison matrix applies ISO dates to every Ledger command', (t) => {
   const { directory, journal } = withJournal(t, fs.readFileSync(fixture, 'utf8'));
-  const matrix = execFileSync(process.execPath, [script, '--list'], {
-    cwd: directory, encoding: 'utf8',
-  });
-  const ledgerCommands = matrix.split('\n').filter((line) => line.includes('`ledger '));
+  const matrix = runComparison(directory, ['--list']);
+  assert.equal(matrix.stderr, '');
+  const ledgerCommands = matrix.stdout.split('\n').filter((line) => line.includes('`ledger '));
   assert.equal(ledgerCommands.length, 8);
   for (const command of ledgerCommands) assert.match(command, /--date-format %Y-%m-%d/u);
-  assert.equal(execFileSync(process.execPath, [
-    script, '--file', journal, '--ledger-bin', ledgerBinary,
-  ], { cwd: directory, encoding: 'utf8', env: {
-    ...process.env, LEDLIGHT_CACHE_HOME: path.join(directory, 'cache'),
-  } }), 'PASS accounts\nPASS tags\nPASS commodities\nPASS prices\nPASS transactions\n' +
+  const result = runComparison(directory, ['--file', journal, '--ledger-bin', ledgerBinary]);
+  assert.equal(result.stdout, 'PASS accounts\nPASS tags\nPASS commodities\nPASS prices\nPASS transactions\n' +
     'PASS balance\nPASS balance-with-total\nPASS balance-inverted\n');
+  assert.equal(result.stderr, '');
 });
 
 test('comparison script checks balances with market gains and a nonzero total', (t) => {
@@ -51,11 +59,14 @@ account Equity:Opening
 
 P 2024-01-02 FUND 1234.56 SEK
 `);
-  assert.equal(execFileSync(process.execPath, [
-    script, '--file', journal,
+  const result = runComparison(directory, [
+    '--file', journal,
     '--case', 'balance', '--case', 'balance-with-total', '--case', 'balance-inverted',
     '--ledger-bin', ledgerBinary,
-  ], { cwd: directory, encoding: 'utf8', env: {
-    ...process.env, LEDLIGHT_CACHE_HOME: path.join(directory, 'cache'),
-  } }), 'PASS balance\nPASS balance-with-total\nPASS balance-inverted\n');
+  ]);
+  assert.equal(result.stdout, 'PASS balance\nPASS balance-with-total\nPASS balance-inverted\n');
+  for (const name of ['balance', 'balance-with-total', 'balance-inverted']) {
+    assert.match(result.stderr, new RegExp(`\\[${name}: ledlight\\]\\n\\[INVALID_COMMODITY_TRADE\\]`, 'u'));
+  }
+  assert.equal((result.stderr.match(/\[INVALID_COMMODITY_TRADE\]/gu) ?? []).length, 3);
 });

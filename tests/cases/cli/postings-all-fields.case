@@ -1,0 +1,96 @@
+Posting results preserve every field and transaction source in journal order.
+
+========== API ==========
+
+postings({ from: '2024-01-02', to: '2024-01-03', accounts: ['^Assets:'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+
+2024-01-02 Buy fund  ; imported
+  ; Project: Savings
+  Assets:Cash  -100 SEK  ; [2024-01-03] card
+  Assets:Fund  10 FUND {10 SEK} @ 100 SEK
+
+2024-01-04 Opening balance
+  Assets:Cash  20 SEK = 20 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 1,
+    "transactionId": 6,
+    "transactionDate": "2024-01-02",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 8,
+    "description": "Buy fund",
+    "transactionComment": "imported",
+    "transactionNotes": [
+      "Project: Savings"
+    ],
+    "postingDate": "2024-01-03",
+    "account": "Assets:Cash",
+    "postingComment": "[2024-01-03] card",
+    "amount": {
+      "quantity": "-100",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-100",
+        "commodity": "SEK",
+        "balance": "-100"
+      }
+    ]
+  },
+  {
+    "postingId": 2,
+    "transactionId": 6,
+    "transactionDate": "2024-01-02",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 8,
+    "description": "Buy fund",
+    "transactionComment": "imported",
+    "transactionNotes": [
+      "Project: Savings"
+    ],
+    "postingDate": "2024-01-02",
+    "account": "Assets:Fund",
+    "postingComment": null,
+    "amount": {
+      "quantity": "10",
+      "commodity": "FUND"
+    },
+    "lotCost": {
+      "quantity": "10",
+      "commodity": "SEK",
+      "isTotal": false
+    },
+    "cost": {
+      "quantity": "100",
+      "commodity": "SEK",
+      "isTotal": false
+    },
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "10",
+        "commodity": "FUND",
+        "balance": "10"
+      }
+    ]
+  }
+]

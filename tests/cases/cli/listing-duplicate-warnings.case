@@ -1,0 +1,61 @@
+Duplicate declarations warn while the first declaration remains authoritative.
+
+========== CLI ==========
+
+ledlight accounts --format json <<'LEDGER'
+commodity SEK
+  default
+commodity FUND ; fund
+  format 1,000.0000 FUND
+commodity FUND ; duplicate
+commodity UNUSED
+commodity EUR
+commodity NOK
+tag Declared
+tag Declared ; duplicate
+tag Receipt
+tag Reviewed
+tag Source
+account Assets:Fund ; primary
+account Assets:Fund ; duplicate
+account Assets:Unused
+account Equity:Opening
+P 2024-01-02 FUND 12.5 SEK ; closing
+P 2024-01-01 EUR 11 NOK
+P 2024-01-02 FUND 13 SEK ; corrected
+
+2024-01-03 Tagged ; :Reviewed:
+  ; Source: import.csv
+  Assets:Fund  1 FUND {10 SEK} ; Receipt: 42
+  Equity:Opening  -10 SEK
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  "Assets:Fund",
+  "Equity:Opening"
+]
+
+========== WARNINGS ==========
+
+[MISSING_COMMODITY_FORMAT] Commodity SEK must declare a format property
+  <stdin>:1:1
+
+[DUPLICATE_COMMODITY_DECLARATION] Commodity FUND has already been declared
+  <stdin>:5:1
+
+[MISSING_COMMODITY_FORMAT] Commodity UNUSED must declare a format property
+  <stdin>:6:1
+
+[MISSING_COMMODITY_FORMAT] Commodity EUR must declare a format property
+  <stdin>:7:1
+
+[MISSING_COMMODITY_FORMAT] Commodity NOK must declare a format property
+  <stdin>:8:1
+
+[DUPLICATE_TAG_DECLARATION] Tag Declared has already been declared
+  <stdin>:10:1
+
+[DUPLICATE_ACCOUNT_DECLARATION] Account Assets:Fund has already been declared
+  <stdin>:15:1

@@ -1,0 +1,52 @@
+Cash flows outside the selected interval need no conversion prices.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Portfolio'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+commodity OTHER
+P 2024-01-01 FUND 10 SEK
+P 2024-01-02 FUND 11 SEK
+P 2024-01-03 FUND 12 SEK
+
+2024-01-01 Acquisition with unpriced cash flow
+  Assets:Portfolio  10 FUND
+  Assets:Portfolio  -10 OTHER
+
+2024-01-03 Future acquisition with unpriced cash flow
+  Assets:Portfolio  1 FUND
+  Assets:Portfolio  -1 OTHER
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-02",
+  "to": "2024-01-02",
+  "commodities": [
+    "FUND"
+  ],
+  "valuationCommodity": "SEK",
+  "openingValue": 100,
+  "endingValue": 110,
+  "netContributions": 0,
+  "profitLoss": 10,
+  "timeWeightedReturn": 0.10000000000000009,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-02",
+      "value": 110,
+      "netContributions": 0,
+      "profitLoss": 10,
+      "timeWeightedReturn": 0.10000000000000009,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}

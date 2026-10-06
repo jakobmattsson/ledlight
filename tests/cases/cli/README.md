@@ -32,6 +32,9 @@ case also verifies exit code 1, and a case with both CLI and API verifies that
 both paths raise the same error. An absent ERROR section requires success.
 OUTPUT and WARNINGS are optional; an empty section asserts an empty value.
 Whitespace and final newlines in present sections are compared exactly.
+Use `{{JOURNAL_PATH}}` or `{{FILE:relative/path.ledger}}` in an expectation when
+the output contains the temporary path of the main journal or an included file.
+The runner substitutes those paths before the exact comparison.
 
 `========== API ==========` contains one journal method call, such as
 `aggregate({ accounts: ['^Assets:'] })` or `tags({})`. Write it as a JavaScript

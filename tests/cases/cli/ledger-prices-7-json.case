@@ -4,6 +4,10 @@ Prices json output: prices for unused commodities produce an empty listing.
 
 ledlight prices --format json
 
+========== API ==========
+
+prices()
+
 ========== FILE ==========
 
 commodity SEK

@@ -1,0 +1,38 @@
+Correcting a foreign lot cost restores report values.
+
+========== API ==========
+
+unrealizedGains()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+account Assets:USD
+account Assets:Cash
+P 2024-01-01 STOCK 30 SEK
+P 2024-01-01 USD 2 SEK
+
+2024-01-01 Buy dollars
+  Assets:USD  10 USD {2 SEK}
+  Assets:Cash  -20 SEK
+
+2024-01-01 Buy shares
+  Assets:Stock  1 STOCK {20 SEK}
+  Assets:USD  -10 USD {2 SEK} @ 2 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Stock",
+    "quantity": "10",
+    "commodity": "SEK"
+  }
+]

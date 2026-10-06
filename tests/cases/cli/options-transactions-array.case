@@ -1,0 +1,25 @@
+transactions rejects a array options value.
+
+========== API ==========
+
+transactions([])
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== ERROR ==========
+
+transactions options must be an object

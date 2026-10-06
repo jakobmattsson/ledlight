@@ -1,0 +1,30 @@
+A total price does not produce a sale price warning.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Holdings
+account Bank
+account Result
+account Fees
+account Other
+P 2024-01-01 FUND 100 USD
+2024-01-01 Purchase
+  Holdings  10 FUND {100 USD}
+  Bank  -1000 USD
+2024-01-02 Sale
+  Holdings  -2 FUND {100 USD} @@ 240 USD
+  Bank  240 USD
+  Result  -40 USD
+
+========== WARNINGS ==========
+
+

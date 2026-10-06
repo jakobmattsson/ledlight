@@ -4,6 +4,10 @@ Prices json output: explicit corrections, inferred unit and total costs, and lon
 
 ledlight prices --format json
 
+========== API ==========
+
+prices()
+
 ========== FILE ==========
 
 commodity SEK

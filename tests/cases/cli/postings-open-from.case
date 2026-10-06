@@ -1,0 +1,59 @@
+Posting filters accept an open upper date bound.
+
+========== API ==========
+
+postings({ from: '2024-01-04', accounts: ['Cash$'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+
+2024-01-02 Buy fund  ; imported
+  ; Project: Savings
+  Assets:Cash  -100 SEK  ; [2024-01-03] card
+  Assets:Fund  10 FUND {10 SEK} @ 100 SEK
+
+2024-01-04 Opening balance
+  Assets:Cash  20 SEK = 20 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 3,
+    "transactionId": 7,
+    "transactionDate": "2024-01-04",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 13,
+    "description": "Opening balance",
+    "transactionComment": null,
+    "transactionNotes": [],
+    "postingDate": "2024-01-04",
+    "account": "Assets:Cash",
+    "postingComment": null,
+    "amount": {
+      "quantity": "20",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": {
+      "quantity": "20",
+      "commodity": "SEK"
+    },
+    "amounts": [
+      {
+        "quantity": "20",
+        "commodity": "SEK",
+        "balance": "-80"
+      }
+    ]
+  }
+]

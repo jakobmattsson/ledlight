@@ -1,0 +1,41 @@
+An assignment acquisition and its implicit counterpart are both validated.
+
+========== API ==========
+
+aggregate({ accounts: ['^Holdings$'], inValuationCommodity: true })
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Holdings
+account Bank
+account Opening
+P 2024-01-01 FUND 100 USD
+2024-01-01 Opening balance
+  Holdings  = 2 FUND
+  Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Holdings",
+    "commodity": "USD",
+    "quantity": "200"
+  }
+]
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] Positive FUND posting must use a lot cost ({...} or {{...}}) and no transaction price (@ or @@), except when both prices are zero; the default commodity is USD
+  {{JOURNAL_PATH}}:11:3
+
+[INVALID_COMMODITY_TRADE] Negative FUND posting must use both a lot cost ({...} or {{...}}) and a transaction price (@ or @@); the default commodity is USD
+  {{JOURNAL_PATH}}:12:3
+
+[NEGATIVE_POSTING_DATE_HOLDING] Opening: holding is -2 FUND on 2024-01-01 using posting dates; disposals must not precede available acquisitions
+  {{JOURNAL_PATH}}:12:3

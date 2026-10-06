@@ -1,0 +1,56 @@
+Each commodity is totaled exactly without a default commodity.
+
+========== API ==========
+
+aggregate({ accounts: ['Assets:'], includeTotal: true })
+
+========== FILE ==========
+
+2024-01-01 First holding
+  Assets:A  0.1 FUND
+  Assets:A  10.000000000000000001 USD
+  Equity:Opening  -0.1 FUND
+  Equity:Opening  -10.000000000000000001 USD
+
+2024-01-02 Second holding
+  Assets:B  0.2 FUND
+  Assets:B  -2 USD
+  Equity:Opening  -0.2 FUND
+  Equity:Opening  2 USD
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:A",
+    "commodity": "FUND",
+    "quantity": "0.1"
+  },
+  {
+    "account": "Assets:A",
+    "commodity": "USD",
+    "quantity": "10.000000000000000001"
+  },
+  {
+    "account": "Assets:B",
+    "commodity": "FUND",
+    "quantity": "0.2"
+  },
+  {
+    "account": "Assets:B",
+    "commodity": "USD",
+    "quantity": "-2"
+  },
+  {
+    "account": "Total",
+    "commodity": "FUND",
+    "isTotal": true,
+    "quantity": "0.3"
+  },
+  {
+    "account": "Total",
+    "commodity": "USD",
+    "isTotal": true,
+    "quantity": "8.000000000000000001"
+  }
+]

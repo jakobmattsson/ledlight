@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { execFileSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 const Database = require('better-sqlite3');
 const { pathsForJournal } = resolveRepositoryModule("src/core/cache-paths.js");
 const {
@@ -439,9 +439,17 @@ account Equity:Opening
 `);
   const { databasePath } = pathsForJournal(journalPath);
 
-  const first = execFileSync(process.execPath, [
-    cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
-  ], { cwd: directory, encoding: 'utf8', env: process.env });
+  function runAggregate() {
+    const result = spawnSync(process.execPath, [
+      cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
+    ], { cwd: directory, encoding: 'utf8', env: process.env });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /^\[MISSING_COMMODITY_FORMAT\] Commodity SEK must declare a format property/u);
+    return result.stdout;
+  }
+
+  const first = runAggregate();
   assert.equal(first, '1 SEK  Assets:Cash,Main\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 
@@ -455,11 +463,7 @@ account Equity:Opening
   Assets:LongAccount  10000 SEK
   Equity:Opening
 `);
-  const second = execFileSync(
-    process.execPath,
-    [cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:'],
-    { cwd: directory, encoding: 'utf8', env: process.env },
-  );
+  const second = runAggregate();
   assert.equal(second, '     2.005 SEK  Assets:Cash,Main\n10,000     SEK  Assets:LongAccount\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
 

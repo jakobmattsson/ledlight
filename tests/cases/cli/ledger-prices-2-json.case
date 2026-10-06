@@ -4,6 +4,10 @@ Prices json output: total sale display rounds ties to even.
 
 ledlight prices --format json
 
+========== API ==========
+
+prices()
+
 ========== FILE ==========
 
 commodity SEK

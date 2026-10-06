@@ -1,0 +1,68 @@
+investmentPerformance selects a single account pattern.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-02-28",
+  "to": "2024-03-01",
+  "commodities": [
+    "SEK"
+  ],
+  "valuationCommodity": "SEK",
+  "openingValue": 0,
+  "endingValue": 15,
+  "netContributions": 15,
+  "profitLoss": 0,
+  "timeWeightedReturn": 0,
+  "moneyWeightedReturn": 1.2050086219990732e-7,
+  "moneyWeightedReturnTotal": 6.602786574217044e-10,
+  "points": [
+    {
+      "date": "2024-02-28",
+      "value": 10,
+      "netContributions": 10,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    },
+    {
+      "date": "2024-02-29",
+      "value": 12,
+      "netContributions": 12,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "moneyWeightedReturn": -1.8785104916184833e-7,
+      "moneyWeightedReturnTotal": -5.146604568699153e-10
+    },
+    {
+      "date": "2024-03-01",
+      "value": 15,
+      "netContributions": 15,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "moneyWeightedReturn": 1.2050086219990732e-7,
+      "moneyWeightedReturnTotal": 6.602786574217044e-10
+    }
+  ]
+}

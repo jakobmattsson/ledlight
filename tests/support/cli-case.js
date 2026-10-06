@@ -155,7 +155,9 @@ function parseCase(fileName) {
 }
 
 function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
-  const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-case-'));
+  const temporaryDirectory = fs.realpathSync.native(
+    fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-case-')),
+  );
   const journalPath = path.join(temporaryDirectory, 'journal.ledger');
   if (file !== undefined) fs.writeFileSync(journalPath, file);
   for (const [relativePath, content] of Object.entries(files)) {
@@ -236,7 +238,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
   if (remaining.length > 0) {
     throw new Error(`CLI stdin storage was not removed: ${remaining.join(', ')}`);
   }
-  return actual;
+  return { actual, journalPath, temporaryDirectory };
 }
 
 module.exports = { parseCase, runCase };

@@ -1,0 +1,21 @@
+An open posting-date interval includes the delayed posting.
+
+========== API ==========
+
+aggregate({ from: '2024-01-03' })
+
+========== FILE ==========
+
+2024-01-01 Delayed posting
+  Assets:Cash  10 SEK ; [2024-01-03]
+  Equity:Opening  -10 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "10"
+  }
+]

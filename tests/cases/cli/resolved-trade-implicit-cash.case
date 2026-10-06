@@ -1,0 +1,24 @@
+implicit cash produces no trade warning.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Holdings
+account Bank
+account Opening
+P 2024-01-01 FUND 100 USD
+2024-01-01 Purchase
+  Holdings  2 FUND {100 USD}
+  Bank
+
+========== WARNINGS ==========
+
+

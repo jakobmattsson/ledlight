@@ -1,0 +1,50 @@
+A single-day range includes both endpoints and retains opening balances where relevant.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:'], from: '2024-02-29', to: '2024-02-29' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-02-29",
+  "to": "2024-02-29",
+  "commodities": [
+    "SEK"
+  ],
+  "valuationCommodity": "SEK",
+  "openingValue": 10,
+  "endingValue": 12,
+  "netContributions": 2,
+  "profitLoss": 0,
+  "timeWeightedReturn": 0,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-02-29",
+      "value": 12,
+      "netContributions": 2,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}

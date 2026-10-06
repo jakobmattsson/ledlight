@@ -1,0 +1,25 @@
+Valuation uses the journal’s USD default instead of assuming SEK.
+
+========== API ==========
+
+aggregate({ accounts: ['Assets:'], inValuationCommodity: true })
+
+========== FILE ==========
+
+commodity USD
+  format 1,000.00 USD
+  default
+P 2024-01-01 FUND 12 USD
+2024-01-01 Opening
+  Assets:Fund  2 FUND {12 USD}
+  Equity:Opening  -24 USD
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Fund",
+    "commodity": "USD",
+    "quantity": "24"
+  }
+]
