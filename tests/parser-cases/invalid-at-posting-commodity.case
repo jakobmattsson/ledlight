@@ -1,0 +1,10 @@
+========== TEXT ==========
+2024-01-01 Operator
+  Assets:Cash  1 US@D
+  Equity:Opening
+========== ERROR ==========
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

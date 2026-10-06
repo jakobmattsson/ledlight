@@ -1,0 +1,122 @@
+========== TEXT ==========
+account Assets:Declared
+2024-01-01 Broken amount
+  Assets:Cash  nope SEK
+  Equity:Opening
+commodity SEK
+  format nonsense
+account Equity:Declared
+2024-01-02 Valid
+  Assets:Cash  5 SEK
+  Equity:Opening
+P 2024-99-01 FUND 10 SEK
+tag Imported
+========== JSON ==========
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "account",
+      "name": "Assets:Declared",
+      "comment": null,
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    },
+    {
+      "type": "account",
+      "name": "Equity:Declared",
+      "comment": null,
+      "location": {
+        "source": "fixture.ledger",
+        "line": 7,
+        "column": 1
+      }
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-02",
+      "description": "Valid",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "5",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 9,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 10,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 8,
+        "column": 1
+      }
+    },
+    {
+      "type": "tag",
+      "name": "Imported",
+      "comment": null,
+      "location": {
+        "source": "fixture.ledger",
+        "line": 12,
+        "column": 1
+      }
+    }
+  ]
+}
+========== WARNINGS ==========
+[
+  {
+    "code": "SYNTAX_ERROR",
+    "source": "fixture.ledger",
+    "line": 3,
+    "startLine": 2,
+    "endLine": 4
+  },
+  {
+    "code": "SYNTAX_ERROR",
+    "source": "fixture.ledger",
+    "line": 6,
+    "startLine": 5,
+    "endLine": 6
+  },
+  {
+    "code": "SYNTAX_ERROR",
+    "source": "fixture.ledger",
+    "line": 11,
+    "startLine": 11,
+    "endLine": 11
+  }
+]

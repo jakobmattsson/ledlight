@@ -1,0 +1,8 @@
+========== TEXT ==========
+P 2024/01/01 FUND 1 SEK
+========== ERROR ==========
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

@@ -389,10 +389,12 @@ other times; valuation remains the responsibility of price data.
 
 `tests/support/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `tests/support/reference/reference-parser.js`. Tests parse representative
-documents with both Ohm and the optimized runtime parser and compare the
-resulting syntax trees. This keeps the grammar reviewable without adding
-parser-framework overhead to production imports.
+semantics in `tests/support/reference/reference-parser.js`. The fixtures in
+`tests/parser-cases` define expected syntax trees, a shared error contract for
+invalid documents, and expected warnings when parsing recovers from malformed
+top-level blocks. Each fixture runs through both Ohm and the optimized runtime
+parser. Separate tests check parser-specific diagnostics. This keeps the grammar
+reviewable without adding parser-framework overhead to production imports.
 
 Ohm is only a development dependency. The optimized parser has no runtime
 dependency on Ohm.

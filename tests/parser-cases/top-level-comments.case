@@ -1,0 +1,60 @@
+========== TEXT ==========
+; top-level comment
+2024-01-01 Transaction
+  Assets:Cash  1 SEK
+  Equity:Opening
+========== JSON ==========
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-01",
+      "description": "Transaction",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 4,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 2,
+        "column": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+========== TEXT ==========
+commodity USD   
+========== JSON ==========
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "commodity",
+      "comment": null,
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      },
+      "symbol": "USD",
+      "properties": []
+    }
+  ]
+}
