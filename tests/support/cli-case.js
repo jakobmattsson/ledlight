@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const { asValue } = require('awilix');
 const { createRepositoryContainer } = require('../../src/composition/repository-container');
 const createReportCommand = require('../../src/cli/modules/report-command');
+const { executeCli } = require('../../src/cli/execute-cli');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],
@@ -143,15 +144,15 @@ function runCase({ arguments_, journal, file, api }) {
   try {
     if (arguments_) {
       const resultText = { output: '', warnings: '', error: '', exitCode: 0 };
-      try {
-        const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
-        const result = modules.reportCommand.run(cliArguments);
-        resultText.output = result.output;
-        resultText.warnings = modules.cliFormat.formatWarnings(result.warnings);
-      } catch (error) {
-        resultText.error = `${error.message}\n`;
-        resultText.exitCode = 1;
-      }
+      const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
+      resultText.exitCode = executeCli({
+        reportCommand: modules.reportCommand,
+        output: {
+          writeOutput(value) { resultText.output += value; },
+          writeWarnings(warnings) { resultText.warnings += modules.cliFormat.formatWarnings(warnings); },
+          writeError(value) { resultText.error += value; },
+        },
+      }, cliArguments);
       actual.cli = resultText;
     }
     if (api) {
