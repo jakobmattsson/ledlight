@@ -19,7 +19,7 @@ const HEADERS = new Map([
 ]);
 
 function parseArguments(command) {
-  const arguments_ = [];
+  const args = [];
   let token = '';
   let quote = null;
   let started = false;
@@ -34,7 +34,7 @@ function parseArguments(command) {
       quote = character;
       started = true;
     } else if (!quote && /\s/u.test(character)) {
-      if (started) arguments_.push(token);
+      if (started) args.push(token);
       token = '';
       started = false;
     } else {
@@ -43,8 +43,8 @@ function parseArguments(command) {
     }
   }
   if (quote) throw new Error('Unclosed command quote');
-  if (started) arguments_.push(token);
-  return arguments_;
+  if (started) args.push(token);
+  return args;
 }
 
 function parseCase(fileName) {
@@ -72,37 +72,36 @@ function parseCase(fileName) {
   if (cli === undefined && sections.api === undefined) {
     throw new Error(`${fileName}: expected a CLI or API section`);
   }
-  let arguments_;
-  let journal;
-  let heredoc = false;
+  let cliArgs;
+  let heredoc;
+  let hasHeredoc = false;
   if (cli !== undefined) {
     const cliLines = cli.endsWith('\n') ? cli.slice(0, -1).split('\n') : cli.split('\n');
     const command = cliLines[0] ?? '';
-    heredoc = /[ \t]+<<(?:LEDGER|'LEDGER'|"LEDGER")$/u.test(command);
-    const commandText = heredoc
+    hasHeredoc = /[ \t]+<<(?:LEDGER|'LEDGER'|"LEDGER")$/u.test(command);
+    const commandText = hasHeredoc
       ? command.replace(/[ \t]+<<(?:LEDGER|'LEDGER'|"LEDGER")$/u, '')
       : command;
     const match = /^ledlight(?:[ \t]+(.+))?$/u.exec(commandText);
     if (!match) throw new Error(`${fileName}: expected a ledlight command in CLI`);
-    arguments_ = parseArguments(match[1] ?? '');
-    if (arguments_.length === 0) throw new Error(`${fileName}: expected a CLI command`);
-    if (arguments_.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
+    cliArgs = parseArguments(match[1] ?? '');
+    if (cliArgs.length === 0) throw new Error(`${fileName}: expected a CLI command`);
+    if (cliArgs.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
       throw new Error(`${fileName}: the case supplies the journal; omit --file`);
     }
-    if (heredoc) {
+    if (hasHeredoc) {
       const journalEnd = cliLines.indexOf('LEDGER', 1);
       if (journalEnd < 0 || journalEnd !== cliLines.length - 1) {
         throw new Error(`${fileName}: CLI needs a closing LEDGER line`);
       }
-      journal = `${cliLines.slice(1, journalEnd).join('\n')}\n`;
+      heredoc = `${cliLines.slice(1, journalEnd).join('\n')}\n`;
     } else if (cliLines.length !== 1) {
       throw new Error(`${fileName}: CLI contains text after the command`);
     }
   }
-  if (heredoc === Object.hasOwn(sections, 'file')) {
+  if (hasHeredoc === Object.hasOwn(sections, 'file')) {
     throw new Error(`${fileName}: provide exactly one of a LEDGER heredoc or FILE section`);
   }
-  journal ??= sections.file;
   if (!Object.hasOwn(sections, 'output') &&
       !Object.hasOwn(sections, 'warnings') &&
       !Object.hasOwn(sections, 'error') &&
@@ -120,18 +119,18 @@ function parseCase(fileName) {
     api = { statement: new vm.Script(statement, { filename: fileName }) };
   }
   return {
-    arguments_, journal, file: !heredoc, api,
+    cliArgs, heredoc, file: sections.file, api,
     output: sections.output, warnings: sections.warnings, error: sections.error,
   };
 }
 
-function runCase({ arguments_, journal, file, api }) {
+function runCase({ cliArgs, heredoc, file, api }) {
   const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-case-'));
   const journalPath = path.join(temporaryDirectory, 'journal.ledger');
-  if (file) fs.writeFileSync(journalPath, journal);
+  if (file !== undefined) fs.writeFileSync(journalPath, file);
   const container = createRepositoryContainer();
   container.register({
-    standardInput: asValue({ isTTY: () => false, read: () => journal }),
+    standardInput: asValue({ isTTY: () => false, read: () => heredoc }),
     os: asValue({ tmpdir: () => temporaryDirectory }),
     processEnvironment: asValue({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
   });
@@ -142,9 +141,11 @@ function runCase({ arguments_, journal, file, api }) {
   const actual = {};
   let remaining;
   try {
-    if (arguments_) {
-      const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
-      const result = executeCli(modules.reportCommand, cliArguments);
+    if (cliArgs) {
+      const args = file === undefined
+        ? cliArgs
+        : [cliArgs[0], '--file', journalPath, ...cliArgs.slice(1)];
+      const result = executeCli(modules.reportCommand, args);
       actual.cli = {
         output: result.output,
         warnings: modules.cliFormat.formatWarnings(result.warnings),
@@ -153,7 +154,7 @@ function runCase({ arguments_, journal, file, api }) {
       };
     }
     if (api) {
-      if (!file) fs.writeFileSync(journalPath, journal);
+      if (heredoc !== undefined) fs.writeFileSync(journalPath, heredoc);
       const resultText = { output: '', warnings: '', error: '' };
       try {
         const journalApi = container.resolve('project').openJournal(journalPath);
