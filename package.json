@@ -43,6 +43,7 @@
     "access": "public"
   },
   "scripts": {
+    "benchmark": "node benchmarks/run.js",
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
     "lint": "eslint .",
