@@ -14,7 +14,7 @@ P 2024-01-01 STOCK 12 SEK
   Assets:Cash  -100 SEK
 LEDGER
 
-====================
+========== STDOUT ==========
 [
   {
     "account": "Assets:Cash",
@@ -27,6 +27,6 @@ LEDGER
     "quantity": "10"
   }
 ]
-====================
+========== STDERR ==========
 [UNDECLARED_ACCOUNT] Account Assets:Stock must be declared before use
   <stdin>:10:3

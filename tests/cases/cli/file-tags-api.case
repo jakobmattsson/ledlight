@@ -1,0 +1,21 @@
+# A file-backed tag listing agrees with the public API after CLI name formatting.
+
+ledlight tags --format json
+========== FILE ==========
+commodity SEK
+  default
+  format 1,000.00 SEK
+tag Imported
+account Assets:Cash
+account Equity:Opening
+
+2024-01-01 Opening
+  ; Imported: yes
+  Assets:Cash  100 SEK
+  Equity:Opening
+========== STDOUT ==========
+[
+  "Imported"
+]
+========== API ==========
+tags({})

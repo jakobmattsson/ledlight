@@ -4,6 +4,5 @@ ledlight accounts <<'LEDGER'
 include missing/*.ledger
 LEDGER
 
-====================
-====================
+========== STDERR ==========
 <stdin>:1: include matched no files: missing/*.ledger

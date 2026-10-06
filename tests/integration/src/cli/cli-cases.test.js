@@ -7,12 +7,26 @@ const test = require('node:test');
 const { parseCase, runCase } = require('../../../support/cli-case');
 
 const directory = path.resolve(__dirname, '../../../cases/cli');
+
+function presentedApiResult(expected, result) {
+  if (expected.api.method === 'tags') return result.map(({ tag }) => tag);
+  if (!expected.arguments_.includes('--details') && expected.api.method === 'accounts') {
+    return result.map(({ account }) => account);
+  }
+  if (!expected.arguments_.includes('--details') && expected.api.method === 'commodities') {
+    return result.map(({ commodity }) => commodity);
+  }
+  return result;
+}
+
 for (const fileName of fs.readdirSync(directory).filter((name) => name.endsWith('.case')).sort()) {
   test(fileName, () => {
     const expected = parseCase(path.join(directory, fileName));
-    assert.deepEqual(runCase(expected), {
-      stdout: expected.stdout,
-      stderr: expected.stderr,
-    });
+    const actual = runCase(expected);
+    if (expected.stdout !== undefined) assert.equal(actual.stdout, expected.stdout);
+    if (expected.stderr !== undefined) assert.equal(actual.stderr, expected.stderr);
+    if (expected.api) {
+      assert.deepEqual(presentedApiResult(expected, actual.apiResult), JSON.parse(actual.stdout));
+    }
   });
 }
