@@ -2,6 +2,7 @@
 
 module.exports = ({
   project,
+  cliStdinJournal,
   packageMetadata: { version },
   cliArguments: { parseArguments, usage },
   cliFormat: {
@@ -24,10 +25,8 @@ module.exports = ({
 
   let lastWarnings = [];
 
-  function runJsonCommand(parsed) {
-    const { command, journalPath, options } = parsed;
-    const journal = project.openJournal(journalPath);
-    lastWarnings = journal.warnings || [];
+  function runJsonCommand(parsed, journal) {
+    const { command, options } = parsed;
     if (command === 'accounts') {
       return formatAccounts(journal.accounts(options), parsed.output);
     }
@@ -66,10 +65,8 @@ module.exports = ({
     throw new Error(`Unsupported command: ${command}`);
   }
 
-  function runReport(parsed) {
-    const { command, reportOptions, journalPath, output } = parsed;
-    const journal = project.openJournal(journalPath);
-    lastWarnings = journal.warnings || [];
+  function runReport(parsed, journal) {
+    const { command, reportOptions, output } = parsed;
     if (command === 'investment-performance') {
       const report = journal.investmentPerformance(reportOptions);
       return output.json
@@ -103,7 +100,7 @@ module.exports = ({
       );
   }
 
-  function runReportCommand(arguments_) {
+  function runReportCommand(arguments_, stdinSource) {
     if (arguments_.length === 0 ||
         (arguments_.length === 1 && arguments_[0] === '--help')) {
       return `${usage()}\n`;
@@ -115,19 +112,25 @@ module.exports = ({
       return `${usage(arguments_[0])}\n`;
     }
     const parsed = parseArguments(arguments_);
-    return [
-      'aggregate',
-      'balance-history',
-      'unrealized-gains',
-      'investment-performance',
-    ].includes(parsed.command)
-      ? runReport(parsed)
-      : runJsonCommand(parsed);
+    const run = (journal) => {
+      lastWarnings = journal.warnings || [];
+      return [
+        'aggregate',
+        'balance-history',
+        'unrealized-gains',
+        'investment-performance',
+      ].includes(parsed.command)
+        ? runReport(parsed, journal)
+        : runJsonCommand(parsed, journal);
+    };
+    return parsed.journalPath === '-'
+      ? cliStdinJournal.withJournal(stdinSource, run)
+      : run(project.openJournal(parsed.journalPath));
   }
 
-  function runReportCommandWithWarnings(arguments_) {
+  function runReportCommandWithWarnings(arguments_, stdinSource) {
     lastWarnings = [];
-    const output = runReportCommand(arguments_);
+    const output = runReportCommand(arguments_, stdinSource);
     return { output, warnings: lastWarnings };
   }
 

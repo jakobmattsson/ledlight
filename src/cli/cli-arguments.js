@@ -113,7 +113,7 @@ module.exports = ({
     { choices: ['all', 'used', 'unused'], defaultValue: 'used', apiInput: 'usage' },
   );
   const addJournal = (command) => addValueOption(
-    command, '--file <path>', 'read the journal rooted at this file',
+    command, '--file <path>', 'read this journal file, or - for stdin (piped input is detected automatically)',
     { required: true, apiInput: 'journalPath' },
   );
   const addJson = (command) => addOutputBooleanOption(

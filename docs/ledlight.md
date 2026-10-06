@@ -135,7 +135,7 @@ underlying result.
 | `postings --to DATE` | `options.to` | Inclusive posting-date end |
 | `postings --accounts PATTERN` | `options.accounts` | Repeated posting-account selection |
 | `postings --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `--file PATH` | `journalPath` | Root journal file |
+| `--file PATH` | `journalPath` | Root journal file; CLI-only `-` reads stdin |
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
 | `unrealized-gains --to DATE` | `options.to` | Inclusive position and valuation snapshot |
@@ -181,8 +181,40 @@ The CLI reads the first `.ledlightrc` found at `./.ledlightrc` or
 `~/.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
 using the same form as Ledger's initialization file; blank lines and lines
 beginning with `;` are ignored. An explicit command-line `--file` takes
-precedence. This is CLI-only configuration: `openJournal(journalPath)` always
-uses its argument directly and never reads `.ledlightrc`.
+precedence, followed by nonempty piped input, then configuration. This is CLI-only
+configuration: `openJournal(journalPath)` always uses its argument directly and
+never reads `.ledlightrc`.
+
+Every CLI command can read a UTF-8 journal from stdin. Use a pipe, redirected
+file, or heredoc without `--file`, or explicitly select stdin with `--file -`:
+
+```sh
+cat journal.ledger | ledlight balance-history
+ledlight unrealized-gains --file - --include-total < journal.ledger
+
+ledlight aggregate --value --include-total <<'LEDGER'
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+account Assets:Cash
+P 2024-01-01 STOCK 12 SEK
+
+2024-01-01 Purchase
+  Assets:Stock  10 STOCK {10 SEK}
+  Assets:Cash  -100 SEK
+LEDGER
+```
+
+The heredoc example reports a total of 20 SEK. An explicit file path wins over
+piped text. Empty automatic stdin falls back to `.ledlightrc`; `--file -` always
+uses stdin, even when it is empty. Help and version commands do not read stdin.
+Relative includes in stdin resolve from the current working directory; nested
+includes keep resolving from their containing file. Diagnostics identify the
+root source as `<stdin>`. Stdin reports use a temporary database, removed on
+completion or failure, and do not populate the persistent journal cache.
 
 Each report and query module owns a strict Zod schema beside its execution
 function and returns both from its module factory. Public calls are parsed by
@@ -543,6 +575,18 @@ value of each open non-default commodity position minus its remaining lot
 cost. Results are grouped by account, expressed in the journal default
 commodity, and omit zero gains. Losses are returned as negative quantities.
 
+Lot costs for selected open positions must be expressed in the journal default
+commodity. Ingestion records a `FOREIGN_LOT_COST_CURRENCY` warning for costs in
+another currency, visible in every report regardless of account or date filters.
+The gain report omits affected account/commodity positions instead of failing or
+mixing currencies. Its account sums and total include only the remaining positions
+and may be incomplete, as the warning explains. This includes costs on both
+acquisitions and disposals contributing to an open position. Missing lot costs on
+other open positions still cause an error. Prices alone cannot
+identify the original acquisition exchange rates for later disposals or transfers;
+record the acquisition basis in the default commodity explicitly. Closed positions
+are omitted before checking their lot costs.
+
 ```console
 ledlight unrealized-gains --file main.ledger
 ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "^Assets:Broker"
@@ -573,6 +617,9 @@ command, independent of report dates or account filters:
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
   at their recorded acquisition costs.
+- `FOREIGN_LOT_COST_CURRENCY` identifies lot costs outside the journal default
+  commodity. These postings remain available to other reports, but affected
+  positions are omitted from unrealized gains, making its totals potentially incomplete.
 - `SALE_PROCEEDS_MISMATCH` identifies a transaction whose sale prices cannot be
   reconciled with its monetary postings. Sales use `@`/`@@`, simultaneous purchases
   use their lot costs, and internal transfers and splits are excluded. The net

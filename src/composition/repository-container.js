@@ -16,6 +16,7 @@ const REPOSITORY_MODULE_PATTERNS = Object.freeze([
   'src/cli/cli-command.js',
   'src/cli/cli-configuration.js',
   'src/cli/cli-format.js',
+  'src/cli/cli-stdin-journal.js',
   'src/core/*.js',
   'src/ingestion/**/*.js',
   'src/queries/support/*.js',
@@ -117,9 +118,14 @@ function registerExternalModules(container) {
     currentWorkingDirectory: asValue(() => process.cwd()),
     envPaths: asValue(require('env-paths')),
     fs: asValue(require('node:fs')),
+    os: asValue(require('node:os')),
     packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
     processEnvironment: asValue(process.env),
+    standardInput: asValue({
+      isTTY: () => Boolean(process.stdin.isTTY),
+      read: () => require('node:fs').readFileSync(0, 'utf8'),
+    }),
     systemClock: asValue({
       now: () => Date.now(),
       sleep(milliseconds) {

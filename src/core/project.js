@@ -104,7 +104,10 @@ module.exports = ({
   }
 
   function openJournal(journalPath) {
-    const current = ensureCurrent(journalPath);
+    return journalFromDatabase(ensureCurrent(journalPath));
+  }
+
+  function journalFromDatabase(current) {
     const warnings = groupWarnings(queryDatabase(
       current.databasePath,
       (database) => database.prepare(`
@@ -158,5 +161,6 @@ module.exports = ({
   return {
     apiDefinitions,
     openJournal,
+    $$private: { journalFromDatabase },
   };
 };

@@ -212,6 +212,15 @@ grouped by account and expressed as exact decimal strings in the journal
 default commodity. Each row is `{ account, quantity, commodity }`; zero-gain
 accounts are omitted and losses are negative. Rows are sorted by account.
 
+All lot costs contributing to a selected open position must be expressed in
+the journal default commodity. Ingestion records `FOREIGN_LOT_COST_CURRENCY`
+warnings for costs in another currency, available through `journal.warnings`
+and every CLI report. The gain report omits affected account/commodity positions;
+account sums and the CLI total cover only the remaining positions and may be
+incomplete. The report does not infer historical exchange rates or lot allocations.
+Missing lot costs on other open positions still cause an error. Closed positions
+are omitted before checking their lot costs.
+
 Options are `to`, `accounts`, and `dateBasis`. `to` is the inclusive snapshot
 date for both positions and valuation prices, `accounts` contains account
 patterns, and `dateBasis` is `posting` (the default) or `transaction`. When

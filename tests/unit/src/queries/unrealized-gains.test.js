@@ -14,12 +14,12 @@ const { execute: queryUnrealizedGains } = resolveQuery('unrealizedGains');
 const { buildDatabase } = resolveRepositoryModule('src/ingestion/database/database.js').$$private;
 const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
 
-function buildFixture(t) {
+function buildFixture(t, source) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-gain-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
-  fs.writeFileSync(journalPath, `commodity USD
+  fs.writeFileSync(journalPath, source ?? `commodity USD
   default
 P 2024-01-01 AAPL 100 USD
 P 2024-01-01 BOND 50 USD
@@ -77,6 +77,53 @@ test('uses the snapshot date for positions, prices, and account selection', (t) 
     { account: 'Assets:Bonds', quantity: '-20', commodity: 'USD' },
   ]);
 });
+
+for (const cost of ['{10 USD}', '{{10 USD}}']) {
+  test(`omits positions with foreign lot costs ${cost} while preserving supported positions`, (t) => {
+    const databasePath = buildFixture(t, `commodity SEK
+  default
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Broker
+account Assets:Other
+account Assets:Cash
+account Income:Gains
+P 2024-01-01 STOCK 30 SEK
+P 2024-01-01 USD 2 SEK
+
+2024-01-01 Purchase
+  Assets:Broker  2 STOCK {20 SEK}
+  Assets:Other  1 STOCK {20 SEK}
+  Assets:Cash  -60 SEK
+
+2024-02-01 Disposal with foreign basis
+  Assets:Broker  -1 STOCK ${cost} @ 15 USD
+  Assets:Cash
+
+2024-03-01 Close position
+  Assets:Broker  -1 STOCK {20 SEK} @ 30 SEK
+  Assets:Cash  30 SEK
+  Income:Gains  -10 SEK
+`);
+    assert.deepEqual(unrealizedGains(databasePath, { to: '2024-01-31' }), [
+      { account: 'Assets:Broker', quantity: '20', commodity: 'SEK' },
+      { account: 'Assets:Other', quantity: '10', commodity: 'SEK' },
+    ]);
+    assert.deepEqual(unrealizedGains(databasePath, {
+      to: '2024-02-01', accounts: ['^Assets:Broker$'],
+    }), []);
+    assert.deepEqual(unrealizedGains(databasePath, {
+      to: '2024-02-01', accounts: ['^Assets:Broker$', '^Assets:Other$'],
+    }), [{ account: 'Assets:Other', quantity: '10', commodity: 'SEK' }]);
+    assert.deepEqual(unrealizedGains(databasePath, {
+      to: '2024-02-01', accounts: ['^Assets:Other$'],
+    }), [{ account: 'Assets:Other', quantity: '10', commodity: 'SEK' }]);
+    assert.deepEqual(unrealizedGains(databasePath, { accounts: ['^Assets:Broker$'] }), []);
+  });
+}
 
 test('rejects unsupported unrealized-gain options and invalid dates', (t) => {
   const databasePath = buildFixture(t);

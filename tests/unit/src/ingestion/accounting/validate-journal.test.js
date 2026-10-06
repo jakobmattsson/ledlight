@@ -257,6 +257,25 @@ test('does not apply the trade annotation rule to default commodities or zero qu
   assert.deepEqual(validateJournal(parseTrade('-1 SEK')).warnings, []);
 });
 
+test('warns about foreign lot cost currencies without discarding the transaction', () => {
+  for (const annotation of ['{10 USD}', '{{10 USD}}']) {
+    for (const amount of [`1 FUND ${annotation}`, `-1 FUND ${annotation} @ 12 USD`]) {
+      const journal = parseTrade(amount);
+      const result = validateJournal(journal);
+      assert.deepEqual(result.warnings.filter(({ code }) => code === 'FOREIGN_LOT_COST_CURRENCY'), [{
+        code: 'FOREIGN_LOT_COST_CURRENCY',
+        message: 'Assets:Fund: lot cost in USD must be expressed in the default commodity SEK. ' +
+          'Unrealized gains omit affected positions; their totals may be incomplete',
+        source: 'fixture.ledger',
+        line: 9,
+        column: 3,
+        startLine: 9,
+        endLine: 9,
+      }]);
+      assert.equal(result.invalidEntries.size, 0);
+    }
+  }
+});
 test('warns when a cost in the posting commodity changes its nominal value', () => {
   for (const posting of [
     '100 SEK {2 SEK}', '100 SEK {{200 SEK}}',
@@ -269,10 +288,12 @@ test('warns when a cost in the posting commodity changes its nominal value', () 
     '100 FUND {2 FUND}',
   ]) {
     const result = validateJournal(parseTrade(posting));
-    assert.equal(result.warnings.length, 1, posting);
-    assert.equal(result.warnings[0].code, 'INVALID_COMMODITY_TRADE', posting);
-    assert.match(result.warnings[0].message, /must value one (SEK|FUND) at exactly one \1/u);
-    assert.equal(result.warnings[0].line, 9, posting);
+    assert.deepEqual(result.warnings.map(({ code }) => code), posting === '100 FUND {2 FUND}'
+      ? ['FOREIGN_LOT_COST_CURRENCY', 'INVALID_COMMODITY_TRADE']
+      : ['INVALID_COMMODITY_TRADE'], posting);
+    const warning = result.warnings.find(({ code }) => code === 'INVALID_COMMODITY_TRADE');
+    assert.match(warning.message, /must value one (SEK|FUND) at exactly one \1/u);
+    assert.equal(warning.line, 9, posting);
   }
 });
 

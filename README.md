@@ -33,9 +33,26 @@ const journal = openJournal('/path/to/books/main.ledger');
 
 Database operations take the path of the root journal directly. Ledlight stores
 its derived SQLite database in the operating system's application cache
-directory. The CLI accepts the root journal through `--file` or a `.ledlightrc`
-file; the JavaScript API continues to take the path directly and does not read
-configuration files.
+directory. The CLI accepts the root journal through `--file`, a `.ledlightrc`
+file, or stdin. Pipe a journal into any command, or use `--file -` explicitly.
+The JavaScript API continues to take the path directly and does not read
+configuration files or stdin.
+
+Run a complete example without creating a journal file:
+
+```sh
+ledlight aggregate --accounts '^Assets:' --include-total <<'LEDGER'
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Equity:Opening
+
+2024-01-01 Opening balance
+  Assets:Cash  100 SEK
+  Equity:Opening
+LEDGER
+```
 
 See [the Ledlight documentation](docs/ledlight.md) for the supported syntax,
 reports, and CLI, and the [Node.js API reference](docs/api.md) for the complete

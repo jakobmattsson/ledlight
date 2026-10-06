@@ -55,7 +55,10 @@ module.exports = ({
           END
           ELSE decimal_mul(r.quantity, p.lot_cost_quantity)
         END) AS cost_basis,
-        MIN(CASE WHEN p.lot_cost_quantity IS NULL THEN r.commodity END) AS missing_lot_cost
+        MIN(CASE WHEN p.lot_cost_quantity IS NULL THEN r.commodity END) AS missing_lot_cost,
+        MIN(CASE
+          WHEN p.lot_cost_commodity != ? THEN p.lot_cost_commodity
+        END) AS foreign_lot_cost_commodity
       FROM resolved_posting_amounts AS r
       JOIN postings AS p ON p.id = r.posting_id
       JOIN transactions AS t ON t.entry_id = p.transaction_id
@@ -63,11 +66,10 @@ module.exports = ({
       GROUP BY p.account, r.commodity
       HAVING decimal_cmp(decimal_sum(r.quantity), '0') != 0
       ORDER BY p.account, r.commodity
-    `).all(...filter.parameters);
+    `).all(valuationCommodity, ...filter.parameters);
   }
 
-  function calculateRows(positions, rates, valuationCommodity) {
-    const gains = new Map();
+  function validateCostBases(positions) {
     for (const position of positions) {
       if (position.missing_lot_cost) {
         throw new Error(
@@ -75,6 +77,12 @@ module.exports = ({
           `${position.missing_lot_cost} has no lot cost`,
         );
       }
+    }
+  }
+
+  function calculateRows(positions, rates, valuationCommodity) {
+    const gains = new Map();
+    for (const position of positions) {
       const marketValue = multiplyDecimals(
         parseDecimal(position.quantity),
         parseDecimal(rates.get(position.commodity)),
@@ -95,7 +103,9 @@ module.exports = ({
   function queryUnrealizedGains(database, options, { valuationPriceCache }) {
     const reportOptions = parseOptions(optionsSchema, options, 'unrealizedGains');
     const valuationCommodity = valuationCommodityFromDatabase(database);
-    const positions = queryPositions(database, reportOptions, valuationCommodity);
+    const positions = queryPositions(database, reportOptions, valuationCommodity)
+      .filter((position) => !position.foreign_lot_cost_commodity);
+    validateCostBases(positions);
     const rates = queryValuationRates(
       database,
       reportOptions.to,

@@ -5,7 +5,7 @@ module.exports = ({
 }) => {
 
   function createJournalLoader(parseSource) {
-    return function loadJournal(journalPath) {
+    return function loadJournal(journalPath, rootSource) {
       const entries = [];
       const warnings = [];
       const traversal = traverseJournal(journalPath, ({ content, path, include }) => {
@@ -15,7 +15,7 @@ module.exports = ({
           if (entry.type === 'include') include(entry.path, entry.location.line);
           else entries.push(entry);
         }
-      });
+      }, rootSource);
       return { ...traversal, entries, warnings };
     };
   }

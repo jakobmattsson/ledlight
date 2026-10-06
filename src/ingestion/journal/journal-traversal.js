@@ -7,19 +7,19 @@ module.exports = ({
   includePattern: { expandIncludePattern },
 }) => {
 
-  function traverseJournal(journalPath, processFile) {
-    const resolvedJournalPath = path.resolve(journalPath);
+  function traverseJournal(journalPath, processFile, rootSource) {
+    const resolvedJournalPath = rootSource ? journalPath : path.resolve(journalPath);
     const filesByPath = new Map();
     const active = new Set();
 
-    function load(filePath) {
-      const absolutePath = path.resolve(filePath);
+    function load(filePath, source) {
+      const absolutePath = source ? filePath : path.resolve(filePath);
       if (active.has(absolutePath)) throw new Error(`Circular include detected at ${absolutePath}`);
       if (filesByPath.has(absolutePath)) return;
       active.add(absolutePath);
 
       try {
-        const bytes = fs.readFileSync(absolutePath);
+        const bytes = source ? Buffer.from(source.content, 'utf8') : fs.readFileSync(absolutePath);
         const content = bytes.toString('utf8');
         if (!filesByPath.has(absolutePath)) {
           filesByPath.set(absolutePath, {
@@ -33,7 +33,9 @@ module.exports = ({
           content,
           path: absolutePath,
           include(includePath, line) {
-            const includePattern = path.resolve(path.dirname(absolutePath), includePath);
+            const includePattern = path.resolve(
+              source?.baseDirectory ?? path.dirname(absolutePath), includePath,
+            );
             const matches = expandIncludePattern(includePattern);
             if (matches.length === 0) {
               const location = line === undefined ? absolutePath : `${absolutePath}:${line}`;
@@ -47,7 +49,7 @@ module.exports = ({
       }
     }
 
-    load(resolvedJournalPath);
+    load(resolvedJournalPath, rootSource);
     return { journalPath: resolvedJournalPath, files: [...filesByPath.values()] };
   }
 
