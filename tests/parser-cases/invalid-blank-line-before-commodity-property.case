@@ -1,0 +1,10 @@
+========== TEXT ==========
+commodity SEK
+
+  format 1,000.00 SEK
+========== ERROR ==========
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 3
+}

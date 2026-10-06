@@ -1,0 +1,10 @@
+========== TEXT ==========
+2024-01-01 Trade
+  Assets:Fund  1 FUND {{100 SEK}
+  Equity:Opening
+========== ERROR ==========
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

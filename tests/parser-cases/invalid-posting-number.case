@@ -1,0 +1,9 @@
+========== TEXT ==========
+2024-01-01 Invalid
+  Assets:Cash  one SEK
+========== ERROR ==========
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}
