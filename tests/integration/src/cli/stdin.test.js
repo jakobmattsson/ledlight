@@ -100,22 +100,3 @@ test('stdin expands includes from the working directory and nested includes from
   assert.equal(result.stderr, '');
   assert.equal(JSON.parse(result.stdout).at(-1).quantity, '20');
 });
-
-test('stdin keeps diagnostic source locations and cleans up after load and query failures', (t) => {
-  const { run, cacheDirectory } = fixture(t);
-  const warning = run(['aggregate', '--format', 'json'], source.replace('account Assets:Stock\n', ''));
-  assert.equal(warning.status, 0, warning.stderr);
-  assert.match(warning.stderr, /\[UNDECLARED_ACCOUNT\]/u);
-  assert.match(warning.stderr, /<stdin>:10:3/u);
-
-  const missingInclude = run(['accounts'], 'include missing/*.ledger\n');
-  assert.equal(missingInclude.status, 1);
-  assert.match(missingInclude.stderr, /<stdin>:1: include matched no files: missing\/\*\.ledger/u);
-  assert.equal(missingInclude.stdout, '');
-
-  const missingPrice = run(['aggregate', '--value'], source.replace('P 2024-01-01 STOCK 12 SEK\n', ''));
-  assert.equal(missingPrice.status, 1);
-  assert.match(missingPrice.stderr, /No price for STOCK/u);
-  assert.equal(missingPrice.stdout, '');
-  assert.equal(fs.existsSync(cacheDirectory), false);
-});

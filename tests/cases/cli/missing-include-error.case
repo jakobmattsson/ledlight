@@ -1,0 +1,9 @@
+# A missing include fails with a stdin source location.
+
+ledlight accounts <<'LEDGER'
+include missing/*.ledger
+LEDGER
+
+====================
+====================
+<stdin>:1: include matched no files: missing/*.ledger
