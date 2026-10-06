@@ -26,4 +26,4 @@ account Equity:Opening
 
 ========== API ==========
 
-tags({})
+tags({});

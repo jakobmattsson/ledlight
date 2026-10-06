@@ -23,8 +23,8 @@ an empty section asserts empty output. Whitespace and final newlines in present
 sections are compared exactly.
 
 `========== API ==========` contains one journal method call, such as
-`aggregate({ accounts: ['^Assets:'] })` or `tags({})`. The options use YAML flow
-object syntax. With CLI, the test compares the API result with the CLI's JSON
+`aggregate({ accounts: ['^Assets:'] });` or `tags({});`. Write it as a JavaScript
+statement. With CLI, the test compares the API result with the CLI's JSON
 output. For accounts, tags, and commodities, this comparison uses the CLI's
 name-only representation unless `--details` is present. Use JSON CLI output
 when including API. Without CLI, the API result becomes JSON stdout and journal

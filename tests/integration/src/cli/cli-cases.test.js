@@ -9,11 +9,11 @@ const { parseCase, runCase } = require('../../../support/cli-case');
 const directory = path.resolve(__dirname, '../../../cases/cli');
 
 function presentedApiResult(expected, result) {
-  if (expected.api.method === 'tags') return result.map(({ tag }) => tag);
-  if (!expected.arguments_.includes('--details') && expected.api.method === 'accounts') {
+  if (expected.arguments_[0] === 'tags') return result.map(({ tag }) => tag);
+  if (!expected.arguments_.includes('--details') && expected.arguments_[0] === 'accounts') {
     return result.map(({ account }) => account);
   }
-  if (!expected.arguments_.includes('--details') && expected.api.method === 'commodities') {
+  if (!expected.arguments_.includes('--details') && expected.arguments_[0] === 'commodities') {
     return result.map(({ commodity }) => commodity);
   }
   return result;

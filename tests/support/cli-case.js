@@ -3,8 +3,8 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
 const { asValue } = require('awilix');
-const yaml = require('yaml');
 const { createRepositoryContainer } = require('../../src/composition/repository-container');
 const createReportCommand = require('../../src/cli/modules/report-command');
 
@@ -111,13 +111,9 @@ function parseCase(fileName) {
   }
   let api;
   if (Object.hasOwn(sections, 'api')) {
-    const call = /^([a-z][A-Za-z0-9]*)\s*\(([\s\S]*)\)$/u.exec(sections.api.trim());
-    if (!call) throw new Error(`${fileName}: API must contain a journal method call`);
-    const options = call[2].trim() === '' ? {} : yaml.parse(call[2]);
-    if (options === null || typeof options !== 'object' || Array.isArray(options)) {
-      throw new Error(`${fileName}: API arguments must be an object`);
-    }
-    api = { method: call[1], options };
+    const statement = sections.api.trim();
+    if (statement === '') throw new Error(`${fileName}: API needs a JavaScript statement`);
+    api = { statement: new vm.Script(statement, { filename: fileName }) };
   }
   return { arguments_, journal, file: !heredoc, api, stdout: sections.stdout, stderr: sections.stderr };
 }
@@ -155,10 +151,11 @@ function runCase({ arguments_, journal, file, api }) {
       if (!file) fs.writeFileSync(journalPath, journal);
       try {
         const journalApi = container.resolve('project').openJournal(journalPath);
-        if (!Object.hasOwn(journalApi, api.method) || typeof journalApi[api.method] !== 'function') {
-          throw new Error(`Unknown journal API method: ${api.method}`);
-        }
-        const apiResult = journalApi[api.method](api.options);
+        const bindings = Object.fromEntries(Object.entries(journalApi)
+          .filter(([, value]) => typeof value === 'function')
+          .map(([name, method]) => [name, method.bind(journalApi)]));
+        const apiResult = api.statement.runInNewContext(bindings, { timeout: 1000 });
+        if (apiResult === undefined) throw new Error('API statement did not return a result');
         if (arguments_) actual.apiResult = apiResult;
         else {
           actual = {
