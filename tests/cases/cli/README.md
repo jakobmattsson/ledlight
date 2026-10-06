@@ -7,7 +7,7 @@ heading. The reader removes those surrounding blank lines before using the
 section content.
 
 `========== CLI ==========` contains a `ledlight` command. It is optional when
-an API section is present. Command arguments support quoted strings and
+an API or LEDGER-CLI section is present. Command arguments support quoted strings and
 backslash escapes, but no shell is run. Omit `--file`; the case supplies the
 journal in one of two ways:
 
@@ -16,6 +16,14 @@ journal in one of two ways:
 - Omit the heredoc and put the journal in `========== FILE ==========`. The
   test writes it to a temporary file and supplies that path as `--file` when
   CLI is present. FILE is required when CLI is absent.
+
+`========== LEDGER-CLI ==========` contains a `ledger` command. The runner
+executes the configured Ledger binary and supplies the same journal path as an
+implicit `--file` argument. Its output is compared against the same sections
+as CLI and API. Set `LEDGER_BIN` to use a Ledger binary outside `PATH`.
+
+For journals with includes, add `========== FILE relative/path.ledger ==========`
+sections. Each creates a file relative to the temporary journal directory.
 
 Use `========== OUTPUT ==========` for the CLI output or the JSON form of an
 API-only result. Use `========== WARNINGS ==========` for formatted journal
@@ -33,4 +41,5 @@ independently with the same OUTPUT, WARNINGS, and ERROR sections. Include only
 the expectations relevant to the case.
 
 The reader accepts sections in any order. By convention, write them as CLI,
-API, FILE, OUTPUT, WARNINGS, then ERROR, omitting unused sections.
+LEDGER-CLI, API, FILE, extra FILE sections, OUTPUT, WARNINGS, then ERROR,
+omitting unused sections.

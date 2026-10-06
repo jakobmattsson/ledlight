@@ -1,0 +1,36 @@
+Unused commodities listing.
+
+========== CLI ==========
+
+ledlight commodities --usage unused
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1000.000 FUND
+commodity UNUSED
+  format 1000 UNUSED
+tag Used
+tag Unused
+account Assets Fund
+account Assets:Fund
+account Assets:Unused
+account Equity:Opening
+P 2024-01-01 FUND 9 USD
+P 2024-01-01 FUND 10 USD
+
+2024-01-02 Buy
+  ; Used: yes
+  Assets:Fund  2 FUND {{20 USD}}
+  Assets Fund  -20 USD
+
+2024-01-03 No change
+  Assets:Fund  0 FUND
+  Equity:Opening  0 FUND
+
+========== OUTPUT ==========
+
+UNUSED

@@ -1,0 +1,67 @@
+Prices json output: independent quote currencies with corrections and first-seen currency order.
+
+========== CLI ==========
+
+ledlight prices --format json
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity ZEBRA
+  format 1000 ZEBRA
+commodity ALPHA
+  format 1000 ALPHA
+commodity Long_Fund_Name
+  format 1000 Long_Fund_Name
+commodity UNUSED
+  format 1000 UNUSED
+account Assets:Funds
+account Assets:Cash
+account Equity:Opening
+account Income:Gains
+commodity NOK
+  format 1,000.00 NOK
+
+2024-01-01 Purchase
+  Assets:Funds  1 ALPHA {10 SEK}
+  Assets:Cash  -10 SEK
+
+P 2024-01-02 ALPHA 12 NOK
+P 2024-01-02 ALPHA 11 SEK
+P 2024-01-02 ALPHA 13 NOK ; corrected
+P 2024-01-03 ALPHA 14 NOK
+
+========== OUTPUT ==========
+
+[
+  {
+    "date": "2024-01-01",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "10",
+    "quoteCommodity": "SEK",
+    "comment": null
+  },
+  {
+    "date": "2024-01-02",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "11",
+    "quoteCommodity": "SEK",
+    "comment": null
+  },
+  {
+    "date": "2024-01-02",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "13",
+    "quoteCommodity": "NOK",
+    "comment": "corrected"
+  },
+  {
+    "date": "2024-01-03",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "14",
+    "quoteCommodity": "NOK",
+    "comment": null
+  }
+]

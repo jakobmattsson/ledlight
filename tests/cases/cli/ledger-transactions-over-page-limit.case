@@ -1,0 +1,823 @@
+Default text transactions include all 101 entries.
+
+========== CLI ==========
+
+ledlight transactions
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+account Assets:Cash
+account Equity:Opening
+
+2024-01-01 Entry 1
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 2
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 3
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 4
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 5
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 6
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 7
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 8
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 9
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 10
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 11
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 12
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 13
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 14
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 15
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 16
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 17
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 18
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 19
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 20
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 21
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 22
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 23
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 24
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 25
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 26
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 27
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 28
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 29
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 30
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 31
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 32
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 33
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 34
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 35
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 36
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 37
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 38
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 39
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 40
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 41
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 42
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 43
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 44
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 45
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 46
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 47
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 48
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 49
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 50
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 51
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 52
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 53
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 54
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 55
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 56
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 57
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 58
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 59
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 60
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 61
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 62
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 63
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 64
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 65
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 66
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 67
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 68
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 69
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 70
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 71
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 72
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 73
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 74
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 75
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 76
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 77
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 78
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 79
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 80
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 81
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 82
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 83
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 84
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 85
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 86
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 87
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 88
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 89
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 90
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 91
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 92
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 93
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 94
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 95
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 96
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 97
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 98
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 99
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 100
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+2024-01-01 Entry 101
+  Assets:Cash  1 USD
+  Equity:Opening  -1 USD
+
+========== OUTPUT ==========
+
+2024-01-01 Entry 1
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 2
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 3
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 4
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 5
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 6
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 7
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 8
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 9
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 10
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 11
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 12
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 13
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 14
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 15
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 16
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 17
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 18
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 19
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 20
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 21
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 22
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 23
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 24
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 25
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 26
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 27
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 28
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 29
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 30
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 31
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 32
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 33
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 34
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 35
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 36
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 37
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 38
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 39
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 40
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 41
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 42
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 43
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 44
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 45
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 46
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 47
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 48
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 49
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 50
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 51
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 52
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 53
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 54
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 55
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 56
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 57
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 58
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 59
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 60
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 61
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 62
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 63
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 64
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 65
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 66
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 67
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 68
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 69
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 70
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 71
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 72
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 73
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 74
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 75
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 76
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 77
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 78
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 79
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 80
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 81
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 82
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 83
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 84
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 85
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 86
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 87
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 88
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 89
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 90
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 91
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 92
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 93
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 94
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 95
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 96
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 97
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 98
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 99
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 100
+    Assets:Cash                             1.00 USD
+    Equity:Opening
+
+2024-01-01 Entry 101
+    Assets:Cash                             1.00 USD
+    Equity:Opening

@@ -1,0 +1,35 @@
+Ledger and Ledlight produce the same valued balances.
+
+========== CLI ==========
+
+ledlight aggregate --accounts Assets:Investments --value
+
+========== LEDGER-CLI ==========
+
+ledger --args-only --date-format %Y-%m-%d --no-pager --sort account --exchange USD balance --flat --no-total --format '%20(display_total)  %(account)\n' '^Assets:Investments'
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+
+commodity FUND
+  format 1000 FUND
+account Assets:Investments
+account Assets:Cash
+
+P 2024-01-01 FUND 10 USD
+P 2024-02-01 FUND 12.5 USD
+
+2024-01-10 Buy fund units
+  Assets:Investments  3 FUND {10 USD}
+  Assets:Cash  -30 USD
+
+2024-02-15 Buy another unit
+  Assets:Investments  1 FUND {12.5 USD}
+  Assets:Cash  -12.5 USD
+
+========== OUTPUT ==========
+
+           50.00 USD  Assets:Investments

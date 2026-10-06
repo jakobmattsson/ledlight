@@ -1,0 +1,55 @@
+Prices match Ledger: interleaved commodities and years across included files.
+
+========== CLI ==========
+
+ledlight prices
+
+========== LEDGER-CLI ==========
+
+ledger --args-only --date-format %Y-%m-%d --no-pager prices --sort date,account
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity ZEBRA
+  format 1000 ZEBRA
+commodity ALPHA
+  format 1000 ALPHA
+commodity Long_Fund_Name
+  format 1000 Long_Fund_Name
+commodity UNUSED
+  format 1000 UNUSED
+account Assets:Funds
+account Assets:Cash
+account Equity:Opening
+account Income:Gains
+include quotes.ledger
+
+2023-12-29 Opening Zebra
+  Assets:Funds  1 ZEBRA {8 SEK}
+  Equity:Opening  -8 SEK
+
+2023-12-29 Opening Alpha
+  Assets:Funds  1 ALPHA {5 SEK}
+  Equity:Opening  -5 SEK
+
+========== FILE quotes.ledger ==========
+
+P 2024-02-01 ZEBRA 12.345 SEK
+P 2024-01-01 ALPHA 7 SEK
+P 2023-12-31 ZEBRA 9 SEK
+P 2024-01-01 ZEBRA 11 SEK
+P 2023-12-31 ALPHA 6 SEK
+P 2023-01-01 UNUSED 999 SEK
+
+========== OUTPUT ==========
+
+2023-12-29 ALPHA        5.00 SEK
+2023-12-29 ZEBRA        8.00 SEK
+2023-12-31 ALPHA        6.00 SEK
+2023-12-31 ZEBRA        9.00 SEK
+2024-01-01 ALPHA        7.00 SEK
+2024-01-01 ZEBRA       11.00 SEK
+2024-02-01 ZEBRA      12.345 SEK

@@ -1,0 +1,83 @@
+Prices json output: inferred purchase and total sale display precision preserves source decimal places.
+
+========== CLI ==========
+
+ledlight prices --format json
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity ZEBRA
+  format 1000 ZEBRA
+commodity ALPHA
+  format 1000 ALPHA
+commodity Long_Fund_Name
+  format 1000 Long_Fund_Name
+commodity UNUSED
+  format 1000 UNUSED
+account Assets:Funds
+account Assets:Cash
+account Equity:Opening
+account Income:Gains
+
+2024-01-01 Purchase with integer amounts
+  Assets:Funds  3 ALPHA {{1 SEK}}
+  Assets:Cash  -1 SEK
+
+2024-01-02 Purchase with explicit decimal places
+  Assets:Funds  3.0000 ALPHA {{1.00 SEK}}
+  Assets:Cash  -1.00 SEK
+
+2024-01-03 Sale with integer amounts
+  Assets:Funds  -3 ALPHA {{1 SEK}} @@ 2 SEK
+  Assets:Cash  2 SEK
+  Income:Gains  -1 SEK
+
+2024-01-04 Sale with explicit decimal places
+  Assets:Funds  -3.0000 ALPHA {{1.00 SEK}} @@ 2.00 SEK
+  Assets:Cash  2.00 SEK
+  Income:Gains  -1.00 SEK
+
+P 2024-01-05 ALPHA 0.123456789012345678901234567890123456 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "date": "2024-01-01",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "0.333333333333333333333333333333",
+    "quoteCommodity": "SEK",
+    "comment": null
+  },
+  {
+    "date": "2024-01-02",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "0.333333333333333333333333333333",
+    "quoteCommodity": "SEK",
+    "comment": null
+  },
+  {
+    "date": "2024-01-03",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "0.666666666666666666666666666667",
+    "quoteCommodity": "SEK",
+    "comment": null
+  },
+  {
+    "date": "2024-01-04",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "0.666666666666666666666666666667",
+    "quoteCommodity": "SEK",
+    "comment": null
+  },
+  {
+    "date": "2024-01-05",
+    "baseCommodity": "ALPHA",
+    "quoteQuantity": "0.123456789012345678901234567890123456",
+    "quoteCommodity": "SEK",
+    "comment": null
+  }
+]

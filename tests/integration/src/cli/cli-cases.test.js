@@ -18,7 +18,9 @@ for (const fileName of fs.readdirSync(directory).filter((name) => name.endsWith(
         assert.equal(result.warnings, expected.warnings, `${name} WARNINGS`);
       }
       assert.equal(result.error, expected.error ?? '', `${name} ERROR`);
-      if (name === 'cli') assert.equal(result.exitCode, expected.error === undefined ? 0 : 1);
+      if (name === 'cli' || name === 'ledgerCli') {
+        assert.equal(result.exitCode, expected.error === undefined ? 0 : 1);
+      }
     }
   });
 }

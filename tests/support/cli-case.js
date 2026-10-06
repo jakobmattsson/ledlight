@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -11,6 +12,7 @@ const { executeCli } = require('../../src/cli/execute-cli');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],
+  ['========== LEDGER-CLI ==========', 'ledgerCli'],
   ['========== API ==========', 'api'],
   ['========== FILE ==========', 'file'],
   ['========== OUTPUT ==========', 'output'],
@@ -51,8 +53,10 @@ function parseCase(fileName) {
   const lines = fs.readFileSync(fileName, 'utf8').replaceAll('\r\n', '\n').split('\n');
   if (lines.at(-1) === '') lines.pop();
   const sections = {};
+  const files = {};
   for (let index = 0; index < lines.length;) {
-    const name = HEADERS.get(lines[index]);
+    const extraFile = /^========== FILE ([^=]+) ==========$/u.exec(lines[index]);
+    const name = HEADERS.get(lines[index]) ?? (extraFile ? 'extraFile' : undefined);
     if (!name) {
       if (Object.keys(sections).length > 0) {
         throw new Error(`${fileName}: text outside a section at line ${index + 1}`);
@@ -60,17 +64,31 @@ function parseCase(fileName) {
       index += 1;
       continue;
     }
-    if (Object.hasOwn(sections, name)) throw new Error(`${fileName}: duplicate ${name} section`);
+    if (name !== 'extraFile' && Object.hasOwn(sections, name)) {
+      throw new Error(`${fileName}: duplicate ${name} section`);
+    }
     let start = ++index;
-    while (index < lines.length && !HEADERS.has(lines[index])) index += 1;
+    while (index < lines.length && !HEADERS.has(lines[index]) &&
+      !/^========== FILE ([^=]+) ==========$/u.test(lines[index])) index += 1;
     let end = index;
     if (lines[start] === '') start += 1;
     if (lines[end - 1] === '') end -= 1;
-    sections[name] = start >= end ? '' : `${lines.slice(start, end).join('\n')}\n`;
+    const content = start >= end ? '' : `${lines.slice(start, end).join('\n')}\n`;
+    if (name === 'extraFile') {
+      const relativePath = extraFile[1];
+      if (path.isAbsolute(relativePath) || relativePath.split('/').some((part) =>
+        part === '' || part === '.' || part === '..') || relativePath === 'journal.ledger') {
+        throw new Error(`${fileName}: invalid FILE path ${relativePath}`);
+      }
+      if (Object.hasOwn(files, relativePath)) {
+        throw new Error(`${fileName}: duplicate FILE path ${relativePath}`);
+      }
+      files[relativePath] = content;
+    } else sections[name] = content;
   }
   const cli = sections.cli;
-  if (cli === undefined && sections.api === undefined) {
-    throw new Error(`${fileName}: expected a CLI or API section`);
+  if (cli === undefined && sections.api === undefined && sections.ledgerCli === undefined) {
+    throw new Error(`${fileName}: expected a CLI, LEDGER-CLI, or API section`);
   }
   let cliArgs;
   let heredoc;
@@ -102,13 +120,23 @@ function parseCase(fileName) {
   if (hasHeredoc === Object.hasOwn(sections, 'file')) {
     throw new Error(`${fileName}: provide exactly one of a LEDGER heredoc or FILE section`);
   }
+  let ledgerArgs;
+  if (sections.ledgerCli !== undefined) {
+    const match = /^ledger(?:[ \t]+(.+))?\n?$/u.exec(sections.ledgerCli);
+    if (!match) throw new Error(`${fileName}: expected a ledger command in LEDGER-CLI`);
+    ledgerArgs = parseArguments(match[1] ?? '');
+    if (ledgerArgs.length === 0) throw new Error(`${fileName}: expected a LEDGER-CLI command`);
+    if (ledgerArgs.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
+      throw new Error(`${fileName}: the case supplies the journal; omit --file`);
+    }
+  }
   if (!Object.hasOwn(sections, 'output') &&
       !Object.hasOwn(sections, 'warnings') &&
       !Object.hasOwn(sections, 'error') &&
       !Object.hasOwn(sections, 'api')) {
     throw new Error(`${fileName}: expected OUTPUT, WARNINGS, ERROR, or API`);
   }
-  if (cli === undefined && sections.output === undefined &&
+  if (cli === undefined && sections.ledgerCli === undefined && sections.output === undefined &&
       sections.warnings === undefined && sections.error === undefined) {
     throw new Error(`${fileName}: an API-only case needs OUTPUT, WARNINGS, or ERROR`);
   }
@@ -119,15 +147,20 @@ function parseCase(fileName) {
     api = { statement: new vm.Script(statement, { filename: fileName }) };
   }
   return {
-    cliArgs, heredoc, file: sections.file, api,
+    cliArgs, ledgerArgs, heredoc, file: sections.file, files, api,
     output: sections.output, warnings: sections.warnings, error: sections.error,
   };
 }
 
-function runCase({ cliArgs, heredoc, file, api }) {
+function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
   const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-case-'));
   const journalPath = path.join(temporaryDirectory, 'journal.ledger');
   if (file !== undefined) fs.writeFileSync(journalPath, file);
+  for (const [relativePath, content] of Object.entries(files)) {
+    const destination = path.join(temporaryDirectory, relativePath);
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.writeFileSync(destination, content);
+  }
   const container = createRepositoryContainer();
   container.register({
     standardInput: asValue({ isTTY: () => false, read: () => heredoc }),
@@ -159,6 +192,20 @@ function runCase({ cliArgs, heredoc, file, api }) {
         warnings: exitCode === 0 ? stderr : '',
         error: exitCode === 1 ? stderr : '',
         exitCode,
+      };
+    }
+    if (ledgerArgs) {
+      if (heredoc !== undefined) fs.writeFileSync(journalPath, heredoc);
+      const result = spawnSync(process.env.LEDGER_BIN ?? 'ledger', [
+        '--file', journalPath, ...ledgerArgs,
+      ], { cwd: temporaryDirectory, encoding: 'utf8' });
+      if (result.error) throw result.error;
+      if (result.signal) throw new Error(`Ledger terminated with signal ${result.signal}`);
+      actual.ledgerCli = {
+        output: result.stdout,
+        warnings: result.status === 0 ? result.stderr : '',
+        error: result.status === 0 ? '' : result.stderr,
+        exitCode: result.status,
       };
     }
     if (api) {

@@ -1,0 +1,35 @@
+Ledger and Ledlight produce the same inverted balances.
+
+========== CLI ==========
+
+ledlight aggregate --accounts Expenses: --invert
+
+========== LEDGER-CLI ==========
+
+ledger --args-only --date-format %Y-%m-%d --no-pager --sort account --invert balance --flat --no-total --format '%1(display_total)  %(account)\n' '^Expenses:'
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Equity:Opening
+account Expenses:Food
+account Income:Salary
+
+2024-01-01 Opening balances
+  Assets:Cash  1000.00 SEK
+  Equity:Opening
+
+2024-01-15 Groceries
+  Expenses:Food  125.50 SEK
+  Assets:Cash
+
+2024-02-01 Salary
+  Assets:Cash  2500.00 SEK
+  Income:Salary
+
+========== OUTPUT ==========
+
+-125.50 SEK  Expenses:Food
