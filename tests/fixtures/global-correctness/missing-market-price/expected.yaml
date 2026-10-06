@@ -1,6 +1,0 @@
-runs:
-  - command: unrealized-gains --to 2024-03-31 --format json
-    expect:
-      exitCode: 1
-      error: No price for FUND on or before 2024-03-31 can convert it to USD
-      warnings: []

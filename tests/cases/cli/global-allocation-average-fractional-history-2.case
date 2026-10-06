@@ -1,0 +1,54 @@
+Global correctness: allocation-average-fractional-history, run 2.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-04-30 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-01 FUND 4 USD
+P 2024-03-01 FUND 10 USD
+
+2024-01-01 Buy cheap units
+  Assets:Broker  3 FUND {{3 USD}}
+  Assets:Bank  -3 USD
+
+2024-01-02 Buy expensive units
+  Assets:Broker  3 FUND {{9 USD}}
+  Assets:Bank  -9 USD
+
+2024-02-01 Average-cost first sale
+  Assets:Broker  -1 FUND {{2 USD}} @@ 4 USD
+  Assets:Bank  4 USD
+  Income:CapitalGains  -2 USD
+
+2024-03-01 Buy new units
+  Assets:Broker  1 FUND {{8 USD}}
+  Assets:Bank  -8 USD
+
+2024-04-01 Average-cost second sale
+  Assets:Broker  -3 FUND {{9 USD}} @@ 30 USD
+  Assets:Bank  30 USD
+  Income:CapitalGains  -21 USD
+
+2024-05-01 Final sale
+  Assets:Broker  -3 FUND {{9 USD}} @@ 30 USD
+  Assets:Bank  30 USD
+  Income:CapitalGains  -21 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Broker",
+    "quantity": "21",
+    "commodity": "USD"
+  }
+]

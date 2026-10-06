@@ -1,0 +1,49 @@
+Global correctness: allocation-future-purchase, run 1.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-02-28 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-01 FUND 4 USD
+
+2024-01-01 Initial purchase
+  Assets:Broker  10 FUND {{10 USD}}
+  Assets:Bank  -10 USD
+
+2024-02-01 Sale before expensive purchase
+  Assets:Broker  -5 FUND {{10 USD}} @@ 20 USD
+  Assets:Bank  20 USD
+  Income:CapitalGains  -10 USD
+
+2024-03-01 Later expensive purchase
+  Assets:Broker  10 FUND {{30 USD}}
+  Assets:Bank  -30 USD
+
+2024-04-01 Close all units
+  Assets:Broker  -15 FUND {{30 USD}} @@ 60 USD
+  Assets:Bank  60 USD
+  Income:CapitalGains  -30 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Broker",
+    "quantity": "20",
+    "commodity": "USD"
+  }
+]
+
+========== WARNINGS ==========
+
+[IMPOSSIBLE_COST_BASIS] Sale before expensive purchase: Assets:Broker sold 5 FUND with cost 10 USD; allowed range is 5 to 5 USD
+  <stdin>:17:3

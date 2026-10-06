@@ -1,0 +1,34 @@
+Global correctness: partial-lifo, run 1.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-01-31 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-31 FUND 150 USD
+P 2024-03-01 FUND 200 USD
+
+2024-01-01 First purchase
+  Assets:Broker  5 FUND {100 USD}
+  Assets:Bank  -500 USD
+
+2024-01-02 Second purchase
+  Assets:Broker  5 FUND {{1000 USD}}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Partial sale with user-selected basis
+  Assets:Broker  -4 FUND {{800 USD}} @ 250 USD
+  Assets:Bank  1000 USD
+  Income:CapitalGains  -200 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[]

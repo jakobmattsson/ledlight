@@ -1,0 +1,28 @@
+The unrealized-gains report exposes full history warnings.
+
+========== CLI ==========
+
+ledlight unrealized-gains --format json --to 2024-01-01 --accounts ^Assets:Bank$ <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Assets:Broker
+account Assets:Bank
+P 2024-01-01 FUND 100 USD
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {{1000 USD}}
+  Assets:Bank  -1000 USD
+2024-02-01 Bankruptcy with missing cost disposal
+  Assets:Broker  -10 FUND {{0 USD}} @@ 0 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[]
+
+========== WARNINGS ==========
+
+[RESIDUAL_COST_BASIS] Assets:Broker: zero FUND units retain cost basis 1000 USD
+  <stdin>:13:3

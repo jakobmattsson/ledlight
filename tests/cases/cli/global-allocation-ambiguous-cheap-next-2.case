@@ -1,0 +1,53 @@
+Global correctness: allocation-ambiguous-cheap-next, run 2.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-01 FUND 4 USD
+
+2024-01-01 Buy cheap units
+  Assets:Broker  10 FUND {{10 USD}}
+  Assets:Bank  -10 USD
+
+2024-01-02 Buy middle units
+  Assets:Broker  10 FUND {{20 USD}}
+  Assets:Bank  -20 USD
+
+2024-01-03 Buy expensive units
+  Assets:Broker  10 FUND {{30 USD}}
+  Assets:Bank  -30 USD
+
+2024-02-01 Ambiguous first sale
+  Assets:Broker  -10 FUND {{20 USD}} @@ 40 USD
+  Assets:Bank  40 USD
+  Income:CapitalGains  -20 USD
+
+2024-03-01 Second sale
+  Assets:Broker  -10 FUND {{10 USD}} @@ 40 USD
+  Assets:Bank  40 USD
+  Income:CapitalGains  -30 USD
+
+2024-04-01 Final sale
+  Assets:Broker  -10 FUND {{30 USD}} @@ 40 USD
+  Assets:Bank  40 USD
+  Income:CapitalGains  -10 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Broker",
+    "quantity": "10",
+    "commodity": "USD"
+  }
+]

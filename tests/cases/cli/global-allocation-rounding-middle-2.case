@@ -1,0 +1,39 @@
+Global correctness: allocation-rounding-middle, run 2.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-04-30 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-01-01 FUND 1 USD
+
+2024-01-01 Purchase
+  Assets:Broker  3 FUND {{1 USD}}
+  Assets:Bank  -1 USD
+
+2024-02-01 Sale 1
+  Assets:Broker  -1 FUND {{0.33 USD}} @@ 1 USD
+  Assets:Bank  1 USD
+  Income:CapitalGains  -0.67 USD
+
+2024-03-01 Sale 2
+  Assets:Broker  -1 FUND {{0.34 USD}} @@ 1 USD
+  Assets:Bank  1 USD
+  Income:CapitalGains  -0.66 USD
+
+2024-04-01 Sale 3
+  Assets:Broker  -1 FUND {{0.33 USD}} @@ 1 USD
+  Assets:Bank  1 USD
+  Income:CapitalGains  -0.67 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[]

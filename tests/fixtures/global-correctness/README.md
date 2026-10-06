@@ -1,72 +1,20 @@
 # Global accounting correctness scenarios
 
-Each scenario contains a standalone `journal.ledger`, an `expected.yaml` with
-concrete CLI runs, and `NOTES.md` explaining the calculations. The expected
-results are derived from the accounting examples, never copied from Ledger CLI
-output. No configured accounting instance is required.
+The executable scenarios are `tests/cases/cli/global-*.case`. Each case contains
+its own journal, CLI command, and exact OUTPUT, WARNINGS, or ERROR expectation.
+The expectations are derived from the accounting examples, never copied from
+Ledger CLI output. No configured accounting instance is required.
 
-## Read a scenario as a command
+Each scenario name below has one or more numbered case files. For example,
+`global-allocation-below-minimum-1.case` runs `unrealized-gains` against its
+embedded journal. A second numbered case can query a later snapshot of the
+same accounting history.
 
-For example, `allocation-below-minimum/expected.yaml` specifies:
-
-```yaml
-runs:
-  - command: unrealized-gains --to 2024-02-28 --format json
-    expect:
-      exitCode: 0
-      result:
-        - account: Assets:Broker
-          quantity: "27.99"
-          commodity: USD
-      warnings:
-        - "[IMPOSSIBLE_COST_BASIS] Impossible first sale: Assets:Broker sold 11 FUND with cost 11.99 USD; allowed range is 12 to 32 USD"
-```
-
-The journal balances, but selling eleven units cannot consume less than 12 USD
-of its available acquisition cost. The report still shows the result calculated
-from the booked values, accompanied by a warning. After full liquidation the
-result becomes `[]`, while the warning about the earlier sale remains.
-
-To run a scenario manually, use its `command`, prefixed with `node src/cli/run.js`,
-and add `--file tests/fixtures/global-correctness/<scenario>/journal.ledger`.
-
-## Expected output contract
-
-- `command` is the actual report command, including snapshot date and any
-  account filters. The runner passes arguments directly to Node without a shell
-  and adds the path to a test-owned temporary copy of the journal.
-- `expect.exitCode` is the process exit code: 0 for a completed report, including
-  reports with accounting warnings; 1 when required data prevents calculation.
-- `expect.result` is the complete parsed JSON from stdout, including row order.
-  Quantities are exact decimal strings. Zero-gain accounts and closed positions
-  are omitted. A residual basis on a closed position must appear in warnings,
-  not as a phantom unrealized gain.
-- `expect.warnings` is the complete ordered list of diagnostic summary lines on
-  stderr. `[]` explicitly requires no warnings. Indented source-location lines
-  are excluded from comparison because their temporary paths vary.
-- `expect.error` replaces `result` when calculation fails. It is the exact error
-  line on stderr; stdout must be empty. Unknown basis or market value must not
-  be replaced with zero. The current CLI emits the fatal error without ingestion
-  warnings, which these error scenarios preserve.
-
-All warning expectations are active assertions. Warnings cover the complete
-journal, independently of the command, account filters, and report dates.
-Consequently an earlier snapshot can include a warning about a later disposal.
-`IMPOSSIBLE_COST_BASIS`, `RESIDUAL_COST_BASIS`, and `RESULT_MISMATCH` are shared
-ingestion diagnostics persisted in the journal cache. Valid transfers and splits
-preserve basis without producing `INVALID_COMMODITY_TRADE` warnings.
-
-The output policy is explicit: computable booked results remain visible with
-warnings for invalid accounting. A report without warnings is the intended
-outcome for valid examples, regardless of the user's allocation method. Missing
-information needed for the numerical result produces a fatal error.
-
-## Verification and supporting calculations
-
-Run `node --test tests/integration/global-correctness.test.js` for these scenarios,
-`npm run test:integration` for all integration tests, or `npm test` for canonical
-project verification. The runner actually launches the CLI for every command
-using an isolated journal copy and cache. It does not invoke Ledger.
+The case runner invokes Ledlight in process and compares complete output and
+warning text. Warnings cover the complete journal, independently of command,
+account filters, and report dates. Consequently an earlier snapshot can include
+a warning about a later disposal. A required valuation or basis that cannot be
+calculated produces ERROR and exit code 1.
 
 `NOTES.md` retains positions, cash flows, realized and unrealized results,
 hand-derived disposal bounds, and example feasible allocations. Those figures
@@ -76,15 +24,16 @@ a successful report does not expose its computed disposal interval. Boundary
 acceptance and rejection scenarios test observable consequences; exact successful
 intervals and allocation witnesses remain explanatory calculations.
 
-The fixtures verify global correctness and allocation validation. See
-[ALLOCATION.md](ALLOCATION.md) for history-dependent bounds, proportional
-allocations, chronological order, transfers and splits.
+Run `node --test tests/integration/src/cli/cli-cases.test.js` for these scenarios,
+`npm run test:integration` for all integration tests, or `npm test` for canonical
+project verification. See [ALLOCATION.md](ALLOCATION.md) for history-dependent
+bounds, proportional allocations, chronological order, transfers and splits.
 
 ## Scenarios and expected results
 
 Amounts below are USD at the last snapshot. Realized results are after separately
-expensed fees. Exact report expectations, including earlier dates, are in each
-directory's `expected.yaml`; position-level calculations are in `NOTES.md`.
+expensed fees. Exact report expectations, including earlier dates, are in the numbered
+`global-*.case` files; position-level calculations are in `NOTES.md`.
 
 | Scenario | Net realized | Unrealized | Economic result | Expected outcome |
 | --- | ---: | ---: | ---: | --- |

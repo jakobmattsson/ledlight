@@ -1,0 +1,34 @@
+Global correctness: sold-with-negative-residual, run 1.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-03-01 FUND 100 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Sell every unit with incorrect total basis
+  Assets:Broker  -10 FUND {{1100 USD}} @@ 1000 USD
+  Assets:Bank  1000 USD
+  Income:CapitalGains  100 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[]
+
+========== WARNINGS ==========
+
+[RESIDUAL_COST_BASIS] Assets:Broker: zero FUND units retain cost basis -100 USD
+  <stdin>:17:3

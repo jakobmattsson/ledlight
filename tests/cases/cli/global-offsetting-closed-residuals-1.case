@@ -1,0 +1,48 @@
+Global correctness: offsetting-closed-residuals, run 1.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+commodity OTHER
+  format 1,000.000 OTHER
+account Assets:Bank
+account Assets:Broker
+account Income:CapitalGains
+
+P 2024-03-01 FUND 100 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-01-02 Purchase another commodity
+  Assets:Broker  10 OTHER {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Close first commodity with too little basis
+  Assets:Broker  -10 FUND {{900 USD}} @@ 1000 USD
+  Assets:Bank  1000 USD
+  Income:CapitalGains  -100 USD
+
+2024-02-02 Close second commodity with too much basis
+  Assets:Broker  -10 OTHER {{1100 USD}} @@ 1000 USD
+  Assets:Bank  1000 USD
+  Income:CapitalGains  100 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[]
+
+========== WARNINGS ==========
+
+[RESIDUAL_COST_BASIS] Assets:Broker: zero FUND units retain cost basis 100 USD
+  <stdin>:23:3
+
+[RESIDUAL_COST_BASIS] Assets:Broker: zero OTHER units retain cost basis -100 USD
+  <stdin>:28:3

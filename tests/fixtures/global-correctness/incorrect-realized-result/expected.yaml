@@ -1,9 +1,0 @@
-runs:
-  - command: unrealized-gains --to 2024-03-31 --format json
-    expect:
-      exitCode: 0
-      result: []
-      warnings:
-        - "[UNBALANCED_TRANSACTION] Transaction does not balance: 100 USD"
-        - "[RESULT_MISMATCH] Realized plus unrealized result differs from cash flows and remaining
-          market value by -100 USD"

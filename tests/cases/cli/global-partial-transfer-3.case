@@ -1,0 +1,34 @@
+Global correctness: partial-transfer, run 3.
+
+========== CLI ==========
+
+ledlight unrealized-gains --to 2024-03-31 --format json --accounts Assets:OtherBroker <<'LEDGER'
+commodity USD
+  format 1,000.00 USD
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Bank
+account Assets:Broker
+account Assets:OtherBroker
+
+P 2024-03-01 FUND 120 USD
+
+2024-01-01 Purchase
+  Assets:Broker  10 FUND {100 USD}
+  Assets:Bank  -1000 USD
+
+2024-02-01 Transfer between owned accounts
+  Assets:Broker  -4 FUND {100 USD}
+  Assets:OtherBroker  4 FUND {100 USD}
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:OtherBroker",
+    "quantity": "80",
+    "commodity": "USD"
+  }
+]

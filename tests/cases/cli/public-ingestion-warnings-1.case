@@ -1,0 +1,38 @@
+The aggregate report exposes ingestion warnings.
+
+========== CLI ==========
+
+ledlight aggregate --accounts Assets: --format json <<'LEDGER'
+commodity SEK
+  format 1,000.00 SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-30 Invalid date
+  Assets:Ignored  100 SEK
+  Equity:Opening
+2024-01-01 Incorrect assertion and balance
+  Assets:Cash  10 SEK = 11 SEK
+  Equity:Opening  -9 SEK
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "10"
+  }
+]
+
+========== WARNINGS ==========
+
+[SYNTAX_ERROR] Invalid date "2024-02-30"
+  <stdin>:6:1 (affected lines 6-8)
+
+[BALANCE_ASSERTION_FAILED] Balance assertion failed: expected 11 SEK, got 10 SEK
+  <stdin>:10:3
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: 1 SEK
+  <stdin>:9:1

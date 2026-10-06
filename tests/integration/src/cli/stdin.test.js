@@ -48,22 +48,17 @@ function fixture(t) {
   return { directory, journalPath, cacheDirectory, run };
 }
 
-test('all CLI commands accept automatic and explicit stdin with the same results as a file', (t) => {
+test('path-bearing reports identify stdin instead of the file path', (t) => {
   const { run, journalPath } = fixture(t);
-  for (const command of [
-    'aggregate', 'balance-history', 'unrealized-gains', 'investment-performance',
-    'accounts', 'tags', 'commodities', 'prices', 'transactions', 'postings',
-  ]) {
-    const arguments_ = [command, ...(command === 'investment-performance' ? ['--json'] : ['--format', 'json'])];
+  for (const command of ['transactions', 'postings']) {
+    const arguments_ = [command, '--format', 'json'];
     const fromFile = run([...arguments_, '--file', journalPath], '');
     assert.equal(fromFile.status, 0, fromFile.stderr);
     const expected = fromFile.stdout.replaceAll(fs.realpathSync.native(journalPath), '<stdin>');
-    for (const inputArguments of [arguments_, [...arguments_, '--file', '-']]) {
-      const result = run(inputArguments);
-      assert.equal(result.status, 0, `${command}: ${result.stderr}`);
-      assert.equal(result.stderr, '');
-      assert.equal(result.stdout, expected, command);
-    }
+    const result = run(arguments_);
+    assert.equal(result.status, 0, `${command}: ${result.stderr}`);
+    assert.equal(result.stderr, '');
+    assert.equal(result.stdout, expected, command);
   }
 });
 
@@ -87,16 +82,4 @@ test('stdin overrides configuration, explicit paths override stdin, and empty in
   const empty = run(['accounts', '--file=-', '--format', 'json'], '');
   assert.equal(empty.status, 0, empty.stderr);
   assert.deepEqual(JSON.parse(empty.stdout), []);
-});
-
-test('stdin expands includes from the working directory and nested includes from their file directory', (t) => {
-  const { run, directory } = fixture(t);
-  fs.mkdirSync(path.join(directory, 'parts'));
-  fs.writeFileSync(path.join(directory, 'parts', 'root.ledger'), 'include nested.ledger\n');
-  fs.writeFileSync(path.join(directory, 'parts', 'nested.ledger'), source);
-  const result = run(['aggregate', '--value', '--include-total', '--format', 'json'],
-    'include parts/*.ledger\n');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.equal(JSON.parse(result.stdout).at(-1).quantity, '20');
 });

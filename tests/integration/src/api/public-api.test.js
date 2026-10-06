@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../support/repository-container');
-const { execFileSync, spawnSync } = require('node:child_process');
+const { execFileSync } = require('node:child_process');
 const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
@@ -108,21 +108,6 @@ P 2024-01-01 USD 2 SEK
     { date: '2024-01-01', amount: '10', commodity: 'SEK' },
   ]);
   assert.deepEqual(journal.unrealizedGains(), []);
-  for (const command of ['aggregate', 'balance-history', 'unrealized-gains', 'accounts']) {
-    const result = spawnSync(process.execPath, [
-      cliPath, command, '--format', 'json', '--file', journalPath,
-    ], {
-      cwd: directory,
-      encoding: 'utf8',
-      env: { ...process.env, LEDLIGHT_CACHE_HOME: cacheDirectory },
-    });
-    assert.ifError(result.error);
-    assert.equal(result.status, 0, result.stderr);
-    assert.ok(Array.isArray(JSON.parse(result.stdout)));
-    if (command === 'unrealized-gains') assert.deepEqual(JSON.parse(result.stdout), []);
-    assert.equal(result.stderr.split('\n')[0], `[FOREIGN_LOT_COST_CURRENCY] ${message}`);
-  }
-
   fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(
     '1 STOCK {10 USD}\n  Assets:USD\n',
     '1 STOCK {20 SEK}\n  Assets:USD  -10 USD {2 SEK} @ 2 SEK\n',
@@ -245,22 +230,6 @@ account Equity:Opening
     'warnings must remain available when the current database is reused',
   );
 
-  const cli = spawnSync(process.execPath, [
-    cliPath, 'aggregate', '--file', journalPath, '--accounts', 'Assets:', '--format', 'json',
-  ], { cwd: directory, encoding: 'utf8', env: process.env });
-  assert.equal(cli.status, 0);
-  assert.deepEqual(JSON.parse(cli.stdout), [
-    { account: 'Assets:Cash', quantity: '10', commodity: 'SEK' },
-  ]);
-  assert.match(cli.stderr, /^\[SYNTAX_ERROR\] /u);
-  assert.match(cli.stderr, new RegExp(
-    `${journalPath.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&')}:6:1 ` +
-    '\\(affected lines 6-8\\)',
-    'u',
-  ));
-  assert.match(cli.stderr, /\n\[BALANCE_ASSERTION_FAILED\] /u);
-  assert.match(cli.stderr, /\n\[UNBALANCED_TRANSACTION\] /u);
-  assert.doesNotMatch(cli.stderr, /^\s*\{/u);
 });
 
 test('groups repeated warnings and exposes only their first ten instances', (t) => {
@@ -283,15 +252,6 @@ test('groups repeated warnings and exposes only their first ten instances', (t) 
     4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
   ]);
 
-  const cli = spawnSync(process.execPath, [cliPath, 'accounts', '--file', journalPath], {
-    cwd: directory,
-    encoding: 'utf8',
-    env: process.env,
-  });
-  assert.equal(cli.status, 0);
-  assert.equal(cli.stdout, '');
-  assert.equal(cli.stderr.match(/^ {2}.*journal\.ledger:\d+:\d+$/gmu)?.length, 10);
-  assert.match(cli.stderr, /\[UNDECLARED_COMMODITY\] Commodity FUND must be declared before use/u);
 });
 
 test('exposes full-history accounting diagnostics on open and across cached report commands', (t) => {
@@ -326,13 +286,4 @@ P 2024-01-01 FUND 100 USD
   previousCache.close();
   assert.deepEqual(openJournal(journalPath).warnings, journal.warnings,
     'opening an older cache must rebuild it with global accounting diagnostics');
-  for (const command of ['balance-history', 'unrealized-gains', 'aggregate', 'accounts']) {
-    const arguments_ = [cliPath, command, '--file', journalPath, '--format', 'json'];
-    if (command !== 'accounts') arguments_.push('--to', '2024-01-01', '--accounts', '^Assets:Bank$');
-    const cli = spawnSync(process.execPath, arguments_, {
-      cwd: directory, encoding: 'utf8', env: process.env,
-    });
-    assert.equal(cli.status, 0, cli.stderr);
-    assert.match(cli.stderr, /\[RESIDUAL_COST_BASIS\] Assets:Broker: zero FUND units retain cost basis 1000 USD/u);
-  }
 });

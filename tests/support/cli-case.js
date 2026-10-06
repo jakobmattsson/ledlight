@@ -104,8 +104,10 @@ function parseCase(fileName) {
     if (!match) throw new Error(`${fileName}: expected a ledlight command in CLI`);
     cliArgs = parseArguments(match[1] ?? '');
     if (cliArgs.length === 0) throw new Error(`${fileName}: expected a CLI command`);
-    if (cliArgs.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
-      throw new Error(`${fileName}: the case supplies the journal; omit --file`);
+    if (cliArgs.some((argument, index) =>
+      (argument === '--file' && (!hasHeredoc || cliArgs[index + 1] !== '-')) ||
+      (argument.startsWith('--file=') && (!hasHeredoc || argument !== '--file=-')))) {
+      throw new Error(`${fileName}: the case supplies the journal; use --file - only for stdin`);
     }
     if (hasHeredoc) {
       const journalEnd = cliLines.indexOf('LEDGER', 1);
@@ -164,6 +166,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }) {
   const container = createRepositoryContainer();
   container.register({
     standardInput: asValue({ isTTY: () => false, read: () => heredoc }),
+    currentWorkingDirectory: asValue(() => temporaryDirectory),
     os: asValue({ tmpdir: () => temporaryDirectory }),
     processEnvironment: asValue({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
   });

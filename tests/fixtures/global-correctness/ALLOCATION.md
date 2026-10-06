@@ -5,9 +5,9 @@ and costs explain every disposal, in order, with all relevant movements and
 adjustments accounted for? The validator must neither select a particular lot
 method nor require that sold whole shares identify particular original shares.
 
-These scenarios exercise the shared ingestion validator. `expected.yaml`
-specifies actual `unrealized-gains` commands with exact rows, warnings, errors,
-and exit codes; every assertion is active. Warnings always cover the complete
+These scenarios exercise the shared ingestion validator. The numbered
+`tests/cases/cli/global-*.case` files specify actual `unrealized-gains` commands
+with exact rows, warnings, errors, and exit codes; every assertion is active. Warnings always cover the complete
 journal, even when the report selects an earlier snapshot. Hand-derived bounds
 and witness allocations remain in each scenario's `NOTES.md`.
 
