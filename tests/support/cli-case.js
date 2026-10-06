@@ -143,17 +143,14 @@ function runCase({ arguments_, journal, file, api }) {
   let remaining;
   try {
     if (arguments_) {
-      const resultText = { output: '', warnings: '', error: '', exitCode: 0 };
       const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
-      resultText.exitCode = executeCli({
-        reportCommand: modules.reportCommand,
-        output: {
-          writeOutput(value) { resultText.output += value; },
-          writeWarnings(warnings) { resultText.warnings += modules.cliFormat.formatWarnings(warnings); },
-          writeError(value) { resultText.error += value; },
-        },
-      }, cliArguments);
-      actual.cli = resultText;
+      const result = executeCli(modules.reportCommand, cliArguments);
+      actual.cli = {
+        output: result.output,
+        warnings: modules.cliFormat.formatWarnings(result.warnings),
+        error: result.error,
+        exitCode: result.exitCode,
+      };
     }
     if (api) {
       if (!file) fs.writeFileSync(journalPath, journal);

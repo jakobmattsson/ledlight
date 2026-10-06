@@ -1,14 +1,11 @@
 'use strict';
 
-function executeCli({ reportCommand, output }, arguments_) {
+function executeCli(reportCommand, arguments_) {
   try {
     const result = reportCommand.run(arguments_);
-    output.writeOutput(result.output);
-    output.writeWarnings(result.warnings);
-    return 0;
+    return { output: result.output, warnings: result.warnings, error: '', exitCode: 0 };
   } catch (error) {
-    output.writeError(`${error.message}\n`);
-    return 1;
+    return { output: '', warnings: [], error: `${error.message}\n`, exitCode: 1 };
   }
 }
 
