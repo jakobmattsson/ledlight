@@ -1,4 +1,6 @@
-# A heredoc and the public API produce the same filtered total.
+A heredoc and the public API produce the same filtered total.
+
+========== CLI ==========
 
 ledlight aggregate --accounts '^Assets:' --include-total --format json <<'LEDGER'
 commodity SEK
@@ -13,8 +15,11 @@ account Equity:Opening
 LEDGER
 
 ========== API ==========
+
 aggregate({ accounts: ['^Assets:'], includeTotal: true })
+
 ========== STDOUT ==========
+
 [
   {
     "account": "Assets:Cash",

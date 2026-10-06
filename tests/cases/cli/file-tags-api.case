@@ -1,7 +1,11 @@
-# A file-backed tag listing agrees with the public API after CLI name formatting.
+A file-backed tag listing agrees with the public API after CLI name formatting.
+
+========== CLI ==========
 
 ledlight tags --format json
+
 ========== FILE ==========
+
 commodity SEK
   default
   format 1,000.00 SEK
@@ -13,9 +17,13 @@ account Equity:Opening
   ; Imported: yes
   Assets:Cash  100 SEK
   Equity:Opening
+
 ========== STDOUT ==========
+
 [
   "Imported"
 ]
+
 ========== API ==========
+
 tags({})

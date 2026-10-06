@@ -1,4 +1,6 @@
-# An undeclared account produces a source-positioned warning.
+An undeclared account produces a source-positioned warning.
+
+========== CLI ==========
 
 ledlight aggregate --format json <<'LEDGER'
 commodity SEK
@@ -15,6 +17,7 @@ P 2024-01-01 STOCK 12 SEK
 LEDGER
 
 ========== STDOUT ==========
+
 [
   {
     "account": "Assets:Cash",
@@ -27,6 +30,8 @@ LEDGER
     "quantity": "10"
   }
 ]
+
 ========== STDERR ==========
+
 [UNDECLARED_ACCOUNT] Account Assets:Stock must be declared before use
   <stdin>:10:3

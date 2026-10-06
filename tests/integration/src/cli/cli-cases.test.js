@@ -25,7 +25,7 @@ for (const fileName of fs.readdirSync(directory).filter((name) => name.endsWith(
     const actual = runCase(expected);
     if (expected.stdout !== undefined) assert.equal(actual.stdout, expected.stdout);
     if (expected.stderr !== undefined) assert.equal(actual.stderr, expected.stderr);
-    if (expected.api) {
+    if (expected.api && expected.arguments_) {
       assert.deepEqual(presentedApiResult(expected, actual.apiResult), JSON.parse(actual.stdout));
     }
   });

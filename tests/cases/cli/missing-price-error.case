@@ -1,4 +1,6 @@
-# A valuation without a price fails on stderr.
+A valuation without a price fails on stderr.
+
+========== CLI ==========
 
 ledlight aggregate --value <<'LEDGER'
 commodity SEK
@@ -15,4 +17,5 @@ account Assets:Cash
 LEDGER
 
 ========== STDERR ==========
+
 No price for STOCK on or before 9999-12-31 can convert it to SEK

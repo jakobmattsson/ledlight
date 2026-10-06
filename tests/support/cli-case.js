@@ -9,6 +9,7 @@ const { createRepositoryContainer } = require('../../src/composition/repository-
 const createReportCommand = require('../../src/cli/modules/report-command');
 
 const HEADERS = new Map([
+  ['========== CLI ==========', 'cli'],
   ['========== FILE ==========', 'file'],
   ['========== API ==========', 'api'],
   ['========== STDOUT ==========', 'stdout'],
@@ -47,36 +48,54 @@ function parseArguments(command) {
 function parseCase(fileName) {
   const lines = fs.readFileSync(fileName, 'utf8').replaceAll('\r\n', '\n').split('\n');
   if (lines.at(-1) === '') lines.pop();
-  let index = 0;
-  while (lines[index] === '' || lines[index]?.startsWith('#')) index += 1;
-  const command = lines[index] ?? '';
-  const heredoc = /[ \t]+<<(?:LEDGER|'LEDGER'|"LEDGER")$/u.test(command);
-  const commandText = heredoc ? command.replace(/[ \t]+<<(?:LEDGER|'LEDGER'|"LEDGER")$/u, '') : command;
-  const match = /^ledlight(?:[ \t]+(.+))?$/u.exec(commandText);
-  if (!match) throw new Error(`${fileName}: expected a ledlight command`);
-  const arguments_ = parseArguments(match[1] ?? '');
-  if (arguments_.length === 0) throw new Error(`${fileName}: expected a CLI command`);
-  if (arguments_.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
-    throw new Error(`${fileName}: the case supplies the journal; omit --file`);
-  }
-  index += 1;
-  let journal;
-  if (heredoc) {
-    const journalEnd = lines.indexOf('LEDGER', index);
-    if (journalEnd < 0) throw new Error(`${fileName}: missing LEDGER terminator`);
-    journal = `${lines.slice(index, journalEnd).join('\n')}\n`;
-    index = journalEnd + 1;
-  }
-  while (lines[index] === '') index += 1;
-  const section = (start, end) => start === end ? '' : `${lines.slice(start, end).join('\n')}\n`;
   const sections = {};
-  while (index < lines.length) {
+  for (let index = 0; index < lines.length;) {
     const name = HEADERS.get(lines[index]);
-    if (!name) throw new Error(`${fileName}: unknown section header at line ${index + 1}`);
+    if (!name) {
+      if (Object.keys(sections).length > 0) {
+        throw new Error(`${fileName}: text outside a section at line ${index + 1}`);
+      }
+      index += 1;
+      continue;
+    }
     if (Object.hasOwn(sections, name)) throw new Error(`${fileName}: duplicate ${name} section`);
-    const start = ++index;
+    let start = ++index;
     while (index < lines.length && !HEADERS.has(lines[index])) index += 1;
-    sections[name] = section(start, index);
+    let end = index;
+    if (lines[start] === '') start += 1;
+    if (lines[end - 1] === '') end -= 1;
+    sections[name] = start >= end ? '' : `${lines.slice(start, end).join('\n')}\n`;
+  }
+  const cli = sections.cli;
+  if (cli === undefined && sections.api === undefined) {
+    throw new Error(`${fileName}: expected a CLI or API section`);
+  }
+  let arguments_;
+  let journal;
+  let heredoc = false;
+  if (cli !== undefined) {
+    const cliLines = cli.endsWith('\n') ? cli.slice(0, -1).split('\n') : cli.split('\n');
+    const command = cliLines[0] ?? '';
+    heredoc = /[ \t]+<<(?:LEDGER|'LEDGER'|"LEDGER")$/u.test(command);
+    const commandText = heredoc
+      ? command.replace(/[ \t]+<<(?:LEDGER|'LEDGER'|"LEDGER")$/u, '')
+      : command;
+    const match = /^ledlight(?:[ \t]+(.+))?$/u.exec(commandText);
+    if (!match) throw new Error(`${fileName}: expected a ledlight command in CLI`);
+    arguments_ = parseArguments(match[1] ?? '');
+    if (arguments_.length === 0) throw new Error(`${fileName}: expected a CLI command`);
+    if (arguments_.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
+      throw new Error(`${fileName}: the case supplies the journal; omit --file`);
+    }
+    if (heredoc) {
+      const journalEnd = cliLines.indexOf('LEDGER', 1);
+      if (journalEnd < 0 || journalEnd !== cliLines.length - 1) {
+        throw new Error(`${fileName}: CLI needs a closing LEDGER line`);
+      }
+      journal = `${cliLines.slice(1, journalEnd).join('\n')}\n`;
+    } else if (cliLines.length !== 1) {
+      throw new Error(`${fileName}: CLI contains text after the command`);
+    }
   }
   if (heredoc === Object.hasOwn(sections, 'file')) {
     throw new Error(`${fileName}: provide exactly one of a LEDGER heredoc or FILE section`);
@@ -86,6 +105,9 @@ function parseCase(fileName) {
       !Object.hasOwn(sections, 'stderr') &&
       !Object.hasOwn(sections, 'api')) {
     throw new Error(`${fileName}: expected STDOUT, STDERR, or API`);
+  }
+  if (cli === undefined && sections.stdout === undefined && sections.stderr === undefined) {
+    throw new Error(`${fileName}: an API-only case needs STDOUT or STDERR`);
   }
   let api;
   if (Object.hasOwn(sections, 'api')) {
@@ -103,7 +125,7 @@ function parseCase(fileName) {
 function runCase({ arguments_, journal, file, api }) {
   const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-case-'));
   const journalPath = path.join(temporaryDirectory, 'journal.ledger');
-  if (file || api) fs.writeFileSync(journalPath, journal);
+  if (file) fs.writeFileSync(journalPath, journal);
   const container = createRepositoryContainer();
   container.register({
     standardInput: asValue({ isTTY: () => false, read: () => journal }),
@@ -117,22 +139,37 @@ function runCase({ arguments_, journal, file, api }) {
   let actual;
   let remaining;
   try {
-    try {
-      const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
-      const result = modules.reportCommand.run(cliArguments);
-      actual = {
-        stdout: result.output,
-        stderr: modules.cliFormat.formatWarnings(result.warnings),
-      };
-    } catch (error) {
-      actual = { stdout: '', stderr: `${error.message}\n` };
+    if (arguments_) {
+      try {
+        const cliArguments = file ? [arguments_[0], '--file', journalPath, ...arguments_.slice(1)] : arguments_;
+        const result = modules.reportCommand.run(cliArguments);
+        actual = {
+          stdout: result.output,
+          stderr: modules.cliFormat.formatWarnings(result.warnings),
+        };
+      } catch (error) {
+        actual = { stdout: '', stderr: `${error.message}\n` };
+      }
     }
     if (api) {
-      const journalApi = container.resolve('project').openJournal(journalPath);
-      if (!Object.hasOwn(journalApi, api.method) || typeof journalApi[api.method] !== 'function') {
-        throw new Error(`Unknown journal API method: ${api.method}`);
+      if (!file) fs.writeFileSync(journalPath, journal);
+      try {
+        const journalApi = container.resolve('project').openJournal(journalPath);
+        if (!Object.hasOwn(journalApi, api.method) || typeof journalApi[api.method] !== 'function') {
+          throw new Error(`Unknown journal API method: ${api.method}`);
+        }
+        const apiResult = journalApi[api.method](api.options);
+        if (arguments_) actual.apiResult = apiResult;
+        else {
+          actual = {
+            stdout: `${JSON.stringify(apiResult, null, 2)}\n`,
+            stderr: modules.cliFormat.formatWarnings(journalApi.warnings),
+          };
+        }
+      } catch (error) {
+        if (arguments_) throw error;
+        actual = { stdout: '', stderr: `${error.message}\n` };
       }
-      actual.apiResult = journalApi[api.method](api.options);
     }
   } finally {
     remaining = fs.readdirSync(temporaryDirectory)

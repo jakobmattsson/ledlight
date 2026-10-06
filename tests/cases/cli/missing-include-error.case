@@ -1,8 +1,11 @@
-# A missing include fails with a stdin source location.
+A missing include fails with a stdin source location.
+
+========== CLI ==========
 
 ledlight accounts <<'LEDGER'
 include missing/*.ledger
 LEDGER
 
 ========== STDERR ==========
+
 <stdin>:1: include matched no files: missing/*.ledger
