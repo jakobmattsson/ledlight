@@ -19,19 +19,17 @@
     "sqlite"
   ],
   "type": "commonjs",
-  "main": "index.js",
+  "main": "src/index.js",
   "exports": {
-    ".": "./index.js"
+    ".": "./src/index.js"
   },
   "files": [
     "docs/api.md",
     "docs/ledger-cli-equivalence.md",
     "docs/ledlight.md",
     "docs/package.md",
-    "index.js",
     "scripts",
-    "src",
-    "!src/ingestion/syntax/reference"
+    "src"
   ],
   "bin": {
     "ledlight": "src/cli/run.js",
@@ -44,6 +42,7 @@
     "access": "public"
   },
   "scripts": {
+    "benchmark": "node benchmarks/run.js",
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
     "lint": "eslint .",

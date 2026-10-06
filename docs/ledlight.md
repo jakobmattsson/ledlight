@@ -241,7 +241,7 @@ The implementation is organized by responsibility directly under `src`:
 - `core` contains project composition for the stable Node.js API,
   public errors, shared runtime-input validation, exact decimal arithmetic, and
   valuation logic;
-- `ingestion` owns the optimized parser and normative Ohm grammar, traverses
+- `ingestion` owns the optimized parser, traverses
   journal includes, validates and resolves journal postings, persists the
   normalized database, and materializes query optimizations;
 - `queries` contains one module per public API/CLI query—including aggregate,
@@ -387,9 +387,9 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
+`tests/support/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `src/ingestion/syntax/reference/reference-parser.js`. Tests parse representative
+semantics in `tests/support/reference/reference-parser.js`. Tests parse representative
 documents with both Ohm and the optimized runtime parser and compare the
 resulting syntax trees. This keeps the grammar reviewable without adding
 parser-framework overhead to production imports.
@@ -630,9 +630,13 @@ command, independent of report dates or account filters:
   nonzero remaining basis, including offsetting residuals within one account.
 - `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
   at their recorded acquisition costs.
-- `FOREIGN_LOT_COST_CURRENCY` identifies lot costs outside the journal default
-  commodity. These postings remain available to other reports, but affected
-  positions are omitted from unrealized gains, making its totals potentially incomplete.
+- `FOREIGN_LOT_COST_CURRENCY` identifies non-default commodity postings with lot
+  costs outside the journal default commodity. These postings remain available
+  to other reports, but affected positions are omitted from unrealized gains,
+  making its totals potentially incomplete.
+- `INVALID_COMMODITY_TRADE` also identifies default-commodity postings with a
+  lot cost or transaction price in another commodity. Cost reports retain the
+  posting's face value in the default commodity.
 - `SALE_PROCEEDS_MISMATCH` identifies a transaction whose sale prices cannot be
   reconciled with its monetary postings. Sales use `@`/`@@`, simultaneous purchases
   use their lot costs, and internal transfers and splits are excluded. The net

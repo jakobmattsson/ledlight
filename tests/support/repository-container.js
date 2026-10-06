@@ -26,4 +26,16 @@ function resolveQuery(name) {
   return query;
 }
 
-module.exports = { resolveQuery, resolveRepositoryModule };
+function resolveReferenceParser() {
+  const createReferenceParser = require('./reference/reference-parser');
+  return createReferenceParser({
+    fs,
+    path,
+    ohm: require('ohm-js'),
+    ingestionWarning: container.resolve('ingestionWarning'),
+    syntaxErrors: container.resolve('syntaxErrors'),
+    topLevelBlocks: container.resolve('topLevelBlocks'),
+  });
+}
+
+module.exports = { resolveQuery, resolveReferenceParser, resolveRepositoryModule };

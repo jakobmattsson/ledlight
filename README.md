@@ -61,6 +61,9 @@ compatibility guarantees are defined in the
 [package support policy](docs/package.md). The
 [Ledger CLI equivalence matrix](docs/ledger-cli-equivalence.md) shows which
 commands can be compared and provides a script for checking any journal.
+See the [benchmark history](https://jakobmattsson.github.io/ledlight/dev/bench/)
+for CI performance trends and the [benchmark notes](docs/benchmark.md) for the
+fixture and measurement method.
 Proposed follow-up work is tracked in the
 [improvement backlog](docs/improvements.md).
 
