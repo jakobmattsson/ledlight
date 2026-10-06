@@ -1,9 +1,8 @@
 # Improvement backlog
 
-This document records improvement opportunities identified during the initial
-extraction of Ledlight from Fonden. They are proposals rather than established
-compatibility guarantees. Each item should be evaluated and split into a
-focused change before implementation.
+This document records improvement opportunities for Ledlight. They are
+proposals rather than established compatibility guarantees. Each item should
+be evaluated and split into a focused change before implementation.
 
 The Ledger CLI differential test corpus is not listed here because it has
 already been implemented. It should continue to grow alongside supported
