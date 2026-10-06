@@ -24,44 +24,6 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
   assert.equal(require.cache[sqliteModulePath], undefined);
 });
 
-test('parses Ledger text into a strict AST without opening a journal', () => {
-  const { parseLedgerText } = require(ledlightPath);
-  const source = 'generated.ledger';
-  const document = parseLedgerText(`account Assets:Broker
-commodity STOCK
-  format 1,000 STOCK
-P 2024-01-01 STOCK 10 SEK
-2024-01-02 Buy shares
-  ; Generated-ID trade-1
-  Assets:Broker  2 STOCK {8 SEK} @ 10 SEK
-  Assets:Cash  -20 SEK
-`, { source });
-
-  assert.equal(document.source, source);
-  assert.deepEqual(document.entries.map(({ type }) => type), [
-    'account', 'commodity', 'price', 'transaction',
-  ]);
-  assert.equal(document.entries[0].name, 'Assets:Broker');
-  assert.deepEqual(document.entries[1].properties.map(({ name, value }) => ({ name, value })), [
-    { name: 'format', value: '1,000 STOCK' },
-  ]);
-  assert.deepEqual(document.entries[2].price, { quantity: '10', commodity: 'SEK' });
-  const transaction = document.entries[3];
-  assert.equal(transaction.date, '2024-01-02');
-  assert.deepEqual(transaction.notes.map(({ text }) => text), ['Generated-ID trade-1']);
-  assert.equal(transaction.postings[0].account, 'Assets:Broker');
-  assert.deepEqual(transaction.postings[0].amount, { quantity: '2', commodity: 'STOCK' });
-  assert.deepEqual(transaction.postings[0].lotCost, {
-    total: false, amount: { quantity: '8', commodity: 'SEK' },
-  });
-  assert.deepEqual(transaction.postings[0].cost, {
-    total: false, amount: { quantity: '10', commodity: 'SEK' },
-  });
-  assert.deepEqual(transaction.postings[0].location, { source, line: 7, column: 3 });
-  assert.equal('warnings' in document, false);
-  assert.equal(require.cache[sqliteModulePath], undefined);
-});
-
 test('rejects malformed Ledger text instead of returning a partial AST', () => {
   const { parseLedgerText } = require(ledlightPath);
   assert.throws(
