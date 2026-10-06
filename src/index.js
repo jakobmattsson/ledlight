@@ -1,6 +1,6 @@
 'use strict';
 
-const { createRepositoryContainer } = require('./src/composition/repository-container');
+const { createRepositoryContainer } = require('./composition/repository-container');
 
 const { openJournal } = createRepositoryContainer().resolve('project');
 
