@@ -5,12 +5,27 @@ module.exports = ({
   decimal: { divideDecimals, formatDecimal, parseDecimal },
   zod: { z },
 }) => {
-  const optionsSchema = z.strictObject({});
+  const optionsSchema = z.strictObject({
+    mode: z.enum(['effective', 'directives']).default('effective'),
+  });
   const inferredPriceScale = 30;
   const decimalScale = (quantity) => quantity.split('.')[1]?.length ?? 0;
 
   function queryPrices(database, options, _caches) {
-    parseOptions(optionsSchema, options, 'prices');
+    const { mode } = parseOptions(optionsSchema, options, 'prices');
+    if (mode === 'directives') {
+      return database.prepare(`
+        SELECT
+          prices.date,
+          prices.base_commodity AS baseCommodity,
+          prices.quote_quantity AS quoteQuantity,
+          prices.quote_commodity AS quoteCommodity,
+          prices.comment
+        FROM prices
+        JOIN journal_entries AS entries ON entries.id = prices.entry_id
+        ORDER BY prices.base_commodity, prices.date, entries.sequence
+      `).all();
+    }
     const events = database.prepare(`
       SELECT
         prices.date,

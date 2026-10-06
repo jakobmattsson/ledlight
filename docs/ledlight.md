@@ -105,8 +105,10 @@ used names and omit unused declarations. `commodities --details` includes each
 selected declaration's comment, format, default status, and usage status.
 Prices expose the effective market price database, including inferred
 transaction prices and last-price-wins deduplication for a commodity and date.
-All price output formats sort by ascending date, then base commodity, matching
-Ledger with `--sort date,account`. Price and transaction text output use ISO
+`prices --mode directives` instead exposes every explicit journal price,
+including unused commodities and superseded prices, in base-commodity, date,
+and journal source order. Effective price output sorts by ascending date, then
+base commodity, matching Ledger with `--sort date,account`. Price and transaction text output use ISO
 dates (`YYYY-MM-DD`), matching Ledger with `--date-format %Y-%m-%d`.
 
 ### CLI to API parity
@@ -126,6 +128,7 @@ underlying result.
 | `tags --file PATH` | `openJournal(journalPath).tags()` | Used tags |
 | `commodities --file PATH` | `openJournal(journalPath).commodities()` | Used commodities |
 | `prices --file PATH` | `openJournal(journalPath).prices()` | Effective market prices |
+| `prices --mode MODE` | `options.mode` | Select `effective` (default) or `directives` |
 | `transactions --file PATH` | `openJournal(journalPath).transactions(options)` | Transactions (unpaged in default text output) |
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |

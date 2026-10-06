@@ -38,7 +38,7 @@ module.exports = ({
       const descriptions = parsed.output.format === 'text'
         ? journal.commodities({ usage: 'all' })
         : undefined;
-      return formatPrices(journal.prices(), parsed.output, descriptions);
+      return formatPrices(journal.prices(options), parsed.output, descriptions);
     }
     if (command === 'transactions') {
       const descriptions = parsed.output.format === 'text'

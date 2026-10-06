@@ -9,9 +9,7 @@ const { openJournal } = require('ledlight');
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact
 decimal strings unless a result field is explicitly documented as a number.
 API option objects reject unknown properties and values of the wrong type,
-including `null`. Omit the options argument or pass `{}` to use defaults. Even
-`prices`, which has no supported options, rejects supplied options rather than
-ignoring them.
+including `null`. Omit the options argument or pass `{}` to use defaults.
 
 All account selections use literal substring patterns. A leading `^` anchors a
 pattern to the start of the account name and a trailing `$` anchors it to the
@@ -47,7 +45,7 @@ all default to `false`.
 | `accounts` | No date filter. | `accounts`, `usage` |
 | `commodities` | No date filter. | `usage` |
 | `tags` | No date filter. | `usage` |
-| `prices` | No date filter; returns all effective price dates. | None |
+| `prices` | No date filter. | `mode`: `effective` or `directives` |
 
 `dateBasis: 'transaction'` changes the date used for positions or activity;
 market prices always retain their own price dates. Queries without `dateBasis`
@@ -332,9 +330,10 @@ booleans. A later duplicate commodity declaration produces a warning and is
 not stored, so the first declaration supplies the metadata. Other commodity
 properties are not currently exposed.
 
-### `journal.prices()`
+### `journal.prices({ mode })`
 
-Returns Ledger's effective market prices for used commodities. The last price
+`mode` defaults to `effective`, which returns Ledger's effective market prices
+for used commodities. The last price
 encountered for a base commodity, quote commodity, and date wins, whether explicit
 or inferred from lot or transaction costs:
 
@@ -353,6 +352,14 @@ strings; inferred unit prices are calculated to thirty decimal places. Text
 output follows Ledger's display precision for inferred prices, while API, JSON,
 and CSV quantities retain their calculation precision.
 Rows sort by ascending date, then base commodity. Dates use `YYYY-MM-DD`.
+
+`mode: 'directives'` returns every explicit `P` directive from the journal,
+including prices for unused commodities and earlier prices superseded on the
+same day. It does not infer prices from transactions. Rows sort by base
+commodity, then ascending date, then journal source order. The result fields
+are the same as in effective mode, and `quoteQuantity` retains the source
+decimal string. This order lets consumers apply their own last-directive-wins
+rule for each commodity and date.
 
 ### `journal.transactions({ accounts, id, order, page, pageSize })`
 
@@ -442,6 +449,8 @@ csv`. Text tag and commodity output contains one name per line. With
 every field returned by `journal.commodities(options)`. Text price output
 contains one price per line with an ISO date. JSON and
 CSV retain every field returned by `journal.prices()`.
+`prices --mode directives` selects explicit journal price directives; the
+default `--mode effective` preserves the Ledger-compatible price listing.
 
 CLI commands preserve the query result on stdout and emit a human-readable
 summary of the journal's warnings on stderr when it is non-empty. No warning

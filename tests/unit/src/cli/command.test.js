@@ -270,8 +270,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
         isDefault: false, used: false,
       }, usd];
     },
-    prices() {
-      calls.push(['prices']);
+    prices(options) {
+      calls.push(['prices', options]);
       return [{
         date: '2024-01-01', baseCommodity: 'EUR', quoteQuantity: '1.1',
         quoteCommodity: 'USD', comment: null,
@@ -359,7 +359,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['tags', { usage: 'used' }],
     ['openJournal', '/journal'], ['commodities', { usage: 'used' }],
     ['openJournal', '/journal'], ['commodities', { usage: 'all' }],
-    ['openJournal', '/journal'], ['prices'],
+    ['openJournal', '/journal'], ['prices', { mode: 'effective' }],
     ['openJournal', '/journal'], ['transactions', {
       accounts: ['Assets:Cash'], id: '7', order: 'newest', page: '2', pageSize: '10',
     }],
