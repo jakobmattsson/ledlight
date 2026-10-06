@@ -1,6 +1,6 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../../support/repository-container");
+const { resolveReferenceParser, resolveRepositoryModule } = require("../../../../support/repository-container");
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
@@ -8,9 +8,7 @@ const { errorCodes } = resolveRepositoryModule("src/core/public-errors.js");
 const runtimeParser = resolveRepositoryModule("src/ingestion/syntax/ledger-parser.js");
 const parseRecovering = runtimeParser.parse;
 const parse = runtimeParser.$$private.parseStrict;
-const referenceParser = resolveRepositoryModule(
-  "src/ingestion/syntax/reference/reference-parser.js",
-).$$private;
+const referenceParser = resolveReferenceParser().$$private;
 const ohmParser = { parse: referenceParser.parseStrict };
 
 function parseConformant(sourceText, source) {

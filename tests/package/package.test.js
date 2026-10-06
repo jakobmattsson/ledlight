@@ -55,7 +55,7 @@ test('the published archive installs and exposes the module and CLI', () => {
     for (const packagedPath of packagedPaths) {
       assert.doesNotMatch(
         packagedPath,
-        /^(?:\.codex|tests|docs\/improvements\.md|src\/ledlight\/syntax\/reference|AGENTS\.md|eslint\.config\.js)/u,
+        /^(?:\.codex|tests|docs\/improvements\.md|AGENTS\.md|eslint\.config\.js)/u,
       );
     }
 

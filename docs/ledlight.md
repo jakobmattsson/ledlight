@@ -237,7 +237,7 @@ The implementation is organized by responsibility directly under `src`:
 - `core` contains project composition for the stable Node.js API,
   public errors, shared runtime-input validation, exact decimal arithmetic, and
   valuation logic;
-- `ingestion` owns the optimized parser and normative Ohm grammar, traverses
+- `ingestion` owns the optimized parser, traverses
   journal includes, validates and resolves journal postings, persists the
   normalized database, and materializes query optimizations;
 - `queries` contains one module per public API/CLI query—including aggregate,
@@ -383,9 +383,9 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/ingestion/syntax/reference/ledger.ohm` is the normative description of the
+`tests/support/reference/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `src/ingestion/syntax/reference/reference-parser.js`. Tests parse representative
+semantics in `tests/support/reference/reference-parser.js`. Tests parse representative
 documents with both Ohm and the optimized runtime parser and compare the
 resulting syntax trees. This keeps the grammar reviewable without adding
 parser-framework overhead to production imports.

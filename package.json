@@ -29,8 +29,7 @@
     "docs/ledlight.md",
     "docs/package.md",
     "scripts",
-    "src",
-    "!src/ingestion/syntax/reference"
+    "src"
   ],
   "bin": {
     "ledlight": "src/cli/run.js",

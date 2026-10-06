@@ -132,11 +132,6 @@ function registerExternalModules(container) {
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
       },
     }),
-    ohm: asValue({
-      grammar(...arguments_) {
-        return require('ohm-js').grammar(...arguments_);
-      },
-    }),
     sqlite: asValue(function LazyDatabase(...arguments_) {
       const Database = require('better-sqlite3');
       return new Database(...arguments_);
