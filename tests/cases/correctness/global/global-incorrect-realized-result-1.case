@@ -36,5 +36,8 @@ LEDGER
 [UNBALANCED_TRANSACTION] Transaction does not balance: 100 USD
   <stdin>:16:1
 
+[COST_BALANCE_MISMATCH] Transaction cost balance is 100 USD; the balance and balance-history reports at cost using transaction dates require zero
+  <stdin>:16:1
+
 [RESULT_MISMATCH] Realized plus unrealized result differs from cash flows and remaining market value by -100 USD
   <stdin>:16:1

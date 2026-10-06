@@ -36,3 +36,6 @@ LEDGER
 
 [UNBALANCED_TRANSACTION] Transaction does not balance: 1 SEK
   <stdin>:9:1
+
+[COST_BALANCE_MISMATCH] Transaction cost balance is 1 SEK; the balance and balance-history reports at cost using transaction dates require zero
+  <stdin>:9:1

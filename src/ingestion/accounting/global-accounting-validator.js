@@ -127,9 +127,15 @@ module.exports = ({
           }
         }
       });
-      if (hasInvestment && knownBalance && transactionBalance.n) {
-        imbalance = add(imbalance, transactionBalance);
-        imbalanceLocation = transaction.location;
+      if (knownBalance && transactionBalance.n) {
+        warnings.push(createWarning(warningCodes.COST_BALANCE_MISMATCH,
+          `Transaction cost balance is ${format(transactionBalance)} ${valuationCommodity}; ` +
+          'the balance and balance-history reports at cost using transaction dates require zero',
+          transaction.location));
+        if (hasInvestment) {
+          imbalance = add(imbalance, transactionBalance);
+          imbalanceLocation = transaction.location;
+        }
       }
     }
 

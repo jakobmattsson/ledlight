@@ -1,4 +1,4 @@
-A non-nominal cost on the reporting currency is diagnosed without changing report values.
+A Ledger-valid transaction can balance in EUR while cost reports in SEK do not balance.
 
 ========== API ==========
 
@@ -9,12 +9,14 @@ balanceHistoryReport({ valuation: 'cost', dateBasis: 'transaction' })
 commodity SEK
   default
   format 1,000.00 SEK
+commodity EUR
+  format 1,000.00 EUR
 account Assets:Cash
 account Equity:Opening
 
-2024-01-01 Invalid price on reporting currency
-  Assets:Cash  100 SEK {2 SEK}
-  Equity:Opening  -200 SEK
+2024-01-01 Foreign cost annotations on SEK postings
+  Assets:Cash  100 SEK {2 EUR}
+  Equity:Opening  -200 SEK {1 EUR}
 
 ========== OUTPUT ==========
 
@@ -28,8 +30,5 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
-[INVALID_COMMODITY_TRADE] Lot cost expressed in the posting commodity SEK must value one SEK at exactly one SEK
-  {{JOURNAL_PATH}}:8:3
-
 [COST_BALANCE_MISMATCH] Transaction cost balance is -100 SEK; the balance and balance-history reports at cost using transaction dates require zero
-  {{JOURNAL_PATH}}:7:1
+  {{JOURNAL_PATH}}:9:1

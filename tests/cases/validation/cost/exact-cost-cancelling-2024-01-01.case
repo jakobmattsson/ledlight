@@ -39,3 +39,9 @@ account Assets:Cash
 
 [UNBALANCED_TRANSACTION] Transaction does not balance: 0.01 SEK
   {{JOURNAL_PATH}}:13:1
+
+[COST_BALANCE_MISMATCH] Transaction cost balance is -0.01 SEK; the balance and balance-history reports at cost using transaction dates require zero
+  {{JOURNAL_PATH}}:9:1
+
+[COST_BALANCE_MISMATCH] Transaction cost balance is 0.01 SEK; the balance and balance-history reports at cost using transaction dates require zero
+  {{JOURNAL_PATH}}:13:1

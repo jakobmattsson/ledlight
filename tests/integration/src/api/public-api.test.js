@@ -169,6 +169,7 @@ account Equity:Opening
     'SYNTAX_ERROR',
     'BALANCE_ASSERTION_FAILED',
     'UNBALANCED_TRANSACTION',
+    'COST_BALANCE_MISMATCH',
   ]);
   assert.deepEqual(
     {
