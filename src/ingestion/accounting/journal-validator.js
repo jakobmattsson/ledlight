@@ -2,7 +2,8 @@
 
 module.exports = ({
   decimal: { compareDecimals, parseDecimal },
-  commodityMovements: { carriedMovements },
+  rational: { parse: parseRational, cmp },
+  commodityMovements: { annotatedTotal, carriedMovements },
   ingestionWarning: { createWarning, warningCodes },
   journalValuationCommodity: { valuationCommodityFromJournal },
 }) => {
@@ -111,6 +112,28 @@ module.exports = ({
     }
   }
 
+  function validateSelfCommodityCosts(posting, warnings) {
+    if (!posting.amount?.commodity) return;
+    const { commodity, quantity } = posting.amount;
+    for (const [label, annotation] of [
+      ['Lot cost', posting.lotCost], ['Transaction price', posting.cost],
+    ]) {
+      if (annotation?.amount.commodity !== commodity) continue;
+      const expected = parseRational(annotation.total ? quantity : '1');
+      const actual = annotation.total
+        ? annotatedTotal(annotation, expected)
+        : parseRational(annotation.amount.quantity);
+      if (cmp(actual, expected) !== 0) {
+        warnings.push(createWarning(
+          warningCodes.INVALID_COMMODITY_TRADE,
+          `${label} expressed in the posting commodity ${commodity} ` +
+            `must value one ${commodity} at exactly one ${commodity}`,
+          posting.location,
+        ));
+      }
+    }
+  }
+
   function validatePosting(posting, defaultCommodity, warnings, carried) {
     let storable = true;
     if (posting.amount) {
@@ -144,6 +167,7 @@ module.exports = ({
         posting.balanceAssertion, 'Balance assertion', posting.location, warnings,
       ) && storable;
     }
+    validateSelfCommodityCosts(posting, warnings);
     if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
     return storable;
   }
@@ -157,6 +181,7 @@ module.exports = ({
       // Explicit amounts were checked before resolution. Assignments must use
       // the actual change in holdings, not the target balance's sign.
       if (posting.original.amount && !posting.original.balanceAssignment) continue;
+      validateSelfCommodityCosts(posting, warnings);
       if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
     }
   }

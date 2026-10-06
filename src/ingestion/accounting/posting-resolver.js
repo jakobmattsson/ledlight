@@ -23,24 +23,6 @@ module.exports = ({
     map.set(key, addDecimals(map.get(key) || ZERO, value));
   }
 
-  function amountTolerance(quantity) {
-    const point = quantity.indexOf('.');
-    const scale = point < 0 ? 0 : quantity.length - point - 1;
-    return { coefficient: 5n, scale: scale + 1 };
-  }
-
-  function recordTolerance(tolerances, commodity, quantity) {
-    const tolerance = amountTolerance(quantity);
-    const current = tolerances.get(commodity);
-    if (!current || compareDecimals(tolerance, current) > 0) tolerances.set(commodity, tolerance);
-  }
-
-  function absoluteDecimal(decimal) {
-    return decimal.coefficient < 0n
-      ? { coefficient: -decimal.coefficient, scale: decimal.scale }
-      : decimal;
-  }
-
   function isCommodityExchange(residuals) {
     return residuals.length === 2 &&
     (residuals[0][1].coefficient < 0n) !== (residuals[1][1].coefficient < 0n);
@@ -99,8 +81,6 @@ module.exports = ({
       const balancesBeforeTransaction = new Map(this.balances);
       const resolved = transaction.postings.map(() => []);
       const transactionBalance = new Map();
-      const transactionTolerances = new Map();
-      const calculatedCostCommodities = new Set();
       let implicitPosition = null;
       let hasCost = false;
       let invalidTransaction = false;
@@ -140,14 +120,6 @@ module.exports = ({
         this.apply(posting.account, amount);
         const balancing = balancingAmount(posting, amount);
         addToMap(transactionBalance, balancing.commodity, parseDecimal(balancing.quantity));
-        if (annotation && !annotation.total) {
-          calculatedCostCommodities.add(balancing.commodity);
-        } else {
-          const quantity = annotation
-            ? annotation.amount.quantity
-            : posting.balanceAssignment?.quantity || amount.quantity;
-          recordTolerance(transactionTolerances, balancing.commodity, quantity);
-        }
 
         if (posting.balanceAssertion) {
           const actual = this.accountBalance(posting.account, posting.balanceAssertion.commodity);
@@ -169,12 +141,8 @@ module.exports = ({
         return null;
       }
 
-      const residuals = [...transactionBalance].filter(([commodity, residual]) => {
-        if (compareDecimals(residual, ZERO) === 0) return false;
-        const tolerance = transactionTolerances.get(commodity);
-        return !calculatedCostCommodities.has(commodity) || !tolerance ||
-        compareDecimals(absoluteDecimal(residual), tolerance) > 0;
-      });
+      const residuals = [...transactionBalance].filter(([, residual]) =>
+        compareDecimals(residual, ZERO) !== 0);
       if (implicitPosition !== null) {
         const posting = transaction.postings[implicitPosition];
         for (const [commodity, residual] of residuals) {

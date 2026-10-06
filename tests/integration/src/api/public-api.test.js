@@ -93,7 +93,7 @@ P 2024-01-01 USD 2 SEK
   const Database = require(sqliteModulePath);
   const previousCache = new Database(journal.databasePath);
   try {
-    previousCache.prepare("UPDATE database_metadata SET value = '24' WHERE key = 'schema_version'").run();
+    previousCache.prepare("UPDATE database_metadata SET value = '26' WHERE key = 'schema_version'").run();
     previousCache.prepare('DELETE FROM ingestion_warnings').run();
   } finally {
     previousCache.close();

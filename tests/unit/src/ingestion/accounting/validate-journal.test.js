@@ -276,3 +276,43 @@ test('warns about foreign lot cost currencies without discarding the transaction
     }
   }
 });
+test('warns when a cost in the posting commodity changes its nominal value', () => {
+  for (const posting of [
+    '100 SEK {2 SEK}', '100 SEK {{200 SEK}}',
+    '100 SEK @ 2 SEK', '100 SEK @@ 200 SEK',
+    '-100 SEK {2 SEK}', '-100 SEK {{200 SEK}}', '-100 SEK {{-200 SEK}}',
+    '-100 SEK @ 2 SEK', '-100 SEK @@ 200 SEK',
+    '100 SEK {0 SEK}', '100 SEK {-1 SEK}',
+    '100 SEK {1.000000000000000001 SEK}',
+    '0 SEK {2 SEK}', '0 SEK {{1 SEK}}',
+    '100 FUND {2 FUND}',
+  ]) {
+    const result = validateJournal(parseTrade(posting));
+    assert.deepEqual(result.warnings.map(({ code }) => code), posting === '100 FUND {2 FUND}'
+      ? ['FOREIGN_LOT_COST_CURRENCY', 'INVALID_COMMODITY_TRADE']
+      : ['INVALID_COMMODITY_TRADE'], posting);
+    const warning = result.warnings.find(({ code }) => code === 'INVALID_COMMODITY_TRADE');
+    assert.match(warning.message, /must value one (SEK|FUND) at exactly one \1/u);
+    assert.equal(warning.line, 9, posting);
+  }
+});
+
+test('allows nominal unit and total costs and costs expressed in another commodity', () => {
+  for (const posting of [
+    '100 SEK {1.00 SEK}', '100 SEK {{100.00 SEK}}',
+    '-100 SEK {1 SEK}', '-100 SEK {{100 SEK}}', '-100 SEK {{-100 SEK}}',
+    '100 SEK @ 1 SEK', '100 SEK @@ 100 SEK',
+    '-100 SEK @ 1 SEK', '-100 SEK @@ 100 SEK', '-100 SEK @@ -100 SEK',
+    '0 SEK {1 SEK}', '0 SEK {{0 SEK}}',
+    '100 FUND {2 SEK}', '100 SEK @ 2 FUND',
+  ]) {
+    assert.deepEqual(validateJournal(parseTrade(posting)).warnings, [], posting);
+  }
+});
+
+test('checks the transaction price even when a nominal lot cost is also present', () => {
+  const result = validateJournal(parseTrade('100 SEK {1 SEK} @ 2 SEK'));
+  assert.equal(result.warnings.length, 1);
+  assert.equal(result.warnings[0].code, 'INVALID_COMMODITY_TRADE');
+  assert.match(result.warnings[0].message, /^Transaction price/u);
+});
