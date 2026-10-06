@@ -1,4 +1,6 @@
-Global correctness: split, run 1.
+Global correctness: split (run 1).
+A split changes unit count while preserving total basis. Selling part of the
+adjusted holding realizes gain only from the sale.
 
 ========== CLI ==========
 

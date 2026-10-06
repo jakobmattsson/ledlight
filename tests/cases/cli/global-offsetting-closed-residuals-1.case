@@ -1,4 +1,6 @@
-Global correctness: offsetting-closed-residuals, run 1.
+Global correctness: offsetting-closed-residuals (run 1).
+Two closed commodities retain equal and opposite basis. Their account total
+cancels, but each position still needs its own residual-basis warning.
 
 ========== CLI ==========
 

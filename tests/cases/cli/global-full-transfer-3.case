@@ -1,4 +1,7 @@
-Global correctness: full-transfer, run 3.
+Global correctness: full-transfer (run 3).
+Moving the entire holding carries its units and basis to the destination. The
+empty source has no sale gain, while combined basis and unrealized gain remain
+unchanged.
 
 ========== CLI ==========
 

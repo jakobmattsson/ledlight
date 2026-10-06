@@ -1,4 +1,6 @@
-Global correctness: partial-lifo, run 2.
+Global correctness: partial-lifo (run 2).
+A last-in-first-out allocation changes the realized and unrealized split while
+their sum stays 700 USD.
 
 ========== CLI ==========
 

@@ -1,4 +1,7 @@
-Global correctness: allocation-sale-price-derived-cost, run 2.
+Global correctness: allocation-sale-price-derived-cost (run 2).
+Sale prices do not determine acquisition basis. Assigning 800 USD of basis to
+units acquired for 400 USD is impossible even if the sales eventually close
+the position.
 
 ========== CLI ==========
 

@@ -1,4 +1,7 @@
-Global correctness: allocation-average-fractional-history, run 1.
+Global correctness: allocation-average-fractional-history (run 1).
+Whole-unit disposals may draw fractional amounts from different acquisition
+groups. The first sale can use an average basis, and a later purchase changes
+the feasible average.
 
 ========== CLI ==========
 

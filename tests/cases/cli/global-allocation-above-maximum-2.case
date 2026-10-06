@@ -1,4 +1,7 @@
-Global correctness: allocation-above-maximum, run 2.
+Global correctness: allocation-above-maximum (run 2).
+An eleven-unit disposal can remove at most 32 USD of the available basis.
+Booking 32.01 USD is impossible, and a later complete sale does not erase that
+warning.
 
 ========== CLI ==========
 

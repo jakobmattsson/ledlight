@@ -1,4 +1,6 @@
-Global correctness: partial-average, run 1.
+Global correctness: partial-average (run 1).
+Average-cost allocation splits a 700 USD economic result between realized and
+unrealized gain without requiring identified original lots.
 
 ========== CLI ==========
 

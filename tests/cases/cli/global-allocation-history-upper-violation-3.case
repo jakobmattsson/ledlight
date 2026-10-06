@@ -1,4 +1,7 @@
-Global correctness: allocation-history-upper-violation, run 3.
+Global correctness: allocation-history-upper-violation (run 3).
+The first sale removes the maximum feasible basis and tightens the next sale’s
+upper bound. The second sale’s 20 USD basis is then impossible despite a
+balanced final history.
 
 ========== CLI ==========
 

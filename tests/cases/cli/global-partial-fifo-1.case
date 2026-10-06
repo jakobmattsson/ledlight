@@ -1,4 +1,6 @@
-Global correctness: partial-fifo, run 1.
+Global correctness: partial-fifo (run 1).
+A first-in-first-out allocation changes the realized and unrealized split
+while their sum stays 700 USD.
 
 ========== CLI ==========
 

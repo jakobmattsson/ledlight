@@ -1,4 +1,6 @@
-Global correctness: fractional-multiple-sales, run 1.
+Global correctness: fractional-multiple-sales (run 1).
+Fractional quantities and total lot costs must reconcile exactly across
+several sales without binary floating-point drift.
 
 ========== CLI ==========
 

@@ -1,4 +1,6 @@
-Global correctness: sold-with-positive-residual, run 1.
+Global correctness: sold-with-positive-residual (run 1).
+A closed position retains positive basis despite balanced transactions. The
+residual must be warned about rather than reported as unrealized gain.
 
 ========== CLI ==========
 

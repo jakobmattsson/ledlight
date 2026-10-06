@@ -1,4 +1,6 @@
-Global correctness: fully-sold-average, run 2.
+Global correctness: fully-sold-average (run 2).
+An average-cost disposal consumes all units and all basis. Realized gain
+totals 1,000 USD and no unrealized position remains.
 
 ========== CLI ==========
 

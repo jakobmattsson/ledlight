@@ -1,4 +1,6 @@
-Global correctness: allocation-future-purchase, run 1.
+Global correctness: allocation-future-purchase (run 1).
+A purchase after a disposal cannot justify that disposal’s recorded basis. The
+warning remains even when later transactions close the position.
 
 ========== CLI ==========
 

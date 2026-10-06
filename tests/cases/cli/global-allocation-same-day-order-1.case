@@ -1,4 +1,6 @@
-Global correctness: allocation-same-day-order, run 1.
+Global correctness: allocation-same-day-order (run 1).
+A purchase later on the same date cannot supply basis to an earlier sale.
+Journal order matters even when a date-only snapshot sees both entries.
 
 ========== CLI ==========
 

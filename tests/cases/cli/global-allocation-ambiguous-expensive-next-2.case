@@ -1,4 +1,6 @@
-Global correctness: allocation-ambiguous-expensive-next, run 2.
+Global correctness: allocation-ambiguous-expensive-next (run 2).
+The first sale has more than one feasible allocation. Retaining every feasible
+interpretation allows the next sale to consume the expensive remaining units.
 
 ========== CLI ==========
 

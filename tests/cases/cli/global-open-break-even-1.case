@@ -1,4 +1,6 @@
-Global correctness: open-break-even, run 1.
+Global correctness: open-break-even (run 1).
+An open holding whose market value equals its remaining basis has no
+unrealized gain row.
 
 ========== CLI ==========
 

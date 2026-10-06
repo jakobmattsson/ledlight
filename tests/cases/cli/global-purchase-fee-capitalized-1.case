@@ -1,4 +1,6 @@
-Global correctness: purchase-fee-capitalized, run 1.
+Global correctness: purchase-fee-capitalized (run 1).
+A purchase fee included in lot basis changes realized and unrealized gain. The
+total economic result remains 285 USD after both fees are counted once.
 
 ========== CLI ==========
 

@@ -1,4 +1,6 @@
-Global correctness: open-gain, run 1.
+Global correctness: open-gain (run 1).
+An open holding with market value above its remaining basis produces a
+positive unrealized gain.
 
 ========== CLI ==========
 

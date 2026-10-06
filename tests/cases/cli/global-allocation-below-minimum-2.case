@@ -1,4 +1,6 @@
-Global correctness: allocation-below-minimum, run 2.
+Global correctness: allocation-below-minimum (run 2).
+An eleven-unit disposal must remove at least 12 USD of basis. Booking 11.99
+USD is impossible, and later liquidation does not repair the earlier error.
 
 ========== CLI ==========
 

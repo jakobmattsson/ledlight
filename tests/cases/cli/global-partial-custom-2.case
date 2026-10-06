@@ -1,4 +1,6 @@
-Global correctness: partial-custom, run 2.
+Global correctness: partial-custom (run 2).
+A custom feasible allocation changes realized and unrealized gain while their
+sum stays 700 USD. The validator need not choose a prescribed lot method.
 
 ========== CLI ==========
 

@@ -1,4 +1,6 @@
-Global correctness: fees-expensed, run 1.
+Global correctness: fees-expensed (run 1).
+Purchase and sale fees recorded as expenses reduce the economic result once
+each. Their treatment leaves the portfolio result at 285 USD.
 
 ========== CLI ==========
 

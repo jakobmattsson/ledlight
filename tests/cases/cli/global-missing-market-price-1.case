@@ -1,4 +1,6 @@
-Global correctness: missing-market-price, run 1.
+Global correctness: missing-market-price (run 1).
+A lot cost establishes acquisition basis but is not a market quote. Without a
+market price the unrealized gain cannot be calculated.
 
 ========== CLI ==========
 

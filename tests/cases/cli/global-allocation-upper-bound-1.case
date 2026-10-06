@@ -1,4 +1,7 @@
-Global correctness: allocation-upper-bound, run 1.
+Global correctness: allocation-upper-bound (run 1).
+The first eleven-unit sale may remove exactly the maximum 32 USD. Subsequent
+sales must respect the tighter remaining bounds and consume the full 60 USD
+basis.
 
 ========== CLI ==========
 

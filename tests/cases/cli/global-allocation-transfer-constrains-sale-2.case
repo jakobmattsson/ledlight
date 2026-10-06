@@ -1,4 +1,6 @@
-Global correctness: allocation-transfer-constrains-sale, run 2.
+Global correctness: allocation-transfer-constrains-sale (run 2).
+Transferred basis constrains each depot separately. A destination sale booked
+at 77 USD is too cheap even though the source depot still holds cheaper units.
 
 ========== CLI ==========
 

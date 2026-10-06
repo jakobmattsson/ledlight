@@ -1,4 +1,6 @@
-Global correctness: transfer-without-basis, run 1.
+Global correctness: transfer-without-basis (run 1).
+The destination receives units without recorded basis. An unchanged combined
+unit count cannot justify treating that missing basis as zero.
 
 ========== CLI ==========
 

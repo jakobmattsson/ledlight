@@ -1,4 +1,6 @@
-Global correctness: partial-transfer, run 3.
+Global correctness: partial-transfer (run 3).
+Moving part of a holding carries the matching basis. Account-filtered reports
+show each depot separately while the combined unrealized result is preserved.
 
 ========== CLI ==========
 

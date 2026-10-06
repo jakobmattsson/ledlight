@@ -1,4 +1,7 @@
-Global correctness: allocation-rounding-residual, run 2.
+Global correctness: allocation-rounding-residual (run 2).
+Booking 0.34 USD on each of three one-third-USD sales is locally plausible,
+but removes 1.02 USD from a 1 USD acquisition. The closed position must warn
+about residual basis.
 
 ========== CLI ==========
 

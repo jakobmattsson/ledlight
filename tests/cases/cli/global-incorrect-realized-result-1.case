@@ -1,4 +1,7 @@
-Global correctness: incorrect-realized-result, run 1.
+Global correctness: incorrect-realized-result (run 1).
+The remaining position has no unrealized gain, but booked realized gain is 100
+USD below the result implied by cash flows. A result-mismatch warning must
+expose the difference.
 
 ========== CLI ==========
 

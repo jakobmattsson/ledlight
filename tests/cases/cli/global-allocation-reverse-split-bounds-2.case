@@ -1,4 +1,7 @@
-Global correctness: allocation-reverse-split-bounds, run 2.
+Global correctness: allocation-reverse-split-bounds (run 2).
+A reverse split preserves total basis while increasing basis per new unit. A
+later sale may have proceeds below cost without changing the feasible disposal
+cost.
 
 ========== CLI ==========
 

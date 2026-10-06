@@ -1,4 +1,7 @@
-Global correctness: allocation-fees-transfer-split, run 1.
+Global correctness: allocation-fees-transfer-split (run 1).
+Capitalized fees become basis that follows an internal transfer and a split.
+Both depots can then sell at feasible account-specific costs; separate sale
+fees reduce the realized result once.
 
 ========== CLI ==========
 

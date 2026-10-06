@@ -1,4 +1,6 @@
-Global correctness: sale-fee-netted, run 1.
+Global correctness: sale-fee-netted (run 1).
+A sale fee netted against proceeds changes realized gain without changing
+acquisition basis. The total economic result remains 285 USD.
 
 ========== CLI ==========
 

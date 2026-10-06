@@ -1,4 +1,6 @@
-Global correctness: allocation-sale-prices-independent, run 3.
+Global correctness: allocation-sale-prices-independent (run 3).
+Sale proceeds may be above or below acquisition cost. Disposals keep the
+feasible 100 USD per-unit basis regardless of their prices.
 
 ========== CLI ==========
 

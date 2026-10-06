@@ -316,6 +316,9 @@ the format prevents display precision from changing when a later amount happens
 to contain more decimal places. The default cost currency's format also defines
 the rounding step used by acquisition-cost allocation checks.
 
+See [acquisition-cost allocation](allocation-feasibility.md) for the historical
+feasibility rules, rounding behavior, and diagnostics.
+
 Accounts, commodities, and tags must be declared before their first use in
 journal traversal order. Each use before its declaration produces an
 `UNDECLARED_ACCOUNT`, `UNDECLARED_COMMODITY`, or `UNDECLARED_TAG` warning at

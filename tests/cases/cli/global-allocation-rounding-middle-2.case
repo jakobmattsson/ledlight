@@ -1,4 +1,6 @@
-Global correctness: allocation-rounding-middle, run 2.
+Global correctness: allocation-rounding-middle (run 2).
+Three one-third-USD units can be booked as 0.33, 0.34, and 0.33 USD. Rounding
+upward on the middle sale is valid and all booked basis is consumed.
 
 ========== CLI ==========
 

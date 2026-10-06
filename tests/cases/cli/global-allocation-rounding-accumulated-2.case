@@ -1,4 +1,7 @@
-Global correctness: allocation-rounding-accumulated, run 2.
+Global correctness: allocation-rounding-accumulated (run 2).
+Each of three units costs exactly one third of a USD. Two sales booked at 0.34
+USD can round upward, but the final 0.32 USD cannot; a zero final balance does
+not cure that sale.
 
 ========== CLI ==========
 
