@@ -96,7 +96,7 @@ account Equity:Opening
       const ledlight = require('ledlight');
       assert.equal(typeof ledlight.openJournal, 'function');
       assert.deepEqual(Object.keys(ledlight), ['openJournal', 'parseLedgerText']);
-      assert.equal(ledlight.parseLedgerText('account Assets:Cash\n').entries[0].name, 'Assets:Cash');
+      assert.equal(ledlight.parseLedgerText('account Assets:Cash').entries[0].name, 'Assets:Cash');
       assert.deepEqual(ledlight.openJournal(${JSON.stringify(journalPath)}).aggregate({}), [
         { account: 'Assets:Cash', quantity: '10', commodity: 'USD' },
         { account: 'Equity:Opening', quantity: '-10', commodity: 'USD' },
