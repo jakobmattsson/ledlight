@@ -727,6 +727,5 @@ The CLI's `--invert` option maps directly to the public report option
 Ledlight's balance command is a general exact-query interface over a journal.
 Consumer applications own account selection, derived-account rules,
 presentation, and compatibility with their existing commands. Keeping those
-policies outside Ledlight lets applications such as Fonden use the same parsing,
-storage, and reporting primitives without coupling Ledlight to one accounting
-instance.
+policies outside Ledlight lets applications use the same parsing, storage, and
+reporting primitives without coupling Ledlight to one accounting instance.
