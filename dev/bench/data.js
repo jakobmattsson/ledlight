@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791323140197,
+  "lastUpdate": 1791323190490,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -272,6 +272,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 10.536123,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "576ce25239eb0a72caadbff1dcd2210104bd7119",
+          "message": "Merge pull request #87 from jakobmattsson/codex/move-benchmarks-into-scripts\n\nOrganize benchmark and Ledger compatibility scripts",
+          "timestamp": "2026-10-06T23:46:04+02:00",
+          "tree_id": "20e9177542478ee3afbebe0a95851f5c1a95fd4a",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/576ce25239eb0a72caadbff1dcd2210104bd7119"
+        },
+        "date": 1791323189747,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1672.994586,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 11.0446,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 12.001108,
             "unit": "ms"
           }
         ]
