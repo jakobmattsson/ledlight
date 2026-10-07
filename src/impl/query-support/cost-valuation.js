@@ -12,7 +12,7 @@ module.exports = ({
       JOIN postings AS p ON p.id = r.posting_id
       JOIN transactions AS t ON t.entry_id = p.transaction_id
       ${filter.sql}
-        AND r.commodity != ?
+        ${filter.sql ? 'AND' : 'WHERE'} r.commodity != ?
         AND (p.lot_cost_quantity IS NULL OR p.lot_cost_commodity != ?)
       LIMIT 1
     `).get(...filter.parameters, valuationCommodity, valuationCommodity);

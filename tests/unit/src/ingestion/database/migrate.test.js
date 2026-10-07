@@ -29,8 +29,9 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(tables.includes('ingestion_warnings'));
   assert.ok(!tables.includes('metadata'));
   assert.ok(tables.includes('journal_entries'));
-  assert.ok(tables.includes('transaction_tags'));
-  assert.ok(tables.includes('posting_tags'));
+  assert.ok(!tables.includes('transaction_tags'));
+  assert.ok(!tables.includes('posting_tags'));
+  assert.ok(!tables.includes('commodity_properties'));
   assert.ok(tables.includes('resolved_posting_amounts'));
   assert.ok(tables.includes('valuation_prices'));
   for (const table of [
@@ -42,7 +43,7 @@ test('creates the current schema in an empty database', (t) => {
     assert.equal(used.dflt_value, '0');
   }
   const reportDate = database.pragma('table_info(postings)')
-    .find((column) => column.name === 'report_date');
+    .find((column) => column.name === 'posting_date');
   assert.equal(reportDate.notnull, 1);
   const postingColumns = database.pragma('table_info(postings)').map((column) => column.name);
   assert.ok(postingColumns.includes('lot_cost_quantity'));
@@ -53,10 +54,19 @@ test('creates the current schema in an empty database', (t) => {
   assert.equal(runningBalance.notnull, 1);
   assert.equal(runningBalance.dflt_value, "'0'");
   assert.deepEqual(
-    database.pragma('index_info(postings_account_report_date)')
+    database.pragma('index_info(postings_account_posting_date)')
       .map((column) => column.name),
-    ['account', 'report_date'],
+    ['account', 'posting_date'],
   );
+  assert.deepEqual(
+    database.pragma('index_info(postings_posting_date)')
+      .map((column) => column.name),
+    ['posting_date'],
+  );
+  const commodityColumns = database.pragma('table_info(commodity_declarations)')
+    .map((column) => column.name);
+  assert.ok(commodityColumns.includes('format'));
+  assert.ok(commodityColumns.includes('is_default'));
   const transactionColumns = database.pragma('table_info(transactions)').map((column) => column.name);
   assert.ok(!transactionColumns.includes('status'));
   assert.ok(!transactionColumns.includes('code'));
@@ -84,8 +94,8 @@ test('creates the current schema in an empty database', (t) => {
   assert.throws(
     () => database.prepare(`
       INSERT INTO postings
-        (id, transaction_id, position, report_date, line, column, account, amount_quantity)
-      VALUES (1, 1, 0, '2024-01-01', 1, 1, 'Assets:Fund', '10')
+        (id, transaction_id, position, posting_date, line, account, amount_quantity)
+      VALUES (1, 1, 0, '2024-01-01', 1, 'Assets:Fund', '10')
     `).run(),
     /CHECK constraint failed/u,
   );
@@ -95,15 +105,11 @@ test('enforces unique account, commodity, and tag declaration names', (t) => {
   const database = temporaryDatabase(t);
   migrateDatabase(database);
   database.exec(`
-    INSERT INTO source_files (id, traversal_index, path, sha256, size)
-    VALUES (1, 0, 'fixture.ledger', '${'0'.repeat(64)}', 0);
-    INSERT INTO journal_entries (id, sequence, source_file_id, type, line, column) VALUES
-      (1, 0, 1, 'account', 1, 1),
-      (2, 1, 1, 'account', 2, 1),
-      (3, 2, 1, 'commodity', 3, 1),
-      (4, 3, 1, 'commodity', 4, 1),
-      (5, 4, 1, 'tag', 5, 1),
-      (6, 5, 1, 'tag', 6, 1);
+    INSERT INTO source_files (id, path, sha256, size)
+    VALUES (1, 'fixture.ledger', '${'0'.repeat(64)}', 0);
+    INSERT INTO journal_entries (id, source_file_id, line) VALUES
+      (1, 1, 1), (2, 1, 2), (3, 1, 3),
+      (4, 1, 4), (5, 1, 5), (6, 1, 6);
     INSERT INTO account_declarations (entry_id, name) VALUES (1, 'Assets:Cash');
     INSERT INTO commodity_declarations (entry_id, symbol) VALUES (3, 'SEK');
     INSERT INTO tag_declarations (entry_id, name) VALUES (5, 'Reviewed');

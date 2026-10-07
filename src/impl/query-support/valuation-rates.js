@@ -22,9 +22,8 @@ module.exports = ({
     const rows = database.prepare(`
     SELECT p.base_commodity, p.quote_quantity, p.quote_commodity
     FROM prices AS p
-    JOIN journal_entries AS e ON e.id = p.entry_id
     WHERE p.date <= COALESCE(?, '9999-12-31')
-    ORDER BY p.base_commodity, p.date DESC, e.sequence DESC
+    ORDER BY p.base_commodity, p.date DESC, p.entry_id DESC
   `).all(throughDate ?? null);
     for (const row of rows) {
       if (!prices.has(row.base_commodity)) prices.set(row.base_commodity, row);
@@ -110,9 +109,8 @@ module.exports = ({
     return database.prepare(`
     SELECT p.date, p.base_commodity, p.quote_quantity, p.quote_commodity
     FROM prices AS p
-    JOIN journal_entries AS e ON e.id = p.entry_id
     WHERE p.date <= COALESCE(?, '9999-12-31')
-    ORDER BY p.base_commodity, p.date, e.sequence
+    ORDER BY p.base_commodity, p.date, p.entry_id
   `).all(throughDate ?? null);
   }
 

@@ -24,12 +24,12 @@ module.exports = ({
     return {
       databaseMetadata: database.prepare('INSERT INTO database_metadata (key, value) VALUES (?, ?)'),
       sourceFile: database.prepare(`
-      INSERT INTO source_files (id, traversal_index, path, sha256, size)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO source_files (id, path, sha256, size)
+      VALUES (?, ?, ?, ?)
     `),
       journalEntry: database.prepare(`
-      INSERT INTO journal_entries (id, sequence, source_file_id, type, line, column)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO journal_entries (id, source_file_id, line)
+      VALUES (?, ?, ?)
     `),
       transaction: database.prepare(`
       INSERT INTO transactions
@@ -38,30 +38,20 @@ module.exports = ({
     `),
       posting: database.prepare(`
       INSERT INTO postings
-        (id, transaction_id, position, report_date, line, column, account,
+        (id, transaction_id, position, posting_date, line, account,
          amount_quantity, amount_commodity,
          lot_cost_quantity, lot_cost_commodity, lot_cost_is_total,
          cost_quantity, cost_commodity, cost_is_total,
          balance_assignment_quantity, balance_assignment_commodity,
          balance_assertion_quantity, balance_assertion_commodity, comment)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
       note: database.prepare(`
-      INSERT INTO transaction_notes
-        (id, transaction_id, position, line, column, text, key, value)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transaction_notes (transaction_id, position, line, text)
+      VALUES (?, ?, ?, ?)
     `),
       resolvedPostingAmount: database.prepare(`
       INSERT INTO resolved_posting_amounts (id, posting_id, position, quantity, commodity)
-      VALUES (?, ?, ?, ?, ?)
-    `),
-      transactionTag: database.prepare(`
-      INSERT INTO transaction_tags
-        (id, transaction_id, note_id, position, name, value)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `),
-      postingTag: database.prepare(`
-      INSERT INTO posting_tags (id, posting_id, position, name, value)
       VALUES (?, ?, ?, ?, ?)
     `),
       price: database.prepare(`
@@ -76,12 +66,8 @@ module.exports = ({
       INSERT INTO tag_declarations (entry_id, name, comment, used) VALUES (?, ?, ?, ?)
     `),
       commodity: database.prepare(`
-      INSERT INTO commodity_declarations (entry_id, symbol, comment, used) VALUES (?, ?, ?, ?)
-    `),
-      commodityProperty: database.prepare(`
-      INSERT INTO commodity_properties
-        (id, commodity_id, position, line, column, name, value, comment)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO commodity_declarations (entry_id, symbol, comment, format, is_default, used)
+      VALUES (?, ?, ?, ?, ?, ?)
     `),
     };
   }
@@ -100,7 +86,7 @@ module.exports = ({
       const postingId = ++counters.posting;
       statements.posting.run(
         postingId, entryId, position, posting.postingDate || entry.date,
-        posting.location.line, posting.location.column,
+        posting.location.line,
         posting.account, amount.quantity, amount.commodity,
         lotCost.quantity, lotCost.commodity, posting.lotCost ? Number(posting.lotCost.total) : null,
         cost.quantity, cost.commodity, posting.cost ? Number(posting.cost.total) : null,
@@ -113,32 +99,12 @@ module.exports = ({
           resolvedAmount.quantity, resolvedAmount.commodity,
         );
       });
-      (posting.tags || []).forEach((tag, tagPosition) => {
-        statements.postingTag.run(
-          ++counters.postingTag, postingId, tagPosition, tag.name, tag.value,
-        );
-      });
     });
 
-    let tagPosition = 0;
-    const noteTagCount = entry.notes.reduce((count, note) => count + (note.tags || []).length, 0);
-    const headerTags = (entry.tags || []).slice(0, (entry.tags || []).length - noteTagCount);
-    headerTags.forEach((tag) => {
-      statements.transactionTag.run(
-        ++counters.transactionTag, entryId, null, tagPosition++, tag.name, tag.value,
-      );
-    });
     entry.notes.forEach((note, position) => {
-      const noteId = ++counters.note;
       statements.note.run(
-        noteId, entryId, position, note.location.line, note.location.column,
-        note.text, note.key, note.value,
+        entryId, position, note.location.line, note.text,
       );
-      (note.tags || []).forEach((tag) => {
-        statements.transactionTag.run(
-          ++counters.transactionTag, entryId, noteId, tagPosition++, tag.name, tag.value,
-        );
-      });
     });
   }
 
@@ -161,18 +127,16 @@ module.exports = ({
       case 'tag':
         statements.tag.run(entryId, entry.name, entry.comment, Number(usage.tags.has(entry.name)));
         break;
-      case 'commodity':
+      case 'commodity': {
+        const properties = entry.properties.filter((property) => !ignoredProperties.has(property));
         statements.commodity.run(
-          entryId, entry.symbol, entry.comment, Number(usage.commodities.has(entry.symbol)),
+          entryId, entry.symbol, entry.comment,
+          properties.findLast((property) => property.name === 'format')?.value ?? null,
+          Number(properties.some((property) => property.name === 'default')),
+          Number(usage.commodities.has(entry.symbol)),
         );
-        entry.properties.filter((property) => !ignoredProperties.has(property))
-          .forEach((property, position) => {
-            statements.commodityProperty.run(
-              ++counters.property, entryId, position, property.location.line,
-              property.location.column, property.name, property.value, property.comment,
-            );
-          });
         break;
+      }
       default:
         throw new Error(`Cannot store unsupported journal entry type: ${entry.type}`);
     }
@@ -270,26 +234,22 @@ module.exports = ({
         const sourceIds = new Map();
         journal.files.forEach((file, index) => {
           const fileId = index + 1;
-          statements.sourceFile.run(fileId, index, file.path, file.sha256, file.size);
+          statements.sourceFile.run(fileId, file.path, file.sha256, file.size);
           sourceIds.set(file.path, fileId);
         });
 
         const counters = {
           posting: 0,
           resolvedAmount: 0,
-          note: 0,
-          property: 0,
-          transactionTag: 0,
-          postingTag: 0,
         };
-        storableEntries.forEach((entry, sequence) => {
+        storableEntries.forEach((entry, index) => {
           const sourceFileId = sourceIds.get(entry.location.source);
           if (sourceFileId === undefined) {
             throw new Error(`Journal entry refers to an unregistered source file: ${entry.location.source}`);
           }
-          const entryId = sequence + 1;
+          const entryId = index + 1;
           statements.journalEntry.run(
-            entryId, sequence, sourceFileId, entry.type, entry.location.line, entry.location.column,
+            entryId, sourceFileId, entry.location.line,
           );
           insertEntry(
             statements, entryId, entry, counters, resolvedTransactions, ignoredProperties, usage,

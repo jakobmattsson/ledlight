@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS database_metadata (
 
 CREATE TABLE IF NOT EXISTS source_files (
   id INTEGER PRIMARY KEY,
-  traversal_index INTEGER NOT NULL UNIQUE,
   path TEXT NOT NULL UNIQUE,
   sha256 TEXT NOT NULL CHECK (length(sha256) = 64),
   size INTEGER NOT NULL CHECK (size >= 0)
@@ -24,11 +23,8 @@ CREATE TABLE IF NOT EXISTS ingestion_warnings (
 
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY,
-  sequence INTEGER NOT NULL UNIQUE,
   source_file_id INTEGER NOT NULL REFERENCES source_files(id),
-  type TEXT NOT NULL CHECK (type IN ('account', 'tag', 'commodity', 'price', 'transaction')),
-  line INTEGER NOT NULL,
-  column INTEGER NOT NULL
+  line INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
@@ -42,9 +38,8 @@ CREATE TABLE IF NOT EXISTS postings (
   id INTEGER PRIMARY KEY,
   transaction_id INTEGER NOT NULL REFERENCES transactions(entry_id) ON DELETE CASCADE,
   position INTEGER NOT NULL,
-  report_date TEXT NOT NULL,
+  posting_date TEXT NOT NULL,
   line INTEGER NOT NULL,
-  column INTEGER NOT NULL,
   account TEXT NOT NULL,
   amount_quantity TEXT,
   amount_commodity TEXT,
@@ -75,16 +70,12 @@ CREATE TABLE IF NOT EXISTS postings (
 );
 
 CREATE TABLE IF NOT EXISTS transaction_notes (
-  id INTEGER PRIMARY KEY,
   transaction_id INTEGER NOT NULL REFERENCES transactions(entry_id) ON DELETE CASCADE,
   position INTEGER NOT NULL,
   line INTEGER NOT NULL,
-  column INTEGER NOT NULL,
   text TEXT NOT NULL,
-  key TEXT,
-  value TEXT,
-  UNIQUE (transaction_id, position)
-);
+  PRIMARY KEY (transaction_id, position)
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS resolved_posting_amounts (
   id INTEGER PRIMARY KEY,
@@ -93,25 +84,6 @@ CREATE TABLE IF NOT EXISTS resolved_posting_amounts (
   quantity TEXT NOT NULL,
   commodity TEXT NOT NULL,
   running_balance TEXT NOT NULL DEFAULT '0',
-  UNIQUE (posting_id, position)
-);
-
-CREATE TABLE IF NOT EXISTS transaction_tags (
-  id INTEGER PRIMARY KEY,
-  transaction_id INTEGER NOT NULL REFERENCES transactions(entry_id) ON DELETE CASCADE,
-  note_id INTEGER REFERENCES transaction_notes(id) ON DELETE CASCADE,
-  position INTEGER NOT NULL,
-  name TEXT NOT NULL CHECK (length(name) > 0),
-  value TEXT,
-  UNIQUE (transaction_id, position)
-);
-
-CREATE TABLE IF NOT EXISTS posting_tags (
-  id INTEGER PRIMARY KEY,
-  posting_id INTEGER NOT NULL REFERENCES postings(id) ON DELETE CASCADE,
-  position INTEGER NOT NULL,
-  name TEXT NOT NULL CHECK (length(name) > 0),
-  value TEXT,
   UNIQUE (posting_id, position)
 );
 
@@ -149,32 +121,18 @@ CREATE TABLE IF NOT EXISTS commodity_declarations (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
   symbol TEXT NOT NULL UNIQUE,
   comment TEXT,
+  format TEXT,
+  is_default INTEGER NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1)),
   used INTEGER NOT NULL DEFAULT 0 CHECK (used IN (0, 1))
 );
 
-CREATE TABLE IF NOT EXISTS commodity_properties (
-  id INTEGER PRIMARY KEY,
-  commodity_id INTEGER NOT NULL REFERENCES commodity_declarations(entry_id) ON DELETE CASCADE,
-  position INTEGER NOT NULL,
-  line INTEGER NOT NULL,
-  column INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  value TEXT,
-  comment TEXT,
-  UNIQUE (commodity_id, position)
-);
-
-CREATE INDEX IF NOT EXISTS journal_entries_source_location
-  ON journal_entries(source_file_id, line);
 CREATE INDEX IF NOT EXISTS transactions_date
   ON transactions(date);
-CREATE INDEX IF NOT EXISTS postings_account_report_date
-  ON postings(account, report_date);
+CREATE INDEX IF NOT EXISTS postings_account_posting_date
+  ON postings(account, posting_date);
+CREATE INDEX IF NOT EXISTS postings_posting_date
+  ON postings(posting_date);
 CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity
   ON resolved_posting_amounts(commodity);
-CREATE INDEX IF NOT EXISTS transaction_tags_name
-  ON transaction_tags(name);
-CREATE INDEX IF NOT EXISTS posting_tags_name
-  ON posting_tags(name);
 CREATE INDEX IF NOT EXISTS prices_base_commodity_date
   ON prices(base_commodity, date);

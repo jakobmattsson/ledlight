@@ -24,7 +24,7 @@ module.exports = ({
   });
 
   function reportFilter(options, valuationCommodity) {
-    const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
+    const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.posting_date';
     const clauses = [
       'r.commodity != ?',
       `${dateExpression} <= COALESCE(?, '9999-12-31')`,

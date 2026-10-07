@@ -13,16 +13,22 @@ module.exports = ({
 
   function queryPostings(database, options, _caches) {
     const { accounts, from, to } = parseOptions(optionsSchema, options, 'postings');
-    const clauses = [
-      "postings.report_date >= COALESCE(?, '0000-00-00')",
-      "postings.report_date <= COALESCE(?, '9999-12-31')",
-    ];
-    const parameters = [from ?? null, to ?? null];
+    const clauses = [];
+    const parameters = [];
+    if (from) {
+      clauses.push('postings.posting_date >= ?');
+      parameters.push(from);
+    }
+    if (to) {
+      clauses.push('postings.posting_date <= ?');
+      parameters.push(to);
+    }
     if (accounts.length > 0) {
       const match = accountFilter('postings.account', accounts);
       clauses.push(match.sql);
       parameters.push(...match.parameters);
     }
+    const where = clauses.length === 0 ? '' : `WHERE ${clauses.join('\n        AND ')}`;
     const rows = database.prepare(`
       SELECT
         postings.id AS postingId,
@@ -32,7 +38,7 @@ module.exports = ({
         entries.line AS transactionSourceLine,
         transactions.description,
         transactions.comment AS transactionComment,
-        postings.report_date AS postingDate,
+        postings.posting_date AS postingDate,
         postings.account,
         postings.comment AS postingComment,
         postings.amount_quantity AS amountQuantity,
@@ -55,8 +61,8 @@ module.exports = ({
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
       JOIN source_files ON source_files.id = entries.source_file_id
       JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
-      WHERE ${clauses.join('\n        AND ')}
-      ORDER BY entries.sequence, postings.position, amounts.position
+      ${where}
+      ORDER BY transactions.entry_id, postings.position, amounts.position
     `).all(...parameters);
     const postings = [];
     const byId = new Map();
