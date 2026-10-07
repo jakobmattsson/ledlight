@@ -5,11 +5,11 @@ module.exports = ({
   path,
 }) => {
 
-  const SCHEMA_VERSION = '28';
+  const SCHEMA_VERSION = '30';
   const schema = fs.readFileSync(path.join(__dirname, '../../../surface/database/schema.sql'), 'utf8');
 
   const supportedVersions = new Set([
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', SCHEMA_VERSION,
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', SCHEMA_VERSION,
   ]);
 
   function tableExists(database, name) {

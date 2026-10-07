@@ -36,6 +36,7 @@ test('defines one CLI command for every journal operation', () => {
     prices: 'prices',
     transactions: 'transactions',
     postings: 'postings',
+    print: 'print',
   });
 });
 
@@ -83,6 +84,11 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     outputInputs: ['format'],
   });
   assert.deepEqual(argumentsModule.apiInputCoverage.investmentPerformance.outputInputs, ['format']);
+  assert.deepEqual(argumentsModule.apiInputCoverage.print, {
+    command: 'print',
+    inputs: ['journalPath'],
+    outputInputs: [],
+  });
 });
 
 test('documents the effective default for every enum option in command help', () => {
@@ -440,7 +446,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['account-balances'],
     ['aggregate'],
     ['ledger-transactions', '--file', '/journal'],
-    ['print', '--file', '/journal'],
+    ['print', '--file', '/journal', '--format', 'json'],
     ['aggregate', '--from'],
     ['aggregate', '--from', '--denominate'],
     ['aggregate', '--to', '2024-01-01', '--to', '2024-02-01'],
@@ -473,6 +479,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /misc:/u);
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\s+show transactions/u);
+  assert.match(usage(), /presentation:\n {2}print\s+pretty-print the complete journal/u);
   assert.doesNotMatch(usage(), /transactions\|print/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
@@ -480,7 +487,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /--accounts <pattern>/u);
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
-  assert.throws(() => usage('print'), /Unknown command: print/u);
+  assert.match(usage('print'), /^Usage: ledlight print --file <path> \[options\]/u);
   assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read this journal file, or - for stdin/u);
   assert.match(usage('aggregate'), /--accounts <pattern>.*repeatable/u);
   assert.match(

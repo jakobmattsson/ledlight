@@ -54,6 +54,9 @@ const ast = parseLedgerText('account Assets:Cash\n');
 See the [Node.js API reference](api.md) for every exported operation, journal
 method, option, result shape, and ordering guarantee.
 
+Use `journal.print()` or `ledlight print --file main.ledger` to pretty-print the
+complete journal as text. The CLI lists this command under `presentation`.
+
 See the [package support policy](package.md) for supported Node.js and native
 platforms, module formats, published files, and compatibility guarantees.
 

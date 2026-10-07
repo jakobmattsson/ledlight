@@ -20,6 +20,23 @@ is recognized; all other characters are matched literally.
 Every CLI account filter uses the repeatable `--accounts PATTERN` option.
 The singular `--account` is not supported.
 
+## Presentation
+
+### `journal.print()`
+
+Returns a plain string containing a pretty-printed, complete journal. It has
+no options; omit the argument or pass `{}`. The output is built from stored
+journal data, follows entry order, expands included files, and contains
+declarations, price directives, and transactions, including zero amounts. It
+aligns posting amounts, normalizes numeric text, and preserves stored comments
+and transaction notes. Source-only
+details not represented in the database, such as comments on commodity
+properties, are omitted. Entries rejected during ingestion are also omitted.
+The string is empty when the journal has no stored entries.
+
+`ledlight print --file JOURNAL` writes the same string to standard output.
+It has no filters or output-format options.
+
 ## Query parameter conventions
 
 All dates must be valid calendar dates in `YYYY-MM-DD` format; timestamps,
