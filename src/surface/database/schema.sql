@@ -126,13 +126,8 @@ CREATE TABLE IF NOT EXISTS commodity_declarations (
   used INTEGER NOT NULL DEFAULT 0 CHECK (used IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS transactions_date
-  ON transactions(date);
-CREATE INDEX IF NOT EXISTS postings_account_posting_date
-  ON postings(account, posting_date);
-CREATE INDEX IF NOT EXISTS postings_posting_date
-  ON postings(posting_date);
-CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity
-  ON resolved_posting_amounts(commodity);
-CREATE INDEX IF NOT EXISTS prices_base_commodity_date
-  ON prices(base_commodity, date);
+CREATE INDEX IF NOT EXISTS transactions_date ON transactions(date);
+CREATE INDEX IF NOT EXISTS postings_account_posting_date ON postings(account, posting_date);
+CREATE INDEX IF NOT EXISTS postings_posting_date ON postings(posting_date);
+CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity ON resolved_posting_amounts(commodity);
+CREATE INDEX IF NOT EXISTS prices_base_commodity_date ON prices(base_commodity, date);
