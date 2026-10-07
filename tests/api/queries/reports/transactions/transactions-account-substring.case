@@ -1,0 +1,81 @@
+Transaction account selection matches literal substrings.
+
+========== API ==========
+
+transactions({ accounts: ['Expenses'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+account Expenses:Shop
+
+2024-01-01 First
+  Assets:Cash  10 SEK
+  Equity:Opening  -10 SEK
+
+2024-01-02 Second
+  Assets:Cash  20 SEK
+  Equity:Opening  -20 SEK
+
+2024-01-03 Shop | Third  ; imported
+  ; Project: Home
+  Assets:Cash  -5 SEK  ; card
+  Expenses:Shop
+
+========== OUTPUT ==========
+
+{
+  "order": "oldest",
+  "totalTransactions": 1,
+  "transactions": [
+    {
+      "transactionId": 7,
+      "transactionDate": "2024-01-03",
+      "description": "Shop | Third",
+      "comment": "imported",
+      "notes": [
+        "Project: Home"
+      ],
+      "postings": [
+        {
+          "postingDate": "2024-01-03",
+          "account": "Assets:Cash",
+          "comment": "card",
+          "amount": {
+            "quantity": "-5",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "-5",
+              "commodity": "SEK"
+            }
+          ]
+        },
+        {
+          "postingDate": "2024-01-03",
+          "account": "Expenses:Shop",
+          "comment": null,
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "5",
+              "commodity": "SEK"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

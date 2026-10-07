@@ -3,8 +3,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
-const { AllocationHistory } = resolveRepositoryModule('src/ingestion/accounting/allocation-history.js');
-const { parse, format } = resolveRepositoryModule('src/core/rational.js');
+const { AllocationHistory } = resolveRepositoryModule('src/impl/ingestion/accounting/allocation-history.js');
+const { parse, format } = resolveRepositoryModule('src/impl/core/rational.js');
 
 function ambiguousHistory(account, cheapCost, expensiveCost, saleCost) {
   const history = new AllocationHistory(parse('0'));

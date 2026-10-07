@@ -3,8 +3,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../support/repository-container');
-const { maximize } = resolveRepositoryModule('src/core/linear-program.js');
-const { parse, format } = resolveRepositoryModule('src/core/rational.js');
+const { maximize } = resolveRepositoryModule('src/impl/core/linear-program.js');
+const { parse, format } = resolveRepositoryModule('src/impl/core/rational.js');
 const coefficients = (values) => new Map(values.map((value, index) => [index, parse(value)]));
 const constraint = (values, bound) => ({ coefficients: coefficients(values), bound: parse(bound) });
 

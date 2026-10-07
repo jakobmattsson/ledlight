@@ -2,10 +2,11 @@
 
 const {
   createRepositoryContainer,
-  $$private: { assertDependencyAllowed, repositoryModuleName },
-} = require('../../../../src/composition/repository-container');
+  $$private: { assertDependencyAllowed, commandGroup, repositoryModuleName },
+} = require('../../../../src/impl/composition/repository-container');
 
 const assert = require('node:assert/strict');
+const path = require('node:path');
 const test = require('node:test');
 
 test('derives dependency names from unique kebab-case filenames', () => {
@@ -16,23 +17,42 @@ test('derives dependency names from unique kebab-case filenames', () => {
   );
 });
 
+test('requires command files directly inside a single group directory', () => {
+  assert.equal(commandGroup(path.join('reports', 'total-history.js')), 'reports');
+  assert.throws(
+    () => commandGroup(path.join('reports', 'nested', 'total-history.js')),
+    /directly inside one group directory/u,
+  );
+  assert.throws(
+    () => commandGroup('total-history.js'),
+    /directly inside one group directory/u,
+  );
+});
+
 test('prevents dependencies on CLI modules from outside the CLI', () => {
   assert.throws(
-    () => assertDependencyAllowed('src/core/example.js', 'cliCommand'),
+    () => assertDependencyAllowed('src/impl/core/example.js', 'cliCommand'),
     /may not depend on CLI module/u,
   );
   assert.doesNotThrow(
-    () => assertDependencyAllowed('src/cli/example.js', 'cliCommand'),
+    () => assertDependencyAllowed('src/impl/cli/example.js', 'cliCommand'),
+  );
+  assert.doesNotThrow(
+    () => assertDependencyAllowed('src/surface/commands/raw/example.js', 'cliCommand'),
+  );
+  assert.throws(
+    () => assertDependencyAllowed('src/surface/queries/example.js', 'cliCommand'),
+    /may not depend on CLI module/u,
   );
 });
 
 test('prevents ingestion from depending on queries', () => {
   assert.throws(
-    () => assertDependencyAllowed('src/ingestion/example.js', 'queries'),
+    () => assertDependencyAllowed('src/impl/ingestion/example.js', 'queries'),
     /may not depend on query module/u,
   );
   assert.throws(
-    () => assertDependencyAllowed('src/ingestion/example.js', 'valuationRates'),
+    () => assertDependencyAllowed('src/impl/ingestion/example.js', 'valuationRates'),
     /may not depend on query module/u,
   );
 });

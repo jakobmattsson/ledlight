@@ -1,0 +1,81 @@
+Parses declarations and a wildcard include directive.
+
+========== TEXT ==========
+
+; Header comment
+include prices/*.ledger
+tag Imported
+account Assets:Cash ; primary
+commodity SEK ; currency
+  format 1,000.00 SEK
+  default
+
+========== JSON ==========
+
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "include",
+      "comment": null,
+      "location": {
+        "source": "fixture.ledger",
+        "line": 2,
+        "column": 1
+      },
+      "path": "prices/*.ledger"
+    },
+    {
+      "type": "tag",
+      "name": "Imported",
+      "comment": null,
+      "location": {
+        "source": "fixture.ledger",
+        "line": 3,
+        "column": 1
+      }
+    },
+    {
+      "type": "account",
+      "name": "Assets:Cash",
+      "comment": "primary",
+      "location": {
+        "source": "fixture.ledger",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "type": "commodity",
+      "comment": "currency",
+      "location": {
+        "source": "fixture.ledger",
+        "line": 5,
+        "column": 1
+      },
+      "symbol": "SEK",
+      "properties": [
+        {
+          "name": "format",
+          "value": "1,000.00 SEK",
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 6,
+            "column": 3
+          }
+        },
+        {
+          "name": "default",
+          "value": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 7,
+            "column": 3
+          }
+        }
+      ]
+    }
+  ]
+}

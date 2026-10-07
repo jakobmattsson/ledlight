@@ -4,8 +4,8 @@ const { resolveRepositoryModule } = require('../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { errorCodes } = resolveRepositoryModule('src/core/public-errors.js');
-const parse = resolveRepositoryModule('src/ingestion/syntax/ledger-parser.js').$$private.parseStrict;
+const { errorCodes } = resolveRepositoryModule('src/impl/core/public-errors.js');
+const parse = resolveRepositoryModule('src/impl/ingestion/syntax/ledger-parser.js').$$private.parseStrict;
 
 test('rejects unsupported auxiliary transaction dates', () => {
   const sourceText = '2024-01-01=2024-01-02 Trade\n  Assets:Cash  1 SEK\n  Equity:Opening\n';

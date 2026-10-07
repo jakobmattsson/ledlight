@@ -1,0 +1,46 @@
+Ledger and Ledlight produce the same valuation selection balances.
+
+========== CLI ==========
+
+ledlight aggregate --accounts Assets: --denominate
+
+========== LEDGER-CLI ==========
+
+ledger --args-only --date-format %Y-%m-%d --no-pager --sort account --exchange USD balance --flat --no-total --format '%20(display_total)  %(account)\n' '^Assets:'
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+
+commodity FUND
+  format 1000 FUND
+commodity NOK
+  format 1,000.00 NOK
+commodity GBP
+  format 1,000.00 GBP
+commodity BOND
+  format 1000 BOND
+account Assets:Investments
+account Assets:Bonds
+account Equity:Opening
+
+P 2023-12-31 GBP 1.25 USD
+P 2024-01-01 FUND 10 USD
+P 2024-01-01 BOND 8 GBP
+P 2024-02-01 FUND 2 NOK
+P 2024-02-01 BOND 2 NOK
+
+2024-03-01 Hold fund units
+  Assets:Investments  3 FUND {10 USD}
+  Equity:Opening  -30 USD
+
+2024-03-01 Hold bond units
+  Assets:Bonds  2 BOND {10 USD}
+  Equity:Opening  -20 USD
+
+========== OUTPUT ==========
+
+           20.00 USD  Assets:Bonds
+           30.00 USD  Assets:Investments

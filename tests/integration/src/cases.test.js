@@ -6,7 +6,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { parseCase, runCase } = require('../../support/case');
 
-const directory = path.resolve(__dirname, '../../cases');
+const directory = path.resolve(__dirname, '../../api/queries');
 const fixtureCache = new Map();
 test.after(() => {
   for (const fixtureDirectory of fixtureCache.values()) {

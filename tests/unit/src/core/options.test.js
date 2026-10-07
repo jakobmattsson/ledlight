@@ -4,7 +4,7 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { dateOption, parseOptions } = resolveRepositoryModule('src/core/api-options.js');
+const { dateOption, parseOptions } = resolveRepositoryModule('src/impl/core/api-options.js');
 const { z } = require('zod');
 
 test('parses options with schema-provided defaults', () => {

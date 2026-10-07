@@ -10,8 +10,8 @@ const { execFileSync } = require('node:child_process');
 const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
-const cliPath = path.join(ledlightPath, 'src/cli/run.js');
-const { apiCommands } = resolveRepositoryModule('src/cli/cli-arguments.js');
+const cliPath = path.join(ledlightPath, 'src/impl/cli/run.js');
+const { apiCommands } = resolveRepositoryModule('src/impl/cli/cli-arguments.js');
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-api-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
@@ -61,7 +61,7 @@ test('exposes stable error code strings instead of public error classes', (t) =>
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
-    () => journal.aggregate({ inValuationCommodity: true }),
+    () => journal.aggregate({ denominate: true }),
     (error) => error.code === 'LEDLIGHT_MISSING_VALUATION_DATA',
   );
   fs.rmSync(journal.databasePath);
@@ -163,6 +163,41 @@ test('loads SQLite only when a journal is opened', (t) => {
   );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
   assert.equal(Object.hasOwn(journal, 'reconciliationEntries'), false);
+});
+
+test('returns all transactions without pagination and paginates only when requested', (t) => {
+  const { openJournal } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-transactions-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const entries = Array.from({ length: 501 }, (_value, index) => `
+2024-01-01 Entry ${index + 1}
+  Assets:Cash  1 SEK
+  Equity:Opening  -1 SEK
+`).join('');
+  fs.writeFileSync(journalPath, `commodity SEK
+  format 1,000.00 SEK
+  default
+account Assets:Cash
+account Equity:Opening
+${entries}`);
+
+  const journal = openJournal(journalPath);
+  const unpaginated = journal.transactions();
+  assert.equal(unpaginated.totalTransactions, 501);
+  assert.equal(unpaginated.transactions.length, 501);
+  assert.equal(unpaginated.transactions[500].description, 'Entry 501');
+  assert.equal(unpaginated.transactions[500].postings.length, 2);
+  assert.equal(Object.hasOwn(unpaginated, 'page'), false);
+  assert.equal(Object.hasOwn(unpaginated, 'pageSize'), false);
+  assert.equal(Object.hasOwn(unpaginated, 'totalPages'), false);
+
+  const paginated = journal.transactions({ page: 2, pageSize: 500 });
+  assert.equal(paginated.page, 2);
+  assert.equal(paginated.pageSize, 500);
+  assert.equal(paginated.totalPages, 2);
+  assert.equal(paginated.transactions.length, 1);
+  assert.equal(paginated.transactions[0].description, 'Entry 501');
 });
 
 test('returns query data while exposing ingestion warnings through the API and CLI', (t) => {

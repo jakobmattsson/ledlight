@@ -1,0 +1,13 @@
+Rejects a quoted commodity in a price directive.
+
+========== TEXT ==========
+
+P 2024-01-01 "FUND" 1 USD
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

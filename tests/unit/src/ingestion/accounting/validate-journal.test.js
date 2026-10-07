@@ -4,10 +4,10 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parse } = resolveRepositoryModule("src/ingestion/syntax/ledger-parser.js");
+const { parse } = resolveRepositoryModule("src/impl/ingestion/syntax/ledger-parser.js");
 const {
   validateJournal,
-} = resolveRepositoryModule("src/ingestion/accounting/journal-validator.js");
+} = resolveRepositoryModule("src/impl/ingestion/accounting/journal-validator.js");
 
 const invalidAmounts = [
   {

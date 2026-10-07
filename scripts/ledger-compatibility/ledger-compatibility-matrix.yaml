@@ -19,11 +19,11 @@ commands:
     ledlight: transactions --format text
     ledger: print
   balance:
-    ledlight: aggregate --value
+    ledlight: aggregate --denominate
     ledger: balance --no-total --exchange SEK --flat
   balance-with-total:
-    ledlight: aggregate --value --include-total
+    ledlight: aggregate --denominate --include-total
     ledger: balance --exchange SEK --flat
   balance-inverted:
-    ledlight: aggregate --value --invert
+    ledlight: aggregate --denominate --invert
     ledger: balance --no-total --exchange SEK --flat --invert

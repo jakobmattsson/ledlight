@@ -1,9 +1,0 @@
-========== TEXT ==========
-commodity SEK
-  default SEK
-========== ERROR ==========
-{
-  "code": "LEDLIGHT_SYNTAX",
-  "source": "bad.ledger",
-  "line": 2
-}

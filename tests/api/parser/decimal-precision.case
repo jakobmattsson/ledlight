@@ -1,0 +1,90 @@
+Preserves exact decimal precision in posting amounts and costs.
+
+========== TEXT ==========
+
+2024-01-29 Investment ; imported
+    Assets:Broker Account  8.000000000000000001 SECURITY @ 7786.140669608098 SEK ; exact cost
+    Assets:Cash  = 67683.20 SEK
+    Equity:Opening
+
+========== JSON ==========
+
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-29",
+      "description": "Investment",
+      "comment": "imported",
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Broker Account",
+          "amount": {
+            "quantity": "8.000000000000000001",
+            "commodity": "SECURITY"
+          },
+          "lotCost": null,
+          "cost": {
+            "total": false,
+            "amount": {
+              "quantity": "7786.140669608098",
+              "commodity": "SEK"
+            }
+          },
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": "exact cost",
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 5
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": {
+            "quantity": "67683.20",
+            "commodity": "SEK"
+          },
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 5
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 4,
+            "column": 5
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    }
+  ]
+}

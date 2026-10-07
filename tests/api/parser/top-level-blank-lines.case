@@ -1,0 +1,60 @@
+Parses blank lines between top-level entries.
+
+========== TEXT ==========
+
+2024-01-01 Opening
+  Assets:Cash  1 SEK
+
+commodity SEK
+
+========== JSON ==========
+
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-01",
+      "description": "Opening",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    },
+    {
+      "type": "commodity",
+      "comment": null,
+      "location": {
+        "source": "fixture.ledger",
+        "line": 4,
+        "column": 1
+      },
+      "symbol": "SEK",
+      "properties": []
+    }
+  ]
+}

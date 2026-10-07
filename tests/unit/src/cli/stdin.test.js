@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const createReportCommand = require('../../../../src/cli/modules/report-command');
+const createReportCommand = require('../../../../src/impl/cli/report-command');
 
 function command(standardInput) {
   return createReportCommand({
@@ -30,8 +30,8 @@ test('does not read stdin for help, version, unknown commands, explicit files, o
 test('reads piped text once and selects stdin only for nonempty input', () => {
   let reads = 0;
   const piped = command({ isTTY: () => false, read: () => { reads += 1; return 'journal\n'; } });
-  assert.deepEqual(piped.run(['aggregate', '--value']), {
-    arguments_: ['aggregate', '--file', '-', '--value'], source: 'journal\n',
+  assert.deepEqual(piped.run(['aggregate', '--denominate']), {
+    arguments_: ['aggregate', '--file', '-', '--denominate'], source: 'journal\n',
   });
   assert.equal(reads, 1);
   const empty = command({ isTTY: () => false, read: () => '' });

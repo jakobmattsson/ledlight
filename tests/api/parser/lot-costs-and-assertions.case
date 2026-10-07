@@ -1,0 +1,114 @@
+Parses unit and total lot costs, transaction prices, and balance assertions.
+
+========== TEXT ==========
+
+2024-01-01 Trade
+    Assets:Unit Lot  2 FUND {250 SEK} @ 300 SEK
+    Assets:Total Lot  3.5 FUND {{875 SEK}} @@ 1000.25 SEK
+    Assets:Cash  -1000.25 SEK = 2500.00 SEK
+
+========== JSON ==========
+
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-01",
+      "description": "Trade",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Unit Lot",
+          "amount": {
+            "quantity": "2",
+            "commodity": "FUND"
+          },
+          "lotCost": {
+            "total": false,
+            "amount": {
+              "quantity": "250",
+              "commodity": "SEK"
+            }
+          },
+          "cost": {
+            "total": false,
+            "amount": {
+              "quantity": "300",
+              "commodity": "SEK"
+            }
+          },
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 5
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Total Lot",
+          "amount": {
+            "quantity": "3.5",
+            "commodity": "FUND"
+          },
+          "lotCost": {
+            "total": true,
+            "amount": {
+              "quantity": "875",
+              "commodity": "SEK"
+            }
+          },
+          "cost": {
+            "total": true,
+            "amount": {
+              "quantity": "1000.25",
+              "commodity": "SEK"
+            }
+          },
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 5
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "-1000.25",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": {
+            "quantity": "2500.00",
+            "commodity": "SEK"
+          },
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 4,
+            "column": 5
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    }
+  ]
+}

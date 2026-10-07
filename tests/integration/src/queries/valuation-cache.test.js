@@ -7,8 +7,8 @@ const path = require('node:path');
 const test = require('node:test');
 const { resolveQuery, resolveRepositoryModule } = require('../../../support/repository-container');
 
-const { buildDatabase } = resolveRepositoryModule('src/ingestion/database/database.js').$$private;
-const { readDatabase } = resolveRepositoryModule('src/ingestion/database/database-reader.js');
+const { buildDatabase } = resolveRepositoryModule('src/impl/ingestion/database/database.js').$$private;
+const { readDatabase } = resolveRepositoryModule('src/impl/ingestion/database/database-reader.js');
 const { execute } = resolveQuery('aggregate');
 
 test('aggregate uses materialized valuation rates without filling the raw price cache', (t) => {
@@ -32,7 +32,7 @@ P 2024-01-01 FUND 10 SEK
   buildDatabase(databasePath, journalPath);
   const valuationPriceCache = new Map();
   const rows = readDatabase(databasePath, (database) => execute(database, {
-    to: '2024-01-01', accounts: ['Assets:Fund'], inValuationCommodity: true,
+    to: '2024-01-01', accounts: ['Assets:Fund'], denominate: true,
   }, { valuationPriceCache }));
 
   assert.deepEqual(rows, [{ account: 'Assets:Fund', commodity: 'SEK', quantity: '20' }]);

@@ -1,0 +1,14 @@
+Rejects a transaction date that does not exist on the calendar.
+
+========== TEXT ==========
+
+2024-02-30 Invalid
+  Assets:Cash  1 SEK
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

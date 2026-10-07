@@ -1,0 +1,24 @@
+Cost valuation preserves exact decimal basis without market prices.
+
+========== API ==========
+
+aggregate({ valuation: 'cost', accounts: ['Assets:'], denominate: true, groupBy: 'commodity' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+2024-01-01 Opening
+  Assets:Fund  3 FUND {0.100000000000000001 SEK}
+  Assets:Cash  0.2 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "commodity": "SEK",
+    "quantity": "0.500000000000000003"
+  }
+]

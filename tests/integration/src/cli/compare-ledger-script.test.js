@@ -10,7 +10,7 @@ const { parseCase } = require('../../../support/case');
 
 const root = path.resolve(__dirname, '../../../..');
 const script = path.join(root, 'scripts/ledger-compatibility/compare-ledger.js');
-const fixture = path.join(root, 'tests/cases/compatibility/ledger/ledger-basic-accounts.case');
+const fixture = path.join(root, 'tests/api/queries/compatibility/ledger/ledger-basic-accounts.case');
 const ledgerBinary = process.env.LEDGER_BIN ?? 'ledger';
 
 function withJournal(t, source) {

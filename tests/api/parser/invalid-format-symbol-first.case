@@ -1,0 +1,14 @@
+Rejects a commodity format that puts the symbol first.
+
+========== TEXT ==========
+
+commodity SEK
+  format SEK 1,000.00
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

@@ -9,7 +9,7 @@ module.exports = ({
   topLevelBlocks: { splitTopLevelBlocks },
 }) => {
 
-  const grammarSource = fs.readFileSync(path.join(__dirname, 'ledger.ohm'), 'utf8');
+  const grammarSource = fs.readFileSync(path.join(__dirname, '../../../src/surface/parser/ledger.ohm'), 'utf8');
   const grammar = ohm.grammar(grammarSource);
 
   function location(node, source) {

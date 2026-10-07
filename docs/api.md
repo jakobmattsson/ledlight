@@ -37,8 +37,8 @@ all default to `false`.
 
 | Query | Date inputs and meaning | Other inputs |
 | --- | --- | --- |
-| `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `groupBy`, `inValuationCommodity`, `withValuationValue`, `invert`, `includeTotal` |
-| `balanceHistoryReport` | `from`, `to`: select daily closing balances, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
+| `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `groupBy`, `denominate`, `withValuationValue`, `invert`, `includeTotal` |
+| `totalHistory` | `from`, `to`: select daily closing totals, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
 | `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
 | `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
@@ -57,11 +57,9 @@ Existing API/CLI differences are deliberate compatibility constraints:
 
 - Declaration queries default to `usage: 'all'` in the API and `--usage used`
   in the CLI, where the default matches Ledger.
-- `inValuationCommodity` maps to `--value`. Investment performance uses `--json`,
-  while other formatted reports use `--format json`.
 - Transaction `order` selects forward (`oldest`) or reverse (`newest`) journal
-  order, not a date sort. The API paginates by default; CLI text output includes
-  all matching transactions unless pagination is explicitly requested.
+  order, not a date sort. The API and CLI return all matching transactions
+  unless pagination is explicitly requested.
 
 These spellings and defaults remain supported. Unrealized gains use only `to`
 because they describe a snapshot rather than period activity; all earlier
@@ -203,12 +201,12 @@ Options:
 | `dateBasis` | `posting` or `transaction` | `posting` | Date used for filtering |
 | `valuation` | `cost` or `market` | `market` | Valuation method when converting or adding valuation values |
 | `groupBy` | `account` or `commodity` | `account` | Result grouping dimension |
-| `inValuationCommodity` | boolean | `false` | Convert and combine rows in the journal default commodity |
+| `denominate` | boolean | `false` | Convert and combine rows in the journal default commodity |
 | `withValuationValue` | boolean | `false` | Preserve commodity rows and add `valuationValue` |
 | `invert` | boolean | `false` | Negate quantities and valuation values |
 | `includeTotal` | boolean | `false` | Append an exact total for each reported commodity |
 
-`inValuationCommodity` and `withValuationValue` are mutually exclusive.
+`denominate` and `withValuationValue` are mutually exclusive.
 `includeTotal` is unavailable with commodity grouping because the grouped
 rows already contain the totals for each commodity.
 Account-grouped rows are `{ account, quantity, commodity }`, sorted by account
@@ -219,7 +217,7 @@ accounts, and retain exact zero balances. `withValuationValue` adds an exact
 in commodity order and retain exact zero balances. With `withValuationValue`,
 each total also includes the summed `valuationValue` for that commodity. Empty
 reports have no total rows. Conversion to the default commodity is optional;
-with `inValuationCommodity`, there is a single total in that commodity.
+with `denominate`, there is a single total in that commodity.
 
 `valuation: 'market'` (the default) uses market prices at the valuation cutoff.
 `valuation: 'cost'` uses the signed lot costs recorded on each posting, including
@@ -235,13 +233,13 @@ Lot costs and transaction prices on default-commodity postings must also be
 expressed in the default commodity; ingestion warns with `INVALID_COMMODITY_TRADE`
 when an annotation uses another commodity.
 
-### `journal.balanceHistoryReport(options)`
+### `journal.totalHistory(options)`
 
 Options are `from`, `to`, `accounts`, `dateBasis`, `valuation`, and `invert`. The date bounds
-select output days; postings before `from` still contribute to every closing
-balance. `valuation` accepts `cost` or `market` and defaults to `market`. Market
+select output days; postings before `from` still contribute to every daily
+total. `valuation` accepts `cost` or `market` and defaults to `market`. Market
 valuation uses each day's prices; cost valuation accumulates the recorded lot
-costs with the same rules as `aggregate`, so price changes do not alter balances.
+costs with the same rules as `aggregate`, so price changes do not alter cost totals.
 Both modes use the same date range. History ends at the latest
 posting/transaction date (according to `dateBasis`) or price date in the journal,
 or at `to` if earlier. No rows are synthesized beyond the available history.
@@ -419,28 +417,29 @@ rule for each commodity and date.
 
 ### `journal.transactions({ accounts, id, order, page, pageSize })`
 
-Returns a paginated transaction collection. All options are optional. `accounts`
+Returns a transaction collection. `accounts`
 is an array that selects transactions containing a posting matching any pattern
 while retaining all postings in each selected transaction. `id` selects the transaction with
 that positive integer ID. `order` is `newest` or `oldest` and defaults to
-`oldest`; `page` defaults to `1`, while `pageSize` defaults to `100`. Page values
+`oldest`. Without `page` and `pageSize`, all matching transactions are returned.
+Pagination requires both options; supplying only one is an error. Page values
 and page sizes are positive integers. `id`, `page`, and `pageSize` also accept
 canonical decimal integer strings such as `'2'`, allowing the CLI to pass them
 without coercing other input types. Zero, fractions, unsafe integers, whitespace,
 and leading zeros are rejected. Pages beyond the result are clamped to the last
 page (or page `1` for an empty result).
-The result contains `order`, the selected `page`, `pageSize`,
-`totalTransactions`, `totalPages`, and `transactions`. Transactions include
+The result always contains `order`, `totalTransactions`, and `transactions`.
+Paginated results additionally contain the selected `page`, `pageSize`, and
+`totalPages`. Transactions include
 their ordered note text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
 The `transactions` CLI command defaults to
-`--format text` and prints every matching transaction rather than applying the
-API's 100-row default page size. Its repeatable `--accounts PATTERN` option selects transactions
+`--format text` and prints every matching transaction. Its repeatable `--accounts PATTERN` option selects transactions
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
-journal containing the transactions on the selected page.
-`--format json` returns the complete paginated API result, while `--format csv`
+journal containing the matching transactions or the requested page.
+`--format json` returns the complete API result, while `--format csv`
 returns one row per posting amount with transaction and posting fields.
 
 ### `journal.postings({ from, to, accounts })`
@@ -485,10 +484,13 @@ Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the
 API call or its result. Commands without an established text format return the
 API result as JSON. The report commands preserve their human-readable formats.
-`aggregate`, `balance-history`, and `unrealized-gains` accept `--format json`;
-`investment-performance` accepts `--json` to return every API field. API option
-names use kebab case on the command line; for example, `withValuationValue` is
-`--with-valuation-value` and `includeTotal` is `--include-total`.
+`aggregate`, `total-history`, `unrealized-gains`, and `investment-performance`
+accept `--format json` to return every API field. Investment performance also
+accepts `--format csv` for one data row with the report fields as columns;
+`commodities` and `points` are JSON arrays in their CSV cells, and nulls are
+empty cells. API option names use kebab case on the command line; for example,
+`withValuationValue` becomes `--with-valuation-value` and `includeTotal` becomes
+`--include-total`.
 
 `accounts` defaults to `--format text` and prints the same
 newline-separated account names as `ledger accounts`. Repeating `--accounts

@@ -7,12 +7,12 @@ const test = require('node:test');
 const { parseLedgerText } = require('../../../..');
 const { resolveReferenceParser, resolveRepositoryModule } = require('../../../support/repository-container');
 
-const casesDirectory = path.resolve(__dirname, '../../../parser-cases');
-const textHeader = '========== TEXT ==========\n';
-const jsonHeader = '========== JSON ==========\n';
-const errorHeader = '========== ERROR ==========\n';
-const warningsHeader = '========== WARNINGS ==========\n';
-const runtimeParser = resolveRepositoryModule('src/ingestion/syntax/ledger-parser.js');
+const casesDirectory = path.resolve(__dirname, '../../../api/parser');
+const textHeader = '\n\n========== TEXT ==========\n\n';
+const jsonHeader = '\n========== JSON ==========\n\n';
+const errorHeader = '\n========== ERROR ==========\n\n';
+const warningsHeader = '\n========== WARNINGS ==========\n\n';
+const runtimeParser = resolveRepositoryModule('src/impl/ingestion/syntax/ledger-parser.js');
 const referenceParser = resolveReferenceParser().$$private;
 
 function warningContract({ code, source, line, startLine, endLine }) {
@@ -22,17 +22,20 @@ function warningContract({ code, source, line, startLine, endLine }) {
 for (const name of fs.readdirSync(casesDirectory).filter((file) => file.endsWith('.case')).sort()) {
   test(name, () => {
     const contents = fs.readFileSync(path.join(casesDirectory, name), 'utf8');
-    assert.ok(contents.startsWith(textHeader), 'case must start with a TEXT section');
-    const jsonSeparator = contents.indexOf(jsonHeader, textHeader.length);
-    const errorSeparator = contents.indexOf(errorHeader, textHeader.length);
-    const warningsSeparator = contents.indexOf(warningsHeader, textHeader.length);
+    const textSeparator = contents.indexOf(textHeader);
+    assert.ok(textSeparator > 0 && contents.slice(0, textSeparator).trim() !== '',
+      'case must start with a description and a TEXT section');
+    const jsonSeparator = contents.indexOf(jsonHeader, textSeparator + textHeader.length);
+    const errorSeparator = contents.indexOf(errorHeader, textSeparator + textHeader.length);
+    const warningsSeparator = contents.indexOf(warningsHeader, textSeparator + textHeader.length);
     assert.ok((jsonSeparator >= 0) !== (errorSeparator >= 0),
       'case must have exactly one JSON or ERROR section');
     const separator = jsonSeparator >= 0 ? jsonSeparator : errorSeparator;
-    assert.ok(separator > textHeader.length, 'case must contain a nonempty TEXT section');
+    assert.ok(separator > textSeparator + textHeader.length,
+      'case must contain a nonempty TEXT section');
     const header = jsonSeparator >= 0 ? jsonHeader : errorHeader;
     assert.equal(contents.indexOf(header, separator + header.length), -1, 'case must have one result section');
-    const sourceText = contents.slice(textHeader.length, separator);
+    const sourceText = contents.slice(textSeparator + textHeader.length, separator);
     if (header === jsonHeader) {
       assert.ok(warningsSeparator < 0 || warningsSeparator > separator + header.length,
         'WARNINGS must follow a nonempty JSON section');

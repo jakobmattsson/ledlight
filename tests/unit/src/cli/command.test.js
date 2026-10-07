@@ -1,19 +1,21 @@
 'use strict';
 
-const { resolveRepositoryModule } = require('../../../support/repository-container');
+const { resolveCommands, resolveRepositoryModule } = require('../../../support/repository-container');
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const createCommand = require('../../../../src/cli/cli-command');
-const createArguments = require('../../../../src/cli/cli-arguments');
-const cliArguments = resolveRepositoryModule('src/cli/cli-arguments.js');
-const cliFormat = resolveRepositoryModule('src/cli/cli-format.js');
-const coreProject = resolveRepositoryModule('src/core/project.js');
+const createCommand = require('../../../../src/impl/cli/cli-command');
+const createArguments = require('../../../../src/impl/cli/cli-arguments');
+const commands = resolveCommands();
+const cliArguments = resolveRepositoryModule('src/impl/cli/cli-arguments.js');
+const cliFormat = resolveRepositoryModule('src/impl/cli/cli-format.js');
+const coreProject = resolveRepositoryModule('src/impl/core/project.js');
 
 const commandNames = [...new Set(Object.values(cliArguments.apiCommands))];
 
 test('shows command help only with the explicit help option', () => {
   const { runReportCommand } = createCommand({
+    commands,
     project: { openJournal: () => { throw new Error('must not open a journal'); } },
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -27,6 +29,7 @@ test('shows command help only with the explicit help option', () => {
 
 test('runs a bare command when CLI configuration supplies the journal path', () => {
   const configuredArguments = createArguments({
+    commands,
     cliConfiguration: {
       apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],
     },
@@ -56,6 +59,7 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
     },
   };
   const { runReportCommand } = createCommand({
+    commands,
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments: configuredArguments,
@@ -64,6 +68,34 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
 
   assert.match(runReportCommand(['investment-performance']), /Opening value: 0\.00 USD/u);
   assert.deepEqual(opened, ['/configured-journal']);
+});
+
+test('prepares selected output before shared JSON encoding', () => {
+  const account = { account: 'Assets:Cash', comment: 'Cash', transactionCount: 1 };
+  const gain = { account: 'Assets:Broker', quantity: '5', commodity: 'USD' };
+  const project = {
+    openJournal: () => ({
+      warnings: [],
+      accounts: () => [account],
+      unrealizedGains: () => [gain],
+    }),
+  };
+  const { runReportCommand } = createCommand({
+    commands,
+    project,
+    packageMetadata: { version: '1.2.3' },
+    cliArguments,
+    cliFormat,
+  });
+  assert.equal(runReportCommand(['accounts', '--file', '/journal', '--format', 'json']),
+    '[\n  "Assets:Cash"\n]\n');
+  assert.equal(runReportCommand(['accounts', '--file', '/journal', '--details', '--format', 'json']),
+    `${JSON.stringify([account], null, 2)}\n`);
+  assert.equal(runReportCommand([
+    'unrealized-gains', '--file', '/journal', '--include-total', '--format', 'json',
+  ]), `${JSON.stringify([gain, {
+    account: 'Total', commodity: 'USD', isTotal: true, quantity: '5',
+  }], null, 2)}\n`);
 });
 
 test('delegates report behavior to the public Node API and only formats results', () => {
@@ -79,8 +111,8 @@ test('delegates report behavior to the public Node API and only formats results'
         { account: 'Total', quantity: '-10', commodity: 'USD', isTotal: true },
       ];
     },
-    balanceHistoryReport(options) {
-      calls.push({ operation: 'balanceHistoryReport', options });
+    totalHistory(options) {
+      calls.push({ operation: 'totalHistory', options });
       return [{ date: '2024-01-01', amount: '-10', commodity: 'USD' }];
     },
     unrealizedGains(options) {
@@ -118,6 +150,7 @@ test('delegates report behavior to the public Node API and only formats results'
     },
   };
   const { runReportCommand } = createCommand({
+    commands,
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -146,7 +179,7 @@ test('delegates report behavior to the public Node API and only formats results'
 
   assert.match(
     runReportCommand([
-      'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--value', '--invert',
+      'aggregate', '--file', '/journal', '--accounts', 'Assets:', '--denominate', '--invert',
       '--include-total',
     ]),
     /-{20}\n\s+-10\.00 USD\n$/u,
@@ -159,7 +192,7 @@ test('delegates report behavior to the public Node API and only formats results'
     'amount,commodity\n-10,USD\n',
   );
   assert.equal(
-    runReportCommand(['balance-history', '--file', '/journal', '--invert', '--format', 'csv']),
+    runReportCommand(['total-history', '--file', '/journal', '--invert', '--format', 'csv']),
     'date,amount\n2024-01-01,-10.00\n',
   );
   assert.match(
@@ -181,7 +214,7 @@ test('delegates report behavior to the public Node API and only formats results'
         accounts: ['Assets:'],
         dateBasis: 'posting', valuation: 'market',
         groupBy: 'account',
-        inValuationCommodity: true,
+        denominate: true,
         invert: true,
         includeTotal: true,
       },
@@ -196,9 +229,8 @@ test('delegates report behavior to the public Node API and only formats results'
     },
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'balanceHistoryReport',
+      operation: 'totalHistory',
       options: {
-        accounts: [],
         dateBasis: 'posting', valuation: 'market',
         invert: true,
       },
@@ -206,17 +238,18 @@ test('delegates report behavior to the public Node API and only formats results'
     { operation: 'openJournal', journalPath: '/journal' },
     {
       operation: 'investmentPerformance',
-      options: { accounts: [], commodities: [], excludeCommodities: [] },
+      options: {},
     },
     { operation: 'commodities', options: { usage: 'all' } },
     { operation: 'openJournal', journalPath: '/journal' },
-    { operation: 'unrealizedGains', options: { accounts: [], dateBasis: 'posting' } },
+    { operation: 'unrealizedGains', options: { dateBasis: 'posting' } },
   ]);
 });
 
 test('aggregate includes a total only when requested in every output format', () => {
   const calls = [];
   const { runReportCommand } = createCommand({
+    commands,
     project: {
       openJournal: () => ({
         aggregate(options) {
@@ -236,7 +269,7 @@ test('aggregate includes a total only when requested in every output format', ()
   });
 
   for (const format of ['text', 'csv', 'json']) {
-    const arguments_ = ['aggregate', '--file', '/journal', '--value', '--format', format];
+    const arguments_ = ['aggregate', '--file', '/journal', '--denominate', '--format', format];
     const output = runReportCommand(arguments_);
     assert.match(output, /Assets:Cash/u);
     assert.doesNotMatch(output, /Total/u);
@@ -301,6 +334,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     openJournal(journalPath) { calls.push(['openJournal', journalPath]); return journal; },
   };
   const { runReportCommand } = createCommand({
+    commands,
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -352,7 +386,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     '2024-01-03 Shop\n    Assets:Cash                            -5.00 SEK\n',
   );
   assert.deepEqual(calls, [
-    ['openJournal', '/journal'], ['accounts', { accounts: [], usage: 'used' }],
+    ['openJournal', '/journal'], ['accounts', { usage: 'used' }],
     ['openJournal', '/journal'], ['accounts', {
       accounts: ['Assets:Cash'], usage: 'used',
     }],
@@ -363,8 +397,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
     ['openJournal', '/journal'], ['transactions', {
       accounts: ['Assets:Cash'], id: '7', order: 'newest', page: '2', pageSize: '10',
     }],
-    ['openJournal', '/journal'], ['commodities', { usage: 'all' }],
-    ['transactions', { accounts: [], order: 'oldest' }],
+    ['openJournal', '/journal'], ['transactions', { order: 'oldest' }],
+    ['commodities', { usage: 'all' }],
   ]);
 });
 
@@ -382,6 +416,7 @@ test('collects ingestion warnings before invoking a query', () => {
     },
   };
   const { runReportCommandWithWarnings } = createCommand({
+    commands,
     project: { openJournal: () => journal },
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -427,6 +462,7 @@ test('formats the postings API result in the requested CLI format', () => {
     },
   };
   const { runReportCommand } = createCommand({
+    commands,
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,

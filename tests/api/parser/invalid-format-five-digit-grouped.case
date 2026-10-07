@@ -1,0 +1,14 @@
+Rejects a five-digit grouped commodity format.
+
+========== TEXT ==========
+
+commodity SEK
+  format 10,000.00 SEK
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

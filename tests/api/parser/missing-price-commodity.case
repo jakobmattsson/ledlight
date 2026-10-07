@@ -1,0 +1,13 @@
+Rejects a price directive without a price commodity.
+
+========== TEXT ==========
+
+P 2024-01-01 FUND 10
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

@@ -9,14 +9,14 @@ const path = require('node:path');
 const test = require('node:test');
 const { spawnSync } = require('node:child_process');
 const Database = require('better-sqlite3');
-const { pathsForJournal } = resolveRepositoryModule("src/core/cache-paths.js");
+const { pathsForJournal } = resolveRepositoryModule("src/impl/core/cache-paths.js");
 const {
   ensureDatabaseCurrent,
-} = resolveRepositoryModule("src/ingestion/database/database.js");
+} = resolveRepositoryModule("src/impl/ingestion/database/database.js");
 const {
   buildDatabase,
   checkDatabaseSync,
-} = resolveRepositoryModule("src/ingestion/database/database.js").$$private;
+} = resolveRepositoryModule("src/impl/ingestion/database/database.js").$$private;
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-database-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
@@ -428,7 +428,7 @@ commodity EUR
 test('aggregate CLI builds stale databases but reuses current databases', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
-  const cliPath = path.resolve(__dirname, '../../../../../src/cli/run.js');
+  const cliPath = path.resolve(__dirname, '../../../../../src/impl/cli/run.js');
   fs.writeFileSync(journalPath, `commodity SEK
   default
 account Assets:Cash,Main

@@ -1,0 +1,15 @@
+Transactions reject a page without a page size.
+
+========== API ==========
+
+transactions({ page: 2 })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+
+========== ERROR ==========
+
+page and pageSize must be provided together

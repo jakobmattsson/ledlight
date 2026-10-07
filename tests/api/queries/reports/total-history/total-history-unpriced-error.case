@@ -1,0 +1,17 @@
+A missing historical market price prevents daily valuation.
+
+========== API ==========
+
+totalHistory({ accounts: ['Assets:'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+2024-01-01 Opening
+  Assets:Other  1 OTHER {1 SEK}
+  Equity:Opening  -1 SEK
+
+========== ERROR ==========
+
+No price for OTHER on or before 2024-01-01 can convert it to SEK
