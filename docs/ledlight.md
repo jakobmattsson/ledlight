@@ -463,7 +463,10 @@ Callers can instead select the transaction's primary date so all postings in a
 transaction take effect atomically.
 
 Balance assignments and implicit balancing postings are resolved during the
-database build and stored in `resolved_posting_amounts`. This makes aggregate
+database build and stored in `resolved_posting_amounts`. In `postings`, both
+balance assignments and assertions use `balance_quantity` and
+`balance_commodity`; a missing source amount identifies an assignment, while
+an explicit source amount identifies an assertion. This makes aggregate
 reports a direct SQL operation rather than a replay of Ledger semantics at
 query time.
 

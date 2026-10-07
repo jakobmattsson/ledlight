@@ -47,10 +47,8 @@ module.exports = ({
         postings.cost_quantity AS costQuantity,
         postings.cost_commodity AS costCommodity,
         postings.cost_is_total AS costIsTotal,
-        postings.balance_assignment_quantity AS balanceAssignmentQuantity,
-        postings.balance_assignment_commodity AS balanceAssignmentCommodity,
-        postings.balance_assertion_quantity AS balanceAssertionQuantity,
-        postings.balance_assertion_commodity AS balanceAssertionCommodity,
+        postings.balance_quantity AS balanceQuantity,
+        postings.balance_commodity AS balanceCommodity,
         amounts.quantity,
         amounts.commodity,
         amounts.running_balance AS balance
@@ -67,6 +65,9 @@ module.exports = ({
     for (const row of rows) {
       let posting = byId.get(row.postingId);
       if (!posting) {
+        const balance = row.balanceQuantity === null
+          ? null
+          : { quantity: row.balanceQuantity, commodity: row.balanceCommodity };
         posting = {
           postingId: row.postingId,
           transactionId: row.transactionId,
@@ -95,18 +96,8 @@ module.exports = ({
               commodity: row.costCommodity,
               isTotal: Boolean(row.costIsTotal),
             },
-          balanceAssignment: row.balanceAssignmentQuantity === null
-            ? null
-            : {
-              quantity: row.balanceAssignmentQuantity,
-              commodity: row.balanceAssignmentCommodity,
-            },
-          balanceAssertion: row.balanceAssertionQuantity === null
-            ? null
-            : {
-              quantity: row.balanceAssertionQuantity,
-              commodity: row.balanceAssertionCommodity,
-            },
+          balanceAssignment: row.amountQuantity === null ? balance : null,
+          balanceAssertion: row.amountQuantity === null ? null : balance,
           amounts: [],
         };
         byId.set(row.postingId, posting);

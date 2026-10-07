@@ -155,6 +155,50 @@ P 2024-01-01 FUND 123.45 SEK
   assert.equal(database.pragma('integrity_check', { simple: true }), 'ok');
 });
 
+test('stores assignments and assertions in the same balance columns', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+2024-01-01 Initial balance
+  Assets:Cash  90 SEK
+  Equity:Opening
+2024-01-02 Assigned balance
+  Assets:Cash  = 100 SEK
+  Equity:Opening
+2024-01-03 Asserted balance
+  Assets:Cash  5 SEK = 105 SEK
+  Equity:Opening
+`);
+
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(database.prepare(`
+    SELECT transactions.date, postings.amount_quantity, postings.balance_quantity,
+      postings.balance_commodity, amounts.quantity AS resolved_quantity
+    FROM postings
+    JOIN transactions ON transactions.entry_id = postings.transaction_id
+    JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
+    WHERE postings.account = 'Assets:Cash'
+    ORDER BY transactions.date
+  `).all(), [
+    {
+      date: '2024-01-01', amount_quantity: '90', balance_quantity: null,
+      balance_commodity: null, resolved_quantity: '90',
+    },
+    {
+      date: '2024-01-02', amount_quantity: null, balance_quantity: '100',
+      balance_commodity: 'SEK', resolved_quantity: '10',
+    },
+    {
+      date: '2024-01-03', amount_quantity: '5', balance_quantity: '105',
+      balance_commodity: 'SEK', resolved_quantity: '5',
+    },
+  ]);
+});
+
 test('stores lot costs separately from transaction costs', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');

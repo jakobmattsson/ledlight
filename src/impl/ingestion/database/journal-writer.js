@@ -46,9 +46,8 @@ module.exports = ({
          amount_quantity, amount_commodity,
          lot_cost_quantity, lot_cost_commodity, lot_cost_is_total,
          cost_quantity, cost_commodity, cost_is_total,
-         balance_assignment_quantity, balance_assignment_commodity,
-         balance_assertion_quantity, balance_assertion_commodity)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         balance_quantity, balance_commodity)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
       comment: database.prepare(`
       INSERT INTO comments (transaction_id, posting_id, position, text)
@@ -95,15 +94,14 @@ module.exports = ({
       const amount = amountFields(posting.amount);
       const lotCost = amountFields(posting.lotCost && posting.lotCost.amount);
       const cost = amountFields(posting.cost && posting.cost.amount);
-      const assignment = amountFields(posting.balanceAssignment);
-      const assertion = amountFields(posting.balanceAssertion);
+      const balance = amountFields(posting.balanceAssignment || posting.balanceAssertion);
       const postingId = ++counters.posting;
       statements.posting.run(
         postingId, entryId, position, posting.postingDate || entry.date,
         posting.account, amount.quantity, amount.commodity,
         lotCost.quantity, lotCost.commodity, posting.lotCost ? Number(posting.lotCost.total) : null,
         cost.quantity, cost.commodity, posting.cost ? Number(posting.cost.total) : null,
-        assignment.quantity, assignment.commodity, assertion.quantity, assertion.commodity,
+        balance.quantity, balance.commodity,
       );
       insertComments(statements.comment, posting.comments, posting.location.line, null, postingId);
       resolvedPostings[position].forEach((resolvedAmount, amountPosition) => {

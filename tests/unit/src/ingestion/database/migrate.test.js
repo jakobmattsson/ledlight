@@ -55,6 +55,10 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(postingColumns.includes('lot_cost_is_total'));
   assert.ok(!postingColumns.includes('comment'));
   assert.ok(!postingColumns.includes('line'));
+  assert.ok(postingColumns.includes('balance_quantity'));
+  assert.ok(postingColumns.includes('balance_commodity'));
+  assert.ok(!postingColumns.some((column) => column.startsWith('balance_assignment_')));
+  assert.ok(!postingColumns.some((column) => column.startsWith('balance_assertion_')));
   assert.ok(!database.pragma('table_info(comments)').some((column) => column.name === 'line'));
   assert.deepEqual(
     database.pragma('table_info(file_comments)').map((column) => column.name),
@@ -231,6 +235,22 @@ test('replaces version 30 file comments with entry-owned comments', (t) => {
     database.pragma('table_info(file_comments)').map((column) => column.name),
     ['entry_id', 'text'],
   );
+});
+
+test('replaces version 31 posting balances with shared balance columns', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '31');
+    CREATE TABLE postings (id INTEGER PRIMARY KEY, balance_assignment_quantity TEXT);
+  `);
+
+  migrateDatabase(database);
+
+  const columns = database.pragma('table_info(postings)').map((column) => column.name);
+  assert.ok(columns.includes('balance_quantity'));
+  assert.ok(columns.includes('balance_commodity'));
+  assert.ok(!columns.includes('balance_assignment_quantity'));
 });
 
 test('rejects unsupported schema versions', (t) => {

@@ -79,10 +79,8 @@ CREATE TABLE IF NOT EXISTS postings (
   cost_quantity TEXT,
   cost_commodity TEXT,
   cost_is_total INTEGER CHECK (cost_is_total IN (0, 1)),
-  balance_assignment_quantity TEXT,
-  balance_assignment_commodity TEXT,
-  balance_assertion_quantity TEXT,
-  balance_assertion_commodity TEXT,
+  balance_quantity TEXT,
+  balance_commodity TEXT,
   CHECK ((amount_quantity IS NULL) = (amount_commodity IS NULL)),
   CHECK (
     (lot_cost_quantity IS NULL AND lot_cost_commodity IS NULL AND lot_cost_is_total IS NULL) OR
@@ -92,9 +90,7 @@ CREATE TABLE IF NOT EXISTS postings (
     (cost_quantity IS NULL AND cost_commodity IS NULL AND cost_is_total IS NULL) OR
     (cost_quantity IS NOT NULL AND cost_commodity IS NOT NULL AND cost_is_total IS NOT NULL)
   ),
-  CHECK ((balance_assignment_quantity IS NULL) = (balance_assignment_commodity IS NULL)),
-  CHECK ((balance_assertion_quantity IS NULL) = (balance_assertion_commodity IS NULL)),
-  CHECK (amount_quantity IS NULL OR balance_assignment_quantity IS NULL),
+  CHECK ((balance_quantity IS NULL) = (balance_commodity IS NULL)),
   UNIQUE (transaction_id, position)
 );
 
