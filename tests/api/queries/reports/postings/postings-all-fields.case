@@ -39,7 +39,7 @@ account Equity:Opening
     "postingDate": "2024-01-03",
     "account": "Assets:Cash",
     "postingComments": [
-      "[2024-01-03] card"
+      "card"
     ],
     "amount": {
       "quantity": "-100",

@@ -486,7 +486,7 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
     transactionComments: ['imported', 'Project: Savings'],
     postingDate: '2024-01-03',
     account: 'Assets:Fund',
-    postingComments: ['[2024-01-03] broker'],
+    postingComments: ['broker'],
     amount: { quantity: '10', commodity: 'FUND' },
     lotCost: { quantity: '10', commodity: 'SEK', isTotal: false },
     cost: { quantity: '100', commodity: 'SEK', isTotal: true },
@@ -512,7 +512,7 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
     'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance,' +
     'filename,transactionSourceLine\n' +
     '8,7,2024-01-02,"Buy, fund","[""imported"",""Project: Savings""]",2024-01-03,' +
-    'Assets:Fund,"[""[2024-01-03] broker""]",10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25,' +
+    'Assets:Fund,"[""broker""]",10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25,' +
     '"/books/included, journal.ledger",12\n',
   );
   assert.match(

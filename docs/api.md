@@ -121,6 +121,8 @@ are strings or `null`. A comment on the transaction or posting line becomes
 its first comment. An indented comment before the first posting belongs to the
 transaction; one after a posting belongs to that posting. Tags are
 `{ name, value }`, where `value` may be `null`.
+An inline posting date such as `[2024-01-03]` sets `postingDate` and is excluded
+from the posting's comments. A date-only marker creates no comment.
 Top-level semicolon comments are separate `comment` entries in source order.
 
 For example:

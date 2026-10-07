@@ -457,7 +457,8 @@ for example, `P 2024-01-01 FUND 10 SEK` prices the base commodity `FUND` as a
 quote of `10 SEK`.
 
 Each posting has a non-null `posting_date`: its explicit posting date when one
-is present, otherwise the transaction's primary date. This preserves source
+is present, otherwise the transaction's primary date. Inline posting date
+markers are excluded from stored comment text. This preserves source
 timing for reconciliation. Aggregate reports use this posting date by default.
 Callers can instead select the transaction's primary date so all postings in a
 transaction take effect atomically.

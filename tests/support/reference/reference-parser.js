@@ -106,8 +106,8 @@ module.exports = ({
         account: account.sourceString.trim(),
         ...expression,
         postingDate: inlineComment ? inlineComment.date : null,
-        comments: inlineComment ? [inlineComment.comment] : [],
-        ...(inlineComment?.comment.tags ? { tags: inlineComment.comment.tags } : {}),
+        comments: inlineComment?.comment ? [inlineComment.comment] : [],
+        ...(inlineComment?.comment?.tags ? { tags: inlineComment.comment.tags } : {}),
         location: location(account, this.args.source),
       };
     },
@@ -217,10 +217,13 @@ module.exports = ({
     },
     postingInlineComment(_semicolon, _space, _open, date, _close, _dateSpace, metadata) {
       const tags = metadata.ast(this.args.source);
+      const postingDate = optionalValue(date, this.args.source);
+      const text = metadata.sourceString.trim();
       return {
-        date: optionalValue(date, this.args.source),
-        comment: comment(this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
-          tags, location(_semicolon, this.args.source)),
+        date: postingDate,
+        comment: postingDate && !text ? null : comment(
+          text, tags, location(_semicolon, this.args.source),
+        ),
       };
     },
     transactionInlineComment(_space1, _semicolon, _space2, metadata) {

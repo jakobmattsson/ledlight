@@ -127,8 +127,8 @@ module.exports = ({
     const expression = parseAmountExpression(expressionText, sourceLocation(source, line, expressionColumn));
     const postingDateMatch = parts.comment && /^\[(\d{4}-\d{2}-\d{2})\](?:\s|$)/u.exec(parts.comment);
     const commentAfterDate = postingDateMatch ? parts.comment.slice(postingDateMatch[0].length).trimStart() : parts.comment;
-    const comment = parts.comment === null ? null : parseComment(
-      parts.comment, source, line, indent + parts.index + 1, commentAfterDate,
+    const comment = parts.comment === null || (postingDateMatch && !commentAfterDate) ? null : parseComment(
+      commentAfterDate, source, line, indent + parts.index + 1, commentAfterDate,
     );
     const tags = comment?.tags || [];
     return {

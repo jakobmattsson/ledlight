@@ -50,7 +50,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
           "postingDate": "2024-03-02",
           "comments": [
             {
-              "text": "[2024-03-02] Origin: broker",
+              "text": "Origin: broker",
               "key": "Origin",
               "value": "broker",
               "tags": [

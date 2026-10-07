@@ -253,6 +253,20 @@ test('replaces version 31 posting balances with shared balance columns', (t) => 
   assert.ok(!columns.includes('balance_assignment_quantity'));
 });
 
+test('replaces version 32 caches with normalized posting comments', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '32');
+    CREATE TABLE comments (id INTEGER PRIMARY KEY, text TEXT NOT NULL);
+    INSERT INTO comments (id, text) VALUES (1, '[2024-01-03] card');
+  `);
+
+  migrateDatabase(database);
+
+  assert.equal(database.prepare('SELECT COUNT(*) FROM comments').pluck().get(), 0);
+});
+
 test('rejects unsupported schema versions', (t) => {
   const database = temporaryDatabase(t);
   database.exec(`

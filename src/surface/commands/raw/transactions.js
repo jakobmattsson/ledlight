@@ -161,6 +161,13 @@ module.exports = ({ cliOptions: options }) => ({
           const postingComments = posting.positionedComments ??
             posting.comments.map((text) => ({ position: 1, text }));
           const inlinePostingComment = postingComments.find((comment) => comment.position === 0)?.text;
+          const postingDateMarker = posting.postingDate && posting.postingDate !== date
+            ? `[${posting.postingDate}]` : null;
+          const inlinePostingMetadata = postingDateMarker === null
+            ? inlinePostingComment
+            : inlinePostingComment === undefined || inlinePostingComment === ''
+              ? postingDateMarker
+              : `${postingDateMarker} ${inlinePostingComment}`;
           const formattedExpression = formatPostingExpression(posting, formats);
           const expression = index === elidedAmountIndex ? '' : formattedExpression.text;
           const alignmentWidth = posting.lotCost !== null || posting.cost !== null
@@ -176,18 +183,18 @@ module.exports = ({ cliOptions: options }) => ({
               ? `${posting.account}  ${alignedExpression(10)}`
               : `${posting.account.padEnd(accountColumnWidth)}  ` +
                 alignedExpression(amountColumnWidth);
-          const inlineComment = inlinePostingComment === undefined ? '' : `  ; ${inlinePostingComment}`;
+          const inlineComment = inlinePostingMetadata === undefined ? '' : `  ; ${inlinePostingMetadata}`;
           const maximumWidth = expression === '' ? maximumPostingLineWidth : 80;
           const projectedLineLength = expression === ''
             ? 4 + Math.min(posting.account.length, accountColumnWidth) +
               (posting.amount !== null && posting.account.length > accountColumnWidth ? 2 : 0) +
               inlineComment.length
             : `    ${body}${inlineComment}`.length;
-          const wrapPostingComment = inlinePostingComment !== undefined &&
+          const wrapPostingComment = inlinePostingMetadata !== undefined &&
             projectedLineLength > maximumWidth;
           const postingComment = wrapPostingComment ? '' : inlineComment;
           lines.push(`    ${body}${postingComment}`);
-          if (wrapPostingComment) lines.push(`    ; ${inlinePostingComment}`);
+          if (wrapPostingComment) lines.push(`    ; ${inlinePostingMetadata}`);
           for (const comment of postingComments) {
             if (comment.position !== 0) lines.push(`    ; ${comment.text}`);
           }

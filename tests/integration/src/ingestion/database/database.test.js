@@ -199,6 +199,31 @@ test('stores assignments and assertions in the same balance columns', (t) => {
   ]);
 });
 
+test('stores posting dates separately from comment text', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+2024-01-01 Dated postings
+  Assets:Cash  10 SEK ; [2024-01-02] card
+  Equity:Opening  -10 SEK ; [2024-01-03]
+`);
+
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(database.prepare(`
+    SELECT postings.posting_date, comments.text
+    FROM postings
+    LEFT JOIN comments ON comments.posting_id = postings.id
+    ORDER BY postings.position
+  `).all(), [
+    { posting_date: '2024-01-02', text: 'card' },
+    { posting_date: '2024-01-03', text: null },
+  ]);
+});
+
 test('stores lot costs separately from transaction costs', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');

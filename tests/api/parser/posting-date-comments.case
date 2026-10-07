@@ -1,0 +1,77 @@
+Parses posting dates separately from their comments.
+
+========== TEXT ==========
+
+2024-01-01 Dated postings
+  Assets:Cash  10 SEK ; [2024-01-02] card
+  Equity:Opening  -10 SEK ; [2024-01-03]
+
+========== JSON ==========
+
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-01",
+      "description": "Dated postings",
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": {
+            "quantity": "10",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": "2024-01-02",
+          "comments": [
+            {
+              "text": "card",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 2,
+                "column": 23
+              }
+            }
+          ],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": {
+            "quantity": "-10",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": "2024-01-03",
+          "comments": [],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 3
+          }
+        }
+      ],
+      "comments": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    }
+  ]
+}
