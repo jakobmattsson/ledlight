@@ -31,7 +31,9 @@ module.exports = ({
       if (typeof query !== 'function') {
         throw new Error(`Unsupported API operation: ${command.operation}`);
       }
-      const result = query.call(journal, parsed.options);
+      const result = command.parameterless
+        ? query.call(journal)
+        : query.call(journal, parsed.options);
       const output = command.prepareOutput
         ? command.prepareOutput(result, parsed.cliOptions, cliFormat)
         : result;

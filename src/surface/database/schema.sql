@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS ingestion_warnings (
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY,
   source_file_id INTEGER NOT NULL REFERENCES source_files(id),
-  line INTEGER NOT NULL
+  line INTEGER NOT NULL,
+  printed_text TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS transactions (

@@ -200,6 +200,24 @@ ${entries}`);
   assert.equal(paginated.transactions[0].description, 'Entry 501');
 });
 
+test('print returns plain journal text and rejects an options argument', (t) => {
+  const { openJournal } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-print-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, 'account Assets:Cash\n');
+  const journal = openJournal(journalPath);
+
+  assert.equal(journal.print(), 'account Assets:Cash\n');
+  fs.writeFileSync(journalPath, 'account Assets:Changed\n');
+  assert.equal(journal.print(), 'account Assets:Cash\n');
+  assert.throws(
+    () => journal.print({}),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&
+      error.message === 'print does not accept arguments',
+  );
+});
+
 test('returns query data while exposing ingestion warnings through the API and CLI', (t) => {
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-warnings-'));

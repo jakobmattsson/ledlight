@@ -107,9 +107,9 @@ test('enforces unique account, commodity, and tag declaration names', (t) => {
   database.exec(`
     INSERT INTO source_files (id, path, sha256, size)
     VALUES (1, 'fixture.ledger', '${'0'.repeat(64)}', 0);
-    INSERT INTO journal_entries (id, source_file_id, line) VALUES
-      (1, 1, 1), (2, 1, 2), (3, 1, 3),
-      (4, 1, 4), (5, 1, 5), (6, 1, 6);
+    INSERT INTO journal_entries (id, source_file_id, line, printed_text) VALUES
+      (1, 1, 1, ''), (2, 1, 2, ''), (3, 1, 3, ''),
+      (4, 1, 4, ''), (5, 1, 5, ''), (6, 1, 6, '');
     INSERT INTO account_declarations (entry_id, name) VALUES (1, 'Assets:Cash');
     INSERT INTO commodity_declarations (entry_id, symbol) VALUES (3, 'SEK');
     INSERT INTO tag_declarations (entry_id, name) VALUES (5, 'Reviewed');

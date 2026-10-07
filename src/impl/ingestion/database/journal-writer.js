@@ -8,6 +8,7 @@ module.exports = ({
   globalAccountingValidator: { validateGlobalAccounting },
   journalValidator: { validateJournal, validateResolvedCommodityTrades },
   journalValuationCommodity: { valuationCommodityFromJournal },
+  journalPrinter: { printEntry },
   postingBalanceMaterializer: { materializePostingBalances },
   valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },
@@ -28,8 +29,8 @@ module.exports = ({
       VALUES (?, ?, ?, ?)
     `),
       journalEntry: database.prepare(`
-      INSERT INTO journal_entries (id, source_file_id, line)
-      VALUES (?, ?, ?)
+      INSERT INTO journal_entries (id, source_file_id, line, printed_text)
+      VALUES (?, ?, ?, ?)
     `),
       transaction: database.prepare(`
       INSERT INTO transactions
@@ -249,7 +250,7 @@ module.exports = ({
           }
           const entryId = index + 1;
           statements.journalEntry.run(
-            entryId, sourceFileId, entry.location.line,
+            entryId, sourceFileId, entry.location.line, printEntry(entry),
           );
           insertEntry(
             statements, entryId, entry, counters, resolvedTransactions, ignoredProperties, usage,
