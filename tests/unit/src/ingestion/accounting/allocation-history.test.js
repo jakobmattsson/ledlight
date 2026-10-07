@@ -4,7 +4,45 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
 const { AllocationHistory } = resolveRepositoryModule('src/impl/ingestion/accounting/allocation-history.js');
+const { maximize } = resolveRepositoryModule('src/impl/core/linear-program.js');
 const { parse, format } = resolveRepositoryModule('src/impl/core/rational.js');
+
+function measuredHistory(roundingUnit) {
+  let optimizations = 0;
+  const { AllocationHistory: MeasuredHistory } =
+    require('../../../../../src/impl/ingestion/accounting/allocation-history.js')({
+      rational: resolveRepositoryModule('src/impl/core/rational.js'),
+      linearProgram: {
+        maximize(...args) {
+          optimizations += 1;
+          return maximize(...args);
+        },
+      },
+    });
+  return {
+    history: new MeasuredHistory(parse(roundingUnit)),
+    optimizationCount: () => optimizations,
+  };
+}
+
+test('accepts repeated rounded average-cost sales without optimizing', () => {
+  const { history, optimizationCount } = measuredHistory('0.01');
+  history.acquire('Broker', parse('3'), parse('1'));
+  for (const cost of ['0.34', '0.33', '0.33']) {
+    assert.equal(history.dispose('Broker', parse('1'), parse(cost)), null);
+  }
+  assert.equal(optimizationCount(), 0);
+});
+
+test('falls back to exact allocation after an average-cost sale', () => {
+  const { history, optimizationCount } = measuredHistory('0.01');
+  history.acquire('Broker', parse('10'), parse('10'));
+  history.acquire('Broker', parse('10'), parse('30'));
+  assert.equal(history.dispose('Broker', parse('10'), parse('20')), null);
+  assert.equal(optimizationCount(), 0);
+  assert.equal(history.dispose('Broker', parse('1'), parse('1')), null);
+  assert.ok(optimizationCount() > 0);
+});
 
 function ambiguousHistory(account, cheapCost, expensiveCost, saleCost) {
   const history = new AllocationHistory(parse('0'));
