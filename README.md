@@ -19,6 +19,10 @@ npm test
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.
 
+The full GitHub Actions test job collects coverage and uploads `coverage/lcov.info`
+as an artifact. Local `npm test` runs without coverage; use
+`npm run test:coverage` to generate the report locally when needed.
+
 Run `ledlight` or `ledlight --help` to list the available commands. Run
 `ledlight <command> --help` for the options accepted by one command. Run
 `ledlight --version` for the package version.
