@@ -21,6 +21,9 @@ jobs:
       - run: sudo apt-get install --yes ledger
       - run: npm ci
       - run: npm run test:coverage
+      - name: Show coverage in job summary
+        if: ${{ always() && hashFiles('coverage/coverage-summary.json') != '' }}
+        run: node scripts/ci/coverage-summary.js
       - name: Upload coverage report
         if: ${{ always() && hashFiles('coverage/lcov.info') != '' }}
         uses: actions/upload-artifact@v4
