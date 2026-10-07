@@ -20,7 +20,14 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install --yes ledger
       - run: npm ci
-      - run: npm test
+      - run: npm run test:coverage
+      - name: Upload coverage report
+        if: ${{ always() && hashFiles('coverage/lcov.info') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          retention-days: 14
 
   package:
     name: Node.js 22 on ${{ matrix.os }}
