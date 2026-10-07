@@ -15,6 +15,13 @@ module.exports = ({
     coefficients.set(variable, sub(coefficients.get(variable) || zero, one));
     return expression(value.constant, coefficients);
   }
+  function evaluate(value, witness) {
+    let result = value.constant;
+    for (const [variable, coefficient] of value.coefficients) {
+      result = add(result, mul(coefficient, witness[variable]));
+    }
+    return result;
+  }
 
   class AllocationHistory {
     constructor(roundingUnit) {
@@ -22,6 +29,7 @@ module.exports = ({
       this.groups = new Map();
       this.constraints = [];
       this.variables = 0;
+      this.witness = [];
       this.totals = new Map();
       this.invalid = false;
     }
@@ -40,6 +48,7 @@ module.exports = ({
       }
       for (const [account, total] of other.totals) this.changeTotal(account, total.quantity, total.cost);
       this.variables += other.variables;
+      this.witness.push(...other.witness);
       this.invalid ||= other.invalid;
     }
     holdings(account) {
@@ -70,19 +79,23 @@ module.exports = ({
         bound: neg(bound),
       });
     }
-    strictlyFeasible() {
-      if (!this.constraints.some(({ strict }) => strict)) return true;
+    findWitness(constraints) {
+      if (!constraints.some(({ strict }) => strict)) {
+        const result = maximize(this.variables, constraints, new Map());
+        return result.status === 'optimal' ? result.solution : null;
+      }
       // A closed simplex can optimize infima/suprema, but a boundary-only
       // witness must not satisfy an open rounding interval. One shared positive
       // slack proves that all strict inequalities can hold simultaneously.
       const slack = this.variables;
-      const constraints = this.constraints.map(({ coefficients, bound, strict }) => ({
+      const closed = constraints.map(({ coefficients, bound, strict }) => ({
         coefficients: strict ? new Map([...coefficients, [slack, one]]) : coefficients,
         bound,
       }));
-      constraints.push({ coefficients: new Map([[slack, one]]), bound: one });
-      const result = maximize(this.variables + 1, constraints, new Map([[slack, one]]));
-      return result.status === 'optimal' && result.value.n > 0n;
+      closed.push({ coefficients: new Map([[slack, one]]), bound: one });
+      const result = maximize(this.variables + 1, closed, new Map([[slack, one]]));
+      return result.status === 'optimal' && result.value.n > 0n
+        ? result.solution.slice(0, this.variables) : null;
     }
     dispose(account, quantity, cost, destination, destinationQuantity) {
       if (this.invalid) return null;
@@ -172,30 +185,43 @@ module.exports = ({
         allocated.push({ group, variable });
       }
       this.equality(amountCoefficients, quantity);
-      const upper = maximize(this.variables, this.constraints, costCoefficients);
-      const lower = maximize(this.variables, this.constraints,
-        new Map([...costCoefficients].map(([key, value]) => [key, neg(value)])));
-      if (upper.status !== 'optimal' || lower.status !== 'optimal') {
-        this.invalid = true;
-        return { insufficient: true };
-      }
-      const minimum = neg(lower.value);
-      const maximum = upper.value;
-      if (outside(minimum, maximum)) {
-        this.invalid = true;
-        return { minimum, maximum };
-      }
+      // Proportional consumption of a feasible historical witness is itself a
+      // feasible allocation. Retain the full constraints so later sales may
+      // still choose a different history.
+      const ratio = div(quantity, total.quantity);
+      const average = allocated.map(({ group }) => mul(evaluate(group.remaining, this.witness), ratio));
+      const averageQuantity = average.reduce(add, zero);
+      const averageCost = average.reduce((sum, amount, index) =>
+        add(sum, mul(amount, allocated[index].group.price)), zero);
+      const averageFits = cmp(averageQuantity, quantity) === 0 &&
+        !outside(averageCost, averageCost);
+      const costConstraints = [];
       if (rounded) {
-        this.constraints.push({ coefficients: costCoefficients, bound: upperCost, strict: true });
-        this.constraints.push({
+        costConstraints.push({ coefficients: costCoefficients, bound: upperCost, strict: true });
+        costConstraints.push({
           coefficients: new Map([...costCoefficients].map(([key, value]) => [key, neg(value)])),
           bound: neg(lowerCost), strict: true,
         });
-      } else this.equality(costCoefficients, cost);
-      if (!this.strictlyFeasible()) {
-        this.invalid = true;
-        return { minimum, maximum };
+      } else {
+        costConstraints.push({ coefficients: costCoefficients, bound: cost });
+        costConstraints.push({
+          coefficients: new Map([...costCoefficients].map(([key, value]) => [key, neg(value)])),
+          bound: neg(cost),
+        });
       }
+      const witness = averageFits
+        ? [...this.witness, ...average]
+        : this.findWitness([...this.constraints, ...costConstraints]);
+      if (!witness) {
+        const upper = maximize(this.variables, this.constraints, costCoefficients);
+        const lower = maximize(this.variables, this.constraints,
+          new Map([...costCoefficients].map(([key, value]) => [key, neg(value)])));
+        this.invalid = true;
+        if (upper.status !== 'optimal' || lower.status !== 'optimal') return { insufficient: true };
+        return { minimum: neg(lower.value), maximum: upper.value };
+      }
+      this.witness = witness;
+      this.constraints.push(...costConstraints);
       const transferred = [];
       for (const { group, variable } of allocated) {
         group.remaining = subtractVariable(group.remaining, variable);
