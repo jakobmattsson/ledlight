@@ -54,6 +54,17 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(postingColumns.includes('lot_cost_commodity'));
   assert.ok(postingColumns.includes('lot_cost_is_total'));
   assert.ok(!postingColumns.includes('comment'));
+  assert.ok(!postingColumns.includes('line'));
+  assert.ok(!database.pragma('table_info(comments)').some((column) => column.name === 'line'));
+  assert.deepEqual(
+    database.pragma('table_info(file_comments)').map((column) => column.name),
+    ['entry_id', 'text'],
+  );
+  assert.deepEqual(
+    database.pragma('foreign_key_list(file_comments)')
+      .map(({ table, from, to }) => ({ table, from, to })),
+    [{ table: 'journal_entries', from: 'entry_id', to: 'id' }],
+  );
   const runningBalance = database.pragma('table_info(resolved_posting_amounts)')
     .find((column) => column.name === 'running_balance');
   assert.equal(runningBalance.notnull, 1);
@@ -100,8 +111,8 @@ test('creates the current schema in an empty database', (t) => {
   assert.throws(
     () => database.prepare(`
       INSERT INTO postings
-        (id, transaction_id, position, posting_date, line, account, amount_quantity)
-      VALUES (1, 1, 0, '2024-01-01', 1, 'Assets:Fund', '10')
+        (id, transaction_id, position, posting_date, account, amount_quantity)
+      VALUES (1, 1, 0, '2024-01-01', 'Assets:Fund', '10')
     `).run(),
     /CHECK constraint failed/u,
   );
@@ -204,6 +215,22 @@ test('replaces version 29 notes with current comment tables', (t) => {
   assert.ok(tables.includes('comments'));
   assert.ok(tables.includes('file_comments'));
   assert.ok(!tables.includes('notes'));
+});
+
+test('replaces version 30 file comments with entry-owned comments', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '30');
+    CREATE TABLE file_comments (source_file_id INTEGER, line INTEGER, text TEXT);
+  `);
+
+  migrateDatabase(database);
+
+  assert.deepEqual(
+    database.pragma('table_info(file_comments)').map((column) => column.name),
+    ['entry_id', 'text'],
+  );
 });
 
 test('rejects unsupported schema versions', (t) => {

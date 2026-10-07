@@ -91,7 +91,6 @@ module.exports = ({
             postings.transaction_id AS transactionId,
             postings.id AS postingId,
             postings.posting_date AS postingDate,
-            postings.line AS sourceLine,
             postings.account,
             postings.amount_quantity AS amountQuantity,
             postings.amount_commodity AS amountCommodity,
@@ -153,7 +152,6 @@ module.exports = ({
               },
             amounts: [],
           };
-          Object.defineProperty(posting, 'sourceLine', { value: row.sourceLine });
           transaction.postings.push(posting);
         }
         posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
@@ -161,7 +159,7 @@ module.exports = ({
       const transactionCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT transaction_id AS transactionId, line, position, text
+          SELECT transaction_id AS transactionId, position, text
           FROM comments
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position
@@ -170,7 +168,7 @@ module.exports = ({
       const postingCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT comments.posting_id AS postingId, comments.line, comments.position, comments.text
+          SELECT comments.posting_id AS postingId, comments.position, comments.text
           FROM postings
           JOIN comments ON comments.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
@@ -188,7 +186,7 @@ module.exports = ({
         if (!Object.hasOwn(owner, 'positionedComments')) {
           Object.defineProperty(owner, 'positionedComments', { value: [] });
         }
-        owner.positionedComments.push({ line: row.line, position: row.position, text: row.text });
+        owner.positionedComments.push({ position: row.position, text: row.text });
       }
     }
     return {
@@ -200,9 +198,6 @@ module.exports = ({
         const result = {
           ...transaction,
           postings: transaction.postings.map(({ id: _id, ...posting }, index) => {
-            Object.defineProperty(posting, 'sourceLine', {
-              value: transaction.postings[index].sourceLine,
-            });
             if (Object.hasOwn(transaction.postings[index], 'positionedComments')) {
               Object.defineProperty(posting, 'positionedComments', {
                 value: transaction.postings[index].positionedComments,

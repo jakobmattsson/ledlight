@@ -29,7 +29,7 @@ include included.ledger
 [
   {
     "postingId": 1,
-    "transactionId": 4,
+    "transactionId": 5,
     "transactionDate": "2024-01-01",
     "filename": "{{FILE:included.ledger}}",
     "transactionSourceLine": 3,
@@ -56,7 +56,7 @@ include included.ledger
   },
   {
     "postingId": 2,
-    "transactionId": 4,
+    "transactionId": 5,
     "transactionDate": "2024-01-01",
     "filename": "{{FILE:included.ledger}}",
     "transactionSourceLine": 3,
@@ -80,7 +80,7 @@ include included.ledger
   },
   {
     "postingId": 3,
-    "transactionId": 5,
+    "transactionId": 6,
     "transactionDate": "2024-01-02",
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 7,
@@ -107,7 +107,7 @@ include included.ledger
   },
   {
     "postingId": 4,
-    "transactionId": 5,
+    "transactionId": 6,
     "transactionDate": "2024-01-02",
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 7,

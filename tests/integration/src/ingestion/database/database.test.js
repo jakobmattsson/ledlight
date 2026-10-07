@@ -57,7 +57,7 @@ P 2024-01-01 FUND 123.45 SEK
       postings: result.postings,
       prices: result.prices,
     },
-    { files: 2, entries: 4, transactions: 1, postings: 2, prices: 1 },
+    { files: 2, entries: 6, transactions: 1, postings: 2, prices: 1 },
   );
 
   const database = new Database(databasePath, { readonly: true });
@@ -127,14 +127,15 @@ P 2024-01-01 FUND 123.45 SEK
   );
   assert.deepEqual(
     database.prepare(`
-      SELECT source_files.path, file_comments.line, file_comments.text
+      SELECT file_comments.entry_id, source_files.path, entries.line, file_comments.text
       FROM file_comments
-      JOIN source_files ON source_files.id = file_comments.source_file_id
-      ORDER BY source_files.id, file_comments.line
+      JOIN journal_entries AS entries ON entries.id = file_comments.entry_id
+      JOIN source_files ON source_files.id = entries.source_file_id
+      ORDER BY file_comments.entry_id
     `).all(),
     [
-      { path: journalPath, line: 7, text: 'Root file comment' },
-      { path: transactionsPath, line: 6, text: 'Included file comment' },
+      { entry_id: 4, path: transactionsPath, line: 6, text: 'Included file comment' },
+      { entry_id: 6, path: journalPath, line: 7, text: 'Root file comment' },
     ],
   );
   assert.deepEqual(

@@ -28,8 +28,8 @@ module.exports = ({
       VALUES (?, ?, ?, ?)
     `),
       fileComment: database.prepare(`
-      INSERT INTO file_comments (source_file_id, line, text)
-      VALUES (?, ?, ?)
+      INSERT INTO file_comments (entry_id, text)
+      VALUES (?, ?)
     `),
       journalEntry: database.prepare(`
       INSERT INTO journal_entries (id, source_file_id, line)
@@ -42,17 +42,17 @@ module.exports = ({
     `),
       posting: database.prepare(`
       INSERT INTO postings
-        (id, transaction_id, position, posting_date, line, account,
+        (id, transaction_id, position, posting_date, account,
          amount_quantity, amount_commodity,
          lot_cost_quantity, lot_cost_commodity, lot_cost_is_total,
          cost_quantity, cost_commodity, cost_is_total,
          balance_assignment_quantity, balance_assignment_commodity,
          balance_assertion_quantity, balance_assertion_commodity)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
       comment: database.prepare(`
-      INSERT INTO comments (transaction_id, posting_id, position, line, text)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO comments (transaction_id, posting_id, position, text)
+      VALUES (?, ?, ?, ?)
     `),
       resolvedPostingAmount: database.prepare(`
       INSERT INTO resolved_posting_amounts (id, posting_id, position, quantity, commodity)
@@ -80,7 +80,7 @@ module.exports = ({
     let followingPosition = 1;
     for (const comment of comments) {
       const position = comment.location.line === ownerLine ? 0 : followingPosition++;
-      statement.run(transactionId, postingId, position, comment.location.line, comment.text);
+      statement.run(transactionId, postingId, position, comment.text);
     }
   }
 
@@ -100,7 +100,6 @@ module.exports = ({
       const postingId = ++counters.posting;
       statements.posting.run(
         postingId, entryId, position, posting.postingDate || entry.date,
-        posting.location.line,
         posting.account, amount.quantity, amount.commodity,
         lotCost.quantity, lotCost.commodity, posting.lotCost ? Number(posting.lotCost.total) : null,
         cost.quantity, cost.commodity, posting.cost ? Number(posting.cost.total) : null,
@@ -121,6 +120,9 @@ module.exports = ({
     statements, entryId, entry, counters, resolvedTransactions, ignoredProperties, usage,
   ) {
     switch (entry.type) {
+      case 'comment':
+        statements.fileComment.run(entryId, entry.text);
+        break;
       case 'transaction':
         insertTransaction(statements, entryId, entry, counters, resolvedTransactions.get(entry));
         break;
@@ -205,9 +207,8 @@ module.exports = ({
       }
     }
     const storableEntries = journal.entries.filter((entry) =>
-      entry.type !== 'comment' && !validation.invalidEntries.has(entry) &&
+      !validation.invalidEntries.has(entry) &&
       (entry.type !== 'transaction' || resolvedTransactions.has(entry)));
-    const fileComments = journal.entries.filter((entry) => entry.type === 'comment');
     validateGlobalAccounting(
       storableEntries, resolvedTransactions, valuationCommodity, validation.warnings,
     );
@@ -228,7 +229,6 @@ module.exports = ({
       const replaceContents = database.transaction(() => {
         database.exec(`
         DELETE FROM valuation_prices;
-        DELETE FROM file_comments;
         DELETE FROM ingestion_warnings;
         DELETE FROM journal_entries;
         DELETE FROM source_files;
@@ -248,14 +248,6 @@ module.exports = ({
           statements.sourceFile.run(fileId, file.path, file.sha256, file.size);
           sourceIds.set(file.path, fileId);
         });
-
-        for (const comment of fileComments) {
-          const sourceFileId = sourceIds.get(comment.location.source);
-          if (sourceFileId === undefined) {
-            throw new Error(`File comment refers to an unregistered source file: ${comment.location.source}`);
-          }
-          statements.fileComment.run(sourceFileId, comment.location.line, comment.text);
-        }
 
         const counters = {
           posting: 0,

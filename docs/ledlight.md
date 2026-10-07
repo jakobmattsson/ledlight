@@ -442,16 +442,16 @@ declaration tables. `tag_declarations` stores `tag` directives and their usage
 status. Commodity declarations store the format and default status used by the
 public `commodities` query. `valuation_prices` is derived from `prices` at the
 end of each database build and is not an independent journal source.
-`journal_entries` preserves source file and line information shared by entry
-types other than top-level comments. Its ID preserves source order among those
-entries. Quantities are stored as
-`TEXT`, exactly as parsed, so SQL storage never rounds an accounting value
-through binary floating point.
+`journal_entries` preserves source file, line, and order for every stored
+top-level entry, including file comments. Quantities are stored as `TEXT`,
+exactly as parsed, so SQL storage never rounds an accounting value through
+binary floating point.
 `comments` stores transaction and posting comments together. Position zero
 identifies a comment on the transaction or posting line; subsequent positions
 identify following indented comment lines. An indented comment belongs to the
 preceding posting when one exists, and otherwise to the transaction.
-`file_comments` stores top-level comments by source file and line.
+`file_comments` stores top-level comment text. Its `entry_id` links to the
+comment's source file and line in `journal_entries`.
 Price directives use `base_commodity`, `quote_quantity`, and `quote_commodity`;
 for example, `P 2024-01-01 FUND 10 SEK` prices the base commodity `FUND` as a
 quote of `10 SEK`.
