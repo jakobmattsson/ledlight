@@ -24,7 +24,7 @@ module.exports = ({
 
   function selectTotalHistory(database, options, valuationCommodity) {
     const atCost = options.valuation === 'cost';
-    const quantitySql = atCost ? costValueSql : 'r.quantity';
+    const quantitySql = atCost ? costValueSql : 'r.amount_quantity';
     const totalSql = atCost
       ? 'positions.quantity'
       : 'decimal_mul(positions.quantity, valuation_prices.rate)';
@@ -70,13 +70,13 @@ module.exports = ({
       selected_changes AS (
         SELECT
           ${dateExpression} AS date,
-          r.commodity,
+          r.amount_commodity AS commodity,
           decimal_sum(${quantitySql}) AS quantity
         FROM resolved_posting_amounts AS r
         JOIN postings AS p ON p.id = r.posting_id
         JOIN transactions AS t ON t.entry_id = p.transaction_id
         ${postingWhere}
-        GROUP BY ${dateExpression}, r.commodity
+        GROUP BY ${dateExpression}, r.amount_commodity
       ),
       commodity_bounds AS (
         SELECT commodity, MIN(date) AS start_date

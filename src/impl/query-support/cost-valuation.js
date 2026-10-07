@@ -7,12 +7,12 @@ module.exports = ({
   function validateCostValuation(database, filter) {
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const missing = database.prepare(`
-      SELECT p.account, r.commodity
+      SELECT p.account, r.amount_commodity AS commodity
       FROM resolved_posting_amounts AS r
       JOIN postings AS p ON p.id = r.posting_id
       JOIN transactions AS t ON t.entry_id = p.transaction_id
       ${filter.sql}
-        ${filter.sql ? 'AND' : 'WHERE'} r.commodity != ?
+        ${filter.sql ? 'AND' : 'WHERE'} r.amount_commodity != ?
         AND (p.lot_cost_quantity IS NULL OR p.lot_cost_commodity != ?)
       LIMIT 1
     `).get(...filter.parameters, valuationCommodity, valuationCommodity);
@@ -26,14 +26,14 @@ module.exports = ({
   }
 
   const costValueSql = `CASE
-    WHEN r.commodity = (SELECT value FROM database_metadata WHERE key = 'valuation_commodity')
-      THEN r.quantity
+    WHEN r.amount_commodity = (SELECT value FROM database_metadata WHERE key = 'valuation_commodity')
+      THEN r.amount_quantity
     WHEN p.lot_cost_is_total = 1 THEN CASE
-      WHEN decimal_cmp(r.quantity, '0') < 0 AND decimal_cmp(p.lot_cost_quantity, '0') > 0
+      WHEN decimal_cmp(r.amount_quantity, '0') < 0 AND decimal_cmp(p.lot_cost_quantity, '0') > 0
         THEN decimal_mul(p.lot_cost_quantity, '-1')
       ELSE p.lot_cost_quantity
     END
-    ELSE decimal_mul(r.quantity, p.lot_cost_quantity)
+    ELSE decimal_mul(r.amount_quantity, p.lot_cost_quantity)
   END`;
 
   return { validateCostValuation, costValueSql };

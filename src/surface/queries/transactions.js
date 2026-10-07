@@ -33,7 +33,7 @@ module.exports = ({
       JOIN resolved_posting_amounts AS nonzero_amounts
         ON nonzero_amounts.posting_id = nonzero_postings.id
       WHERE nonzero_postings.transaction_id = transactions.entry_id
-        AND decimal_cmp(nonzero_amounts.quantity, '0') != 0
+        AND decimal_cmp(nonzero_amounts.amount_quantity, '0') != 0
     )`];
     const filterParameters = [];
     if (id !== undefined) {
@@ -102,8 +102,8 @@ module.exports = ({
             postings.cost_is_total AS costIsTotal,
             postings.balance_quantity AS balanceQuantity,
             postings.balance_commodity AS balanceCommodity,
-            amounts.quantity,
-            amounts.commodity
+            amounts.amount_quantity AS quantity,
+            amounts.amount_commodity AS commodity
           FROM postings
           JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})

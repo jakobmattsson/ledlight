@@ -71,16 +71,16 @@ module.exports = ({
       : '';
     const accountColumn = options.groupBy === 'account' ? 'p.account,\n      ' : '';
     const groupBy = options.groupBy === 'account'
-      ? 'p.account, r.commodity'
-      : 'r.commodity';
+      ? 'p.account, r.amount_commodity'
+      : 'r.amount_commodity';
     const nonZero = options.groupBy === 'account'
-      ? "\n    HAVING decimal_cmp(decimal_sum(r.quantity), '0') != 0"
+      ? "\n    HAVING decimal_cmp(decimal_sum(r.amount_quantity), '0') != 0"
       : '';
-    const orderBy = options.groupBy === 'account' ? 'p.account, r.commodity' : 'r.commodity';
+    const orderBy = options.groupBy === 'account' ? 'p.account, r.amount_commodity' : 'r.amount_commodity';
     return database.prepare(`
     SELECT
-      ${accountColumn}r.commodity,
-      decimal_sum(r.quantity) AS quantity${costColumn}
+      ${accountColumn}r.amount_commodity AS commodity,
+      decimal_sum(r.amount_quantity) AS quantity${costColumn}
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     JOIN transactions AS t ON t.entry_id = p.transaction_id
@@ -102,7 +102,7 @@ module.exports = ({
     }
     const valueSql = options.valuation === 'cost'
       ? costValueSql
-      : 'decimal_mul(r.quantity, valuation_rate(r.commodity))';
+      : 'decimal_mul(r.amount_quantity, valuation_rate(r.amount_commodity))';
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const filter = reportFilter(options);
     const accountColumn = options.groupBy === 'account' ? 'p.account,\n      ' : '';

@@ -8,16 +8,16 @@ module.exports = ({
     if (!valuationCommodity) return 0;
     const introductions = database.prepare(`
       WITH commodity_introductions AS (
-        SELECT r.commodity, MIN(p.posting_date) AS date
+        SELECT r.amount_commodity AS commodity, MIN(p.posting_date) AS date
         FROM resolved_posting_amounts AS r
         JOIN postings AS p ON p.id = r.posting_id
-        GROUP BY r.commodity
+        GROUP BY r.amount_commodity
         UNION ALL
-        SELECT r.commodity, MIN(t.date) AS date
+        SELECT r.amount_commodity, MIN(t.date) AS date
         FROM resolved_posting_amounts AS r
         JOIN postings AS p ON p.id = r.posting_id
         JOIN transactions AS t ON t.entry_id = p.transaction_id
-        GROUP BY r.commodity
+        GROUP BY r.amount_commodity
         UNION ALL
         SELECT base_commodity, MIN(date) FROM prices GROUP BY base_commodity
         UNION ALL

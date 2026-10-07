@@ -54,7 +54,7 @@ module.exports = ({
       VALUES (?, ?, ?, ?)
     `),
       resolvedPostingAmount: database.prepare(`
-      INSERT INTO resolved_posting_amounts (id, posting_id, position, quantity, commodity)
+      INSERT INTO resolved_posting_amounts (id, posting_id, position, amount_quantity, amount_commodity)
       VALUES (?, ?, ?, ?, ?)
     `),
       price: database.prepare(`

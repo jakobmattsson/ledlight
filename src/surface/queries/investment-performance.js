@@ -34,21 +34,21 @@ module.exports = ({
       parameters.push(...filter.parameters);
     }
     if (options.excludeCommodities.length > 0) {
-      clauses.push(`r.commodity NOT IN (${options.excludeCommodities.map(() => '?').join(', ')})`);
+      clauses.push(`r.amount_commodity NOT IN (${options.excludeCommodities.map(() => '?').join(', ')})`);
       parameters.push(...options.excludeCommodities);
     }
     const where = clauses.length > 0 ? `WHERE ${clauses.join('\n      AND ')}` : '';
     return database.prepare(`
-    SELECT DISTINCT r.commodity
+    SELECT DISTINCT r.amount_commodity AS commodity
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     ${where}
-    ORDER BY r.commodity
+    ORDER BY r.amount_commodity
   `).all(...parameters).map((row) => row.commodity);
   }
 
   function selectionFilter(options, commodities, alias) {
-    const clauses = [`${alias}.commodity IN (${commodities.map(() => '?').join(', ')})`];
+    const clauses = [`${alias}.amount_commodity IN (${commodities.map(() => '?').join(', ')})`];
     const parameters = [...commodities];
     if (options.accounts.length > 0) {
       const filter = accountFilter('p.account', options.accounts);
@@ -81,12 +81,12 @@ module.exports = ({
     return database.prepare(`
     WITH RECURSIVE
       selected_changes AS (
-        SELECT p.posting_date AS date, r.commodity, decimal_sum(r.quantity) AS quantity
+        SELECT p.posting_date AS date, r.amount_commodity AS commodity, decimal_sum(r.amount_quantity) AS quantity
         FROM resolved_posting_amounts AS r
         JOIN postings AS p ON p.id = r.posting_id
         JOIN transactions AS t ON t.entry_id = p.transaction_id
         WHERE ${filter.sql}
-        GROUP BY p.posting_date, r.commodity
+        GROUP BY p.posting_date, r.amount_commodity
       ),
       commodity_bounds AS (
         SELECT commodity, MIN(date) AS start_date
@@ -142,13 +142,13 @@ module.exports = ({
           AND p.posting_date >= COALESCE(?, '0000-00-00')
           AND p.posting_date <= COALESCE(?, '9999-12-31')
       )
-      SELECT p.*, r.quantity, r.commodity,
+      SELECT p.*, r.amount_quantity AS quantity, r.amount_commodity AS commodity,
         market.rate AS market_rate, lot.rate AS lot_rate, price.rate AS cost_rate
       FROM postings AS p
       JOIN selected_transactions AS selected ON selected.transaction_id = p.transaction_id
       JOIN resolved_posting_amounts AS r ON r.posting_id = p.id
       LEFT JOIN valuation_prices AS market
-        ON market.commodity = r.commodity AND market.date = p.posting_date
+        ON market.commodity = r.amount_commodity AND market.date = p.posting_date
       LEFT JOIN valuation_prices AS lot
         ON lot.commodity = p.lot_cost_commodity AND lot.date = p.posting_date
       LEFT JOIN valuation_prices AS price

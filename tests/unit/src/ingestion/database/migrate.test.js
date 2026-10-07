@@ -69,10 +69,14 @@ test('creates the current schema in an empty database', (t) => {
       .map(({ table, from, to }) => ({ table, from, to })),
     [{ table: 'journal_entries', from: 'entry_id', to: 'id' }],
   );
-  const runningBalance = database.pragma('table_info(resolved_posting_amounts)')
-    .find((column) => column.name === 'running_balance');
-  assert.equal(runningBalance.notnull, 1);
-  assert.equal(runningBalance.dflt_value, "'0'");
+  const resolvedColumns = database.pragma('table_info(resolved_posting_amounts)');
+  assert.deepEqual(
+    resolvedColumns.map((column) => column.name),
+    ['id', 'posting_id', 'position', 'amount_quantity', 'amount_commodity', 'balance_quantity'],
+  );
+  const balanceQuantity = resolvedColumns.find((column) => column.name === 'balance_quantity');
+  assert.equal(balanceQuantity.notnull, 1);
+  assert.equal(balanceQuantity.dflt_value, "'0'");
   assert.deepEqual(
     database.pragma('index_info(postings_account_posting_date)')
       .map((column) => column.name),
@@ -265,6 +269,25 @@ test('replaces version 32 caches with normalized posting comments', (t) => {
   migrateDatabase(database);
 
   assert.equal(database.prepare('SELECT COUNT(*) FROM comments').pluck().get(), 0);
+});
+
+test('replaces version 33 resolved amounts with consistently named columns', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '33');
+    CREATE TABLE resolved_posting_amounts (
+      id INTEGER PRIMARY KEY, posting_id INTEGER, position INTEGER,
+      quantity TEXT, commodity TEXT, running_balance TEXT
+    );
+  `);
+
+  migrateDatabase(database);
+
+  assert.deepEqual(
+    database.pragma('table_info(resolved_posting_amounts)').map((column) => column.name),
+    ['id', 'posting_id', 'position', 'amount_quantity', 'amount_commodity', 'balance_quantity'],
+  );
 });
 
 test('rejects unsupported schema versions', (t) => {

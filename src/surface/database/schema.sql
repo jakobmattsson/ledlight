@@ -121,14 +121,14 @@ CREATE TABLE IF NOT EXISTS ingestion_warnings (
   end_line INTEGER NOT NULL
 );
 
--- Resolved amounts and running balances for each posting.
+-- Resolved amounts and balances for each posting.
 CREATE TABLE IF NOT EXISTS resolved_posting_amounts (
   id INTEGER PRIMARY KEY,
   posting_id INTEGER NOT NULL REFERENCES postings(id) ON DELETE CASCADE,
   position INTEGER NOT NULL,
-  quantity TEXT NOT NULL,
-  commodity TEXT NOT NULL,
-  running_balance TEXT NOT NULL DEFAULT '0',
+  amount_quantity TEXT NOT NULL,
+  amount_commodity TEXT NOT NULL,
+  balance_quantity TEXT NOT NULL DEFAULT '0',
   UNIQUE (posting_id, position)
 );
 
@@ -147,4 +147,4 @@ CREATE INDEX IF NOT EXISTS transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS postings_account_posting_date ON postings(account, posting_date);
 CREATE INDEX IF NOT EXISTS postings_posting_date ON postings(posting_date);
 CREATE INDEX IF NOT EXISTS prices_base_commodity_date ON prices(base_commodity, date);
-CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity ON resolved_posting_amounts(commodity);
+CREATE INDEX IF NOT EXISTS resolved_posting_amounts_amount_commodity ON resolved_posting_amounts(amount_commodity);

@@ -49,9 +49,9 @@ module.exports = ({
         postings.cost_is_total AS costIsTotal,
         postings.balance_quantity AS balanceQuantity,
         postings.balance_commodity AS balanceCommodity,
-        amounts.quantity,
-        amounts.commodity,
-        amounts.running_balance AS balance
+        amounts.amount_quantity AS quantity,
+        amounts.amount_commodity AS commodity,
+        amounts.balance_quantity AS balance
       FROM postings
       JOIN transactions ON transactions.entry_id = postings.transaction_id
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id

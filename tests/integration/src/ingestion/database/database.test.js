@@ -91,7 +91,8 @@ P 2024-01-01 FUND 123.45 SEK
   );
   assert.deepEqual(
     database.prepare(`
-      SELECT postings.account, amounts.quantity, amounts.commodity, amounts.running_balance
+      SELECT postings.account, amounts.amount_quantity, amounts.amount_commodity,
+        amounts.balance_quantity
       FROM resolved_posting_amounts AS amounts
       JOIN postings ON postings.id = amounts.posting_id
       ORDER BY amounts.id
@@ -99,15 +100,15 @@ P 2024-01-01 FUND 123.45 SEK
     [
       {
         account: 'Assets:Cash',
-        quantity: '8.000000000000000001',
-        commodity: 'SEK',
-        running_balance: '8.000000000000000001',
+        amount_quantity: '8.000000000000000001',
+        amount_commodity: 'SEK',
+        balance_quantity: '8.000000000000000001',
       },
       {
         account: 'Equity:Opening',
-        quantity: '-8.000000000000000001',
-        commodity: 'SEK',
-        running_balance: '-8.000000000000000001',
+        amount_quantity: '-8.000000000000000001',
+        amount_commodity: 'SEK',
+        balance_quantity: '-8.000000000000000001',
       },
     ],
   );
@@ -177,7 +178,7 @@ test('stores assignments and assertions in the same balance columns', (t) => {
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
     SELECT transactions.date, postings.amount_quantity, postings.balance_quantity,
-      postings.balance_commodity, amounts.quantity AS resolved_quantity
+      postings.balance_commodity, amounts.amount_quantity AS resolved_quantity
     FROM postings
     JOIN transactions ON transactions.entry_id = postings.transaction_id
     JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
@@ -283,7 +284,8 @@ test('materializes exact account and commodity balances in posting-date order', 
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
     SELECT postings.account, postings.posting_date AS date,
-      amounts.quantity, amounts.commodity, amounts.running_balance AS balance
+      amounts.amount_quantity AS quantity, amounts.amount_commodity AS commodity,
+      amounts.balance_quantity AS balance
     FROM resolved_posting_amounts AS amounts
     JOIN postings ON postings.id = amounts.posting_id
     WHERE postings.account LIKE 'Assets:%'

@@ -26,7 +26,7 @@ module.exports = ({
   function reportFilter(options, valuationCommodity) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.posting_date';
     const clauses = [
-      'r.commodity != ?',
+      'r.amount_commodity != ?',
       `${dateExpression} <= COALESCE(?, '9999-12-31')`,
     ];
     const parameters = [valuationCommodity, options.to ?? null];
@@ -43,19 +43,19 @@ module.exports = ({
     return database.prepare(`
       SELECT
         p.account,
-        r.commodity,
-        decimal_sum(r.quantity) AS quantity,
+        r.amount_commodity AS commodity,
+        decimal_sum(r.amount_quantity) AS quantity,
         decimal_sum(CASE
           WHEN p.lot_cost_quantity IS NULL THEN NULL
           WHEN p.lot_cost_is_total = 1 THEN CASE
-            WHEN decimal_cmp(r.quantity, '0') < 0 AND
+            WHEN decimal_cmp(r.amount_quantity, '0') < 0 AND
                  decimal_cmp(p.lot_cost_quantity, '0') > 0
               THEN decimal_mul(p.lot_cost_quantity, '-1')
             ELSE p.lot_cost_quantity
           END
-          ELSE decimal_mul(r.quantity, p.lot_cost_quantity)
+          ELSE decimal_mul(r.amount_quantity, p.lot_cost_quantity)
         END) AS cost_basis,
-        MIN(CASE WHEN p.lot_cost_quantity IS NULL THEN r.commodity END) AS missing_lot_cost,
+        MIN(CASE WHEN p.lot_cost_quantity IS NULL THEN r.amount_commodity END) AS missing_lot_cost,
         MIN(CASE
           WHEN p.lot_cost_commodity != ? THEN p.lot_cost_commodity
         END) AS foreign_lot_cost_commodity
@@ -63,9 +63,9 @@ module.exports = ({
       JOIN postings AS p ON p.id = r.posting_id
       JOIN transactions AS t ON t.entry_id = p.transaction_id
       ${filter.sql}
-      GROUP BY p.account, r.commodity
-      HAVING decimal_cmp(decimal_sum(r.quantity), '0') != 0
-      ORDER BY p.account, r.commodity
+      GROUP BY p.account, r.amount_commodity
+      HAVING decimal_cmp(decimal_sum(r.amount_quantity), '0') != 0
+      ORDER BY p.account, r.amount_commodity
     `).all(valuationCommodity, ...filter.parameters);
   }
 

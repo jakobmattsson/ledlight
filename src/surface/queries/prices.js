@@ -69,9 +69,9 @@ module.exports = ({
       ));
     }
     const usedCommodities = new Set(database.prepare(`
-      SELECT DISTINCT commodity
+      SELECT DISTINCT amount_commodity
       FROM resolved_posting_amounts
-      WHERE decimal_cmp(quantity, '0') != 0
+      WHERE decimal_cmp(amount_quantity, '0') != 0
     `).pluck().all());
     const byKey = new Map();
     const quoteOrder = new Map();
