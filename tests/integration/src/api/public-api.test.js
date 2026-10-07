@@ -200,7 +200,7 @@ ${entries}`);
   assert.equal(paginated.transactions[0].description, 'Entry 501');
 });
 
-test('print returns plain journal text and rejects an options argument', (t) => {
+test('print returns plain journal text and rejects unknown options', (t) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-print-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -216,10 +216,11 @@ test('print returns plain journal text and rejects an options argument', (t) => 
   database.prepare("UPDATE account_declarations SET name = 'Assets:Database'").run();
   database.close();
   assert.equal(journal.print(), 'account Assets:Database\n');
+  assert.equal(journal.print({}), 'account Assets:Database\n');
   assert.throws(
-    () => journal.print({}),
+    () => journal.print({ unknown: true }),
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&
-      error.message === 'print does not accept arguments',
+      error.message === 'Unknown print option: unknown',
   );
 });
 
