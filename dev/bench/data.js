@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791398158532,
+  "lastUpdate": 1791398180763,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -506,6 +506,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 7.67835,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "acaea5c6534eda3be498503f6764ad43ce3e897b",
+          "message": "Merge pull request #93 from jakobmattsson/codex/simplify-database-schema\n\nSimplify SQLite schema around public queries",
+          "timestamp": "2026-10-07T20:35:48+02:00",
+          "tree_id": "bb957c9edca78abe02706bc803fe37a39477fa76",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/acaea5c6534eda3be498503f6764ad43ce3e897b"
+        },
+        "date": 1791398180178,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1060.032476,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 6.33181,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 7.053127,
             "unit": "ms"
           }
         ]
