@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791399004523,
+  "lastUpdate": 1791401195752,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -584,6 +584,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 11.051944,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "98078d23a96225264f2f3e67134d4950a7896f4a",
+          "message": "Merge pull request #95 from jakobmattsson/codex/presentation-print\n\nAdd journal print presentation API and CLI command",
+          "timestamp": "2026-10-07T21:26:11+02:00",
+          "tree_id": "6f0ab88f8ba2fa3b946e1f7e788f813cc50fad4a",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/98078d23a96225264f2f3e67134d4950a7896f4a"
+        },
+        "date": 1791401194786,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1581.055145,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 8.620391,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 10.982854,
             "unit": "ms"
           }
         ]
