@@ -35,12 +35,12 @@ account Expenses:Shop
       "transactionId": 5,
       "transactionDate": "2024-01-01",
       "description": "First",
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-01-01",
           "account": "Assets:Cash",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "10",
             "commodity": "SEK"
@@ -59,7 +59,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-01",
           "account": "Equity:Opening",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "-10",
             "commodity": "SEK"
@@ -81,12 +81,12 @@ account Expenses:Shop
       "transactionId": 6,
       "transactionDate": "2024-01-02",
       "description": "Second",
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-01-02",
           "account": "Assets:Cash",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "20",
             "commodity": "SEK"
@@ -105,7 +105,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-02",
           "account": "Equity:Opening",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "-20",
             "commodity": "SEK"
@@ -127,7 +127,7 @@ account Expenses:Shop
       "transactionId": 7,
       "transactionDate": "2024-01-03",
       "description": "Shop | Third",
-      "notes": [
+      "comments": [
         "imported",
         "Project: Home"
       ],
@@ -135,7 +135,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-03",
           "account": "Assets:Cash",
-          "notes": [
+          "comments": [
             "card"
           ],
           "amount": {
@@ -156,7 +156,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-03",
           "account": "Expenses:Shop",
-          "notes": [],
+          "comments": [],
           "amount": null,
           "lotCost": null,
           "cost": null,

@@ -75,7 +75,7 @@ module.exports = ({
       ORDER BY transactions.entry_id ${direction}
       ${paginationClause}
     `).all(...filterParameters, ...paginationParameters);
-    const transactions = transactionRows.map((row) => ({ ...row, notes: [], postings: [] }));
+    const transactions = transactionRows.map((row) => ({ ...row, comments: [], postings: [] }));
     if (transactions.length > 0) {
       const byId = new Map(transactions.map((transaction) =>
         [transaction.transactionId, transaction]));
@@ -121,7 +121,7 @@ module.exports = ({
             id: row.postingId,
             postingDate: row.postingDate,
             account: row.account,
-            notes: [],
+            comments: [],
             amount: row.amountQuantity === null
               ? null
               : { quantity: row.amountQuantity, commodity: row.amountCommodity },
@@ -158,37 +158,37 @@ module.exports = ({
         }
         posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
       }
-      const transactionNoteRows = batches.flatMap((ids) => {
+      const transactionCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
           SELECT transaction_id AS transactionId, line, position, text
-          FROM notes
+          FROM comments
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position
         `).all(...ids);
       });
-      const postingNoteRows = batches.flatMap((ids) => {
+      const postingCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT notes.posting_id AS postingId, notes.line, notes.position, notes.text
+          SELECT comments.posting_id AS postingId, comments.line, comments.position, comments.text
           FROM postings
-          JOIN notes ON notes.posting_id = postings.id
+          JOIN comments ON comments.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
-          ORDER BY postings.transaction_id, postings.position, notes.position
+          ORDER BY postings.transaction_id, postings.position, comments.position
         `).all(...ids);
       });
       const postingsById = new Map(transactions.flatMap((transaction) =>
         transaction.postings.map((posting) => [posting.id, posting])));
-      for (const row of [...transactionNoteRows, ...postingNoteRows]) {
+      for (const row of [...transactionCommentRows, ...postingCommentRows]) {
         const owner = row.postingId === undefined
           ? byId.get(row.transactionId)
           : postingsById.get(row.postingId);
         if (!owner) continue;
-        owner.notes.push(row.text);
-        if (!Object.hasOwn(owner, 'positionedNotes')) {
-          Object.defineProperty(owner, 'positionedNotes', { value: [] });
+        owner.comments.push(row.text);
+        if (!Object.hasOwn(owner, 'positionedComments')) {
+          Object.defineProperty(owner, 'positionedComments', { value: [] });
         }
-        owner.positionedNotes.push({ line: row.line, position: row.position, text: row.text });
+        owner.positionedComments.push({ line: row.line, position: row.position, text: row.text });
       }
     }
     return {
@@ -203,17 +203,17 @@ module.exports = ({
             Object.defineProperty(posting, 'sourceLine', {
               value: transaction.postings[index].sourceLine,
             });
-            if (Object.hasOwn(transaction.postings[index], 'positionedNotes')) {
-              Object.defineProperty(posting, 'positionedNotes', {
-                value: transaction.postings[index].positionedNotes,
+            if (Object.hasOwn(transaction.postings[index], 'positionedComments')) {
+              Object.defineProperty(posting, 'positionedComments', {
+                value: transaction.postings[index].positionedComments,
               });
             }
             return posting;
           }),
         };
-        if (Object.hasOwn(transaction, 'positionedNotes')) {
-          Object.defineProperty(result, 'positionedNotes', {
-            value: transaction.positionedNotes,
+        if (Object.hasOwn(transaction, 'positionedComments')) {
+          Object.defineProperty(result, 'positionedComments', {
+            value: transaction.positionedComments,
           });
         }
         return result;

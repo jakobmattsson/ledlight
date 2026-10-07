@@ -18,6 +18,13 @@ CREATE TABLE IF NOT EXISTS journal_entries (
   line INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS file_comments (
+  source_file_id INTEGER NOT NULL REFERENCES source_files(id) ON DELETE CASCADE,
+  line INTEGER NOT NULL,
+  text TEXT NOT NULL,
+  PRIMARY KEY (source_file_id, line)
+) WITHOUT ROWID;
+
 CREATE TABLE IF NOT EXISTS transactions (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
   date TEXT NOT NULL,
@@ -58,7 +65,7 @@ CREATE TABLE IF NOT EXISTS postings (
   UNIQUE (transaction_id, position)
 );
 
-CREATE TABLE IF NOT EXISTS notes (
+CREATE TABLE IF NOT EXISTS comments (
   id INTEGER PRIMARY KEY,
   transaction_id INTEGER REFERENCES transactions(entry_id) ON DELETE CASCADE,
   posting_id INTEGER REFERENCES postings(id) ON DELETE CASCADE,

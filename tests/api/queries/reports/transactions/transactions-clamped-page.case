@@ -38,12 +38,12 @@ account Expenses:Shop
       "transactionId": 5,
       "transactionDate": "2024-01-01",
       "description": "First",
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-01-01",
           "account": "Assets:Cash",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "10",
             "commodity": "SEK"
@@ -62,7 +62,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-01",
           "account": "Equity:Opening",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "-10",
             "commodity": "SEK"

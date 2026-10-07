@@ -27,6 +27,10 @@ module.exports = ({
       INSERT INTO source_files (id, path, sha256, size)
       VALUES (?, ?, ?, ?)
     `),
+      fileComment: database.prepare(`
+      INSERT INTO file_comments (source_file_id, line, text)
+      VALUES (?, ?, ?)
+    `),
       journalEntry: database.prepare(`
       INSERT INTO journal_entries (id, source_file_id, line)
       VALUES (?, ?, ?)
@@ -46,8 +50,8 @@ module.exports = ({
          balance_assertion_quantity, balance_assertion_commodity)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
-      note: database.prepare(`
-      INSERT INTO notes (transaction_id, posting_id, position, line, text)
+      comment: database.prepare(`
+      INSERT INTO comments (transaction_id, posting_id, position, line, text)
       VALUES (?, ?, ?, ?, ?)
     `),
       resolvedPostingAmount: database.prepare(`
@@ -72,11 +76,11 @@ module.exports = ({
     };
   }
 
-  function insertNotes(statement, notes, ownerLine, transactionId, postingId) {
+  function insertComments(statement, comments, ownerLine, transactionId, postingId) {
     let followingPosition = 1;
-    for (const note of notes) {
-      const position = note.location.line === ownerLine ? 0 : followingPosition++;
-      statement.run(transactionId, postingId, position, note.location.line, note.text);
+    for (const comment of comments) {
+      const position = comment.location.line === ownerLine ? 0 : followingPosition++;
+      statement.run(transactionId, postingId, position, comment.location.line, comment.text);
     }
   }
 
@@ -85,7 +89,7 @@ module.exports = ({
       entryId, entry.date, entry.description,
     );
 
-    insertNotes(statements.note, entry.notes, entry.location.line, entryId, null);
+    insertComments(statements.comment, entry.comments, entry.location.line, entryId, null);
 
     entry.postings.forEach((posting, position) => {
       const amount = amountFields(posting.amount);
@@ -102,7 +106,7 @@ module.exports = ({
         cost.quantity, cost.commodity, posting.cost ? Number(posting.cost.total) : null,
         assignment.quantity, assignment.commodity, assertion.quantity, assertion.commodity,
       );
-      insertNotes(statements.note, posting.notes, posting.location.line, null, postingId);
+      insertComments(statements.comment, posting.comments, posting.location.line, null, postingId);
       resolvedPostings[position].forEach((resolvedAmount, amountPosition) => {
         statements.resolvedPostingAmount.run(
           ++counters.resolvedAmount, postingId, amountPosition,
@@ -201,8 +205,9 @@ module.exports = ({
       }
     }
     const storableEntries = journal.entries.filter((entry) =>
-      !validation.invalidEntries.has(entry) &&
+      entry.type !== 'comment' && !validation.invalidEntries.has(entry) &&
       (entry.type !== 'transaction' || resolvedTransactions.has(entry)));
+    const fileComments = journal.entries.filter((entry) => entry.type === 'comment');
     validateGlobalAccounting(
       storableEntries, resolvedTransactions, valuationCommodity, validation.warnings,
     );
@@ -223,6 +228,7 @@ module.exports = ({
       const replaceContents = database.transaction(() => {
         database.exec(`
         DELETE FROM valuation_prices;
+        DELETE FROM file_comments;
         DELETE FROM ingestion_warnings;
         DELETE FROM journal_entries;
         DELETE FROM source_files;
@@ -242,6 +248,14 @@ module.exports = ({
           statements.sourceFile.run(fileId, file.path, file.sha256, file.size);
           sourceIds.set(file.path, fileId);
         });
+
+        for (const comment of fileComments) {
+          const sourceFileId = sourceIds.get(comment.location.source);
+          if (sourceFileId === undefined) {
+            throw new Error(`File comment refers to an unregistered source file: ${comment.location.source}`);
+          }
+          statements.fileComment.run(sourceFileId, comment.location.line, comment.text);
+        }
 
         const counters = {
           posting: 0,

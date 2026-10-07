@@ -28,7 +28,7 @@ Parses posting comments with and without preceding spaces.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "compact",
               "key": null,
@@ -58,7 +58,7 @@ Parses posting comments with and without preceding spaces.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "spaced",
               "key": null,
@@ -77,7 +77,7 @@ Parses posting comments with and without preceding spaces.
           }
         }
       ],
-      "notes": [],
+      "comments": [],
       "location": {
         "source": "fixture.ledger",
         "line": 1,

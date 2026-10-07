@@ -35,7 +35,7 @@ account Expenses:Shop
       "transactionId": 7,
       "transactionDate": "2024-01-03",
       "description": "Shop | Third",
-      "notes": [
+      "comments": [
         "imported",
         "Project: Home"
       ],
@@ -43,7 +43,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-03",
           "account": "Assets:Cash",
-          "notes": [
+          "comments": [
             "card"
           ],
           "amount": {
@@ -64,7 +64,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-03",
           "account": "Expenses:Shop",
-          "notes": [],
+          "comments": [],
           "amount": null,
           "lotCost": null,
           "cost": null,

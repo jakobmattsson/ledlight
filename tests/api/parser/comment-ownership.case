@@ -1,4 +1,4 @@
-Assigns indented comments to the preceding posting and preserves inline notes.
+Assigns indented comments to the preceding posting and preserves inline comments.
 
 ========== TEXT ==========
 
@@ -31,7 +31,7 @@ Assigns indented comments to the preceding posting and preserves inline notes.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "expense inline",
               "key": null,
@@ -83,7 +83,7 @@ Assigns indented comments to the preceding posting and preserves inline notes.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "bank inline",
               "key": null,
@@ -112,7 +112,7 @@ Assigns indented comments to the preceding posting and preserves inline notes.
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
           "text": "transaction inline",
           "key": null,

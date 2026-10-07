@@ -1,4 +1,4 @@
-Parses declarations, prices, and transaction notes together.
+Parses declarations, prices, and transaction comments together.
 
 ========== TEXT ==========
 
@@ -103,7 +103,7 @@ P 2024-01-01 FUND 123.45 SEK ; closing
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 10,
@@ -119,7 +119,7 @@ P 2024-01-01 FUND 123.45 SEK ; closing
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 11,
@@ -127,7 +127,7 @@ P 2024-01-01 FUND 123.45 SEK ; closing
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
           "text": "Source: statement.csv:4",
           "key": "Source",

@@ -43,7 +43,7 @@ Parses transaction and posting tags from comments.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "Receipt: 1234",
               "key": "Receipt",
@@ -85,7 +85,7 @@ Parses transaction and posting tags from comments.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": ":balanced: complete",
               "key": null,
@@ -116,7 +116,7 @@ Parses transaction and posting tags from comments.
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
           "text": ":reviewed:imported: bank statement",
           "key": null,

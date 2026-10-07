@@ -92,7 +92,7 @@ P 2024-01-01 STOCK 10 SEK
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 7,
@@ -111,7 +111,7 @@ P 2024-01-01 STOCK 10 SEK
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 8,
@@ -119,7 +119,7 @@ P 2024-01-01 STOCK 10 SEK
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
           "text": "Generated-ID trade-1",
           "key": null,

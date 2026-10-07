@@ -30,12 +30,12 @@ account Equity:Opening
       "transactionId": 4,
       "transactionDate": "2024-02-28",
       "description": "Opening",
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-02-28",
           "account": "Assets:Cash",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "10",
             "commodity": "SEK"
@@ -54,7 +54,7 @@ account Equity:Opening
         {
           "postingDate": "2024-02-28",
           "account": "Equity:Opening",
-          "notes": [],
+          "comments": [],
           "amount": null,
           "lotCost": null,
           "cost": null,
@@ -73,12 +73,12 @@ account Equity:Opening
       "transactionId": 5,
       "transactionDate": "2024-02-29",
       "description": "Leap day",
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-02-29",
           "account": "Assets:Cash",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "2",
             "commodity": "SEK"
@@ -97,7 +97,7 @@ account Equity:Opening
         {
           "postingDate": "2024-02-29",
           "account": "Equity:Opening",
-          "notes": [],
+          "comments": [],
           "amount": null,
           "lotCost": null,
           "cost": null,
@@ -116,12 +116,12 @@ account Equity:Opening
       "transactionId": 6,
       "transactionDate": "2024-03-01",
       "description": "Following day",
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-03-01",
           "account": "Assets:Cash",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "3",
             "commodity": "SEK"
@@ -140,7 +140,7 @@ account Equity:Opening
         {
           "postingDate": "2024-03-01",
           "account": "Equity:Opening",
-          "notes": [],
+          "comments": [],
           "amount": null,
           "lotCost": null,
           "cost": null,

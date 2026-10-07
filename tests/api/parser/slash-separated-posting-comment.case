@@ -28,7 +28,7 @@ Keeps a slash-separated date in a posting comment as plain text.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "[2024/01/02] imported",
               "key": null,
@@ -55,7 +55,7 @@ Keeps a slash-separated date in a posting comment as plain text.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -63,7 +63,7 @@ Keeps a slash-separated date in a posting comment as plain text.
           }
         }
       ],
-      "notes": [],
+      "comments": [],
       "location": {
         "source": "fixture.ledger",
         "line": 1,

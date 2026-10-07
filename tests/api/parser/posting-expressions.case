@@ -48,7 +48,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": "2024-03-02",
-          "notes": [
+          "comments": [
             {
               "text": "[2024-03-02] Origin: broker",
               "key": "Origin",
@@ -90,7 +90,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
           },
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,
@@ -112,7 +112,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
             "commodity": "FUND"
           },
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 5,
@@ -120,7 +120,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
           "text": "Header: sale",
           "key": "Header",

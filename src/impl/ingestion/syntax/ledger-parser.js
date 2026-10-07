@@ -68,7 +68,7 @@ module.exports = ({
     return value ? [{ name: value[1], value: value[2].trim() }] : [];
   }
 
-  function parseNote(text, source, line, column, tagText) {
+  function parseComment(text, source, line, column, tagText) {
     const tags = parseCommentTags(tagText);
     const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
     return {
@@ -104,13 +104,13 @@ module.exports = ({
     const parts = splitComment(text.slice(cursor));
     const description = parts.text.trim();
     if (!description) throw syntaxError('Expected a transaction description', source, line, cursor + 1);
-    const note = parts.comment === null ? null : parseNote(
+    const comment = parts.comment === null ? null : parseComment(
       parts.comment, source, line, cursor + parts.index + 1, parts.comment,
     );
-    const tags = note?.tags || [];
+    const tags = comment?.tags || [];
     return {
       type: 'transaction', date, description,
-      ...(tags.length > 0 ? { tags } : {}), postings: [], notes: note ? [note] : [],
+      ...(tags.length > 0 ? { tags } : {}), postings: [], comments: comment ? [comment] : [],
       location: sourceLocation(source, line, 1),
     };
   }
@@ -127,15 +127,15 @@ module.exports = ({
     const expression = parseAmountExpression(expressionText, sourceLocation(source, line, expressionColumn));
     const postingDateMatch = parts.comment && /^\[(\d{4}-\d{2}-\d{2})\](?:\s|$)/u.exec(parts.comment);
     const commentAfterDate = postingDateMatch ? parts.comment.slice(postingDateMatch[0].length).trimStart() : parts.comment;
-    const note = parts.comment === null ? null : parseNote(
+    const comment = parts.comment === null ? null : parseComment(
       parts.comment, source, line, indent + parts.index + 1, commentAfterDate,
     );
-    const tags = note?.tags || [];
+    const tags = comment?.tags || [];
     return {
       type: 'posting', account,
       ...(expression || { amount: null, lotCost: null, cost: null, balanceAssignment: null, balanceAssertion: null }),
       postingDate: postingDateMatch ? assertDate(postingDateMatch[1], source, line, raw.indexOf('[') + 2) : null,
-      notes: note ? [note] : [], ...(tags.length > 0 ? { tags } : {}),
+      comments: comment ? [comment] : [], ...(tags.length > 0 ? { tags } : {}),
       location: sourceLocation(source, line, indent + 1),
     };
   }
@@ -212,14 +212,23 @@ module.exports = ({
 
       const marker = trimmed[0];
       if (marker === ';') {
+        if (first === 0) {
+          transaction = null;
+          commodity = null;
+          entries.push({
+            type: 'comment', text: trimmed.slice(1).trim(),
+            location: sourceLocation(source, lineNumber, 1),
+          });
+          continue;
+        }
         if (transaction && first > 0) {
           const owner = transaction.postings.at(-1) || transaction;
-          const noteText = trimmed.slice(1).trim();
-          const note = parseNote(noteText, source, lineNumber, first + 1, noteText);
-          owner.notes.push(note);
-          if (note.tags) owner.tags = [...(owner.tags || []), ...note.tags];
+          const commentText = trimmed.slice(1).trim();
+          const comment = parseComment(commentText, source, lineNumber, first + 1, commentText);
+          owner.comments.push(comment);
+          if (comment.tags) owner.tags = [...(owner.tags || []), ...comment.tags];
         }
-        if (first === 0 || transaction) continue;
+        if (transaction) continue;
       }
       if (first > 0) {
         if (transaction) transaction.postings.push(parsePosting(raw, source, lineNumber));

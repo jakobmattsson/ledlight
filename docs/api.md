@@ -106,20 +106,22 @@ preserved in `quantity`. Entry shapes are:
 | `account`, `tag` | `name`, `comment`, `location` |
 | `commodity` | `symbol`, `properties`, `comment`, `location` |
 | `price` | `date`, `commodity`, `price` (amount), `comment`, `location` |
-| `transaction` | `date`, `description`, `postings`, `notes`, `location`; optional `tags` |
+| `comment` | `text`, `location` |
+| `transaction` | `date`, `description`, `postings`, `comments`, `location`; optional `tags` |
 
 Commodity `properties` is an array of `{ name, value, comment, location }`;
 `value` is a string or `null`. A transaction posting contains `type: 'posting'`,
 `account`, `amount`, `lotCost`, `cost`, `balanceAssignment`,
-`balanceAssertion`, `postingDate`, `notes`, and `location`, plus optional
+`balanceAssertion`, `postingDate`, `comments`, and `location`, plus optional
 `tags`. The amount, balance assignment, and balance assertion fields are an
 amount or `null`. `lotCost` and `cost` are `{ total: boolean, amount }` or
-`null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A note
+`null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A comment
 is `{ text, key, value, location }`, plus optional `tags`; `key` and `value`
 are strings or `null`. A comment on the transaction or posting line becomes
-its first note. An indented comment before the first posting belongs to the
+its first comment. An indented comment before the first posting belongs to the
 transaction; one after a posting belongs to that posting. Tags are
 `{ name, value }`, where `value` may be `null`.
+Top-level semicolon comments are separate `comment` entries in source order.
 
 For example:
 
@@ -129,7 +131,7 @@ const ast = parseLedgerText(
   { source: 'proposed.ledger' },
 );
 const transaction = ast.entries[0];
-console.log(transaction.notes[0].text); // Generated-ID trade-1
+console.log(transaction.comments[0].text); // Generated-ID trade-1
 console.log(transaction.postings[0].lotCost.amount.quantity); // 8
 ```
 
@@ -433,7 +435,7 @@ and leading zeros are rejected. Pages beyond the result are clamped to the last
 page (or page `1` for an empty result).
 The result always contains `order`, `totalTransactions`, and `transactions`.
 Paginated results additionally contain the selected `page`, `pageSize`, and
-`totalPages`. Transactions and their postings each include ordered `notes`
+`totalPages`. Transactions and their postings each include ordered `comments`
 arrays of text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
@@ -443,8 +445,8 @@ The `transactions` CLI command defaults to
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the matching transactions or the requested page.
 `--format json` returns the complete API result, while `--format csv`
-returns one row per posting amount with transaction and posting notes encoded
-as JSON arrays in `transactionNotes` and `postingNotes` columns.
+returns one row per posting amount with transaction and posting comments encoded
+as JSON arrays in `transactionComments` and `postingComments` columns.
 
 ### `journal.postings({ from, to, accounts })`
 
@@ -453,11 +455,11 @@ Returns all matching postings in journal order. All options are optional.
 is an array of patterns matched against the posting account; an empty array
 selects every account.
 
-Each result contains `postingId`, `postingDate`, `account`, ordered `postingNotes`,
+Each result contains `postingId`, `postingDate`, `account`, ordered `postingComments`,
 the nullable source `amount`, lot cost, transaction cost, balance assignment,
 and balance assertion, and every resolved amount. It also contains the parent
 transaction's `transactionId`, `transactionDate`, `description`,
-and ordered `transactionNotes`. `filename` identifies the
+and ordered `transactionComments`. `filename` identifies the
 source file containing the transaction, including when it was loaded through an
 `include`. `transactionSourceLine` is the one-based line number of the transaction
 header in that file, not the posting line.

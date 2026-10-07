@@ -27,10 +27,10 @@ LEDGER
     "filename": "<stdin>",
     "transactionSourceLine": 10,
     "description": "Purchase",
-    "transactionNotes": [],
+    "transactionComments": [],
     "postingDate": "2024-01-01",
     "account": "Assets:Stock",
-    "postingNotes": [],
+    "postingComments": [],
     "amount": {
       "quantity": "10",
       "commodity": "STOCK"
@@ -58,10 +58,10 @@ LEDGER
     "filename": "<stdin>",
     "transactionSourceLine": 10,
     "description": "Purchase",
-    "transactionNotes": [],
+    "transactionComments": [],
     "postingDate": "2024-01-01",
     "account": "Assets:Cash",
-    "postingNotes": [],
+    "postingComments": [],
     "amount": {
       "quantity": "-100",
       "commodity": "SEK"

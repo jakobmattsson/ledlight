@@ -74,10 +74,10 @@ module.exports = ({
           filename: row.filename,
           transactionSourceLine: row.transactionSourceLine,
           description: row.description,
-          transactionNotes: [],
+          transactionComments: [],
           postingDate: row.postingDate,
           account: row.account,
-          postingNotes: [],
+          postingComments: [],
           amount: row.amountQuantity === null
             ? null
             : { quantity: row.amountQuantity, commodity: row.amountCommodity },
@@ -120,30 +120,30 @@ module.exports = ({
     }
     if (postings.length > 0) {
       const transactionIds = [...new Set(postings.map(({ transactionId }) => transactionId))];
-      const notesByTransaction = new Map(transactionIds.map((id) => [id, []]));
+      const commentsByTransaction = new Map(transactionIds.map((id) => [id, []]));
       for (let offset = 0; offset < transactionIds.length; offset += 500) {
         const ids = transactionIds.slice(offset, offset + 500);
         const placeholders = ids.map(() => '?').join(', ');
-        const transactionNotes = database.prepare(`
+        const transactionComments = database.prepare(`
           SELECT transaction_id AS transactionId, text
-          FROM notes
+          FROM comments
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position
         `).all(...ids);
-        for (const note of transactionNotes) {
-          notesByTransaction.get(note.transactionId).push(note.text);
+        for (const comment of transactionComments) {
+          commentsByTransaction.get(comment.transactionId).push(comment.text);
         }
-        const postingNotes = database.prepare(`
-          SELECT notes.posting_id AS postingId, notes.text
+        const postingComments = database.prepare(`
+          SELECT comments.posting_id AS postingId, comments.text
           FROM postings
-          JOIN notes ON notes.posting_id = postings.id
+          JOIN comments ON comments.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
-          ORDER BY postings.transaction_id, postings.position, notes.position
+          ORDER BY postings.transaction_id, postings.position, comments.position
         `).all(...ids);
-        for (const note of postingNotes) byId.get(note.postingId)?.postingNotes.push(note.text);
+        for (const comment of postingComments) byId.get(comment.postingId)?.postingComments.push(comment.text);
       }
       for (const posting of postings) {
-        posting.transactionNotes = [...notesByTransaction.get(posting.transactionId)];
+        posting.transactionComments = [...commentsByTransaction.get(posting.transactionId)];
       }
     }
     return postings;

@@ -1,4 +1,4 @@
-Transaction text keeps inline notes on their source lines and following notes below.
+Transaction text keeps inline comments on their source lines and following comments below.
 
 ========== CLI ==========
 

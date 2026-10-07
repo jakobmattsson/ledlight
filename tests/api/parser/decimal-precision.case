@@ -35,7 +35,7 @@ Preserves exact decimal precision in posting amounts and costs.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "exact cost",
               "key": null,
@@ -65,7 +65,7 @@ Preserves exact decimal precision in posting amounts and costs.
           },
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -81,7 +81,7 @@ Preserves exact decimal precision in posting amounts and costs.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,
@@ -89,7 +89,7 @@ Preserves exact decimal precision in posting amounts and costs.
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
           "text": "imported",
           "key": null,

@@ -38,12 +38,14 @@ commodity SEK
   format 1,000.00 SEK
 include transactions.ledger
 P 2024-01-01 FUND 123.45 SEK
+; Root file comment
 `);
   fs.writeFileSync(transactionsPath, `2024-01-02 Bank | Deposit ; :imported: bank statement
   ; Source: statement.csv:4
   Assets:Cash  8.000000000000000001 SEK ; Receipt: 1234
   ; Imported from the bank statement
   Equity:Opening  ; :balanced:
+; Included file comment
 `);
 
   const result = buildDatabase(databasePath, journalPath);
@@ -112,15 +114,27 @@ P 2024-01-01 FUND 123.45 SEK
   assert.equal(result.postingBalances, 2);
   assert.deepEqual(
     database.prepare(`
-      SELECT transaction_id IS NOT NULL AS transaction_note, position, text
-      FROM notes ORDER BY id
+      SELECT transaction_id IS NOT NULL AS transaction_comment, position, text
+      FROM comments ORDER BY id
     `).all(),
     [
-      { transaction_note: 1, position: 0, text: ':imported: bank statement' },
-      { transaction_note: 1, position: 1, text: 'Source: statement.csv:4' },
-      { transaction_note: 0, position: 0, text: 'Receipt: 1234' },
-      { transaction_note: 0, position: 1, text: 'Imported from the bank statement' },
-      { transaction_note: 0, position: 0, text: ':balanced:' },
+      { transaction_comment: 1, position: 0, text: ':imported: bank statement' },
+      { transaction_comment: 1, position: 1, text: 'Source: statement.csv:4' },
+      { transaction_comment: 0, position: 0, text: 'Receipt: 1234' },
+      { transaction_comment: 0, position: 1, text: 'Imported from the bank statement' },
+      { transaction_comment: 0, position: 0, text: ':balanced:' },
+    ],
+  );
+  assert.deepEqual(
+    database.prepare(`
+      SELECT source_files.path, file_comments.line, file_comments.text
+      FROM file_comments
+      JOIN source_files ON source_files.id = file_comments.source_file_id
+      ORDER BY source_files.id, file_comments.line
+    `).all(),
+    [
+      { path: journalPath, line: 7, text: 'Root file comment' },
+      { path: transactionsPath, line: 6, text: 'Included file comment' },
     ],
   );
   assert.deepEqual(

@@ -24,10 +24,10 @@ module.exports = ({ cliOptions: options }) => ({
           transactionId: transaction.transactionId,
           transactionDate: transaction.transactionDate,
           description: transaction.description,
-          transactionNotes: JSON.stringify(transaction.notes),
+          transactionComments: JSON.stringify(transaction.comments),
           postingDate: posting.postingDate,
           account: posting.account,
-          postingNotes: JSON.stringify(posting.notes),
+          postingComments: JSON.stringify(posting.comments),
           quantity: amount.quantity,
           commodity: amount.commodity,
         }))));
@@ -35,8 +35,8 @@ module.exports = ({ cliOptions: options }) => ({
 
     function formatTransactionsCsv(report) {
       const fields = [
-        'transactionId', 'transactionDate', 'description', 'transactionNotes',
-        'postingDate', 'account', 'postingNotes', 'quantity', 'commodity',
+        'transactionId', 'transactionDate', 'description', 'transactionComments',
+        'postingDate', 'account', 'postingComments', 'quantity', 'commodity',
       ];
       const lines = [fields.join(',')];
       for (const row of transactionRows(report)) {
@@ -131,16 +131,16 @@ module.exports = ({ cliOptions: options }) => ({
       for (const transaction of report.transactions) {
         const date = transaction.transactionDate;
         const header = `${date} ${transaction.description}`;
-        const transactionNotes = transaction.positionedNotes ??
-          transaction.notes.map((text) => ({ position: 1, text }));
-        const inlineTransactionNote = transactionNotes.find((note) => note.position === 0)?.text;
-        const inlineHeader = inlineTransactionNote === undefined ? '' : ` ; ${inlineTransactionNote}`;
-        const wrapHeaderNote = inlineTransactionNote !== undefined &&
+        const transactionComments = transaction.positionedComments ??
+          transaction.comments.map((text) => ({ position: 1, text }));
+        const inlineTransactionComment = transactionComments.find((comment) => comment.position === 0)?.text;
+        const inlineHeader = inlineTransactionComment === undefined ? '' : ` ; ${inlineTransactionComment}`;
+        const wrapHeaderComment = inlineTransactionComment !== undefined &&
           `${header}${inlineHeader}`.length > 80;
-        lines.push(`${header}${wrapHeaderNote ? '' : inlineHeader}`);
-        if (wrapHeaderNote) lines.push(`    ; ${inlineTransactionNote}`);
-        for (const note of transactionNotes) {
-          if (note.position !== 0) lines.push(`    ; ${note.text}`);
+        lines.push(`${header}${wrapHeaderComment ? '' : inlineHeader}`);
+        if (wrapHeaderComment) lines.push(`    ; ${inlineTransactionComment}`);
+        for (const comment of transactionComments) {
+          if (comment.position !== 0) lines.push(`    ; ${comment.text}`);
         }
         const canElideAmount = transaction.postings.length === 2 &&
           transaction.postings.every((posting) =>
@@ -158,9 +158,9 @@ module.exports = ({ cliOptions: options }) => ({
           ? implicitPostingIndexes.length === 1 ? implicitPostingIndexes[0] : 1
           : -1;
         transaction.postings.forEach((posting, index) => {
-          const postingNotes = posting.positionedNotes ??
-            posting.notes.map((text) => ({ position: 1, text }));
-          const inlinePostingNote = postingNotes.find((note) => note.position === 0)?.text;
+          const postingComments = posting.positionedComments ??
+            posting.comments.map((text) => ({ position: 1, text }));
+          const inlinePostingComment = postingComments.find((comment) => comment.position === 0)?.text;
           const formattedExpression = formatPostingExpression(posting, formats);
           const expression = index === elidedAmountIndex ? '' : formattedExpression.text;
           const alignmentWidth = posting.lotCost !== null || posting.cost !== null
@@ -176,20 +176,20 @@ module.exports = ({ cliOptions: options }) => ({
               ? `${posting.account}  ${alignedExpression(10)}`
               : `${posting.account.padEnd(accountColumnWidth)}  ` +
                 alignedExpression(amountColumnWidth);
-          const inlineNote = inlinePostingNote === undefined ? '' : `  ; ${inlinePostingNote}`;
+          const inlineComment = inlinePostingComment === undefined ? '' : `  ; ${inlinePostingComment}`;
           const maximumWidth = expression === '' ? maximumPostingLineWidth : 80;
           const projectedLineLength = expression === ''
             ? 4 + Math.min(posting.account.length, accountColumnWidth) +
               (posting.amount !== null && posting.account.length > accountColumnWidth ? 2 : 0) +
-              inlineNote.length
-            : `    ${body}${inlineNote}`.length;
-          const wrapPostingNote = inlinePostingNote !== undefined &&
+              inlineComment.length
+            : `    ${body}${inlineComment}`.length;
+          const wrapPostingComment = inlinePostingComment !== undefined &&
             projectedLineLength > maximumWidth;
-          const postingNote = wrapPostingNote ? '' : inlineNote;
-          lines.push(`    ${body}${postingNote}`);
-          if (wrapPostingNote) lines.push(`    ; ${inlinePostingNote}`);
-          for (const note of postingNotes) {
-            if (note.position !== 0) lines.push(`    ; ${note.text}`);
+          const postingComment = wrapPostingComment ? '' : inlineComment;
+          lines.push(`    ${body}${postingComment}`);
+          if (wrapPostingComment) lines.push(`    ; ${inlinePostingComment}`);
+          for (const comment of postingComments) {
+            if (comment.position !== 0) lines.push(`    ; ${comment.text}`);
           }
         });
         lines.push('');

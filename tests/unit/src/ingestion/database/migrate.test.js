@@ -32,7 +32,9 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(!tables.includes('transaction_tags'));
   assert.ok(!tables.includes('posting_tags'));
   assert.ok(!tables.includes('commodity_properties'));
-  assert.ok(tables.includes('notes'));
+  assert.ok(tables.includes('comments'));
+  assert.ok(tables.includes('file_comments'));
+  assert.ok(!tables.includes('notes'));
   assert.ok(!tables.includes('transaction_notes'));
   assert.ok(tables.includes('resolved_posting_amounts'));
   assert.ok(tables.includes('valuation_prices'));
@@ -168,7 +170,7 @@ test('recreates a supported legacy cache with the current schema', (t) => {
   assert.ok(!tables.includes('metadata'));
 });
 
-test('replaces version 28 comments and transaction notes with unified notes', (t) => {
+test('replaces version 28 comments and transaction notes with current comment tables', (t) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -181,9 +183,27 @@ test('replaces version 28 comments and transaction notes with unified notes', (t
 
   const tables = database.prepare("SELECT name FROM sqlite_schema WHERE type = 'table'")
     .pluck().all();
-  assert.ok(tables.includes('notes'));
+  assert.ok(tables.includes('comments'));
+  assert.ok(tables.includes('file_comments'));
   assert.ok(!tables.includes('transaction_notes'));
   assert.ok(!database.pragma('table_info(transactions)').some((column) => column.name === 'comment'));
+});
+
+test('replaces version 29 notes with current comment tables', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '29');
+    CREATE TABLE notes (id INTEGER PRIMARY KEY, text TEXT NOT NULL);
+  `);
+
+  migrateDatabase(database);
+
+  const tables = database.prepare("SELECT name FROM sqlite_schema WHERE type = 'table'")
+    .pluck().all();
+  assert.ok(tables.includes('comments'));
+  assert.ok(tables.includes('file_comments'));
+  assert.ok(!tables.includes('notes'));
 });
 
 test('rejects unsupported schema versions', (t) => {

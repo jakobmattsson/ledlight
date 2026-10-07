@@ -13,6 +13,15 @@ Parses semicolon comments at the top level.
   "source": "fixture.ledger",
   "entries": [
     {
+      "type": "comment",
+      "text": "top-level comment",
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    },
+    {
       "type": "transaction",
       "date": "2024-01-01",
       "description": "Transaction",
@@ -29,7 +38,7 @@ Parses semicolon comments at the top level.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -45,7 +54,7 @@ Parses semicolon comments at the top level.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,
@@ -53,7 +62,7 @@ Parses semicolon comments at the top level.
           }
         }
       ],
-      "notes": [],
+      "comments": [],
       "location": {
         "source": "fixture.ledger",
         "line": 2,

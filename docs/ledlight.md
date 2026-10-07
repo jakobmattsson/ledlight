@@ -436,20 +436,22 @@ to journal comment metadata.
 hash, and its traversal order. `checkDatabaseSync` rebuilds the current source
 manifest and reports added, removed, and changed files.
 
-The main query tables are `transactions`, `postings`, `notes`,
+The main query tables are `transactions`, `postings`, `comments`,
 `resolved_posting_amounts`, `prices`, `valuation_prices`, and the three
 declaration tables. `tag_declarations` stores `tag` directives and their usage
 status. Commodity declarations store the format and default status used by the
 public `commodities` query. `valuation_prices` is derived from `prices` at the
 end of each database build and is not an independent journal source.
 `journal_entries` preserves source file and line information shared by entry
-types. Its ID also preserves global source order. Quantities are stored as
+types other than top-level comments. Its ID preserves source order among those
+entries. Quantities are stored as
 `TEXT`, exactly as parsed, so SQL storage never rounds an accounting value
 through binary floating point.
-`notes` stores transaction and posting comments together. Position zero
+`comments` stores transaction and posting comments together. Position zero
 identifies a comment on the transaction or posting line; subsequent positions
 identify following indented comment lines. An indented comment belongs to the
 preceding posting when one exists, and otherwise to the transaction.
+`file_comments` stores top-level comments by source file and line.
 Price directives use `base_commodity`, `quote_quantity`, and `quote_commodity`;
 for example, `P 2024-01-01 FUND 10 SEK` prices the base commodity `FUND` as a
 quote of `10 SEK`.

@@ -1,4 +1,4 @@
-Postings expose their own notes separately from transaction notes.
+Postings expose their own comments separately from transaction comments.
 
 ========== CLI ==========
 
@@ -33,13 +33,13 @@ tag Receipt
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 7,
     "description": "Groceries",
-    "transactionNotes": [
+    "transactionComments": [
       "transaction inline",
       "transaction detail"
     ],
     "postingDate": "2024-01-01",
     "account": "Expenses:Food",
-    "postingNotes": [
+    "postingComments": [
       "expense inline",
       "Receipt: 1234"
     ],
@@ -66,13 +66,13 @@ tag Receipt
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 7,
     "description": "Groceries",
-    "transactionNotes": [
+    "transactionComments": [
       "transaction inline",
       "transaction detail"
     ],
     "postingDate": "2024-01-01",
     "account": "Assets:Bank",
-    "postingNotes": [
+    "postingComments": [
       "bank inline",
       "bank detail"
     ],

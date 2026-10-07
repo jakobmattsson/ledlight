@@ -29,7 +29,7 @@ Parses zero, positive, and negative posting quantities.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 2,
@@ -48,7 +48,7 @@ Parses zero, positive, and negative posting quantities.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -67,7 +67,7 @@ Parses zero, positive, and negative posting quantities.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,
@@ -75,7 +75,7 @@ Parses zero, positive, and negative posting quantities.
           }
         }
       ],
-      "notes": [],
+      "comments": [],
       "location": {
         "source": "fixture.ledger",
         "line": 1,

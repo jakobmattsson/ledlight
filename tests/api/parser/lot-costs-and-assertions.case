@@ -41,7 +41,7 @@ Parses unit and total lot costs, transaction prices, and balance assertions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 2,
@@ -72,7 +72,7 @@ Parses unit and total lot costs, transaction prices, and balance assertions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -94,7 +94,7 @@ Parses unit and total lot costs, transaction prices, and balance assertions.
             "commodity": "SEK"
           },
           "postingDate": null,
-          "notes": [],
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,
@@ -102,7 +102,7 @@ Parses unit and total lot costs, transaction prices, and balance assertions.
           }
         }
       ],
-      "notes": [],
+      "comments": [],
       "location": {
         "source": "fixture.ledger",
         "line": 1,

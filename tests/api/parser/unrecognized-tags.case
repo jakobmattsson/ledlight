@@ -28,7 +28,7 @@ Keeps unrecognized tag-like comment text as plain comments.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": ":two words:",
               "key": null,
@@ -58,7 +58,7 @@ Keeps unrecognized tag-like comment text as plain comments.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "notes": [
+          "comments": [
             {
               "text": "Key:: value",
               "key": null,
@@ -77,7 +77,7 @@ Keeps unrecognized tag-like comment text as plain comments.
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
           "text": "ordinary :embedded:",
           "key": null,

@@ -27,12 +27,12 @@ LEDGER
       "transactionId": 6,
       "transactionDate": "2024-01-01",
       "description": "Purchase",
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-01-01",
           "account": "Assets:Stock",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "10",
             "commodity": "STOCK"
@@ -55,7 +55,7 @@ LEDGER
         {
           "postingDate": "2024-01-01",
           "account": "Assets:Cash",
-          "notes": [],
+          "comments": [],
           "amount": {
             "quantity": "-100",
             "commodity": "SEK"

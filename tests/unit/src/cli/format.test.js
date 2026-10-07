@@ -417,11 +417,11 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
       transactionId: 7,
       transactionDate: '2024-01-03',
       description: 'Shop | Groceries',
-      notes: ['imported', 'Project: Home'],
+      comments: ['imported', 'Project: Home'],
       postings: [{
         postingDate: '2024-01-03',
         account: 'Assets:Cash',
-        notes: ['card'],
+        comments: ['card'],
         amount: { quantity: '-5', commodity: 'SEK' },
         lotCost: null,
         cost: null,
@@ -431,7 +431,7 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
       }, {
         postingDate: '2024-01-03',
         account: 'Expenses:Food',
-        notes: [],
+        comments: [],
         amount: null,
         lotCost: null,
         cost: null,
@@ -442,10 +442,10 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
     }],
   };
 
-  Object.defineProperty(report.transactions[0], 'positionedNotes', { value: [
+  Object.defineProperty(report.transactions[0], 'positionedComments', { value: [
     { position: 0, text: 'imported' }, { position: 1, text: 'Project: Home' },
   ] });
-  Object.defineProperty(report.transactions[0].postings[0], 'positionedNotes', {
+  Object.defineProperty(report.transactions[0].postings[0], 'positionedComments', {
     value: [{ position: 0, text: 'card' }],
   });
 
@@ -458,8 +458,8 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
   );
   assert.equal(
     formatTransactions(report, { format: 'csv' }),
-    'transactionId,transactionDate,description,transactionNotes,postingDate,account,' +
-    'postingNotes,quantity,commodity\n' +
+    'transactionId,transactionDate,description,transactionComments,postingDate,account,' +
+    'postingComments,quantity,commodity\n' +
     '7,2024-01-03,Shop | Groceries,"[""imported"",""Project: Home""]",' +
     '2024-01-03,Assets:Cash,"[""card""]",-5,SEK\n' +
     '7,2024-01-03,Shop | Groceries,"[""imported"",""Project: Home""]",' +
@@ -483,10 +483,10 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
     transactionId: 7,
     transactionDate: '2024-01-02',
     description: 'Buy, fund',
-    transactionNotes: ['imported', 'Project: Savings'],
+    transactionComments: ['imported', 'Project: Savings'],
     postingDate: '2024-01-03',
     account: 'Assets:Fund',
-    postingNotes: ['[2024-01-03] broker'],
+    postingComments: ['[2024-01-03] broker'],
     amount: { quantity: '10', commodity: 'FUND' },
     lotCost: { quantity: '10', commodity: 'SEK', isTotal: false },
     cost: { quantity: '100', commodity: 'SEK', isTotal: true },
@@ -506,7 +506,7 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
   assert.equal(
     formatPostings(postings, { format: 'csv' }),
     'postingId,transactionId,transactionDate,description,' +
-    'transactionNotes,postingDate,account,postingNotes,amountQuantity,amountCommodity,' +
+    'transactionComments,postingDate,account,postingComments,amountQuantity,amountCommodity,' +
     'lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,' +
     'balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,' +
     'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance,' +
