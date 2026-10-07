@@ -277,7 +277,9 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
         }
         const apiResult = method(...api.args);
         if (apiResult === undefined) throw new Error('API statement did not return a result');
-        resultText.output = modules.cliFormat.formatJson(apiResult);
+        resultText.output = typeof apiResult === 'string'
+          ? apiResult
+          : modules.cliFormat.formatJson(apiResult);
         resultText.warnings = modules.cliFormat.formatWarnings(journalApi.warnings);
       } catch (error) {
         resultText.error = `${error.message}\n`;

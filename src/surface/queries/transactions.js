@@ -150,7 +150,7 @@ module.exports = ({
       const transactionCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT transaction_id AS transactionId, position, text
+          SELECT transaction_id AS transactionId, text
           FROM comments
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position
@@ -159,7 +159,7 @@ module.exports = ({
       const postingCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT comments.posting_id AS postingId, comments.position, comments.text
+          SELECT comments.posting_id AS postingId, comments.text
           FROM postings
           JOIN comments ON comments.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
@@ -169,7 +169,7 @@ module.exports = ({
       const transactionTagRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT transaction_id AS transactionId, position, name, value
+          SELECT transaction_id AS transactionId, name, value
           FROM tags
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position, ordinal
@@ -178,7 +178,7 @@ module.exports = ({
       const postingTagRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT tags.posting_id AS postingId, tags.position, tags.name, tags.value
+          SELECT tags.posting_id AS postingId, tags.name, tags.value
           FROM postings
           JOIN tags ON tags.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
@@ -193,10 +193,6 @@ module.exports = ({
           : postingsById.get(row.postingId);
         if (!owner) continue;
         owner.comments.push(row.text);
-        if (!Object.hasOwn(owner, 'positionedComments')) {
-          Object.defineProperty(owner, 'positionedComments', { value: [] });
-        }
-        owner.positionedComments.push({ position: row.position, text: row.text });
       }
       for (const row of [...transactionTagRows, ...postingTagRows]) {
         const owner = row.postingId === undefined
@@ -205,10 +201,6 @@ module.exports = ({
         if (!owner) continue;
         if (!owner.tags) owner.tags = [];
         owner.tags.push({ name: row.name, value: row.value });
-        if (!Object.hasOwn(owner, 'positionedTags')) {
-          Object.defineProperty(owner, 'positionedTags', { value: [] });
-        }
-        owner.positionedTags.push({ position: row.position, name: row.name, value: row.value });
       }
     }
     return {
@@ -216,35 +208,10 @@ module.exports = ({
       ...(page === undefined ? {} : { page: selectedPage, pageSize }),
       totalTransactions,
       ...(page === undefined ? {} : { totalPages }),
-      transactions: transactions.map((transaction) => {
-        const result = {
-          ...transaction,
-          postings: transaction.postings.map(({ id: _id, ...posting }, index) => {
-            if (Object.hasOwn(transaction.postings[index], 'positionedComments')) {
-              Object.defineProperty(posting, 'positionedComments', {
-                value: transaction.postings[index].positionedComments,
-              });
-            }
-            if (Object.hasOwn(transaction.postings[index], 'positionedTags')) {
-              Object.defineProperty(posting, 'positionedTags', {
-                value: transaction.postings[index].positionedTags,
-              });
-            }
-            return posting;
-          }),
-        };
-        if (Object.hasOwn(transaction, 'positionedComments')) {
-          Object.defineProperty(result, 'positionedComments', {
-            value: transaction.positionedComments,
-          });
-        }
-        if (Object.hasOwn(transaction, 'positionedTags')) {
-          Object.defineProperty(result, 'positionedTags', {
-            value: transaction.positionedTags,
-          });
-        }
-        return result;
-      }),
+      transactions: transactions.map((transaction) => ({
+        ...transaction,
+        postings: transaction.postings.map(({ id: _id, ...posting }) => posting),
+      })),
     };
   }
 

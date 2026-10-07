@@ -20,6 +20,23 @@ is recognized; all other characters are matched literally.
 Every CLI account filter uses the repeatable `--accounts PATTERN` option.
 The singular `--account` is not supported.
 
+## Presentation
+
+### `journal.print()`
+
+Returns a plain string containing a pretty-printed, complete journal. It has
+no options; omit the argument or pass `{}`. The output is built from stored
+journal data, follows entry order, expands included files, and contains
+declarations, price directives, and transactions, including zero amounts. It
+aligns posting amounts, normalizes numeric text, and preserves stored comments,
+tags, posting dates, and their order within each transaction. Source-only
+details not represented in the database, such as comments on commodity
+properties, are omitted. Entries rejected during ingestion are also omitted.
+The string is empty when the journal has no stored entries.
+
+`ledlight print --file JOURNAL` writes the same string to standard output.
+It has no filters or output-format options.
+
 ## Query parameter conventions
 
 All dates must be valid calendar dates in `YYYY-MM-DD` format; timestamps,
@@ -450,8 +467,9 @@ The `transactions` CLI command defaults to
 `--format text` and prints every matching transaction. Its repeatable `--accounts PATTERN` option selects transactions
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the matching transactions or the requested page.
-Text output preserves the relative order of comments and tags, including
-metadata written on the transaction or posting line.
+Text output groups comments before tags for each transaction and posting.
+Use `journal.print()` when the original relative order and inline placement
+of this metadata matter.
 `--format json` returns the complete API result, while `--format csv`
 returns one row per posting amount with transaction and posting comments and tags
 encoded as JSON arrays in separate `transactionComments`, `postingComments`,

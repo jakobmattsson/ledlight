@@ -442,13 +442,6 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
     }],
   };
 
-  Object.defineProperty(report.transactions[0], 'positionedComments', { value: [
-    { position: 0, text: 'imported' }, { position: 1, text: 'Project: Home' },
-  ] });
-  Object.defineProperty(report.transactions[0].postings[0], 'positionedComments', {
-    value: [{ position: 0, text: 'card' }],
-  });
-
   assert.equal(
     formatTransactions(report, { format: 'text' }),
     '2024-01-03 Shop | Groceries ; imported\n' +

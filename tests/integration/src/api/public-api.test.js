@@ -80,6 +80,11 @@ tag Receipt
   assert.deepEqual(transaction.postings[0].tags, parsed.postings[0].tags);
   assert.deepEqual(transaction.postings[0].comments, ['card payment']);
   assert.equal(transaction.postings[0].postingDate, '2024-01-02');
+  assert.deepEqual(Object.getOwnPropertyNames(transaction), Object.keys(transaction));
+  assert.deepEqual(
+    Object.getOwnPropertyNames(transaction.postings[0]),
+    Object.keys(transaction.postings[0]),
+  );
 
   const posting = journal.postings({ accounts: ['Assets:Cash'] })[0];
   assert.deepEqual(posting.transactionTags, parsed.tags);
@@ -243,6 +248,30 @@ ${entries}`);
   assert.equal(paginated.totalPages, 2);
   assert.equal(paginated.transactions.length, 1);
   assert.equal(paginated.transactions[0].description, 'Entry 501');
+});
+
+test('print returns plain journal text and rejects unknown options', (t) => {
+  const { openJournal } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-print-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, 'account Assets:Cash\n');
+  const journal = openJournal(journalPath);
+
+  assert.equal(journal.print(), 'account Assets:Cash\n');
+  fs.writeFileSync(journalPath, 'account Assets:Changed\n');
+  assert.equal(journal.print(), 'account Assets:Cash\n');
+  const Database = require(sqliteModulePath);
+  const database = new Database(journal.databasePath);
+  database.prepare("UPDATE account_declarations SET name = 'Assets:Database'").run();
+  database.close();
+  assert.equal(journal.print(), 'account Assets:Database\n');
+  assert.equal(journal.print({}), 'account Assets:Database\n');
+  assert.throws(
+    () => journal.print({ unknown: true }),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&
+      error.message === 'Unknown print option: unknown',
+  );
 });
 
 test('returns query data while exposing ingestion warnings through the API and CLI', (t) => {

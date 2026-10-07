@@ -128,33 +128,6 @@ module.exports = ({ cliOptions: options }) => ({
     function formatTransactionsText(report, descriptions) {
       const formatTag = ({ name, value }) => value === null
         ? `:${name}:` : `${name}: ${value}`;
-      function metadataLines(owner) {
-        const comments = owner.positionedComments ??
-          owner.comments.map((text, index) => ({ position: index + 1, text }));
-        const lastCommentPosition = Math.max(0, ...comments.map(({ position }) => position));
-        const tags = owner.positionedTags ??
-          (owner.tags || []).map((tag, index) => ({
-            ...tag, position: lastCommentPosition + index + 1,
-          }));
-        const byPosition = new Map();
-        for (const { position, text } of comments) {
-          byPosition.set(position, { comment: text, tags: [] });
-        }
-        for (const tag of tags) {
-          if (!byPosition.has(tag.position)) byPosition.set(tag.position, { tags: [] });
-          byPosition.get(tag.position).tags.push(tag);
-        }
-        return [...byPosition].sort(([left], [right]) => left - right)
-          .map(([position, { comment, tags: lineTags }]) => {
-            const tagText = lineTags.length > 0 && lineTags.every(({ value }) => value === null)
-              ? `:${lineTags.map(({ name }) => name).join(':')}:`
-              : lineTags.map(formatTag).join(' ');
-            return {
-              position,
-              text: [tagText, comment].filter((part) => part !== undefined && part !== '').join(' '),
-            };
-          });
-      }
       const accountColumnWidth = 34;
       const amountColumnWidth = 12;
       const maximumPostingLineWidth = 61;
@@ -163,16 +136,14 @@ module.exports = ({ cliOptions: options }) => ({
       for (const transaction of report.transactions) {
         const date = transaction.transactionDate;
         const header = `${date} ${transaction.description}`;
-        const transactionMetadata = metadataLines(transaction);
-        const inlineTransactionComment = transactionMetadata.find((item) => item.position === 0)?.text;
+        const inlineTransactionComment = transaction.comments[0];
         const inlineHeader = inlineTransactionComment === undefined ? '' : ` ; ${inlineTransactionComment}`;
         const wrapHeaderComment = inlineTransactionComment !== undefined &&
           `${header}${inlineHeader}`.length > 80;
         lines.push(`${header}${wrapHeaderComment ? '' : inlineHeader}`);
         if (wrapHeaderComment) lines.push(`    ; ${inlineTransactionComment}`);
-        for (const item of transactionMetadata) {
-          if (item.position !== 0) lines.push(`    ; ${item.text}`);
-        }
+        for (const comment of transaction.comments.slice(1)) lines.push(`    ; ${comment}`);
+        for (const tag of transaction.tags || []) lines.push(`    ; ${formatTag(tag)}`);
         const canElideAmount = transaction.postings.length === 2 &&
           transaction.postings.every((posting) =>
             posting.amounts.length === 1 && posting.lotCost === null && posting.cost === null &&
@@ -189,8 +160,7 @@ module.exports = ({ cliOptions: options }) => ({
           ? implicitPostingIndexes.length === 1 ? implicitPostingIndexes[0] : 1
           : -1;
         transaction.postings.forEach((posting, index) => {
-          const postingMetadata = metadataLines(posting);
-          const inlinePostingComment = postingMetadata.find((item) => item.position === 0)?.text;
+          const inlinePostingComment = posting.comments[0];
           const postingDateMarker = posting.postingDate && posting.postingDate !== date
             ? `[${posting.postingDate}]` : null;
           const inlinePostingMetadata = postingDateMarker === null
@@ -225,9 +195,8 @@ module.exports = ({ cliOptions: options }) => ({
           const postingComment = wrapPostingComment ? '' : inlineComment;
           lines.push(`    ${body}${postingComment}`);
           if (wrapPostingComment) lines.push(`    ; ${inlinePostingMetadata}`);
-          for (const item of postingMetadata) {
-            if (item.position !== 0) lines.push(`    ; ${item.text}`);
-          }
+          for (const comment of posting.comments.slice(1)) lines.push(`    ; ${comment}`);
+          for (const tag of posting.tags || []) lines.push(`    ; ${formatTag(tag)}`);
         });
         lines.push('');
       }

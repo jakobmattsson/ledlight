@@ -29,6 +29,8 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(tables.includes('ingestion_warnings'));
   assert.ok(!tables.includes('metadata'));
   assert.ok(tables.includes('journal_entries'));
+  assert.ok(!database.pragma('table_info(journal_entries)')
+    .some((column) => column.name === 'printed_text'));
   assert.ok(!tables.includes('transaction_tags'));
   assert.ok(!tables.includes('posting_tags'));
   assert.ok(tables.includes('tags'));
@@ -321,6 +323,24 @@ test('replaces version 35 caches with tag positions shared with comments', (t) =
   migrateDatabase(database);
 
   assert.ok(database.pragma('table_info(tags)').some((column) => column.name === 'ordinal'));
+});
+
+test('removes stored print text when rebuilding a version 29 cache', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '29');
+    CREATE TABLE journal_entries (id INTEGER PRIMARY KEY, printed_text TEXT NOT NULL);
+    INSERT INTO journal_entries (id, printed_text) VALUES (1, 'old output');
+  `);
+
+  migrateDatabase(database);
+
+  assert.deepEqual(
+    database.pragma('table_info(journal_entries)').map((column) => column.name),
+    ['id', 'source_file_id', 'line'],
+  );
+  assert.equal(database.prepare('SELECT COUNT(*) FROM journal_entries').pluck().get(), 0);
 });
 
 test('rejects unsupported schema versions', (t) => {
