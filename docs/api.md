@@ -96,7 +96,7 @@ not use the warning and recovery behavior of `openJournal`.
 
 The result is `{ source, entries }`. `entries` preserves source order. Every
 entry has `type` and `location: { source, line, column }`, with one-based line
-and column numbers. Comments are `string | null`. Amounts are
+and column numbers. Directive comments are `string | null`. Amounts are
 `{ quantity: string, commodity: string }`; the original decimal precision is
 preserved in `quantity`. Entry shapes are:
 
@@ -106,17 +106,20 @@ preserved in `quantity`. Entry shapes are:
 | `account`, `tag` | `name`, `comment`, `location` |
 | `commodity` | `symbol`, `properties`, `comment`, `location` |
 | `price` | `date`, `commodity`, `price` (amount), `comment`, `location` |
-| `transaction` | `date`, `description`, `postings`, `notes`, `comment`, `location`; optional `tags` |
+| `transaction` | `date`, `description`, `postings`, `notes`, `location`; optional `tags` |
 
 Commodity `properties` is an array of `{ name, value, comment, location }`;
 `value` is a string or `null`. A transaction posting contains `type: 'posting'`,
 `account`, `amount`, `lotCost`, `cost`, `balanceAssignment`,
-`balanceAssertion`, `postingDate`, `comment`, and `location`, plus optional
+`balanceAssertion`, `postingDate`, `notes`, and `location`, plus optional
 `tags`. The amount, balance assignment, and balance assertion fields are an
 amount or `null`. `lotCost` and `cost` are `{ total: boolean, amount }` or
 `null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A note
 is `{ text, key, value, location }`, plus optional `tags`; `key` and `value`
-are strings or `null`. Tags are `{ name, value }`, where `value` may be `null`.
+are strings or `null`. A comment on the transaction or posting line becomes
+its first note. An indented comment before the first posting belongs to the
+transaction; one after a posting belongs to that posting. Tags are
+`{ name, value }`, where `value` may be `null`.
 
 For example:
 
@@ -430,8 +433,8 @@ and leading zeros are rejected. Pages beyond the result are clamped to the last
 page (or page `1` for an empty result).
 The result always contains `order`, `totalTransactions`, and `transactions`.
 Paginated results additionally contain the selected `page`, `pageSize`, and
-`totalPages`. Transactions include
-their ordered note text. Postings retain their nullable source `amount`, lot
+`totalPages`. Transactions and their postings each include ordered `notes`
+arrays of text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
@@ -440,7 +443,8 @@ The `transactions` CLI command defaults to
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the matching transactions or the requested page.
 `--format json` returns the complete API result, while `--format csv`
-returns one row per posting amount with transaction and posting fields.
+returns one row per posting amount with transaction and posting notes encoded
+as JSON arrays in `transactionNotes` and `postingNotes` columns.
 
 ### `journal.postings({ from, to, accounts })`
 
@@ -449,11 +453,11 @@ Returns all matching postings in journal order. All options are optional.
 is an array of patterns matched against the posting account; an empty array
 selects every account.
 
-Each result contains `postingId`, `postingDate`, `account`, `postingComment`,
+Each result contains `postingId`, `postingDate`, `account`, ordered `postingNotes`,
 the nullable source `amount`, lot cost, transaction cost, balance assignment,
 and balance assertion, and every resolved amount. It also contains the parent
 transaction's `transactionId`, `transactionDate`, `description`,
-`transactionComment`, and ordered `transactionNotes`. `filename` identifies the
+and ordered `transactionNotes`. `filename` identifies the
 source file containing the transaction, including when it was loaded through an
 `include`. `transactionSourceLine` is the one-based line number of the transaction
 header in that file, not the posting line.

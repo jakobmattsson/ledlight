@@ -42,6 +42,7 @@ P 2024-01-01 FUND 123.45 SEK
   fs.writeFileSync(transactionsPath, `2024-01-02 Bank | Deposit ; :imported: bank statement
   ; Source: statement.csv:4
   Assets:Cash  8.000000000000000001 SEK ; Receipt: 1234
+  ; Imported from the bank statement
   Equity:Opening  ; :balanced:
 `);
 
@@ -110,8 +111,17 @@ P 2024-01-01 FUND 123.45 SEK
   );
   assert.equal(result.postingBalances, 2);
   assert.deepEqual(
-    database.prepare('SELECT position, text FROM transaction_notes').get(),
-    { position: 0, text: 'Source: statement.csv:4' },
+    database.prepare(`
+      SELECT transaction_id IS NOT NULL AS transaction_note, position, text
+      FROM notes ORDER BY id
+    `).all(),
+    [
+      { transaction_note: 1, position: 0, text: ':imported: bank statement' },
+      { transaction_note: 1, position: 1, text: 'Source: statement.csv:4' },
+      { transaction_note: 0, position: 0, text: 'Receipt: 1234' },
+      { transaction_note: 0, position: 1, text: 'Imported from the bank statement' },
+      { transaction_note: 0, position: 0, text: ':balanced:' },
+    ],
   );
   assert.deepEqual(
     database.prepare("SELECT format, is_default FROM commodity_declarations WHERE symbol = 'SEK'").get(),

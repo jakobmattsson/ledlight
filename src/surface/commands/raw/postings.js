@@ -8,11 +8,10 @@ function postingCsvRows(postings) {
     transactionId: posting.transactionId,
     transactionDate: posting.transactionDate,
     description: posting.description,
-    transactionComment: posting.transactionComment ?? '',
     transactionNotes: JSON.stringify(posting.transactionNotes),
     postingDate: posting.postingDate,
     account: posting.account,
-    postingComment: posting.postingComment ?? '',
+    postingNotes: JSON.stringify(posting.postingNotes),
     amountQuantity: posting.amount?.quantity ?? '',
     amountCommodity: posting.amount?.commodity ?? '',
     lotCostQuantity: posting.lotCost?.quantity ?? '',
@@ -42,8 +41,8 @@ module.exports = ({ cliOptions: options }) => ({
   },
   formatCsv(postings, _cliOptions, { csvField }) {
     const fields = [
-      'postingId', 'transactionId', 'transactionDate', 'description', 'transactionComment',
-      'transactionNotes', 'postingDate', 'account', 'postingComment',
+      'postingId', 'transactionId', 'transactionDate', 'description',
+      'transactionNotes', 'postingDate', 'account', 'postingNotes',
       'amountQuantity', 'amountCommodity', 'lotCostQuantity', 'lotCostCommodity',
       'lotCostIsTotal', 'costQuantity', 'costCommodity', 'costIsTotal',
       'balanceAssignmentQuantity', 'balanceAssignmentCommodity',
@@ -62,6 +61,7 @@ module.exports = ({ cliOptions: options }) => ({
     const rows = postingCsvRows(postings).map((row) => ({
       ...row,
       transactionNotes: JSON.parse(row.transactionNotes).join(' | '),
+      postingNotes: JSON.parse(row.postingNotes).join(' | '),
     }));
     return formatTextTable(rows, [
       { heading: 'Transaction', value: (row) => row.transactionDate },
@@ -70,9 +70,8 @@ module.exports = ({ cliOptions: options }) => ({
       { heading: 'Account', value: (row) => row.account },
       { heading: 'Amount', value: (row) => row.resolvedQuantity, align: 'right' },
       { heading: 'Commodity', value: (row) => row.resolvedCommodity },
-      { heading: 'Transaction comment', value: (row) => row.transactionComment },
-      { heading: 'Notes', value: (row) => row.transactionNotes },
-      { heading: 'Posting comment', value: (row) => row.postingComment },
+      { heading: 'Transaction notes', value: (row) => row.transactionNotes },
+      { heading: 'Posting notes', value: (row) => row.postingNotes },
       { heading: 'Filename', value: (row) => row.filename },
       { heading: 'Transaction source line', value: (row) => row.transactionSourceLine },
     ]);

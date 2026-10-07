@@ -37,10 +37,8 @@ module.exports = ({
         source_files.path AS filename,
         entries.line AS transactionSourceLine,
         transactions.description,
-        transactions.comment AS transactionComment,
         postings.posting_date AS postingDate,
         postings.account,
-        postings.comment AS postingComment,
         postings.amount_quantity AS amountQuantity,
         postings.amount_commodity AS amountCommodity,
         postings.lot_cost_quantity AS lotCostQuantity,
@@ -76,11 +74,10 @@ module.exports = ({
           filename: row.filename,
           transactionSourceLine: row.transactionSourceLine,
           description: row.description,
-          transactionComment: row.transactionComment,
           transactionNotes: [],
           postingDate: row.postingDate,
           account: row.account,
-          postingComment: row.postingComment,
+          postingNotes: [],
           amount: row.amountQuantity === null
             ? null
             : { quantity: row.amountQuantity, commodity: row.amountCommodity },
@@ -123,15 +120,28 @@ module.exports = ({
     }
     if (postings.length > 0) {
       const transactionIds = [...new Set(postings.map(({ transactionId }) => transactionId))];
-      const placeholders = transactionIds.map(() => '?').join(', ');
       const notesByTransaction = new Map(transactionIds.map((id) => [id, []]));
-      const notes = database.prepare(`
-        SELECT transaction_id AS transactionId, text
-        FROM transaction_notes
-        WHERE transaction_id IN (${placeholders})
-        ORDER BY transaction_id, position
-      `).all(...transactionIds);
-      for (const note of notes) notesByTransaction.get(note.transactionId).push(note.text);
+      for (let offset = 0; offset < transactionIds.length; offset += 500) {
+        const ids = transactionIds.slice(offset, offset + 500);
+        const placeholders = ids.map(() => '?').join(', ');
+        const transactionNotes = database.prepare(`
+          SELECT transaction_id AS transactionId, text
+          FROM notes
+          WHERE transaction_id IN (${placeholders})
+          ORDER BY transaction_id, position
+        `).all(...ids);
+        for (const note of transactionNotes) {
+          notesByTransaction.get(note.transactionId).push(note.text);
+        }
+        const postingNotes = database.prepare(`
+          SELECT notes.posting_id AS postingId, notes.text
+          FROM postings
+          JOIN notes ON notes.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, notes.position
+        `).all(...ids);
+        for (const note of postingNotes) byId.get(note.postingId)?.postingNotes.push(note.text);
+      }
       for (const posting of postings) {
         posting.transactionNotes = [...notesByTransaction.get(posting.transactionId)];
       }

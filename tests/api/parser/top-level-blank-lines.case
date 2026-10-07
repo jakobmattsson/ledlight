@@ -16,7 +16,6 @@ commodity SEK
       "type": "transaction",
       "date": "2024-01-01",
       "description": "Opening",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -30,7 +29,7 @@ commodity SEK
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 2,

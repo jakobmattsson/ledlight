@@ -15,7 +15,6 @@ Parses posting comments with and without preceding spaces.
       "type": "transaction",
       "date": "2024-01-01",
       "description": "Posting comments",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -29,7 +28,18 @@ Parses posting comments with and without preceding spaces.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": "compact",
+          "notes": [
+            {
+              "text": "compact",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 2,
+                "column": 24
+              }
+            }
+          ],
           "location": {
             "source": "fixture.ledger",
             "line": 2,
@@ -48,7 +58,18 @@ Parses posting comments with and without preceding spaces.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": "spaced",
+          "notes": [
+            {
+              "text": "spaced",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 3,
+                "column": 25
+              }
+            }
+          ],
           "location": {
             "source": "fixture.ledger",
             "line": 3,

@@ -16,7 +16,6 @@ Parses semicolon comments at the top level.
       "type": "transaction",
       "date": "2024-01-01",
       "description": "Transaction",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -30,7 +29,7 @@ Parses semicolon comments at the top level.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -46,7 +45,7 @@ Parses semicolon comments at the top level.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,

@@ -33,8 +33,8 @@ module.exports = ({
     `),
       transaction: database.prepare(`
       INSERT INTO transactions
-        (entry_id, date, description, comment)
-      VALUES (?, ?, ?, ?)
+        (entry_id, date, description)
+      VALUES (?, ?, ?)
     `),
       posting: database.prepare(`
       INSERT INTO postings
@@ -43,12 +43,12 @@ module.exports = ({
          lot_cost_quantity, lot_cost_commodity, lot_cost_is_total,
          cost_quantity, cost_commodity, cost_is_total,
          balance_assignment_quantity, balance_assignment_commodity,
-         balance_assertion_quantity, balance_assertion_commodity, comment)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         balance_assertion_quantity, balance_assertion_commodity)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
       note: database.prepare(`
-      INSERT INTO transaction_notes (transaction_id, position, line, text)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO notes (transaction_id, posting_id, position, line, text)
+      VALUES (?, ?, ?, ?, ?)
     `),
       resolvedPostingAmount: database.prepare(`
       INSERT INTO resolved_posting_amounts (id, posting_id, position, quantity, commodity)
@@ -72,10 +72,20 @@ module.exports = ({
     };
   }
 
+  function insertNotes(statement, notes, ownerLine, transactionId, postingId) {
+    let followingPosition = 1;
+    for (const note of notes) {
+      const position = note.location.line === ownerLine ? 0 : followingPosition++;
+      statement.run(transactionId, postingId, position, note.location.line, note.text);
+    }
+  }
+
   function insertTransaction(statements, entryId, entry, counters, resolvedPostings) {
     statements.transaction.run(
-      entryId, entry.date, entry.description, entry.comment,
+      entryId, entry.date, entry.description,
     );
+
+    insertNotes(statements.note, entry.notes, entry.location.line, entryId, null);
 
     entry.postings.forEach((posting, position) => {
       const amount = amountFields(posting.amount);
@@ -91,8 +101,8 @@ module.exports = ({
         lotCost.quantity, lotCost.commodity, posting.lotCost ? Number(posting.lotCost.total) : null,
         cost.quantity, cost.commodity, posting.cost ? Number(posting.cost.total) : null,
         assignment.quantity, assignment.commodity, assertion.quantity, assertion.commodity,
-        posting.comment,
       );
+      insertNotes(statements.note, posting.notes, posting.location.line, null, postingId);
       resolvedPostings[position].forEach((resolvedAmount, amountPosition) => {
         statements.resolvedPostingAmount.run(
           ++counters.resolvedAmount, postingId, amountPosition,
@@ -101,11 +111,6 @@ module.exports = ({
       });
     });
 
-    entry.notes.forEach((note, position) => {
-      statements.note.run(
-        entryId, position, note.location.line, note.text,
-      );
-    });
   }
 
   function insertEntry(

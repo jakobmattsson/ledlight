@@ -16,7 +16,6 @@ Treats an indented hash marker as posting account text.
       "type": "transaction",
       "date": "2024-01-01",
       "description": "Transaction",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -27,7 +26,7 @@ Treats an indented hash marker as posting account text.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 2,
@@ -46,7 +45,7 @@ Treats an indented hash marker as posting account text.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -62,7 +61,7 @@ Treats an indented hash marker as posting account text.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,

@@ -417,12 +417,11 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
       transactionId: 7,
       transactionDate: '2024-01-03',
       description: 'Shop | Groceries',
-      comment: 'imported',
-      notes: ['Project: Home'],
+      notes: ['imported', 'Project: Home'],
       postings: [{
         postingDate: '2024-01-03',
         account: 'Assets:Cash',
-        comment: 'card',
+        notes: ['card'],
         amount: { quantity: '-5', commodity: 'SEK' },
         lotCost: null,
         cost: null,
@@ -432,7 +431,7 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
       }, {
         postingDate: '2024-01-03',
         account: 'Expenses:Food',
-        comment: null,
+        notes: [],
         amount: null,
         lotCost: null,
         cost: null,
@@ -443,6 +442,13 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
     }],
   };
 
+  Object.defineProperty(report.transactions[0], 'positionedNotes', { value: [
+    { position: 0, text: 'imported' }, { position: 1, text: 'Project: Home' },
+  ] });
+  Object.defineProperty(report.transactions[0].postings[0], 'positionedNotes', {
+    value: [{ position: 0, text: 'card' }],
+  });
+
   assert.equal(
     formatTransactions(report, { format: 'text' }),
     '2024-01-03 Shop | Groceries ; imported\n' +
@@ -452,10 +458,12 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
   );
   assert.equal(
     formatTransactions(report, { format: 'csv' }),
-    'transactionId,transactionDate,description,transactionComment,postingDate,account,' +
-    'postingComment,quantity,commodity\n' +
-    '7,2024-01-03,Shop | Groceries,imported,2024-01-03,Assets:Cash,card,-5,SEK\n' +
-    '7,2024-01-03,Shop | Groceries,imported,2024-01-03,Expenses:Food,,5,SEK\n',
+    'transactionId,transactionDate,description,transactionNotes,postingDate,account,' +
+    'postingNotes,quantity,commodity\n' +
+    '7,2024-01-03,Shop | Groceries,"[""imported"",""Project: Home""]",' +
+    '2024-01-03,Assets:Cash,"[""card""]",-5,SEK\n' +
+    '7,2024-01-03,Shop | Groceries,"[""imported"",""Project: Home""]",' +
+    '2024-01-03,Expenses:Food,[],5,SEK\n',
   );
   assert.equal(
     formatTransactions(report, { format: 'json' }),
@@ -475,11 +483,10 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
     transactionId: 7,
     transactionDate: '2024-01-02',
     description: 'Buy, fund',
-    transactionComment: 'imported',
-    transactionNotes: ['Project: Savings'],
+    transactionNotes: ['imported', 'Project: Savings'],
     postingDate: '2024-01-03',
     account: 'Assets:Fund',
-    postingComment: '[2024-01-03] broker',
+    postingNotes: ['[2024-01-03] broker'],
     amount: { quantity: '10', commodity: 'FUND' },
     lotCost: { quantity: '10', commodity: 'SEK', isTotal: false },
     cost: { quantity: '100', commodity: 'SEK', isTotal: true },
@@ -498,14 +505,14 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
   );
   assert.equal(
     formatPostings(postings, { format: 'csv' }),
-    'postingId,transactionId,transactionDate,description,transactionComment,' +
-    'transactionNotes,postingDate,account,postingComment,amountQuantity,amountCommodity,' +
+    'postingId,transactionId,transactionDate,description,' +
+    'transactionNotes,postingDate,account,postingNotes,amountQuantity,amountCommodity,' +
     'lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,' +
     'balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,' +
     'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance,' +
     'filename,transactionSourceLine\n' +
-    '8,7,2024-01-02,"Buy, fund",imported,"[""Project: Savings""]",2024-01-03,' +
-    'Assets:Fund,[2024-01-03] broker,10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25,' +
+    '8,7,2024-01-02,"Buy, fund","[""imported"",""Project: Savings""]",2024-01-03,' +
+    'Assets:Fund,"[""[2024-01-03] broker""]",10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25,' +
     '"/books/included, journal.ledger",12\n',
   );
   assert.match(

@@ -32,11 +32,10 @@ account Equity:Opening
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 13,
     "description": "Opening balance",
-    "transactionComment": null,
     "transactionNotes": [],
     "postingDate": "2024-01-04",
     "account": "Assets:Cash",
-    "postingComment": null,
+    "postingNotes": [],
     "amount": {
       "quantity": "20",
       "commodity": "SEK"

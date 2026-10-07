@@ -16,7 +16,6 @@ Parses zero, positive, and negative posting quantities.
       "type": "transaction",
       "date": "2024-01-01",
       "description": "Canonical numbers",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -30,7 +29,7 @@ Parses zero, positive, and negative posting quantities.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 2,
@@ -49,7 +48,7 @@ Parses zero, positive, and negative posting quantities.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -68,7 +67,7 @@ Parses zero, positive, and negative posting quantities.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,

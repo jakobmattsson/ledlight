@@ -1,51 +1,52 @@
-Transactions clamp pages past the end.
+Transactions expose inline and following notes under their Ledger owner.
+
+========== CLI ==========
+
+ledlight transactions --format json
 
 ========== API ==========
 
-transactions({ order: 'newest', page: 99, pageSize: 2 })
+transactions()
 
 ========== FILE ==========
 
 commodity SEK
   default
-account Assets:Cash
-account Equity:Opening
-account Expenses:Shop
+account Expenses:Food
+account Assets:Bank
+tag Receipt
 
-2024-01-01 First
-  Assets:Cash  10 SEK
-  Equity:Opening  -10 SEK
-
-2024-01-02 Second
-  Assets:Cash  20 SEK
-  Equity:Opening  -20 SEK
-
-2024-01-03 Shop | Third  ; imported
-  ; Project: Home
-  Assets:Cash  -5 SEK  ; card
-  Expenses:Shop
+2024-01-01 Groceries ; transaction inline
+  ; transaction detail
+  Expenses:Food  100 SEK ; expense inline
+  ; Receipt: 1234
+  Assets:Bank  -100 SEK ; bank inline
+  ; bank detail
 
 ========== OUTPUT ==========
 
 {
-  "order": "newest",
-  "page": 2,
-  "pageSize": 2,
-  "totalTransactions": 3,
-  "totalPages": 2,
+  "order": "oldest",
+  "totalTransactions": 1,
   "transactions": [
     {
       "transactionId": 5,
       "transactionDate": "2024-01-01",
-      "description": "First",
-      "notes": [],
+      "description": "Groceries",
+      "notes": [
+        "transaction inline",
+        "transaction detail"
+      ],
       "postings": [
         {
           "postingDate": "2024-01-01",
-          "account": "Assets:Cash",
-          "notes": [],
+          "account": "Expenses:Food",
+          "notes": [
+            "expense inline",
+            "Receipt: 1234"
+          ],
           "amount": {
-            "quantity": "10",
+            "quantity": "100",
             "commodity": "SEK"
           },
           "lotCost": null,
@@ -54,17 +55,20 @@ account Expenses:Shop
           "balanceAssertion": null,
           "amounts": [
             {
-              "quantity": "10",
+              "quantity": "100",
               "commodity": "SEK"
             }
           ]
         },
         {
           "postingDate": "2024-01-01",
-          "account": "Equity:Opening",
-          "notes": [],
+          "account": "Assets:Bank",
+          "notes": [
+            "bank inline",
+            "bank detail"
+          ],
           "amount": {
-            "quantity": "-10",
+            "quantity": "-100",
             "commodity": "SEK"
           },
           "lotCost": null,
@@ -73,7 +77,7 @@ account Expenses:Shop
           "balanceAssertion": null,
           "amounts": [
             {
-              "quantity": "-10",
+              "quantity": "-100",
               "commodity": "SEK"
             }
           ]

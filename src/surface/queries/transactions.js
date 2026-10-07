@@ -69,8 +69,7 @@ module.exports = ({
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
-        transactions.description,
-        transactions.comment
+        transactions.description
       FROM transactions
       ${filter}
       ORDER BY transactions.entry_id ${direction}
@@ -94,7 +93,6 @@ module.exports = ({
             postings.posting_date AS postingDate,
             postings.line AS sourceLine,
             postings.account,
-            postings.comment,
             postings.amount_quantity AS amountQuantity,
             postings.amount_commodity AS amountCommodity,
             postings.lot_cost_quantity AS lotCostQuantity,
@@ -123,7 +121,7 @@ module.exports = ({
             id: row.postingId,
             postingDate: row.postingDate,
             account: row.account,
-            comment: row.comment,
+            notes: [],
             amount: row.amountQuantity === null
               ? null
               : { quantity: row.amountQuantity, commodity: row.amountCommodity },
@@ -160,22 +158,37 @@ module.exports = ({
         }
         posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
       }
-      const noteRows = batches.flatMap((ids) => {
+      const transactionNoteRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT transaction_id AS transactionId, line, text
-          FROM transaction_notes
+          SELECT transaction_id AS transactionId, line, position, text
+          FROM notes
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position
         `).all(...ids);
       });
-      for (const row of noteRows) {
-        const transaction = byId.get(row.transactionId);
-        transaction.notes.push(row.text);
-        if (!Object.hasOwn(transaction, 'positionedNotes')) {
-          Object.defineProperty(transaction, 'positionedNotes', { value: [] });
+      const postingNoteRows = batches.flatMap((ids) => {
+        const placeholders = ids.map(() => '?').join(', ');
+        return database.prepare(`
+          SELECT notes.posting_id AS postingId, notes.line, notes.position, notes.text
+          FROM postings
+          JOIN notes ON notes.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, notes.position
+        `).all(...ids);
+      });
+      const postingsById = new Map(transactions.flatMap((transaction) =>
+        transaction.postings.map((posting) => [posting.id, posting])));
+      for (const row of [...transactionNoteRows, ...postingNoteRows]) {
+        const owner = row.postingId === undefined
+          ? byId.get(row.transactionId)
+          : postingsById.get(row.postingId);
+        if (!owner) continue;
+        owner.notes.push(row.text);
+        if (!Object.hasOwn(owner, 'positionedNotes')) {
+          Object.defineProperty(owner, 'positionedNotes', { value: [] });
         }
-        transaction.positionedNotes.push({ line: row.line, text: row.text });
+        owner.positionedNotes.push({ line: row.line, position: row.position, text: row.text });
       }
     }
     return {
@@ -190,6 +203,11 @@ module.exports = ({
             Object.defineProperty(posting, 'sourceLine', {
               value: transaction.postings[index].sourceLine,
             });
+            if (Object.hasOwn(transaction.postings[index], 'positionedNotes')) {
+              Object.defineProperty(posting, 'positionedNotes', {
+                value: transaction.postings[index].positionedNotes,
+              });
+            }
             return posting;
           }),
         };

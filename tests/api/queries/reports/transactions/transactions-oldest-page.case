@@ -38,15 +38,17 @@ account Expenses:Shop
       "transactionId": 7,
       "transactionDate": "2024-01-03",
       "description": "Shop | Third",
-      "comment": "imported",
       "notes": [
+        "imported",
         "Project: Home"
       ],
       "postings": [
         {
           "postingDate": "2024-01-03",
           "account": "Assets:Cash",
-          "comment": "card",
+          "notes": [
+            "card"
+          ],
           "amount": {
             "quantity": "-5",
             "commodity": "SEK"
@@ -65,7 +67,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-03",
           "account": "Expenses:Shop",
-          "comment": null,
+          "notes": [],
           "amount": null,
           "lotCost": null,
           "cost": null,

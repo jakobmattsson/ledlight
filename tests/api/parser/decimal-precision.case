@@ -16,7 +16,6 @@ Preserves exact decimal precision in posting amounts and costs.
       "type": "transaction",
       "date": "2024-01-29",
       "description": "Investment",
-      "comment": "imported",
       "postings": [
         {
           "type": "posting",
@@ -36,7 +35,18 @@ Preserves exact decimal precision in posting amounts and costs.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": "exact cost",
+          "notes": [
+            {
+              "text": "exact cost",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 2,
+                "column": 82
+              }
+            }
+          ],
           "location": {
             "source": "fixture.ledger",
             "line": 2,
@@ -55,7 +65,7 @@ Preserves exact decimal precision in posting amounts and costs.
           },
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -71,7 +81,7 @@ Preserves exact decimal precision in posting amounts and costs.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,
@@ -79,7 +89,18 @@ Preserves exact decimal precision in posting amounts and costs.
           }
         }
       ],
-      "notes": [],
+      "notes": [
+        {
+          "text": "imported",
+          "key": null,
+          "value": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 1,
+            "column": 23
+          }
+        }
+      ],
       "location": {
         "source": "fixture.ledger",
         "line": 1,

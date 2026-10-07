@@ -32,6 +32,8 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(!tables.includes('transaction_tags'));
   assert.ok(!tables.includes('posting_tags'));
   assert.ok(!tables.includes('commodity_properties'));
+  assert.ok(tables.includes('notes'));
+  assert.ok(!tables.includes('transaction_notes'));
   assert.ok(tables.includes('resolved_posting_amounts'));
   assert.ok(tables.includes('valuation_prices'));
   for (const table of [
@@ -49,6 +51,7 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(postingColumns.includes('lot_cost_quantity'));
   assert.ok(postingColumns.includes('lot_cost_commodity'));
   assert.ok(postingColumns.includes('lot_cost_is_total'));
+  assert.ok(!postingColumns.includes('comment'));
   const runningBalance = database.pragma('table_info(resolved_posting_amounts)')
     .find((column) => column.name === 'running_balance');
   assert.equal(runningBalance.notnull, 1);
@@ -72,6 +75,7 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(!transactionColumns.includes('code'));
   assert.ok(!transactionColumns.includes('payee'));
   assert.ok(!transactionColumns.includes('narration'));
+  assert.ok(!transactionColumns.includes('comment'));
   const priceColumns = database.pragma('table_info(prices)');
   assert.deepEqual(
     priceColumns.filter((column) => [
@@ -162,6 +166,24 @@ test('recreates a supported legacy cache with the current schema', (t) => {
   ).pluck().all();
   assert.ok(tables.includes('database_metadata'));
   assert.ok(!tables.includes('metadata'));
+});
+
+test('replaces version 28 comments and transaction notes with unified notes', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '28');
+    CREATE TABLE transactions (entry_id INTEGER PRIMARY KEY, comment TEXT);
+    CREATE TABLE transaction_notes (transaction_id INTEGER, position INTEGER, text TEXT);
+  `);
+
+  migrateDatabase(database);
+
+  const tables = database.prepare("SELECT name FROM sqlite_schema WHERE type = 'table'")
+    .pluck().all();
+  assert.ok(tables.includes('notes'));
+  assert.ok(!tables.includes('transaction_notes'));
+  assert.ok(!database.pragma('table_info(transactions)').some((column) => column.name === 'comment'));
 });
 
 test('rejects unsupported schema versions', (t) => {

@@ -1,0 +1,95 @@
+Postings expose their own notes separately from transaction notes.
+
+========== CLI ==========
+
+ledlight postings --format json
+
+========== API ==========
+
+postings()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Expenses:Food
+account Assets:Bank
+tag Receipt
+
+2024-01-01 Groceries ; transaction inline
+  ; transaction detail
+  Expenses:Food  100 SEK ; expense inline
+  ; Receipt: 1234
+  Assets:Bank  -100 SEK ; bank inline
+  ; bank detail
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 1,
+    "transactionId": 5,
+    "transactionDate": "2024-01-01",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Groceries",
+    "transactionNotes": [
+      "transaction inline",
+      "transaction detail"
+    ],
+    "postingDate": "2024-01-01",
+    "account": "Expenses:Food",
+    "postingNotes": [
+      "expense inline",
+      "Receipt: 1234"
+    ],
+    "amount": {
+      "quantity": "100",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "100",
+        "commodity": "SEK",
+        "balance": "100"
+      }
+    ]
+  },
+  {
+    "postingId": 2,
+    "transactionId": 5,
+    "transactionDate": "2024-01-01",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Groceries",
+    "transactionNotes": [
+      "transaction inline",
+      "transaction detail"
+    ],
+    "postingDate": "2024-01-01",
+    "account": "Assets:Bank",
+    "postingNotes": [
+      "bank inline",
+      "bank detail"
+    ],
+    "amount": {
+      "quantity": "-100",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-100",
+        "commodity": "SEK",
+        "balance": "-100"
+      }
+    ]
+  }
+]

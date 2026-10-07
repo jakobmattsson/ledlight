@@ -1,0 +1,30 @@
+Transaction text keeps inline notes on their source lines and following notes below.
+
+========== CLI ==========
+
+ledlight transactions
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Expenses:Food
+account Assets:Bank
+tag Receipt
+
+2024-01-01 Groceries ; transaction inline
+  ; transaction detail
+  Expenses:Food  100 SEK ; expense inline
+  ; Receipt: 1234
+  Assets:Bank  -100 SEK ; bank inline
+  ; bank detail
+
+========== OUTPUT ==========
+
+2024-01-01 Groceries ; transaction inline
+    ; transaction detail
+    Expenses:Food                         100.00 SEK  ; expense inline
+    ; Receipt: 1234
+    Assets:Bank  ; bank inline
+    ; bank detail

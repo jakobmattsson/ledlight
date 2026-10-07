@@ -1,11 +1,13 @@
-Parses transaction and posting tags from comments.
+Assigns indented comments to the preceding posting and preserves inline notes.
 
 ========== TEXT ==========
 
-2024-01-01 Tagged ; :reviewed:imported: bank statement
-  ; Source: bank export
-  Assets:Cash  1 SEK ; Receipt: 1234
-  Equity:Opening  -1 SEK ; :balanced: complete
+2024-01-01 Groceries ; transaction inline
+  ; transaction detail
+  Expenses:Food  100 SEK ; expense inline
+  ; Receipt: 1234
+  Assets:Bank  -100 SEK ; bank inline
+  ; bank detail
 
 ========== JSON ==========
 
@@ -15,27 +17,13 @@ Parses transaction and posting tags from comments.
     {
       "type": "transaction",
       "date": "2024-01-01",
-      "description": "Tagged",
-      "tags": [
-        {
-          "name": "reviewed",
-          "value": null
-        },
-        {
-          "name": "imported",
-          "value": null
-        },
-        {
-          "name": "Source",
-          "value": "bank export"
-        }
-      ],
+      "description": "Groceries",
       "postings": [
         {
           "type": "posting",
-          "account": "Assets:Cash",
+          "account": "Expenses:Food",
           "amount": {
-            "quantity": "1",
+            "quantity": "100",
             "commodity": "SEK"
           },
           "lotCost": null,
@@ -44,6 +32,16 @@ Parses transaction and posting tags from comments.
           "balanceAssertion": null,
           "postingDate": null,
           "notes": [
+            {
+              "text": "expense inline",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 3,
+                "column": 26
+              }
+            },
             {
               "text": "Receipt: 1234",
               "key": "Receipt",
@@ -56,28 +54,28 @@ Parses transaction and posting tags from comments.
               ],
               "location": {
                 "source": "fixture.ledger",
-                "line": 3,
-                "column": 22
+                "line": 4,
+                "column": 3
               }
-            }
-          ],
-          "tags": [
-            {
-              "name": "Receipt",
-              "value": "1234"
             }
           ],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
             "column": 3
-          }
+          },
+          "tags": [
+            {
+              "name": "Receipt",
+              "value": "1234"
+            }
+          ]
         },
         {
           "type": "posting",
-          "account": "Equity:Opening",
+          "account": "Assets:Bank",
           "amount": {
-            "quantity": "-1",
+            "quantity": "-100",
             "commodity": "SEK"
           },
           "lotCost": null,
@@ -87,66 +85,48 @@ Parses transaction and posting tags from comments.
           "postingDate": null,
           "notes": [
             {
-              "text": ":balanced: complete",
+              "text": "bank inline",
               "key": null,
               "value": null,
-              "tags": [
-                {
-                  "name": "balanced",
-                  "value": null
-                }
-              ],
               "location": {
                 "source": "fixture.ledger",
-                "line": 4,
-                "column": 26
+                "line": 5,
+                "column": 25
               }
-            }
-          ],
-          "tags": [
+            },
             {
-              "name": "balanced",
-              "value": null
+              "text": "bank detail",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 6,
+                "column": 3
+              }
             }
           ],
           "location": {
             "source": "fixture.ledger",
-            "line": 4,
+            "line": 5,
             "column": 3
           }
         }
       ],
       "notes": [
         {
-          "text": ":reviewed:imported: bank statement",
+          "text": "transaction inline",
           "key": null,
           "value": null,
-          "tags": [
-            {
-              "name": "reviewed",
-              "value": null
-            },
-            {
-              "name": "imported",
-              "value": null
-            }
-          ],
           "location": {
             "source": "fixture.ledger",
             "line": 1,
-            "column": 19
+            "column": 22
           }
         },
         {
-          "text": "Source: bank export",
-          "key": "Source",
-          "value": "bank export",
-          "tags": [
-            {
-              "name": "Source",
-              "value": "bank export"
-            }
-          ],
+          "text": "transaction detail",
+          "key": null,
+          "value": null,
           "location": {
             "source": "fixture.ledger",
             "line": 2,

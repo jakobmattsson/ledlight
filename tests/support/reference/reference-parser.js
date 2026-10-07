@@ -30,6 +30,17 @@ module.exports = ({
     return node.children.map((child) => child.ast(source));
   }
 
+  function note(text, tags, where) {
+    const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
+    return {
+      text,
+      key: valueTag ? valueTag.name : null,
+      value: valueTag ? valueTag.value : null,
+      ...(tags.length > 0 ? { tags } : {}),
+      location: where,
+    };
+  }
+
   function parseDate(value, node, source) {
     const year = Number(value.slice(0, 4));
     const month = Number(value.slice(5, 7));
@@ -50,35 +61,38 @@ module.exports = ({
       };
     },
 
-    topLevel_transaction(date, _space, description, comment, _lineEnd, body) {
+    topLevel_transaction(date, _space, description, inlineNote, _lineEnd, body) {
       const source = this.args.source;
       const text = description.sourceString.trim();
       const items = values(body, source).filter((item) => item !== null);
-      const postings = items.filter((item) => item.type === 'posting');
-      const transactionComment = optionalValue(comment, source);
-      const tags = [
-        ...(transactionComment ? transactionComment.tags : []),
-        ...items.filter((item) => item.type === 'note').flatMap((item) => item.tags || []),
-      ];
+      const headerNote = optionalValue(inlineNote, source);
       const transaction = {
         type: 'transaction',
         date: date.ast(source),
         description: text,
-        comment: transactionComment ? transactionComment.comment : null,
+        postings: [],
+        notes: headerNote ? [headerNote] : [],
         location: location(date, source),
       };
-      if (postings.length === 0) {
+      if (headerNote?.tags) transaction.tags = [...headerNote.tags];
+      for (const item of items) {
+        if (item.type === 'posting') {
+          transaction.postings.push(item);
+        } else {
+          const owner = transaction.postings.at(-1) || transaction;
+          const currentNote = { ...item };
+          delete currentNote.type;
+          owner.notes.push(currentNote);
+          if (currentNote.tags) owner.tags = [...(owner.tags || []), ...currentNote.tags];
+        }
+      }
+      if (transaction.postings.length === 0) {
         throw syntaxError('Transaction has no postings', source, transaction.location.line, transaction.location.column);
       }
-      return {
-        ...transaction,
-        ...(tags.length > 0 ? { tags } : {}),
-        postings,
-        notes: items.filter((item) => item.type === 'note').map(({ type: _type, ...note }) => note),
-      };
+      return transaction;
     },
 
-    posting(_indent, account, amountPart, _space, comment, _lineEnd) {
+    posting(_indent, account, amountPart, _space, note, _lineEnd) {
       const expression = optionalValue(amountPart, this.args.source) || {
         amount: null,
         lotCost: null,
@@ -86,14 +100,14 @@ module.exports = ({
         balanceAssignment: null,
         balanceAssertion: null,
       };
-      const postingComment = optionalValue(comment, this.args.source);
+      const inlineNote = optionalValue(note, this.args.source);
       return {
         type: 'posting',
         account: account.sourceString.trim(),
         ...expression,
-        postingDate: postingComment ? postingComment.date : null,
-        comment: postingComment ? postingComment.comment : null,
-        ...(postingComment && postingComment.tags.length > 0 ? { tags: postingComment.tags } : {}),
+        postingDate: inlineNote ? inlineNote.date : null,
+        notes: inlineNote ? [inlineNote.note] : [],
+        ...(inlineNote?.note.tags ? { tags: inlineNote.note.tags } : {}),
         location: location(account, this.args.source),
       };
     },
@@ -196,18 +210,17 @@ module.exports = ({
       };
     },
     topLevel_comment(_semicolon, _space, _text, _lineEnd) { return null; },
-    postingComment(_semicolon, _space, _open, date, _close, _dateSpace, metadata) {
+    postingInlineNote(_semicolon, _space, _open, date, _close, _dateSpace, metadata) {
+      const tags = metadata.ast(this.args.source);
       return {
         date: optionalValue(date, this.args.source),
-        comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
-        tags: metadata.ast(this.args.source),
+        note: note(this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
+          tags, location(_semicolon, this.args.source)),
       };
     },
-    transactionComment(_space1, _semicolon, _space2, metadata) {
-      return {
-        comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
-        tags: metadata.ast(this.args.source),
-      };
+    transactionInlineNote(_space1, _semicolon, _space2, metadata) {
+      return note(this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
+        metadata.ast(this.args.source), location(_semicolon, this.args.source));
     },
     inlineComment(_space1, _semicolon, _space2, text) { return text.sourceString.trim(); },
     metadataComment_tags(tags, _space, _text) { return tags.ast(this.args.source); },

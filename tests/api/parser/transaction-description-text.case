@@ -24,7 +24,6 @@ Keeps status, code, and payee syntax in transaction descriptions.
       "type": "transaction",
       "date": "2024-01-29",
       "description": "* Investment",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -38,7 +37,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 2,
@@ -54,7 +53,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 3,
@@ -73,7 +72,6 @@ Keeps status, code, and payee syntax in transaction descriptions.
       "type": "transaction",
       "date": "2024-01-29",
       "description": "! Investment",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -87,7 +85,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 5,
@@ -103,7 +101,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 6,
@@ -122,7 +120,6 @@ Keeps status, code, and payee syntax in transaction descriptions.
       "type": "transaction",
       "date": "2024-01-29",
       "description": "(trade-1) Investment",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -136,7 +133,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 8,
@@ -152,7 +149,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 9,
@@ -171,7 +168,6 @@ Keeps status, code, and payee syntax in transaction descriptions.
       "type": "transaction",
       "date": "2024-01-29",
       "description": "Shop | Groceries",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -185,7 +181,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 11,
@@ -201,7 +197,7 @@ Keeps status, code, and payee syntax in transaction descriptions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 12,

@@ -30,11 +30,10 @@ account Equity:Opening
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 5,
     "description": "Opening",
-    "transactionComment": null,
     "transactionNotes": [],
     "postingDate": "2024-02-28",
     "account": "Assets:Cash",
-    "postingComment": null,
+    "postingNotes": [],
     "amount": {
       "quantity": "10",
       "commodity": "SEK"
@@ -58,11 +57,10 @@ account Equity:Opening
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 8,
     "description": "Leap day",
-    "transactionComment": null,
     "transactionNotes": [],
     "postingDate": "2024-02-29",
     "account": "Assets:Cash",
-    "postingComment": null,
+    "postingNotes": [],
     "amount": {
       "quantity": "2",
       "commodity": "SEK"
@@ -86,11 +84,10 @@ account Equity:Opening
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 11,
     "description": "Following day",
-    "transactionComment": null,
     "transactionNotes": [],
     "postingDate": "2024-03-01",
     "account": "Assets:Cash",
-    "postingComment": null,
+    "postingNotes": [],
     "amount": {
       "quantity": "3",
       "commodity": "SEK"

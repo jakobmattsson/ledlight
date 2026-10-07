@@ -17,7 +17,6 @@ Parses annotated postings, costs, balance assignments, and assertions.
       "type": "transaction",
       "date": "2024-03-01",
       "description": "Transfer",
-      "comment": "Header: sale",
       "tags": [
         {
           "name": "Header",
@@ -49,7 +48,24 @@ Parses annotated postings, costs, balance assignments, and assertions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": "2024-03-02",
-          "comment": "[2024-03-02] Origin: broker",
+          "notes": [
+            {
+              "text": "[2024-03-02] Origin: broker",
+              "key": "Origin",
+              "value": "broker",
+              "tags": [
+                {
+                  "name": "Origin",
+                  "value": "broker"
+                }
+              ],
+              "location": {
+                "source": "fixture.ledger",
+                "line": 3,
+                "column": 46
+              }
+            }
+          ],
           "tags": [
             {
               "name": "Origin",
@@ -74,7 +90,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
           },
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 4,
@@ -96,7 +112,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
             "commodity": "FUND"
           },
           "postingDate": null,
-          "comment": null,
+          "notes": [],
           "location": {
             "source": "fixture.ledger",
             "line": 5,
@@ -105,6 +121,22 @@ Parses annotated postings, costs, balance assignments, and assertions.
         }
       ],
       "notes": [
+        {
+          "text": "Header: sale",
+          "key": "Header",
+          "value": "sale",
+          "tags": [
+            {
+              "name": "Header",
+              "value": "sale"
+            }
+          ],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 1,
+            "column": 21
+          }
+        },
         {
           "text": "Generated-ID trade-2",
           "key": null,

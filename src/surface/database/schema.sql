@@ -1,3 +1,4 @@
+-- Database and source-file metadata.
 CREATE TABLE IF NOT EXISTS database_metadata (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -10,17 +11,7 @@ CREATE TABLE IF NOT EXISTS source_files (
   size INTEGER NOT NULL CHECK (size >= 0)
 );
 
-CREATE TABLE IF NOT EXISTS ingestion_warnings (
-  position INTEGER PRIMARY KEY,
-  code TEXT NOT NULL,
-  message TEXT NOT NULL,
-  source TEXT NOT NULL,
-  line INTEGER NOT NULL,
-  column INTEGER NOT NULL,
-  start_line INTEGER NOT NULL,
-  end_line INTEGER NOT NULL
-);
-
+-- Parsed journal data. Some fields are normalized during ingestion.
 CREATE TABLE IF NOT EXISTS journal_entries (
   id INTEGER PRIMARY KEY,
   source_file_id INTEGER NOT NULL REFERENCES source_files(id),
@@ -30,8 +21,7 @@ CREATE TABLE IF NOT EXISTS journal_entries (
 CREATE TABLE IF NOT EXISTS transactions (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
   date TEXT NOT NULL,
-  description TEXT NOT NULL,
-  comment TEXT
+  description TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS postings (
@@ -53,7 +43,6 @@ CREATE TABLE IF NOT EXISTS postings (
   balance_assignment_commodity TEXT,
   balance_assertion_quantity TEXT,
   balance_assertion_commodity TEXT,
-  comment TEXT,
   CHECK ((amount_quantity IS NULL) = (amount_commodity IS NULL)),
   CHECK (
     (lot_cost_quantity IS NULL AND lot_cost_commodity IS NULL AND lot_cost_is_total IS NULL) OR
@@ -69,21 +58,15 @@ CREATE TABLE IF NOT EXISTS postings (
   UNIQUE (transaction_id, position)
 );
 
-CREATE TABLE IF NOT EXISTS transaction_notes (
-  transaction_id INTEGER NOT NULL REFERENCES transactions(entry_id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS notes (
+  id INTEGER PRIMARY KEY,
+  transaction_id INTEGER REFERENCES transactions(entry_id) ON DELETE CASCADE,
+  posting_id INTEGER REFERENCES postings(id) ON DELETE CASCADE,
   position INTEGER NOT NULL,
   line INTEGER NOT NULL,
   text TEXT NOT NULL,
-  PRIMARY KEY (transaction_id, position)
-) WITHOUT ROWID;
-
-CREATE TABLE IF NOT EXISTS resolved_posting_amounts (
-  id INTEGER PRIMARY KEY,
-  posting_id INTEGER NOT NULL REFERENCES postings(id) ON DELETE CASCADE,
-  position INTEGER NOT NULL,
-  quantity TEXT NOT NULL,
-  commodity TEXT NOT NULL,
-  running_balance TEXT NOT NULL DEFAULT '0',
+  CHECK ((transaction_id IS NULL) != (posting_id IS NULL)),
+  UNIQUE (transaction_id, position),
   UNIQUE (posting_id, position)
 );
 
@@ -95,13 +78,6 @@ CREATE TABLE IF NOT EXISTS prices (
   quote_commodity TEXT NOT NULL,
   comment TEXT
 );
-
-CREATE TABLE IF NOT EXISTS valuation_prices (
-  commodity TEXT NOT NULL,
-  date TEXT NOT NULL,
-  rate TEXT NOT NULL,
-  PRIMARY KEY (commodity, date)
-) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS account_declarations (
   entry_id INTEGER PRIMARY KEY REFERENCES journal_entries(id) ON DELETE CASCADE,
@@ -126,8 +102,38 @@ CREATE TABLE IF NOT EXISTS commodity_declarations (
   used INTEGER NOT NULL DEFAULT 0 CHECK (used IN (0, 1))
 );
 
+-- Derived data from parsing, validation, and valuation.
+CREATE TABLE IF NOT EXISTS ingestion_warnings (
+  position INTEGER PRIMARY KEY,
+  code TEXT NOT NULL,
+  message TEXT NOT NULL,
+  source TEXT NOT NULL,
+  line INTEGER NOT NULL,
+  column INTEGER NOT NULL,
+  start_line INTEGER NOT NULL,
+  end_line INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS resolved_posting_amounts (
+  id INTEGER PRIMARY KEY,
+  posting_id INTEGER NOT NULL REFERENCES postings(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL,
+  quantity TEXT NOT NULL,
+  commodity TEXT NOT NULL,
+  running_balance TEXT NOT NULL DEFAULT '0',
+  UNIQUE (posting_id, position)
+);
+
+CREATE TABLE IF NOT EXISTS valuation_prices (
+  commodity TEXT NOT NULL,
+  date TEXT NOT NULL,
+  rate TEXT NOT NULL,
+  PRIMARY KEY (commodity, date)
+) WITHOUT ROWID;
+
+-- Indexes.
 CREATE INDEX IF NOT EXISTS transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS postings_account_posting_date ON postings(account, posting_date);
 CREATE INDEX IF NOT EXISTS postings_posting_date ON postings(posting_date);
-CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity ON resolved_posting_amounts(commodity);
 CREATE INDEX IF NOT EXISTS prices_base_commodity_date ON prices(base_commodity, date);
+CREATE INDEX IF NOT EXISTS resolved_posting_amounts_commodity ON resolved_posting_amounts(commodity);
