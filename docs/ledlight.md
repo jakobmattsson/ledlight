@@ -437,20 +437,20 @@ hash, and its traversal order. `checkDatabaseSync` rebuilds the current source
 manifest and reports added, removed, and changed files.
 
 The main query tables are `transactions`, `postings`, `transaction_notes`,
-`transaction_tags`, `posting_tags`, `prices`, `valuation_prices`, the three
-declaration tables, and `commodity_properties`. Transaction tags identify their
-originating note through `note_id`; a null `note_id` means the tag came from the
-transaction header. `tag_declarations` stores `tag` directives rather than tag
-occurrences. `valuation_prices` is derived from `prices` at the end of
-each database build and is not an independent journal source.
-`journal_entries` preserves the global source order and source location shared
-by all entry types. Quantities are stored as `TEXT`, exactly as parsed, so SQL
-storage never rounds an accounting value through binary floating point.
+`resolved_posting_amounts`, `prices`, `valuation_prices`, and the three
+declaration tables. `tag_declarations` stores `tag` directives and their usage
+status. Commodity declarations store the format and default status used by the
+public `commodities` query. `valuation_prices` is derived from `prices` at the
+end of each database build and is not an independent journal source.
+`journal_entries` preserves source file and line information shared by entry
+types. Its ID also preserves global source order. Quantities are stored as
+`TEXT`, exactly as parsed, so SQL storage never rounds an accounting value
+through binary floating point.
 Price directives use `base_commodity`, `quote_quantity`, and `quote_commodity`;
 for example, `P 2024-01-01 FUND 10 SEK` prices the base commodity `FUND` as a
 quote of `10 SEK`.
 
-Each posting has a non-null `report_date`: its explicit posting date when one
+Each posting has a non-null `posting_date`: its explicit posting date when one
 is present, otherwise the transaction's primary date. This preserves source
 timing for reconciliation. Aggregate reports use this posting date by default.
 Callers can instead select the transaction's primary date so all postings in a

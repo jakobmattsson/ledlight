@@ -17,7 +17,6 @@ test('selects the latest price through a date using journal order as a tiebreake
   const database = new Database(':memory:');
   t.after(() => database.close());
   database.exec(`
-    CREATE TABLE journal_entries (id INTEGER PRIMARY KEY, sequence INTEGER NOT NULL);
     CREATE TABLE prices (
       entry_id INTEGER PRIMARY KEY,
       date TEXT NOT NULL,
@@ -25,7 +24,6 @@ test('selects the latest price through a date using journal order as a tiebreake
       quote_quantity TEXT NOT NULL,
       quote_commodity TEXT NOT NULL
     );
-    INSERT INTO journal_entries (id, sequence) VALUES (1, 1), (2, 2), (3, 3);
     INSERT INTO prices
       (entry_id, date, base_commodity, quote_quantity, quote_commodity)
     VALUES

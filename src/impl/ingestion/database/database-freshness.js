@@ -51,7 +51,7 @@ module.exports = ({
 
       const journal = loadJournalManifest(journalPath);
       const storedFiles = database.prepare(
-        'SELECT path, sha256, size FROM source_files ORDER BY traversal_index',
+        'SELECT path, sha256, size FROM source_files ORDER BY id',
       ).all();
       const storedByPath = new Map(storedFiles.map((file) => [file.path, file]));
       const currentByPath = new Map(journal.files.map((file) => [file.path, file]));

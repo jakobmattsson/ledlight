@@ -13,8 +13,7 @@ module.exports = ({
         amounts.commodity
       FROM resolved_posting_amounts AS amounts
       JOIN postings ON postings.id = amounts.posting_id
-      JOIN journal_entries AS entries ON entries.id = postings.transaction_id
-      ORDER BY postings.report_date, entries.sequence,
+      ORDER BY postings.posting_date, postings.transaction_id,
         postings.position, amounts.position
     `).all();
     const updateBalance = database.prepare(`

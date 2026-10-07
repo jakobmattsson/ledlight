@@ -22,8 +22,7 @@ module.exports = ({
           prices.quote_commodity AS quoteCommodity,
           prices.comment
         FROM prices
-        JOIN journal_entries AS entries ON entries.id = prices.entry_id
-        ORDER BY prices.base_commodity, prices.date, entries.sequence
+        ORDER BY prices.base_commodity, prices.date, prices.entry_id
       `).all();
     }
     const events = database.prepare(`
@@ -33,14 +32,13 @@ module.exports = ({
         prices.quote_quantity AS quoteQuantity,
         prices.quote_commodity AS quoteCommodity,
         prices.comment,
-        entries.sequence,
+        prices.entry_id AS sourceOrder,
         -1 AS position,
         0 AS isTotal,
         NULL AS baseQuantity,
         NULL AS transactionId,
         0 AS hasTransactionCost
       FROM prices
-      JOIN journal_entries AS entries ON entries.id = prices.entry_id
       UNION ALL
       SELECT
         transactions.date,
@@ -48,7 +46,7 @@ module.exports = ({
         COALESCE(postings.cost_quantity, postings.lot_cost_quantity),
         COALESCE(postings.cost_commodity, postings.lot_cost_commodity),
         NULL,
-        entries.sequence,
+        transactions.entry_id,
         postings.position,
         COALESCE(postings.cost_is_total, postings.lot_cost_is_total),
         postings.amount_quantity,
@@ -56,10 +54,9 @@ module.exports = ({
         postings.cost_quantity IS NOT NULL
       FROM postings
       JOIN transactions ON transactions.entry_id = postings.transaction_id
-      JOIN journal_entries AS entries ON entries.id = transactions.entry_id
       WHERE postings.amount_quantity IS NOT NULL
         AND (postings.cost_quantity IS NOT NULL OR postings.lot_cost_quantity IS NOT NULL)
-      ORDER BY sequence, position
+      ORDER BY sourceOrder, position
     `).all();
     const transactionScales = new Map();
     for (const row of database.prepare(`
@@ -100,7 +97,7 @@ module.exports = ({
           parseDecimal(event.quoteQuantity), absoluteAmount, inferredPriceScale,
         ));
       }
-      delete event.sequence;
+      delete event.sourceOrder;
       delete event.position;
       delete event.isTotal;
       delete event.baseQuantity;

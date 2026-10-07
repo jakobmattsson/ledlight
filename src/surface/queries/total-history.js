@@ -36,7 +36,7 @@ module.exports = ({
               AND decimal_cmp(positions.quantity, '0') != 0
             THEN positions.commodity
           END)`;
-    const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.report_date';
+    const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.posting_date';
     const selectionFilter = options.accounts.length > 0
       ? accountFilter('p.account', options.accounts)
       : undefined;
@@ -52,7 +52,7 @@ module.exports = ({
       (selectionFilter ? ` AND ${selectionFilter.sql}` : '');
     const latestSelectedDate = options.dateBasis === 'transaction'
       ? 'SELECT MAX(date) AS date FROM transactions'
-      : 'SELECT MAX(report_date) AS date FROM postings';
+      : 'SELECT MAX(posting_date) AS date FROM postings';
     const reportEnd = `SELECT MIN(value, COALESCE(?, value)) AS value
       FROM (
         SELECT MAX(date) AS value FROM (

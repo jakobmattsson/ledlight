@@ -26,7 +26,7 @@ module.exports = ({
 
   function selectedCommodities(database, options) {
     if (options.commodities.length > 0) return options.commodities;
-    const clauses = ["p.report_date <= COALESCE(?, '9999-12-31')"];
+    const clauses = ["p.posting_date <= COALESCE(?, '9999-12-31')"];
     const parameters = [options.to ?? null];
     if (options.accounts.length > 0) {
       const filter = accountFilter('p.account', options.accounts);
@@ -63,7 +63,7 @@ module.exports = ({
     const reportEnd = `SELECT MIN(value, COALESCE(?, value)) AS value
       FROM (
         SELECT MAX(date) AS value FROM (
-          SELECT MAX(p.report_date) AS date
+          SELECT MAX(p.posting_date) AS date
           FROM resolved_posting_amounts AS r
           JOIN postings AS p ON p.id = r.posting_id
           JOIN transactions AS t ON t.entry_id = p.transaction_id
@@ -81,12 +81,12 @@ module.exports = ({
     return database.prepare(`
     WITH RECURSIVE
       selected_changes AS (
-        SELECT p.report_date AS date, r.commodity, decimal_sum(r.quantity) AS quantity
+        SELECT p.posting_date AS date, r.commodity, decimal_sum(r.quantity) AS quantity
         FROM resolved_posting_amounts AS r
         JOIN postings AS p ON p.id = r.posting_id
         JOIN transactions AS t ON t.entry_id = p.transaction_id
         WHERE ${filter.sql}
-        GROUP BY p.report_date, r.commodity
+        GROUP BY p.posting_date, r.commodity
       ),
       commodity_bounds AS (
         SELECT commodity, MIN(date) AS start_date
@@ -139,8 +139,8 @@ module.exports = ({
         FROM resolved_posting_amounts AS r
         JOIN postings AS p ON p.id = r.posting_id
         WHERE ${filter.sql}
-          AND p.report_date >= COALESCE(?, '0000-00-00')
-          AND p.report_date <= COALESCE(?, '9999-12-31')
+          AND p.posting_date >= COALESCE(?, '0000-00-00')
+          AND p.posting_date <= COALESCE(?, '9999-12-31')
       )
       SELECT p.*, r.quantity, r.commodity,
         market.rate AS market_rate, lot.rate AS lot_rate, price.rate AS cost_rate
@@ -148,11 +148,11 @@ module.exports = ({
       JOIN selected_transactions AS selected ON selected.transaction_id = p.transaction_id
       JOIN resolved_posting_amounts AS r ON r.posting_id = p.id
       LEFT JOIN valuation_prices AS market
-        ON market.commodity = r.commodity AND market.date = p.report_date
+        ON market.commodity = r.commodity AND market.date = p.posting_date
       LEFT JOIN valuation_prices AS lot
-        ON lot.commodity = p.lot_cost_commodity AND lot.date = p.report_date
+        ON lot.commodity = p.lot_cost_commodity AND lot.date = p.posting_date
       LEFT JOIN valuation_prices AS price
-        ON price.commodity = p.cost_commodity AND price.date = p.report_date
+        ON price.commodity = p.cost_commodity AND price.date = p.posting_date
       ORDER BY p.transaction_id, p.position, r.position
     `).all(...filter.parameters, options.from ?? null, options.to ?? null);
     const selected = new Set(commodities);
@@ -164,7 +164,7 @@ module.exports = ({
         options.accounts.some((pattern) => accountMatches(row.account, pattern));
       return {
         transactionId: row.transaction_id,
-        date: row.report_date,
+        date: row.posting_date,
         account: row.account,
         amount: { quantity: row.quantity, commodity: row.commodity },
         lotCost: annotation(row.lot_cost_quantity, row.lot_cost_commodity, row.lot_cost_is_total),

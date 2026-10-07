@@ -34,6 +34,7 @@ function verifyFixture(journal, aggregateRows) {
   assert.ok(accounts.every(({ used }) => used));
   const nonzeroAccounts = new Set(aggregateRows.map(({ account }) => account));
   assert.equal(ACCOUNT_COUNT - nonzeroAccounts.size, 55);
+  assert.equal(journal.tags({ usage: 'used' }).length, 7);
 
   const database = new Database(journal.databasePath, { readonly: true });
   try {
@@ -41,7 +42,7 @@ function verifyFixture(journal, aggregateRows) {
     assert.equal(count('transactions'), TRANSACTION_COUNT);
     assert.equal(count('postings'), 10400);
     assert.equal(count('prices'), PRICE_COUNT);
-    assert.equal(count('transaction_tags'), 3650);
+    assert.equal(count('transaction_notes'), 3650);
     const trades = database.prepare(`
       SELECT COUNT(DISTINCT transaction_id) AS count
       FROM postings WHERE amount_commodity LIKE 'UNIT%'

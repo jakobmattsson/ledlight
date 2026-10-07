@@ -61,7 +61,7 @@ P 2024-01-01 FUND 123.45 SEK
   t.after(() => database.close());
   assert.deepEqual(
     database.prepare(`
-      SELECT t.date, p.position, p.report_date, p.account,
+      SELECT t.date, p.position, p.posting_date, p.account,
         p.amount_quantity, p.amount_commodity
       FROM transactions AS t
       JOIN postings AS p ON p.transaction_id = t.entry_id
@@ -71,7 +71,7 @@ P 2024-01-01 FUND 123.45 SEK
       {
         date: '2024-01-02',
         position: 0,
-        report_date: '2024-01-02',
+        posting_date: '2024-01-02',
         account: 'Assets:Cash',
         amount_quantity: '8.000000000000000001',
         amount_commodity: 'SEK',
@@ -79,7 +79,7 @@ P 2024-01-01 FUND 123.45 SEK
       {
         date: '2024-01-02',
         position: 1,
-        report_date: '2024-01-02',
+        posting_date: '2024-01-02',
         account: 'Equity:Opening',
         amount_quantity: null,
         amount_commodity: null,
@@ -110,36 +110,12 @@ P 2024-01-01 FUND 123.45 SEK
   );
   assert.equal(result.postingBalances, 2);
   assert.deepEqual(
-    database.prepare('SELECT key, value FROM transaction_notes').get(),
-    { key: 'Source', value: 'statement.csv:4' },
+    database.prepare('SELECT position, text FROM transaction_notes').get(),
+    { position: 0, text: 'Source: statement.csv:4' },
   );
   assert.deepEqual(
-    database.prepare(`
-      SELECT tags.position, tags.name, tags.value, notes.position AS note_position
-      FROM transaction_tags AS tags
-      LEFT JOIN transaction_notes AS notes ON notes.id = tags.note_id
-      ORDER BY tags.position
-    `).all(),
-    [
-      { position: 0, name: 'imported', value: null, note_position: null },
-      { position: 1, name: 'Source', value: 'statement.csv:4', note_position: 0 },
-    ],
-  );
-  assert.deepEqual(
-    database.prepare(`
-      SELECT postings.position AS posting_position, tags.position, tags.name, tags.value
-      FROM posting_tags AS tags
-      JOIN postings ON postings.id = tags.posting_id
-      ORDER BY postings.position, tags.position
-    `).all(),
-    [
-      { posting_position: 0, position: 0, name: 'Receipt', value: '1234' },
-      { posting_position: 1, position: 0, name: 'balanced', value: null },
-    ],
-  );
-  assert.deepEqual(
-    database.prepare("SELECT name, value FROM commodity_properties WHERE name = 'format'").get(),
-    { name: 'format', value: '1,000.00 SEK' },
+    database.prepare("SELECT format, is_default FROM commodity_declarations WHERE symbol = 'SEK'").get(),
+    { format: '1,000.00 SEK', is_default: 1 },
   );
   assert.deepEqual(
     database.prepare('SELECT commodity, date, rate FROM valuation_prices').all(),
@@ -212,12 +188,12 @@ test('materializes exact account and commodity balances in posting-date order', 
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
-    SELECT postings.account, postings.report_date AS date,
+    SELECT postings.account, postings.posting_date AS date,
       amounts.quantity, amounts.commodity, amounts.running_balance AS balance
     FROM resolved_posting_amounts AS amounts
     JOIN postings ON postings.id = amounts.posting_id
     WHERE postings.account LIKE 'Assets:%'
-    ORDER BY postings.report_date, postings.id, amounts.position
+    ORDER BY postings.posting_date, postings.id, amounts.position
   `).all(), [
     { account: 'Assets:Cash', date: '2024-01-01', quantity: '10', commodity: 'SEK', balance: '10' },
     { account: 'Assets:Bank', date: '2024-01-02', quantity: '7', commodity: 'SEK', balance: '7' },
@@ -417,10 +393,7 @@ commodity EUR
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
-    SELECT declarations.symbol
-    FROM commodity_declarations AS declarations
-    JOIN commodity_properties AS properties ON properties.commodity_id = declarations.entry_id
-    WHERE properties.name = 'default'
+    SELECT symbol FROM commodity_declarations WHERE is_default = 1
   `).pluck().all(), ['USD']);
   assert.equal(fs.existsSync(databasePath), true);
 });

@@ -72,9 +72,8 @@ module.exports = ({
         transactions.description,
         transactions.comment
       FROM transactions
-      JOIN journal_entries AS entries ON entries.id = transactions.entry_id
       ${filter}
-      ORDER BY entries.sequence ${direction}
+      ORDER BY transactions.entry_id ${direction}
       ${paginationClause}
     `).all(...filterParameters, ...paginationParameters);
     const transactions = transactionRows.map((row) => ({ ...row, notes: [], postings: [] }));
@@ -92,7 +91,7 @@ module.exports = ({
           SELECT
             postings.transaction_id AS transactionId,
             postings.id AS postingId,
-            postings.report_date AS postingDate,
+            postings.posting_date AS postingDate,
             postings.line AS sourceLine,
             postings.account,
             postings.comment,
