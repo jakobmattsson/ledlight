@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791366988135,
+  "lastUpdate": 1791389922799,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -389,6 +389,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 7.341555,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ad2b21e5095d761dfa3d789d3ec29173eb17f05",
+          "message": "Merge pull request #90 from jakobmattsson/codex/average-cost-allocation-fast-path\n\nSpeed up lot validation with an average-cost witness",
+          "timestamp": "2026-10-07T18:18:16+02:00",
+          "tree_id": "7ce7d8040736297eb6f261606653a9c7f271ab6c",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/4ad2b21e5095d761dfa3d789d3ec29173eb17f05"
+        },
+        "date": 1791389922078,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1669.091216,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.701667,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 10.743189,
             "unit": "ms"
           }
         ]
