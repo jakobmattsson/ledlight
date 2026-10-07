@@ -2,7 +2,7 @@ Correcting a foreign lot cost restores report values.
 
 ========== API ==========
 
-balanceHistory()
+totalHistory()
 
 ========== FILE ==========
 

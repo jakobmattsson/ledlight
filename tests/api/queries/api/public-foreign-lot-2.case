@@ -1,8 +1,8 @@
-The balance-history report exposes foreign lot.
+The total-history report exposes foreign lot.
 
 ========== CLI ==========
 
-ledlight balance-history --format json <<'LEDGER'
+ledlight total-history --format json <<'LEDGER'
 commodity SEK
   default
   format 1,000.00 SEK

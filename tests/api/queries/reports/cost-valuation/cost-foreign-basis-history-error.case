@@ -2,7 +2,7 @@ Cost history cannot invent missing or foreign-currency basis.
 
 ========== API ==========
 
-balanceHistory({ valuation: 'cost', accounts: ['Assets:'] })
+totalHistory({ valuation: 'cost', accounts: ['Assets:'] })
 
 ========== FILE ==========
 

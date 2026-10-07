@@ -38,7 +38,7 @@ all default to `false`.
 | Query | Date inputs and meaning | Other inputs |
 | --- | --- | --- |
 | `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `groupBy`, `denominate`, `withValuationValue`, `invert`, `includeTotal` |
-| `balanceHistory` | `from`, `to`: select daily closing balances, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
+| `totalHistory` | `from`, `to`: select daily closing totals, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
 | `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
 | `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
@@ -233,13 +233,13 @@ Lot costs and transaction prices on default-commodity postings must also be
 expressed in the default commodity; ingestion warns with `INVALID_COMMODITY_TRADE`
 when an annotation uses another commodity.
 
-### `journal.balanceHistory(options)`
+### `journal.totalHistory(options)`
 
 Options are `from`, `to`, `accounts`, `dateBasis`, `valuation`, and `invert`. The date bounds
-select output days; postings before `from` still contribute to every closing
-balance. `valuation` accepts `cost` or `market` and defaults to `market`. Market
+select output days; postings before `from` still contribute to every daily
+total. `valuation` accepts `cost` or `market` and defaults to `market`. Market
 valuation uses each day's prices; cost valuation accumulates the recorded lot
-costs with the same rules as `aggregate`, so price changes do not alter balances.
+costs with the same rules as `aggregate`, so price changes do not alter cost totals.
 Both modes use the same date range. History ends at the latest
 posting/transaction date (according to `dateBasis`) or price date in the journal,
 or at `to` if earlier. No rows are synthesized beyond the available history.
@@ -484,7 +484,7 @@ Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the
 API call or its result. Commands without an established text format return the
 API result as JSON. The report commands preserve their human-readable formats.
-`aggregate`, `balance-history`, `unrealized-gains`, and `investment-performance`
+`aggregate`, `total-history`, `unrealized-gains`, and `investment-performance`
 accept `--format json` to return every API field. Investment performance also
 accepts `--format csv` for one data row with the report fields as columns;
 `commodities` and `points` are JSON arrays in their CSV cells, and nulls are

@@ -18,13 +18,13 @@ test('derives dependency names from unique kebab-case filenames', () => {
 });
 
 test('requires command files directly inside a single group directory', () => {
-  assert.equal(commandGroup(path.join('reports', 'balance-history.js')), 'reports');
+  assert.equal(commandGroup(path.join('reports', 'total-history.js')), 'reports');
   assert.throws(
-    () => commandGroup(path.join('reports', 'nested', 'balance-history.js')),
+    () => commandGroup(path.join('reports', 'nested', 'total-history.js')),
     /directly inside one group directory/u,
   );
   assert.throws(
-    () => commandGroup('balance-history.js'),
+    () => commandGroup('total-history.js'),
     /directly inside one group directory/u,
   );
 });

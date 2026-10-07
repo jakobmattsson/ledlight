@@ -15,7 +15,7 @@ makes the missing equivalents visible.
 | `aggregate --denominate --include-total --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --exchange SEK --flat` | `balance-with-total` |
 | `aggregate --denominate --invert --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --no-total --exchange SEK --flat --invert` | `balance-inverted` |
 | `unrealized-gains` | No exact equivalent | — |
-| `balance-history` | No exact equivalent | — |
+| `total-history` | No exact equivalent | — |
 | `investment-performance` | No exact equivalent | — |
 
 The runnable matrix covers the unfiltered forms shown above. Additional

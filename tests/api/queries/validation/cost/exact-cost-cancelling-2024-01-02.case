@@ -2,7 +2,7 @@ Cost residuals are diagnosed per transaction even when their sum is zero.
 
 ========== API ==========
 
-balanceHistory({ valuation: 'cost', dateBasis: 'transaction' })
+totalHistory({ valuation: 'cost', dateBasis: 'transaction' })
 
 ========== FILE ==========
 

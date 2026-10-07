@@ -111,8 +111,8 @@ test('delegates report behavior to the public Node API and only formats results'
         { account: 'Total', quantity: '-10', commodity: 'USD', isTotal: true },
       ];
     },
-    balanceHistory(options) {
-      calls.push({ operation: 'balanceHistory', options });
+    totalHistory(options) {
+      calls.push({ operation: 'totalHistory', options });
       return [{ date: '2024-01-01', amount: '-10', commodity: 'USD' }];
     },
     unrealizedGains(options) {
@@ -192,7 +192,7 @@ test('delegates report behavior to the public Node API and only formats results'
     'amount,commodity\n-10,USD\n',
   );
   assert.equal(
-    runReportCommand(['balance-history', '--file', '/journal', '--invert', '--format', 'csv']),
+    runReportCommand(['total-history', '--file', '/journal', '--invert', '--format', 'csv']),
     'date,amount\n2024-01-01,-10.00\n',
   );
   assert.match(
@@ -229,7 +229,7 @@ test('delegates report behavior to the public Node API and only formats results'
     },
     { operation: 'openJournal', journalPath: '/journal' },
     {
-      operation: 'balanceHistory',
+      operation: 'totalHistory',
       options: {
         dateBasis: 'posting', valuation: 'market',
         invert: true,

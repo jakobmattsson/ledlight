@@ -35,10 +35,10 @@ const formatHumanReadable = (rows, denominate, descriptions, groupBy) =>
   denominate && groupBy !== 'commodity'
     ? formatCommand('unrealized-gains', rows, { format: 'text' }, descriptions)
     : formatAggregateText(rows, denominate, descriptions, groupBy);
-const formatBalanceHistoryCsv = (rows) =>
-  formatCommand('balance-history', rows, { format: 'csv' });
-const formatBalanceHistoryHumanReadable = (rows, descriptions) =>
-  formatCommand('balance-history', rows, { format: 'text' }, descriptions);
+const formatTotalHistoryCsv = (rows) =>
+  formatCommand('total-history', rows, { format: 'csv' });
+const formatTotalHistoryHumanReadable = (rows, descriptions) =>
+  formatCommand('total-history', rows, { format: 'text' }, descriptions);
 const formatInvestmentPerformance = (report, descriptions) =>
   formatCommand('investment-performance', report, { format: 'text' }, descriptions);
 const formatInvestmentPerformanceJson = (report) =>
@@ -204,26 +204,26 @@ test('formats commodity totals together below a single separator', () => {
     'Total,2,FUND\nTotal,4,USD\n');
 });
 
-test('formats balance history', () => {
-  const balanceRows = [
+test('formats total history', () => {
+  const totalRows = [
     { date: '2024-01-01', amount: '2.005', commodity: 'USD' },
     { date: '2024-01-02', amount: '10000', commodity: 'USD' },
   ];
   assert.equal(
-    formatBalanceHistoryCsv(balanceRows),
+    formatTotalHistoryCsv(totalRows),
     'date,amount\n2024-01-01,2.01\n2024-01-02,10000.00\n',
   );
   assert.equal(
-    formatBalanceHistoryHumanReadable(balanceRows),
+    formatTotalHistoryHumanReadable(totalRows),
     '2024-01-01       2.01 USD\n2024-01-02  10,000.00 USD\n',
   );
-  assert.deepEqual(balanceRows.map((row) => row.amount), ['2.005', '10000']);
+  assert.deepEqual(totalRows.map((row) => row.amount), ['2.005', '10000']);
 });
 
 test('uses the valuation commodity format for human-readable valuation reports', () => {
   const descriptions = [{ commodity: 'EUR', format: '1,000.000 EUR' }];
   assert.equal(
-    formatBalanceHistoryHumanReadable([
+    formatTotalHistoryHumanReadable([
       { date: '2024-01-01', amount: '1234.5678', commodity: 'EUR' },
     ], descriptions),
     '2024-01-01  1,234.568 EUR\n',

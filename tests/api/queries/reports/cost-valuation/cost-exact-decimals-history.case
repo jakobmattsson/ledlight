@@ -2,7 +2,7 @@ Daily cost history preserves exact decimal basis without market prices.
 
 ========== API ==========
 
-balanceHistory({ valuation: 'cost', accounts: ['Assets:'] })
+totalHistory({ valuation: 'cost', accounts: ['Assets:'] })
 
 ========== FILE ==========
 

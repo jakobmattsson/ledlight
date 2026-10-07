@@ -2,7 +2,7 @@ Unsupported history valuation modes are rejected.
 
 ========== API ==========
 
-balanceHistory({ valuation: 'book' })
+totalHistory({ valuation: 'book' })
 
 ========== FILE ==========
 

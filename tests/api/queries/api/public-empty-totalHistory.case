@@ -1,0 +1,15 @@
+A journal without transactions returns the expected totalHistory result.
+
+========== API ==========
+
+totalHistory()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+
+========== OUTPUT ==========
+
+[]

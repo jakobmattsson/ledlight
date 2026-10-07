@@ -27,7 +27,7 @@ function apiArguments(arguments_) {
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
     aggregate: 'aggregate',
-    balanceHistory: 'balance-history',
+    totalHistory: 'total-history',
     unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
     accounts: 'accounts',
@@ -77,8 +77,8 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
     ['format', 'includeTotal'],
   );
-  assert.deepEqual(argumentsModule.apiInputCoverage.balanceHistory, {
-    command: 'balance-history',
+  assert.deepEqual(argumentsModule.apiInputCoverage.totalHistory, {
+    command: 'total-history',
     inputs: ['journalPath', 'from', 'to', 'accounts', 'dateBasis', 'valuation', 'invert'],
     outputInputs: ['format'],
   });
@@ -218,7 +218,7 @@ test('uses aggregate defaults when no options are supplied', () => {
 });
 
 test('parses valuation choices and explicitly passes the market default', () => {
-  for (const command of ['aggregate', 'balance-history']) {
+  for (const command of ['aggregate', 'total-history']) {
     const arguments_ = [command, '--file', '/journal'];
     assert.equal(parseArguments(arguments_).options.valuation, 'market');
     for (const valuation of ['cost', 'market']) {
@@ -248,9 +248,9 @@ test('uses the CLI configuration file argument when --file is omitted', () => {
   });
 });
 
-test('parses balance history options', () => {
+test('parses total history options', () => {
   assert.deepEqual(apiArguments([
-    'balance-history',
+    'total-history',
     '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
@@ -259,7 +259,7 @@ test('parses balance history options', () => {
     '--invert',
     '--format', 'csv',
   ]), {
-    command: 'balance-history',
+    command: 'total-history',
     journalPath: '/journal',
     options: {
       from: '2024-01-01',
@@ -269,10 +269,10 @@ test('parses balance history options', () => {
       invert: true,
     },
   });
-  assert.throws(() => parseArguments(['balance-history', '--denominate']), /Usage:/u);
-  assert.throws(() => parseArguments(['balance-history', '--account-factor', 'Assets:=1']), /Usage:/u);
-  assert.throws(() => parseArguments(['balance-history', '--csv']), /Usage:/u);
-  assert.throws(() => parseArguments(['balance-history', '--json']), /Usage:/u);
+  assert.throws(() => parseArguments(['total-history', '--denominate']), /Usage:/u);
+  assert.throws(() => parseArguments(['total-history', '--account-factor', 'Assets:=1']), /Usage:/u);
+  assert.throws(() => parseArguments(['total-history', '--csv']), /Usage:/u);
+  assert.throws(() => parseArguments(['total-history', '--json']), /Usage:/u);
 });
 
 test('parses unrealized gains options and CLI-only output controls', () => {
@@ -383,10 +383,10 @@ test('maps every remaining API parameter to CLI arguments', () => {
     },
   });
   assert.deepEqual(apiArguments([
-    'balance-history', '--file', '/journal', '--accounts', 'Assets:Fund',
+    'total-history', '--file', '/journal', '--accounts', 'Assets:Fund',
     '--accounts', 'Assets:Cash', '--format', 'json',
   ]), {
-    command: 'balance-history',
+    command: 'total-history',
     journalPath: '/journal',
     options: {
       accounts: ['Assets:Fund', 'Assets:Cash'],
@@ -468,7 +468,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage(),
-    /reports:\n {2}aggregate\s+aggregate postings[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance[\s\S]* {2}unrealized-gains\s+show unrealized investment gains/u,
+    /reports:\n {2}aggregate\s+aggregate postings[\s\S]* {2}investment-performance\s+show investment performance[\s\S]* {2}total-history\s+show daily closing totals[\s\S]* {2}unrealized-gains\s+show unrealized investment gains/u,
   );
   assert.doesNotMatch(usage(), /misc:/u);
   assert.doesNotMatch(usage(), /Commands:/u);

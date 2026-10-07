@@ -68,7 +68,7 @@ const { openJournal } = require('ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
 const aggregate = journal.aggregate({ to: '2024-12-31' });
-const history = journal.balanceHistory({ from: '2024-01-01' });
+const history = journal.totalHistory({ from: '2024-01-01' });
 ```
 
 ## Public API and CLI contract
@@ -128,7 +128,7 @@ underlying result.
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
 | `aggregate --file PATH` | `openJournal(journalPath).aggregate(options)` | Report selection and calculation |
-| `balance-history --file PATH` | `openJournal(journalPath).balanceHistory(options)` | Report selection and calculation |
+| `total-history --file PATH` | `openJournal(journalPath).totalHistory(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
@@ -152,7 +152,7 @@ underlying result.
 | `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `balance --group-by DIMENSION` | `options.groupBy` | Group by `account` or `commodity` |
-| `--valuation VALUE` | `options.valuation` | `cost` or `market` for aggregate and balance history; defaults to `market` in both API and CLI |
+| `--valuation VALUE` | `options.valuation` | `cost` or `market` for aggregate and total history; defaults to `market` in both API and CLI |
 | `--denominate` | `options.denominate` | Aggregate valuation in the journal default commodity |
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
@@ -166,7 +166,7 @@ underlying result.
 | `commodities --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `prices --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `balance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `balance-history --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `total-history --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --include-total` | None | Append a presentation-only sum of all gain rows |
 | `investment-performance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
@@ -180,7 +180,7 @@ select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction.
 `--order` defaults to `oldest`; `--page` and `--page-size` must be provided
 together to request pagination. Without them, all matching transactions appear.
-The `balance`, `balance-history`, `unrealized-gains`, and
+The `balance`, `total-history`, `unrealized-gains`, and
 `investment-performance` commands use `--format json` when the complete API
 result is needed. Investment performance CSV has one data row; its
 `commodities` and `points` cells contain compact JSON arrays. JSON is required
@@ -202,7 +202,7 @@ Every CLI command can read a UTF-8 journal from stdin. Use a pipe, redirected
 file, or heredoc without `--file`, or explicitly select stdin with `--file -`:
 
 ```sh
-cat journal.ledger | ledlight balance-history
+cat journal.ledger | ledlight total-history
 ledlight unrealized-gains --file - --include-total < journal.ledger
 
 ledlight aggregate --denominate --include-total <<'LEDGER'
@@ -696,17 +696,17 @@ is retained as a diagnostic; later disposals cannot erase it or yield invented f
 reports remain available with warnings and exit code zero. A final disposal's
 residual warning takes precedence over an equivalent allocation warning.
 
-## Balance history
+## Total history
 
-`balanceHistory` returns one row for every calendar day from the first
+`totalHistory` returns one row for every calendar day from the first
 selected posting or transaction date, according to `dateBasis`, through the
 report end. Each row contains `date`, `commodity`, and the exact total
-value of the accounts' holdings in the journal default commodity on that day.
+value of the selected accounts in the journal default commodity on that day.
 Valuation defaults to `market` in the API and explicitly in the CLI. Use
 `valuation: 'cost'` or `--valuation cost` to accumulate recorded acquisition costs
 with the same rules as aggregate valuation. Days without changes remain in the
 result in both modes, and both use the same report end. Market price changes
-only affect balances in market mode. The dedicated unrealized-gain and investment
+only affect totals in market mode. The dedicated unrealized-gain and investment
 performance reports continue to use market valuation. The `dateBasis` option is either
 `posting` (the default) or `transaction`.
 
@@ -714,7 +714,7 @@ performance reports continue to use market valuation. The `dateBasis` option is 
 const { openJournal } = require('ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
-const history = journal.balanceHistory({
+const history = journal.totalHistory({
   accounts: ['^Assets:', '^Liabilities:'],
 });
 ```
@@ -724,11 +724,11 @@ The command prints the complete history by default. `--from`, `--to`, and
 select accounts, while `--format` selects `text`, `json`, or `csv` output:
 
 ```console
-ledlight balance-history --file main.ledger \
+ledlight total-history --file main.ledger \
   --accounts "^Assets:" --accounts "^Liabilities:"
-ledlight balance-history --file main.ledger --date-basis transaction \
+ledlight total-history --file main.ledger --date-basis transaction \
   --accounts "^Assets:" --accounts "^Liabilities:"
-ledlight balance-history --file main.ledger --accounts "^Assets:" --format csv
+ledlight total-history --file main.ledger --accounts "^Assets:" --format csv
 ```
 
 Human-readable amounts use the default commodity's declared format. CSV

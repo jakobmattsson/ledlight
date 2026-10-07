@@ -5,7 +5,7 @@
 // node src/impl/cli/run.js aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "Income:" --accounts "Expenses:" --denominate --invert
 // node src/impl/cli/run.js aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:" --accounts "Liabilities:" --denominate
 // node src/impl/cli/run.js aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:" --accounts "Liabilities:"
-// node src/impl/cli/run.js balance-history --file main.ledger --accounts "Assets:" --format csv
+// node src/impl/cli/run.js total-history --file main.ledger --accounts "Assets:" --format csv
 // node src/impl/cli/run.js unrealized-gains --file main.ledger --accounts "Assets:"
 
 const { loadCliModules } = require('./cli-modules');

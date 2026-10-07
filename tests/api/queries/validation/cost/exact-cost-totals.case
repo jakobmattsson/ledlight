@@ -2,7 +2,7 @@ Exact total costs keep each transaction balanced.
 
 ========== API ==========
 
-balanceHistory({ valuation: 'cost', dateBasis: 'transaction' })
+totalHistory({ valuation: 'cost', dateBasis: 'transaction' })
 
 ========== FILE ==========
 

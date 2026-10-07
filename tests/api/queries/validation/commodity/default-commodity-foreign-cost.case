@@ -2,7 +2,7 @@ Foreign costs on default-commodity postings are diagnosed at their source.
 
 ========== API ==========
 
-balanceHistory({ valuation: 'cost', dateBasis: 'transaction' })
+totalHistory({ valuation: 'cost', dateBasis: 'transaction' })
 
 ========== FILE ==========
 

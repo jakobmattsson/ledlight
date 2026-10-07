@@ -2,7 +2,7 @@ A single-day range includes both endpoints and retains opening balances where re
 
 ========== API ==========
 
-balanceHistory({ accounts: ['Assets:'], from: '2024-02-29', to: '2024-02-29' })
+totalHistory({ accounts: ['Assets:'], from: '2024-02-29', to: '2024-02-29' })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ A non-nominal cost on the reporting currency is diagnosed without changing repor
 
 ========== API ==========
 
-balanceHistory({ valuation: 'cost', dateBasis: 'transaction' })
+totalHistory({ valuation: 'cost', dateBasis: 'transaction' })
 
 ========== FILE ==========
 

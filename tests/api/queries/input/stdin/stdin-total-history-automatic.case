@@ -1,0 +1,28 @@
+The total-history command reads automatic standard input.
+
+========== CLI ==========
+
+ledlight total-history --format json <<'LEDGER'
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+account Assets:Cash
+P 2024-01-01 STOCK 12 SEK
+
+2024-01-01 Purchase
+  Assets:Stock  10 STOCK {10 SEK}
+  Assets:Cash  -100 SEK
+LEDGER
+
+========== OUTPUT ==========
+
+[
+  {
+    "date": "2024-01-01",
+    "amount": "20",
+    "commodity": "SEK"
+  }
+]

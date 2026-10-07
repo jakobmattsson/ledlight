@@ -2,7 +2,7 @@ Transaction-date cost history can be inverted.
 
 ========== API ==========
 
-balanceHistory({ valuation: 'cost', accounts: ['Assets:Broker', 'Assets:Other'], from: '2024-01-04', to: '2024-01-04', dateBasis: 'transaction', invert: true })
+totalHistory({ valuation: 'cost', accounts: ['Assets:Broker', 'Assets:Other'], from: '2024-01-04', to: '2024-01-04', dateBasis: 'transaction', invert: true })
 
 ========== FILE ==========
 

@@ -18,7 +18,7 @@ test('registers all queries as one immutable dependency', () => {
   assert.equal(queries.length, 10);
   for (const registrationName of [
     'aggregateQuery',
-    'balanceHistoryQuery',
+    'totalHistoryQuery',
     'unrealizedGainsQuery',
     'investmentPerformanceQuery',
     'accountsQuery',

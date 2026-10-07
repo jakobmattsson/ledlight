@@ -1,8 +1,8 @@
-Market valuation remains the default for balance history.
+Market valuation remains the default for total history.
 
 ========== API ==========
 
-balanceHistory({ accounts: ['Assets:Broker'], to: '2024-01-05' })
+totalHistory({ accounts: ['Assets:Broker'], to: '2024-01-05' })
 
 ========== FILE ==========
 
