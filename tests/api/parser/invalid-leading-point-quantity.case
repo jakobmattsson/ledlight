@@ -1,0 +1,15 @@
+Rejects a quantity that starts with a decimal point.
+
+========== TEXT ==========
+
+2024-01-01 Invalid decimal
+  Assets:Cash  .5 SEK
+  Equity:Opening
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

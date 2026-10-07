@@ -1,21 +1,33 @@
 'use strict';
 
-const { resolveRepositoryModule } = require('../../../support/repository-container');
+const { resolveCommands, resolveRepositoryModule } = require('../../../support/repository-container');
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const createArguments = require('../../../../src/cli/cli-arguments');
-const project = resolveRepositoryModule('src/core/project.js');
+const createArguments = require('../../../../src/impl/cli/cli-arguments');
+const commands = resolveCommands();
+const project = resolveRepositoryModule('src/impl/core/project.js');
 const argumentsModule = createArguments({
+  commands,
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
 });
 const { apiCommands, parseArguments, usage } = argumentsModule;
 
+function withoutCliOptions(value) {
+  const parsed = { ...value };
+  delete parsed.cliOptions;
+  return parsed;
+}
+
+function apiArguments(arguments_) {
+  return withoutCliOptions(parseArguments(arguments_));
+}
+
 test('defines one CLI command for every journal operation', () => {
   assert.deepEqual(apiCommands, {
     aggregate: 'aggregate',
-    balanceHistoryReport: 'balance-history',
+    balanceHistory: 'balance-history',
     unrealizedGains: 'unrealized-gains',
     investmentPerformance: 'investment-performance',
     accounts: 'accounts',
@@ -36,6 +48,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
   };
   assert.throws(
     () => createArguments({
+      commands,
       cliConfiguration: { apply: (arguments_) => arguments_ },
       project: { apiDefinitions },
     }),
@@ -64,11 +77,12 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     argumentsModule.apiInputCoverage.unrealizedGains.outputInputs,
     ['format', 'includeTotal'],
   );
-  assert.deepEqual(argumentsModule.apiInputCoverage.balanceHistoryReport, {
+  assert.deepEqual(argumentsModule.apiInputCoverage.balanceHistory, {
     command: 'balance-history',
     inputs: ['journalPath', 'from', 'to', 'accounts', 'dateBasis', 'valuation', 'invert'],
     outputInputs: ['format'],
   });
+  assert.deepEqual(argumentsModule.apiInputCoverage.investmentPerformance.outputInputs, ['format']);
 });
 
 test('documents the effective default for every enum option in command help', () => {
@@ -76,7 +90,7 @@ test('documents the effective default for every enum option in command help', ()
     const parsed = parseArguments([
       command, '--file', '/journal',
     ]);
-    const options = { ...parsed.options, ...parsed.reportOptions, ...parsed.output };
+    const options = { ...parsed.options, ...parsed.cliOptions };
     const helpOptions = usage(command).split(/\n(?= {2}--)/u).slice(1);
     for (const helpOption of helpOptions.filter((entry) => entry.includes('(choices:'))) {
       const flag = /^ {2}--([\w-]+)/u.exec(helpOption)[1];
@@ -89,20 +103,18 @@ test('documents the effective default for every enum option in command help', ()
 });
 
 test('parses account output options without adding API options', () => {
-  assert.deepEqual(parseArguments(['accounts', '--file', '/journal']), {
+  assert.deepEqual(apiArguments(['accounts', '--file', '/journal']), {
     command: 'accounts',
     journalPath: '/journal',
-    options: { accounts: [], usage: 'used' },
-    output: { details: false, format: 'text' },
+    options: { usage: 'used' },
   });
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'accounts', '--file', '/journal', '--accounts', '^Assets:',
     '--accounts', '^Expenses:', '--usage', 'unused', '--details', '--format', 'csv',
   ]), {
     command: 'accounts',
     journalPath: '/journal',
     options: { accounts: ['^Assets:', '^Expenses:'], usage: 'unused' },
-    output: { details: true, format: 'csv' },
   });
   assert.throws(
     () => parseArguments(['accounts', '--file', '/journal', '--format', 'yaml']),
@@ -112,27 +124,33 @@ test('parses account output options without adding API options', () => {
   assert.match(usage('accounts'), /--format <format>\s+select the output format/u);
 });
 
+test('passes Commander options directly to command output formatting', () => {
+  const parsed = parseArguments([
+    'accounts', '--file', '/journal', '--accounts', 'Assets:', '--details', '--format', 'csv',
+  ]);
+  assert.deepEqual(parsed.cliOptions, {
+    file: '/journal',
+    accounts: ['Assets:'],
+    usage: 'used',
+    details: true,
+    format: 'csv',
+  });
+  assert.deepEqual(parsed.options, { accounts: ['Assets:'], usage: 'used' });
+});
+
 test('parses listing output formats and unused declaration selection', () => {
   for (const command of ['tags', 'commodities']) {
-    const output = command === 'commodities'
-      ? { details: false, format: 'text' }
-      : { format: 'text' };
-    assert.deepEqual(parseArguments([command, '--file', '/journal']), {
+    assert.deepEqual(apiArguments([command, '--file', '/journal']), {
       command,
       journalPath: '/journal',
       options: { usage: 'used' },
-      output,
     });
-    const jsonOutput = command === 'commodities'
-      ? { details: false, format: 'json' }
-      : { format: 'json' };
-    assert.deepEqual(parseArguments([
+    assert.deepEqual(apiArguments([
       command, '--file', '/journal', '--usage', 'all', '--format', 'json',
     ]), {
       command,
       journalPath: '/journal',
       options: { usage: 'all' },
-      output: jsonOutput,
     });
     assert.throws(
       () => parseArguments([command, '--file', '/journal', '--format', 'yaml']),
@@ -142,74 +160,69 @@ test('parses listing output formats and unused declaration selection', () => {
       `^Usage: ledlight ${command} --file <path> \\[options\\]`, 'u',
     ));
   }
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'commodities', '--file', '/journal', '--usage', 'all', '--details', '--format', 'csv',
   ]), {
     command: 'commodities',
     journalPath: '/journal',
     options: { usage: 'all' },
-    output: { details: true, format: 'csv' },
   });
   assert.match(usage('commodities'), /--details\s+include comments, formats, and usage/u);
-  assert.deepEqual(parseArguments(['prices', '--file', '/journal']), {
+  assert.deepEqual(apiArguments(['prices', '--file', '/journal']), {
     command: 'prices',
     journalPath: '/journal',
     options: { mode: 'effective' },
-    output: { format: 'text' },
   });
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'prices', '--file', '/journal', '--mode', 'directives', '--format', 'json',
   ]), {
     command: 'prices',
     journalPath: '/journal',
     options: { mode: 'directives' },
-    output: { format: 'json' },
   });
 });
 
 test('parses aggregate report options and output format', () => {
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'aggregate',
     '--file', '/journal',
     '--from', '2024-01-01',
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
     '--accounts', 'Liabilities:',
-    '--value',
+    '--denominate',
     '--invert',
     '--group-by', 'commodity',
     '--format', 'csv',
   ]), {
     command: 'aggregate',
     journalPath: '/journal',
-    reportOptions: {
+    options: {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:', 'Liabilities:'],
       dateBasis: 'posting', valuation: 'market',
-      inValuationCommodity: true,
+      denominate: true,
       invert: true,
       groupBy: 'commodity',
     },
-    output: { format: 'csv' },
   });
 });
 
 test('uses aggregate defaults when no options are supplied', () => {
-  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal']), {
+  assert.deepEqual(apiArguments(['aggregate', '--file', '/journal']), {
     command: 'aggregate',
     journalPath: '/journal',
-    reportOptions: { accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account' },
-    output: { format: 'text' },
+    options: { dateBasis: 'posting', valuation: 'market', groupBy: 'account' },
   });
 });
 
 test('parses valuation choices and explicitly passes the market default', () => {
   for (const command of ['aggregate', 'balance-history']) {
     const arguments_ = [command, '--file', '/journal'];
-    assert.equal(parseArguments(arguments_).reportOptions.valuation, 'market');
+    assert.equal(parseArguments(arguments_).options.valuation, 'market');
     for (const valuation of ['cost', 'market']) {
-      assert.equal(parseArguments([...arguments_, '--valuation', valuation]).reportOptions.valuation, valuation);
+      assert.equal(parseArguments([...arguments_, '--valuation', valuation]).options.valuation, valuation);
     }
     assert.throws(() => parseArguments([...arguments_, '--valuation', 'book']),
       /Allowed choices are cost, market/u);
@@ -221,22 +234,22 @@ test('parses valuation choices and explicitly passes the market default', () => 
 
 test('uses the CLI configuration file argument when --file is omitted', () => {
   const configuredArguments = createArguments({
+    commands,
     cliConfiguration: {
       apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],
     },
     project,
   });
 
-  assert.deepEqual(configuredArguments.parseArguments(['aggregate']), {
+  assert.deepEqual(withoutCliOptions(configuredArguments.parseArguments(['aggregate'])), {
     command: 'aggregate',
     journalPath: '/configured-journal',
-    reportOptions: { accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account' },
-    output: { format: 'text' },
+    options: { dateBasis: 'posting', valuation: 'market', groupBy: 'account' },
   });
 });
 
 test('parses balance history options', () => {
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'balance-history',
     '--file', '/journal',
     '--from', '2024-01-01',
@@ -248,23 +261,22 @@ test('parses balance history options', () => {
   ]), {
     command: 'balance-history',
     journalPath: '/journal',
-    reportOptions: {
+    options: {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction', valuation: 'market',
       invert: true,
     },
-    output: { format: 'csv' },
   });
-  assert.throws(() => parseArguments(['balance-history', '--value']), /Usage:/u);
+  assert.throws(() => parseArguments(['balance-history', '--denominate']), /Usage:/u);
   assert.throws(() => parseArguments(['balance-history', '--account-factor', 'Assets:=1']), /Usage:/u);
   assert.throws(() => parseArguments(['balance-history', '--csv']), /Usage:/u);
   assert.throws(() => parseArguments(['balance-history', '--json']), /Usage:/u);
 });
 
 test('parses unrealized gains options and CLI-only output controls', () => {
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'unrealized-gains',
     '--file', '/journal',
     '--to', '2024-12-31',
@@ -275,22 +287,21 @@ test('parses unrealized gains options and CLI-only output controls', () => {
   ]), {
     command: 'unrealized-gains',
     journalPath: '/journal',
-    reportOptions: {
+    options: {
       to: '2024-12-31',
       accounts: ['Assets:'],
       dateBasis: 'transaction',
     },
-    output: { format: 'csv', includeTotal: true },
   });
-  assert.deepEqual(parseArguments(['unrealized-gains', '--file', '/journal']), {
+  assert.deepEqual(apiArguments(['unrealized-gains', '--file', '/journal']), {
     command: 'unrealized-gains',
     journalPath: '/journal',
-    reportOptions: { accounts: [], dateBasis: 'posting' },
-    output: { format: 'text', includeTotal: false },
+    options: { dateBasis: 'posting' },
   });
   assert.deepEqual(
-    parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'json']).output,
-    { format: 'json', includeTotal: false },
+    parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'json'])
+      .cliOptions.format,
+    'json',
   );
   assert.throws(
     () => parseArguments(['unrealized-gains', '--file', '/journal', '--format', 'yaml']),
@@ -307,16 +318,16 @@ test('parses unrealized gains options and CLI-only output controls', () => {
 test('uses the same total flag for both reports without requiring valuation', () => {
   for (const command of ['aggregate', 'unrealized-gains']) {
     const parsed = parseArguments([command, '--file', '/journal', '--include-total']);
-    assert.equal((command === 'aggregate' ? parsed.reportOptions : parsed.output).includeTotal, true);
-    assert.equal(parsed.reportOptions.inValuationCommodity, undefined);
+    assert.equal((command === 'aggregate' ? parsed.options : parsed.cliOptions).includeTotal, true);
+    assert.equal(parsed.options.denominate, undefined);
     assert.match(usage(command), /--include-total/u);
-    assert.doesNotMatch(usage(command), /--total\b|requires --value/u);
+    assert.doesNotMatch(usage(command), /--total\b|requires --denominate/u);
     assert.throws(() => parseArguments([command, '--file', '/journal', '--total']), /unknown option/u);
   }
 });
 
-test('parses investment performance selections and JSON output', () => {
-  assert.deepEqual(parseArguments([
+test('parses investment performance selections and output format', () => {
+  assert.deepEqual(apiArguments([
     'investment-performance',
     '--file', '/journal',
     '--from', '2024-01-01',
@@ -325,58 +336,62 @@ test('parses investment performance selections and JSON output', () => {
     '--commodities', 'FUND_A',
     '--commodities', 'FUND_B',
     '--exclude-commodities', 'SEK',
-    '--json',
+    '--format', 'json',
   ]), {
     command: 'investment-performance',
     journalPath: '/journal',
-    reportOptions: {
+    options: {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:'],
       commodities: ['FUND_A', 'FUND_B'],
       excludeCommodities: ['SEK'],
     },
-    output: { csv: false, json: true },
   });
-  assert.deepEqual(parseArguments(['investment-performance', '--file', '/journal']), {
+  assert.deepEqual(apiArguments(['investment-performance', '--file', '/journal']), {
     command: 'investment-performance',
     journalPath: '/journal',
-    reportOptions: { accounts: [], commodities: [], excludeCommodities: [] },
-    output: { csv: false, json: false },
+    options: {},
   });
+  assert.equal(parseArguments(['investment-performance', '--file', '/journal']).cliOptions.format, 'text');
+  assert.equal(parseArguments([
+    'investment-performance', '--file', '/journal', '--format', 'csv',
+  ]).cliOptions.format, 'csv');
+  assert.throws(() => parseArguments(['investment-performance', '--file', '/journal', '--json']),
+    /unknown option/u);
+  assert.throws(() => parseArguments([
+    'investment-performance', '--file', '/journal', '--format', 'yaml',
+  ]), /Allowed choices are text, json, csv/u);
 });
 
 test('maps every remaining API parameter to CLI arguments', () => {
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'aggregate', '--file', '/journal', '--with-valuation-value', '--format', 'json',
   ]), {
     command: 'aggregate',
     journalPath: '/journal',
-    reportOptions: {
-      accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account', withValuationValue: true,
+    options: {
+      dateBasis: 'posting', valuation: 'market', groupBy: 'account', withValuationValue: true,
     },
-    output: { format: 'json' },
   });
-  assert.deepEqual(parseArguments(['aggregate', '--file', '/journal', '--value', '--include-total']), {
+  assert.deepEqual(apiArguments(['aggregate', '--file', '/journal', '--denominate', '--include-total']), {
     command: 'aggregate',
     journalPath: '/journal',
-    reportOptions: {
-      accounts: [], dateBasis: 'posting', valuation: 'market', groupBy: 'account',
-      inValuationCommodity: true, includeTotal: true,
+    options: {
+      dateBasis: 'posting', valuation: 'market', groupBy: 'account',
+      denominate: true, includeTotal: true,
     },
-    output: { format: 'text' },
   });
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'balance-history', '--file', '/journal', '--accounts', 'Assets:Fund',
     '--accounts', 'Assets:Cash', '--format', 'json',
   ]), {
     command: 'balance-history',
     journalPath: '/journal',
-    reportOptions: {
+    options: {
       accounts: ['Assets:Fund', 'Assets:Cash'],
       dateBasis: 'posting', valuation: 'market',
     },
-    output: { format: 'json' },
   });
   assert.throws(
     () => parseArguments([
@@ -384,7 +399,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
     ]),
     /Allowed choices are text, json, csv/u,
   );
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'transactions', '--file', '/journal', '--accounts', 'Assets:Cash',
     '--accounts', 'Assets:Bank',
     '--id', '42', '--order', 'oldest', '--page', '2',
@@ -394,14 +409,12 @@ test('maps every remaining API parameter to CLI arguments', () => {
     options: {
       accounts: ['Assets:Cash', 'Assets:Bank'], id: '42', order: 'oldest', page: '2', pageSize: '25',
     },
-    output: { format: 'csv' },
   });
-  assert.deepEqual(parseArguments(['transactions', '--file', '/journal']), {
+  assert.deepEqual(apiArguments(['transactions', '--file', '/journal']), {
     command: 'transactions', journalPath: '/journal',
-    options: { accounts: [], order: 'oldest' },
-    output: { format: 'text' },
+    options: { order: 'oldest' },
   });
-  assert.deepEqual(parseArguments([
+  assert.deepEqual(apiArguments([
     'postings', '--file', '/journal', '--from', '2024-01-01', '--to', '2024-01-31',
     '--accounts', 'Assets:Cash', '--accounts', 'Expenses:', '--format', 'csv',
   ]), {
@@ -409,11 +422,10 @@ test('maps every remaining API parameter to CLI arguments', () => {
     options: {
       from: '2024-01-01', to: '2024-01-31', accounts: ['Assets:Cash', 'Expenses:'],
     },
-    output: { format: 'csv' },
   });
-  assert.deepEqual(parseArguments(['postings', '--file', '/journal']), {
+  assert.deepEqual(apiArguments(['postings', '--file', '/journal']), {
     command: 'postings', journalPath: '/journal',
-    options: { accounts: [] }, output: { format: 'text' },
+    options: {},
   });
   assert.match(
     usage('transactions'),
@@ -430,7 +442,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['ledger-transactions', '--file', '/journal'],
     ['print', '--file', '/journal'],
     ['aggregate', '--from'],
-    ['aggregate', '--from', '--value'],
+    ['aggregate', '--from', '--denominate'],
     ['aggregate', '--to', '2024-01-01', '--to', '2024-02-01'],
     ['aggregate', '--date-basis', 'other'],
     ['aggregate', '--date-basis', 'posting', '--date-basis', 'transaction'],
@@ -440,7 +452,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['investment-performance', '--commodities'],
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
-    ['unrealized-gains', '--value'],
+    ['unrealized-gains', '--denominate'],
     ['reconciliation-entries', '--file', '/journal', '--account', 'Assets:Cash'],
   ];
   for (const arguments_ of invalidArguments) {
@@ -452,11 +464,11 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /ledlight <command> --help/u);
   assert.match(
     usage(),
-    /raw:\n {2}accounts\s+show accounts[\s\S]* {2}tags\s+show tags[\s\S]* {2}commodities\s+show commodities[\s\S]* {2}prices\s+show prices[\s\S]* {2}transactions\s+show transactions[\s\S]* {2}postings\s+show postings/u,
+    /raw:\n {2}accounts\s+show accounts[\s\S]* {2}commodities\s+show commodities[\s\S]* {2}postings\s+show postings[\s\S]* {2}prices\s+show prices[\s\S]* {2}tags\s+show tags[\s\S]* {2}transactions\s+show transactions/u,
   );
   assert.match(
     usage(),
-    /reports:\n {2}aggregate\s+aggregate postings[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}unrealized-gains\s+show unrealized investment gains[\s\S]* {2}investment-performance\s+show investment performance/u,
+    /reports:\n {2}aggregate\s+aggregate postings[\s\S]* {2}balance-history\s+show balances over time[\s\S]* {2}investment-performance\s+show investment performance[\s\S]* {2}unrealized-gains\s+show unrealized investment gains/u,
   );
   assert.doesNotMatch(usage(), /misc:/u);
   assert.doesNotMatch(usage(), /Commands:/u);

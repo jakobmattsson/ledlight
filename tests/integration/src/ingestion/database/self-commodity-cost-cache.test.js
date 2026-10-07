@@ -8,7 +8,7 @@ const test = require('node:test');
 const Database = require('better-sqlite3');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
-  resolveRepositoryModule('src/ingestion/database/database.js');
+  resolveRepositoryModule('src/impl/ingestion/database/database.js');
 
 test('rebuilds cached diagnostics for a non-nominal reporting-currency cost', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-self-commodity-cost-'));

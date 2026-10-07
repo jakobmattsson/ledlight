@@ -5,9 +5,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createPublicErrors = require('../../../../../src/core/public-errors');
-const createDatabase = require('../../../../../src/ingestion/database/database');
-const createRebuildLock = require('../../../../../src/ingestion/database/database-rebuild-lock');
+const createPublicErrors = require('../../../../../src/impl/core/public-errors');
+const createDatabase = require('../../../../../src/impl/ingestion/database/database');
+const createRebuildLock = require('../../../../../src/impl/ingestion/database/database-rebuild-lock');
 
 function temporaryDatabasePath(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-rebuild-lock-'));

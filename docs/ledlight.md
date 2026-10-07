@@ -68,7 +68,7 @@ const { openJournal } = require('ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
 const aggregate = journal.aggregate({ to: '2024-12-31' });
-const history = journal.balanceHistoryReport({ from: '2024-01-01' });
+const history = journal.balanceHistory({ from: '2024-01-01' });
 ```
 
 ## Public API and CLI contract
@@ -79,12 +79,18 @@ application interface. It owns journal loading, database freshness, report
 selection, filtering, transformations such as inversion, and calculated rows
 such as totals.
 
-The CLI is a thin adapter over that public module. It may parse command-line
-arguments, map semantic inputs to public API options, invoke a journal
-operation, and format the returned value as human-readable text, CSV, or JSON.
-Formatting may select fields already present in the result, round values for
-display, align columns, add separators, and encode an existing result, but it
-must not calculate or otherwise change report semantics.
+The source definitions for external boundaries live in `src/surface`:
+`queries` exposes API operations, `commands` defines CLI commands,
+`database/schema.sql` defines persistent storage, and `parser/ledger.ohm`
+describes the input language. Their implementation support lives in `src/impl`.
+
+The CLI is a thin adapter over that public module. It parses command-line
+arguments, maps semantic inputs to public API options, and invokes a journal
+operation. Output-only options may then select fields or add presentation rows
+before formatting. Each command formats text and CSV; JSON uses the same
+encoder for every command after output preparation. Formatting may round
+values for display, align columns, and add separators, but it must not
+calculate or otherwise change report semantics.
 
 The CLI command layer must not obtain data or transformations from internal
 report, journal, database, or accounting operations. Pure output code may use
@@ -122,7 +128,7 @@ underlying result.
 | CLI command or option | Public API equivalent | Responsibility |
 | --- | --- | --- |
 | `aggregate --file PATH` | `openJournal(journalPath).aggregate(options)` | Report selection and calculation |
-| `balance-history --file PATH` | `openJournal(journalPath).balanceHistoryReport(options)` | Report selection and calculation |
+| `balance-history --file PATH` | `openJournal(journalPath).balanceHistory(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
@@ -147,7 +153,7 @@ underlying result.
 | `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
 | `balance --group-by DIMENSION` | `options.groupBy` | Group by `account` or `commodity` |
 | `--valuation VALUE` | `options.valuation` | `cost` or `market` for aggregate and balance history; defaults to `market` in both API and CLI |
-| `--value` | `options.inValuationCommodity` | Aggregate valuation in the journal default commodity |
+| `--denominate` | `options.denominate` | Aggregate valuation in the journal default commodity |
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
@@ -163,7 +169,7 @@ underlying result.
 | `balance-history --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --include-total` | None | Append a presentation-only sum of all gain rows |
-| `investment-performance --json` | None | Output encoding only |
+| `investment-performance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--version` | None | CLI package metadata |
 | `--help` | None | Top-level command list |
 | `<command> --help` | None | Detailed usage for one command |
@@ -171,12 +177,15 @@ underlying result.
 Commands without a specialized human-readable representation emit JSON.
 `transactions` defaults to Ledger-style text; repeatable `--accounts` options
 select transactions containing matching accounts while retaining every posting
-in each selected transaction. `--id` optionally selects one transaction, and all pagination options are optional and default to
-`--order oldest --page 1 --page-size 100`.
-The `balance`, `balance-history`, and `unrealized-gains` commands use `--format
-json` when the complete API result is needed. `investment-performance` uses
-`--json`. JSON is required to retain fields such as `valuationValue` and
-other API-only metadata.
+in each selected transaction. `--id` optionally selects one transaction.
+`--order` defaults to `oldest`; `--page` and `--page-size` must be provided
+together to request pagination. Without them, all matching transactions appear.
+The `balance`, `balance-history`, `unrealized-gains`, and
+`investment-performance` commands use `--format json` when the complete API
+result is needed. Investment performance CSV has one data row; its
+`commodities` and `points` cells contain compact JSON arrays. JSON is required
+to retain fields such as `valuationValue` and other API-only metadata in other
+reports.
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
@@ -196,7 +205,7 @@ file, or heredoc without `--file`, or explicitly select stdin with `--file -`:
 cat journal.ledger | ledlight balance-history
 ledlight unrealized-gains --file - --include-total < journal.ledger
 
-ledlight aggregate --value --include-total <<'LEDGER'
+ledlight aggregate --denominate --include-total <<'LEDGER'
 commodity SEK
   default
   format 1,000.00 SEK
@@ -236,26 +245,33 @@ formatter or presentation; they are never passed to a journal operation.
 
 ## Architecture
 
-The implementation is organized by responsibility directly under `src`:
+The public definitions live in `src/surface`, and their implementation lives in
+`src/impl`:
 
-- `core` contains project composition for the stable Node.js API,
+- `surface/queries` contains one module per public API/CLI query, with its Zod
+  schema beside its execution function;
+- `surface/commands` contains the CLI command definitions;
+- `surface/database` and `surface/parser` contain the database schema and input
+  grammar;
+- `impl/core` contains project composition for the stable Node.js API,
   public errors, shared runtime-input validation, exact decimal arithmetic, and
   valuation logic;
-- `ingestion` owns the optimized parser, traverses
+- `impl/ingestion` owns the optimized parser, traverses
   journal includes, validates and resolves journal postings, persists the
   normalized database, and materializes query optimizations;
-- `queries` contains one module per public API/CLI query—including aggregate,
-  balance-history, unrealized-gains, and investment-performance queries—with its Zod schema
-  beside its execution function;
-- `queries/support` contains internal SQL, valuation, and investment-return
+- `impl/query-support` contains internal SQL, valuation, and investment-return
   calculations used by query implementations; and
-- `cli` contains argument parsing, output formatting, and the executable runner
+- `impl/cli` contains argument parsing, output formatting, and the executable runner
   over the public Node.js API.
 
 Dependencies point inward: ingestion writes the database, queries read it, and
 core composes those capabilities into the public Node.js API. The CLI command
 layer depends on that public API; only its output formatter uses shared
 exact-decimal helpers directly.
+The project builds journal operations and API input definitions from the query
+modules. The CLI runner invokes each command's declared API operation and passes
+its result to the command's formatting step. Commands declare how to load any
+additional data needed for text output.
 Awilix supplies each repository factory through a boundary-checking proxy. Code
 outside `cli` cannot resolve CLI modules, and `ingestion` cannot resolve modules
 from `queries`. The complete container is resolved in a unit test so violations
@@ -387,10 +403,10 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`tests/support/reference/ledger.ohm` is the normative description of the
+`src/surface/parser/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
 semantics in `tests/support/reference/reference-parser.js`. The fixtures in
-`tests/parser-cases` define expected syntax trees, a shared error contract for
+`tests/api/parser` define expected syntax trees, a shared error contract for
 invalid documents, and expected warnings when parsing recovers from malformed
 top-level blocks. Each fixture runs through both Ohm and the optimized runtime
 parser. Separate tests check parser-specific diagnostics. This keeps the grammar
@@ -469,7 +485,7 @@ const valuedIncomeStatement = journal.aggregate({
   from: '2024-01-01',
   to: '2024-12-31',
   accounts: ['^Income:', '^Expenses:'],
-  inValuationCommodity: true,
+  denominate: true,
 });
 ```
 
@@ -483,7 +499,7 @@ The command-line equivalent is:
 ledlight aggregate --file main.ledger --to 2024-12-31
 ledlight aggregate --file main.ledger --to 2024-12-31 --date-basis transaction
 ledlight aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 \
-  --accounts "^Income:" --accounts "^Expenses:" --value --invert
+  --accounts "^Income:" --accounts "^Expenses:" --denominate --invert
 ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --format csv
 ledlight aggregate --file main.ledger --accounts "^Assets:" \
   --group-by commodity --format json
@@ -491,17 +507,17 @@ ledlight aggregate --file main.ledger --accounts "^Assets:" \
 
 By default, the command prints right-aligned amounts and commodities followed
 by left-aligned account names. Human-readable output uses each
-commodity's declared `format` precision and separators. With `--value`, it
+commodity's declared `format` precision and separators. With `--denominate`, it
 converts every amount to the journal's default commodity. Add `--include-total`
 to append an exact total for each reported commodity in any output format. `--format csv` prints RFC-style escaped CSV
 with the columns `account,amount,commodity`. Commodity grouping omits the
 `account` column. CSV uses canonical, ungrouped decimal values and does not
-apply commodity display separators. With `--value`, CSV amounts retain the
+apply commodity display separators. With `--denominate`, CSV amounts retain the
 existing exact two-decimal rounding behavior.
 `--invert` negates every reported amount, including the total when requested.
 
 `--valuation market` is the explicit CLI default, matching the API default
-`valuation: 'market'`. Use `--valuation cost` with `--value` or
+`valuation: 'market'`. Use `--valuation cost` with `--denominate` or
 `--with-valuation-value` to value holdings using their recorded lot costs.
 Unit and total lot costs are supported; sales subtract the cost of sold units
 and transfers carry the recorded cost. Amounts in the default commodity keep
@@ -511,14 +527,14 @@ are not needed in cost mode. The journal still supplies realized gain postings.
 Selecting a valuation method alone does not convert commodity quantities.
 
 ```console
-ledlight aggregate --file main.ledger --accounts "^Assets:" --value --valuation cost
+ledlight aggregate --file main.ledger --accounts "^Assets:" --denominate --valuation cost
 ```
 
 The same behavior is available directly through `journal.aggregate`: set
 `invert: true` to negate the returned quantities and `includeTotal: true` to
 append totals in commodity order. Without conversion, quantities are summed
 separately for each commodity; no default commodity or valuation prices are
-needed. With `inValuationCommodity: true`, the result has a single total in the
+needed. With `denominate: true`, the result has a single total in the
 default commodity. Exact zero totals are retained, and empty reports have no
 total rows. The CLI requests totals only with `--include-total`; human-readable
 output puts a separator before the totals. This flag is also used by
@@ -682,7 +698,7 @@ residual warning takes precedence over an equivalent allocation warning.
 
 ## Balance history
 
-`balanceHistoryReport` returns one row for every calendar day from the first
+`balanceHistory` returns one row for every calendar day from the first
 selected posting or transaction date, according to `dateBasis`, through the
 report end. Each row contains `date`, `commodity`, and the exact total
 value of the accounts' holdings in the journal default commodity on that day.
@@ -698,7 +714,7 @@ performance reports continue to use market valuation. The `dateBasis` option is 
 const { openJournal } = require('ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
-const history = journal.balanceHistoryReport({
+const history = journal.balanceHistory({
   accounts: ['^Assets:', '^Liabilities:'],
 });
 ```

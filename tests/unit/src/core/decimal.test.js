@@ -11,7 +11,7 @@ const {
   formatDecimalFixed,
   parseDecimal,
   registerDecimalFunctions,
-} = resolveRepositoryModule("src/core/decimal.js");
+} = resolveRepositoryModule("src/impl/core/decimal.js");
 
 test('rounds exact decimal values to a fixed number of places', () => {
   assert.equal(formatDecimalFixed(parseDecimal('10'), 2), '10.00');

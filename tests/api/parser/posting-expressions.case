@@ -1,0 +1,126 @@
+Parses annotated postings, costs, balance assignments, and assertions.
+
+========== TEXT ==========
+
+2024-03-01 Transfer ; Header: sale
+  ; Generated-ID trade-2
+  Assets:Units  -2 FUND {{20 SEK}} @@ 24 SEK ; [2024-03-02] Origin: broker
+  Assets:Cash  = 24 SEK
+  Equity:Opening  2 FUND = 2 FUND
+
+========== JSON ==========
+
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-03-01",
+      "description": "Transfer",
+      "comment": "Header: sale",
+      "tags": [
+        {
+          "name": "Header",
+          "value": "sale"
+        }
+      ],
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Units",
+          "amount": {
+            "quantity": "-2",
+            "commodity": "FUND"
+          },
+          "lotCost": {
+            "total": true,
+            "amount": {
+              "quantity": "20",
+              "commodity": "SEK"
+            }
+          },
+          "cost": {
+            "total": true,
+            "amount": {
+              "quantity": "24",
+              "commodity": "SEK"
+            }
+          },
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": "2024-03-02",
+          "comment": "[2024-03-02] Origin: broker",
+          "tags": [
+            {
+              "name": "Origin",
+              "value": "broker"
+            }
+          ],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Cash",
+          "amount": null,
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": {
+            "quantity": "24",
+            "commodity": "SEK"
+          },
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 4,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Equity:Opening",
+          "amount": {
+            "quantity": "2",
+            "commodity": "FUND"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": {
+            "quantity": "2",
+            "commodity": "FUND"
+          },
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 5,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [
+        {
+          "text": "Generated-ID trade-2",
+          "key": null,
+          "value": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
+          }
+        }
+      ],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    }
+  ]
+}

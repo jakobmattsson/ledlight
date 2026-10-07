@@ -7,9 +7,9 @@ const test = require('node:test');
 const {
   accountFilter,
   accountMatches,
-} = resolveRepositoryModule("src/queries/support/account-filter.js");
+} = resolveRepositoryModule("src/impl/query-support/account-filter.js");
 const { prefixUpperBound } = resolveRepositoryModule(
-  "src/queries/support/account-filter.js",
+  "src/impl/query-support/account-filter.js",
 ).$$private;
 
 test('calculates exclusive Unicode prefix bounds', () => {

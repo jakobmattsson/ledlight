@@ -1,0 +1,15 @@
+Rejects a posting cost without a commodity.
+
+========== TEXT ==========
+
+2024-01-01 Missing commodity
+  Assets:Fund  1 FUND @ 10
+  Equity:Opening
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

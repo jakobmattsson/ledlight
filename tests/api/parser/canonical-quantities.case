@@ -1,0 +1,87 @@
+Parses zero, positive, and negative posting quantities.
+
+========== TEXT ==========
+
+2024-01-01 Canonical numbers
+  Assets:Zero  0 SEK
+  Assets:Positive  +1 SEK
+  Assets:Negative  -1.25 SEK
+
+========== JSON ==========
+
+{
+  "source": "fixture.ledger",
+  "entries": [
+    {
+      "type": "transaction",
+      "date": "2024-01-01",
+      "description": "Canonical numbers",
+      "comment": null,
+      "postings": [
+        {
+          "type": "posting",
+          "account": "Assets:Zero",
+          "amount": {
+            "quantity": "0",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Positive",
+          "amount": {
+            "quantity": "+1",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 3,
+            "column": 3
+          }
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Negative",
+          "amount": {
+            "quantity": "-1.25",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comment": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 4,
+            "column": 3
+          }
+        }
+      ],
+      "notes": [],
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    }
+  ]
+}

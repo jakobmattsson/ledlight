@@ -1,0 +1,14 @@
+Rejects an unsupported nomarket commodity property.
+
+========== TEXT ==========
+
+commodity SEK
+  nomarket
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

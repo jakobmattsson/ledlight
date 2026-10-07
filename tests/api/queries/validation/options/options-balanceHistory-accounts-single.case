@@ -1,0 +1,41 @@
+balanceHistory selects a single account pattern.
+
+========== API ==========
+
+balanceHistory({ accounts: ['Assets:'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-02-28 Opening
+  Assets:Cash  10 SEK
+  Equity:Opening
+2024-02-29 Leap day
+  Assets:Cash  2 SEK
+  Equity:Opening
+2024-03-01 Following day
+  Assets:Cash  3 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "date": "2024-02-28",
+    "amount": "10",
+    "commodity": "SEK"
+  },
+  {
+    "date": "2024-02-29",
+    "amount": "12",
+    "commodity": "SEK"
+  },
+  {
+    "date": "2024-03-01",
+    "amount": "15",
+    "commodity": "SEK"
+  }
+]

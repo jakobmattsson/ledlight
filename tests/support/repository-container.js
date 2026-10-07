@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const {
   createRepositoryContainer,
   $$private: { repositoryModuleName },
-} = require('../../src/composition/repository-container');
+} = require('../../src/impl/composition/repository-container');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const container = createRepositoryContainer();
@@ -26,6 +26,10 @@ function resolveQuery(name) {
   return query;
 }
 
+function resolveCommands() {
+  return container.resolve('commands');
+}
+
 function resolveReferenceParser() {
   const createReferenceParser = require('./reference/reference-parser');
   return createReferenceParser({
@@ -38,4 +42,4 @@ function resolveReferenceParser() {
   });
 }
 
-module.exports = { resolveQuery, resolveReferenceParser, resolveRepositoryModule };
+module.exports = { resolveCommands, resolveQuery, resolveReferenceParser, resolveRepositoryModule };

@@ -1,0 +1,15 @@
+Rejects a transaction that has a comment but no description.
+
+========== TEXT ==========
+
+2024-01-29 ; imported
+  Assets:Cash  1 SEK
+  Equity:Opening
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

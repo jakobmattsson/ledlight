@@ -1,9 +1,0 @@
-========== TEXT ==========
-2024-01-01 Opening
-
-  Assets:Cash  1 SEK
-========== ERROR ==========
-{
-  "code": "LEDLIGHT_SYNTAX",
-  "source": "bad.ledger"
-}

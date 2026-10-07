@@ -8,7 +8,7 @@ const test = require('node:test');
 const Database = require('better-sqlite3');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
-  resolveRepositoryModule('src/ingestion/database/database.js');
+  resolveRepositoryModule('src/impl/ingestion/database/database.js');
 
 function fixture(t, options) {
   const { secondDate, totalCosts } = { secondDate: '2024-01-02', totalCosts: false, ...options };

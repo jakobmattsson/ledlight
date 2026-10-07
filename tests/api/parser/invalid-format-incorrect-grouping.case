@@ -1,0 +1,14 @@
+Rejects incorrect digit grouping in a commodity format.
+
+========== TEXT ==========
+
+commodity SEK
+  format 12,34.00 SEK
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

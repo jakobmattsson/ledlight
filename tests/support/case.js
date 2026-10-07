@@ -6,9 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { asValue } = require('awilix');
 const espree = require('espree');
-const { createRepositoryContainer } = require('../../src/composition/repository-container');
-const createReportCommand = require('../../src/cli/modules/report-command');
-const { executeCli } = require('../../src/cli/execute-cli');
+const { createRepositoryContainer } = require('../../src/impl/composition/repository-container');
+const { executeCli } = require('../../src/impl/cli/execute-cli');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],
@@ -227,7 +226,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
     processEnvironment: asValue({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
   });
   const modules = {
-    reportCommand: createReportCommand(container.cradle),
+    reportCommand: container.resolve('reportCommand'),
     cliFormat: container.resolve('cliFormat'),
   };
   const actual = {};

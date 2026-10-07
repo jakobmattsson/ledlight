@@ -1,0 +1,35 @@
+Foreign costs on default-commodity postings are diagnosed at their source.
+
+========== API ==========
+
+balanceHistory({ valuation: 'cost', dateBasis: 'transaction' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity EUR
+  format 1,000.00 EUR
+account Assets:Cash
+account Equity:Opening
+
+2024-01-01 Foreign costs on SEK postings
+  Assets:Cash  100 SEK {2 EUR}
+  Equity:Opening  -200 SEK {1 EUR}
+
+========== OUTPUT ==========
+
+[
+  {
+    "date": "2024-01-01",
+    "amount": "-100",
+    "commodity": "SEK"
+  }
+]
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] A SEK posting cannot have a lot cost in EUR. Amounts in the default commodity are valued at face value.
+  {{JOURNAL_PATH}}:10:3
+  {{JOURNAL_PATH}}:11:3

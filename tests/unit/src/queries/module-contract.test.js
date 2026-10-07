@@ -1,14 +1,14 @@
 'use strict';
 
 const { resolveQuery } = require('../../../support/repository-container');
-const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
+const { createRepositoryContainer } = require('../../../../src/impl/composition/repository-container');
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const queryDirectory = path.resolve(__dirname, '../../../../src/queries');
+const queryDirectory = path.resolve(__dirname, '../../../../src/surface/queries');
 
 test('registers all queries as one immutable dependency', () => {
   const container = createRepositoryContainer();
@@ -34,11 +34,8 @@ test('each query module is exposed through the query collection', () => {
     .sort();
 
   for (const fileName of queryFiles) {
-    const expectedName = {
-      'balance-history.js': 'balanceHistoryReport',
-      'unrealized-gains.js': 'unrealizedGains',
-    }[fileName] ?? fileName.replace(/-([a-z])/gu, (_match, letter) => letter.toUpperCase())
-      .replace(/\.js$/u, '');
+    const expectedName = fileName.replace(/\.js$/u, '')
+      .replace(/-([a-z])/gu, (_match, letter) => letter.toUpperCase());
     const query = resolveQuery(expectedName);
     assert.deepEqual(Object.keys(query).sort(), ['execute', 'inputSchema', 'name']);
     assert.equal(query.name, expectedName);

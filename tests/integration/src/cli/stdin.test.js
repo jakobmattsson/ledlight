@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const cliPath = path.resolve(__dirname, '../../../../src/cli/run.js');
+const cliPath = path.resolve(__dirname, '../../../../src/impl/cli/run.js');
 const source = `commodity SEK
   default
   format 1,000.00 SEK
@@ -66,7 +66,7 @@ test('stdin overrides configuration, explicit paths override stdin, and empty in
   const { run, directory, journalPath, cacheDirectory } = fixture(t);
   const configurationPath = path.join(directory, '.ledlightrc');
   fs.writeFileSync(configurationPath, '--unknown invalid\n');
-  const piped = run(['aggregate', '--value', '--include-total', '--format', 'json']);
+  const piped = run(['aggregate', '--denominate', '--include-total', '--format', 'json']);
   assert.equal(piped.status, 0, piped.stderr);
   assert.equal(JSON.parse(piped.stdout).at(-1).quantity, '20');
   assert.equal(fs.existsSync(cacheDirectory), false, 'stdin must not populate the persistent cache');

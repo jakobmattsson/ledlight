@@ -1,0 +1,14 @@
+Rejects trailing text in a commodity format.
+
+========== TEXT ==========
+
+commodity SEK
+  format 1,000.00 SEK trailing
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

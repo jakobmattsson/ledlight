@@ -1,0 +1,19 @@
+A circular price chain cannot provide a valuation.
+
+========== API ==========
+
+aggregate({ to: '2024-01-01', denominate: true })
+
+========== FILE ==========
+
+commodity SEK
+  default
+P 2024-01-01 FUND 2 NOK
+P 2024-01-01 NOK 0.5 FUND
+2024-01-01 Opening
+  Assets:Fund  1 FUND {1 SEK}
+  Equity:Opening  -1 SEK
+
+========== ERROR ==========
+
+Circular price chain while converting FUND to SEK

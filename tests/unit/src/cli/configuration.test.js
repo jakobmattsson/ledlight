@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createConfiguration = require('../../../../src/cli/cli-configuration');
+const createConfiguration = require('../../../../src/impl/cli/cli-configuration');
 
 function temporaryDirectories(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-configuration-'));

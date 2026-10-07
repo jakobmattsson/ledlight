@@ -1,0 +1,23 @@
+A transfer remains atomic when its postings have different dates.
+
+========== API ==========
+
+balanceHistory({ accounts: ['Assets:'], dateBasis: 'transaction' })
+
+========== FILE ==========
+
+commodity SEK
+  default
+2024-01-02 Internal transfer
+  Assets:Destination  10 SEK
+  Assets:Source  -10 SEK ; [2024-01-01]
+
+========== OUTPUT ==========
+
+[
+  {
+    "date": "2024-01-02",
+    "amount": "0",
+    "commodity": "SEK"
+  }
+]

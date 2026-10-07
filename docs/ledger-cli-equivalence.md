@@ -11,9 +11,9 @@ makes the missing equivalents visible.
 | `commodities --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL commodities` | `commodities` |
 | `prices --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL prices --sort date,account` | `prices` |
 | `transactions --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL print` | `transactions` |
-| `aggregate --value --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --no-total --exchange SEK --flat` | `balance` |
-| `aggregate --value --include-total --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --exchange SEK --flat` | `balance-with-total` |
-| `aggregate --value --invert --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --no-total --exchange SEK --flat --invert` | `balance-inverted` |
+| `aggregate --denominate --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --no-total --exchange SEK --flat` | `balance` |
+| `aggregate --denominate --include-total --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --exchange SEK --flat` | `balance-with-total` |
+| `aggregate --denominate --invert --file JOURNAL` | `ledger --args-only --no-pager --date-format %Y-%m-%d --file JOURNAL balance --no-total --exchange SEK --flat --invert` | `balance-inverted` |
 | `unrealized-gains` | No exact equivalent | — |
 | `balance-history` | No exact equivalent | — |
 | `investment-performance` | No exact equivalent | — |

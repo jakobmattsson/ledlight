@@ -1,27 +1,58 @@
 'use strict';
 
-const { resolveRepositoryModule } = require("../../../support/repository-container");
+const { resolveCommands, resolveRepositoryModule } = require('../../../support/repository-container');
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const cliFormat = resolveRepositoryModule('src/impl/cli/cli-format.js');
 const {
   appendTotal,
-  formatCsv,
-  formatBalanceHistoryCsv,
-  formatBalanceHistoryHumanReadable,
-  formatHumanReadable,
-  formatAggregateText,
-  formatInvestmentPerformance,
-  formatInvestmentPerformanceJson,
-  formatTransactions,
   formatJson,
   formatWarnings,
-  formatAccounts,
-  formatCommodities,
-  formatPrices,
-  formatPostings,
-  formatTags,
-} = resolveRepositoryModule("src/cli/cli-format.js");
+} = cliFormat;
+const commands = new Map(resolveCommands().map((command) => [command.name, command]));
+
+function formatCommand(name, result, cliOptions, descriptions) {
+  const command = commands.get(name);
+  const output = command.prepareOutput
+    ? command.prepareOutput(result, cliOptions, cliFormat)
+    : result;
+  if (cliOptions.format === 'json') return cliFormat.formatJson(output);
+  return cliOptions.format === 'csv'
+    ? command.formatCsv(output, cliOptions, cliFormat)
+    : command.formatText(output, cliOptions, cliFormat, descriptions);
+}
+
+const formatAggregateText = (rows, denominate, descriptions, groupBy) =>
+  formatCommand('aggregate', rows, {
+    format: 'text',
+    denominate,
+    groupBy,
+  }, descriptions);
+const formatCsv = (rows, denominate, groupBy) =>
+  formatCommand('aggregate', rows, { format: 'csv', denominate, groupBy });
+const formatHumanReadable = (rows, denominate, descriptions, groupBy) =>
+  denominate && groupBy !== 'commodity'
+    ? formatCommand('unrealized-gains', rows, { format: 'text' }, descriptions)
+    : formatAggregateText(rows, denominate, descriptions, groupBy);
+const formatBalanceHistoryCsv = (rows) =>
+  formatCommand('balance-history', rows, { format: 'csv' });
+const formatBalanceHistoryHumanReadable = (rows, descriptions) =>
+  formatCommand('balance-history', rows, { format: 'text' }, descriptions);
+const formatInvestmentPerformance = (report, descriptions) =>
+  formatCommand('investment-performance', report, { format: 'text' }, descriptions);
+const formatInvestmentPerformanceJson = (report) =>
+  formatCommand('investment-performance', report, { format: 'json' });
+const formatInvestmentPerformanceCsv = (report) =>
+  formatCommand('investment-performance', report, { format: 'csv' });
+const formatAccounts = (rows, output) => formatCommand('accounts', rows, output);
+const formatCommodities = (rows, output) => formatCommand('commodities', rows, output);
+const formatPostings = (rows, output) => formatCommand('postings', rows, output);
+const formatPrices = (rows, output, descriptions) =>
+  formatCommand('prices', rows, output, descriptions);
+const formatTags = (rows, output) => formatCommand('tags', rows, output);
+const formatTransactions = (report, output, descriptions) =>
+  formatCommand('transactions', report, output, descriptions);
 
 const rows = [
   { account: 'Assets:Cash,Main', quantity: '2.005', commodity: 'SEK' },
@@ -239,6 +270,27 @@ test('formats investment performance for people and automation', () => {
     'Money-weighted return (total): 20.00 %\n' +
     'Money-weighted return (annualized): n/a\n');
   assert.equal(formatInvestmentPerformanceJson(report), `${JSON.stringify(report, null, 2)}\n`);
+});
+
+test('writes one investment performance CSV row with nested API fields', () => {
+  const report = {
+    from: null,
+    to: null,
+    commodities: ['FUND,A'],
+    valuationCommodity: 'USD',
+    openingValue: 0,
+    endingValue: 10,
+    netContributions: 10,
+    profitLoss: 0,
+    timeWeightedReturn: null,
+    moneyWeightedReturn: null,
+    moneyWeightedReturnTotal: null,
+    points: [{ date: '2024-01-01', value: 10 }],
+  };
+  assert.equal(formatInvestmentPerformanceCsv(report),
+    'from,to,commodities,valuationCommodity,openingValue,endingValue,netContributions,' +
+    'profitLoss,timeWeightedReturn,moneyWeightedReturn,moneyWeightedReturnTotal,points\n' +
+    ',,"[""FUND,A""]",USD,0,10,10,0,,,,"[{""date"":""2024-01-01"",""value"":10}]"\n');
 });
 
 test('formats arbitrary API results as readable JSON', () => {

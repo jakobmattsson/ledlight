@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const path = require('node:path');
 const test = require('node:test');
-const createCachePaths = require('../../../../src/core/cache-paths');
+const createCachePaths = require('../../../../src/impl/core/cache-paths');
 
 function cachePaths(settings_) {
   const {

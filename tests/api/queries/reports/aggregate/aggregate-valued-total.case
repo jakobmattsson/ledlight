@@ -1,0 +1,24 @@
+Aggregate valued total formatting.
+
+========== CLI ==========
+
+ledlight aggregate --accounts Assets: --denominate --include-total
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash,Main
+account Assets:LongAccount
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash,Main  2.005 SEK
+  Assets:LongAccount  10000 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+            2.01 SEK  Assets:Cash,Main
+       10,000.00 SEK  Assets:LongAccount
+--------------------
+       10,002.01 SEK

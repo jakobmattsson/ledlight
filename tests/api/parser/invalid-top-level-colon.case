@@ -1,0 +1,16 @@
+Rejects a colon as a top-level comment marker.
+
+========== TEXT ==========
+
+: not a comment
+2024-01-01 Transaction
+  Assets:Cash  1 SEK
+  Equity:Opening
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}
