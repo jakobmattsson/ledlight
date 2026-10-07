@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791323268798,
+  "lastUpdate": 1791366988135,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -350,6 +350,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 7.798435,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8e201832cbbc21ba2a9871358bb9b05eedbc03eb",
+          "message": "Merge pull request #89 from jakobmattsson/cleanup\n\nCleanup",
+          "timestamp": "2026-10-07T11:54:48+02:00",
+          "tree_id": "aeede938afe74198710c95a2b0d0a71644d15618",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/8e201832cbbc21ba2a9871358bb9b05eedbc03eb"
+        },
+        "date": 1791366987505,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 29985.142959,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 6.476091,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 7.341555,
             "unit": "ms"
           }
         ]
