@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791398180763,
+  "lastUpdate": 1791399004523,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -545,6 +545,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 7.053127,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d672a9bf77dd312e27d1423ee99dcbd497901128",
+          "message": "Merge pull request #94 from jakobmattsson/codex/coverage-job-summary-20261007\n\nShow code coverage in GitHub Actions",
+          "timestamp": "2026-10-07T20:49:35+02:00",
+          "tree_id": "f31061cee2ae805c93d7a2da7092284e5ca4f065",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/d672a9bf77dd312e27d1423ee99dcbd497901128"
+        },
+        "date": 1791399003512,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1545.791606,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 7.298352,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 11.051944,
             "unit": "ms"
           }
         ]
