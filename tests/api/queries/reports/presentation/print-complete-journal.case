@@ -14,6 +14,7 @@ commodity SEK ; Local currency
   format 1,000.00 SEK ; Display format
   default
 account Assets:Cash ; Current account
+account Assets:Fund
 account Equity:Opening
 tag project
 include details.ledger
@@ -24,20 +25,27 @@ include details.ledger
 2024-01-02 No movement
   Assets:Cash  0 SEK
   Equity:Opening  -0 SEK
+2024-01-03 Buy
+  Assets:Fund  1 FUND {10 SEK}
+  Assets:Cash  -10 SEK
 
 ========== FILE details.ledger ==========
 
 commodity USD
   format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
 P 2024-01-01 USD 2 SEK ; market rate
 
 ========== OUTPUT ==========
 
 commodity SEK  ; Local currency
-  format 1,000.00 SEK  ; Display format
   default
+  format 1,000.00 SEK
 
 account Assets:Cash  ; Current account
+
+account Assets:Fund
 
 account Equity:Opening
 
@@ -46,13 +54,20 @@ tag project
 commodity USD
   format 1,000.00 USD
 
+commodity FUND
+  format 1,000 FUND
+
 P 2024-01-01 USD 2 SEK  ; market rate
 
 2024-01-01 Opening  ; approved
-    Assets:Cash  10 SEK  ; deposit
+    Assets:Cash     10 SEK  ; deposit
     ; source: bank
     Equity:Opening
 
 2024-01-02 No movement
-    Assets:Cash  0 SEK
-    Equity:Opening  -0 SEK
+    Assets:Cash     0 SEK
+    Equity:Opening  0 SEK
+
+2024-01-03 Buy
+    Assets:Fund  1 FUND {10 SEK}
+    Assets:Cash  -10 SEK

@@ -211,6 +211,11 @@ test('print returns plain journal text and rejects an options argument', (t) => 
   assert.equal(journal.print(), 'account Assets:Cash\n');
   fs.writeFileSync(journalPath, 'account Assets:Changed\n');
   assert.equal(journal.print(), 'account Assets:Cash\n');
+  const Database = require(sqliteModulePath);
+  const database = new Database(journal.databasePath);
+  database.prepare("UPDATE account_declarations SET name = 'Assets:Database'").run();
+  database.close();
+  assert.equal(journal.print(), 'account Assets:Database\n');
   assert.throws(
     () => journal.print({}),
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&

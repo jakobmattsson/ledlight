@@ -25,10 +25,12 @@ The singular `--account` is not supported.
 ### `journal.print()`
 
 Returns a plain string containing a pretty-printed, complete journal. It has
-no options. The output follows the stored entry order, expands included files,
-and contains declarations, price directives, and transactions, including zero
-amounts. It preserves entry comments and transaction notes. Entries rejected
-during ingestion are omitted, consistent with the other journal operations.
+no options. The output is built from the stored journal data, follows entry
+order, expands included files, and contains declarations, price directives,
+and transactions, including zero amounts. It aligns posting amounts, normalizes
+numeric text, and preserves stored comments and transaction notes. Source-only
+details not represented in the database, such as comments on commodity
+properties, are omitted. Entries rejected during ingestion are also omitted.
 The string is empty when the journal has no stored entries.
 
 `ledlight print --file JOURNAL` writes the same string to standard output.

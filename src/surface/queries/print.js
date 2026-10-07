@@ -2,6 +2,7 @@
 
 module.exports = ({
   apiOptions: { parseOptions },
+  journalPrinter: { printJournal },
   publicErrors: { createError, errorCodes },
   zod: { z },
 }) => {
@@ -12,10 +13,7 @@ module.exports = ({
       throw createError(errorCodes.INVALID_API_INPUT, 'print does not accept arguments', TypeError);
     }
     parseOptions(inputSchema, options, 'print');
-    const entries = database.prepare(`
-      SELECT printed_text FROM journal_entries ORDER BY id
-    `).pluck().all();
-    return entries.length === 0 ? '' : `${entries.join('\n\n')}\n`;
+    return printJournal(database);
   }
 
   return { inputSchema, execute: print };
