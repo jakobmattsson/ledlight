@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791389922799,
+  "lastUpdate": 1791394840788,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -428,6 +428,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 10.743189,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "547faf50d88d38da535dc5d7cd79b48893f8cb4c",
+          "message": "Merge pull request #91 from jakobmattsson/codex/coverage-reporting\n\nAdd CI coverage reporting",
+          "timestamp": "2026-10-07T19:40:16+02:00",
+          "tree_id": "6c9b574c67267f2a2876cd95e05fdfaa9b1f1925",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/547faf50d88d38da535dc5d7cd79b48893f8cb4c"
+        },
+        "date": 1791394840143,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1442.561536,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 5.935302,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 7.276737,
             "unit": "ms"
           }
         ]
