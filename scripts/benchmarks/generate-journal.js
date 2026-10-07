@@ -7,6 +7,7 @@ const ACCOUNT_COUNT = 210;
 const TRANSACTION_COUNT = 4500;
 const PRICE_COUNT = 31000;
 const TRADE_COUNT = 800;
+const CONCENTRATED_TRADE_COUNT = 32;
 const SALE_COUNT = 250;
 const CLEARING_ACCOUNT_COUNT = 55;
 const START = Date.UTC(2014, 0, 1);
@@ -84,15 +85,21 @@ function generateJournal(fileName) {
     lines.push('', `${date} Synthetic activity ${index + 1}`);
     if (index < 3650) lines.push(`  ; Tag${index % 7 + 1}: Group${index % 13 + 1}`);
     if (tradeSlots.has(index)) {
-      const unit = instrument(tradeIndex % COMMODITY_COUNT);
+      const concentrated = tradeIndex >= TRADE_COUNT - CONCENTRATED_TRADE_COUNT;
+      const unit = instrument(concentrated ? 0 : tradeIndex % COMMODITY_COUNT);
       const account = `Assets:Holding:${unit}`;
-      const sale = Math.floor(tradeIndex / COMMODITY_COUNT) % 3 === 1 && sales < SALE_COUNT;
+      // Repeated partial sales of one instrument accumulate cost-basis constraints.
+      const tradeCycle = concentrated
+        ? (tradeIndex - (TRADE_COUNT - CONCENTRATED_TRADE_COUNT)) % 3
+        : Math.floor(tradeIndex / COMMODITY_COUNT) % 3;
+      const sale = tradeCycle === 2 && sales < SALE_COUNT;
       if (sale) {
-        lines.push(`  ${account}  -1 ${unit} {100 BASE} @ 110 BASE`,
-          '  Assets:Cash  110 BASE', '  Income:Trading  -10 BASE');
+        lines.push(`  ${account}  -1 ${unit} {105 BASE} @ 110 BASE`,
+          '  Assets:Cash  110 BASE', '  Income:Trading  -5 BASE');
         sales += 1;
       } else {
-        lines.push(`  ${account}  1 ${unit} {100 BASE}`, '  Assets:Cash  -100 BASE');
+        const cost = 100 + 10 * tradeCycle;
+        lines.push(`  ${account}  1 ${unit} {${cost} BASE}`, `  Assets:Cash  -${cost} BASE`);
       }
       tradeIndex += 1;
     } else if (clearingSlots.has(index)) {

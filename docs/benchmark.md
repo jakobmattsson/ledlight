@@ -8,9 +8,10 @@ journal. Pass an output path to write the JSON expected by
 The generator creates approximately 4,500 transactions, 10,400 postings,
 31,000 market prices, 210 accounts, and 45 commodities over six calendar years.
 It includes 800 instrument trades, 250 sales, seven tags, and 55 accounts with
-zero ending balances. All identifiers, dates, descriptions, and amounts are
-synthetic. The journal and its SQLite cache are created in a temporary directory
-and removed after each run.
+zero ending balances. Repeated partial sales against distinct cost lots make the
+primary cold-load measurement exercise constrained cost-basis allocation. All
+identifiers, dates, descriptions, and amounts are synthetic. The journal and
+its SQLite cache are created in a temporary directory and removed after each run.
 
 The runner measures a cold database build, a cached open, and an aggregate
 report separately. Each operation runs three times, and the median is reported.

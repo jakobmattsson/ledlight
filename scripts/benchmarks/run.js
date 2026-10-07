@@ -47,6 +47,13 @@ function verifyFixture(journal, aggregateRows) {
       FROM postings WHERE amount_commodity LIKE 'UNIT%'
     `).get().count;
     assert.equal(trades, TRADE_COUNT);
+    const concentratedSales = database.prepare(`
+      SELECT COUNT(*) AS count FROM postings
+      WHERE account = 'Assets:Holding:UNIT001'
+        AND amount_quantity = '-1'
+        AND lot_cost_quantity = '105'
+    `).get().count;
+    assert.ok(concentratedSales >= 15);
   } finally {
     database.close();
   }
