@@ -2,7 +2,7 @@ Ledlight {
   document = topLevel* end
 
   topLevel
-    = date spacing+ description transactionInlineComment? lineEnd (indentedComment | posting)+               -- transaction
+    = date spacing+ description transactionInlineComment? lineEnd (indentedComment | posting)+            -- transaction
     | "commodity" spacing+ commoditySymbol inlineComment? spacing* lineEnd commodityBody*                 -- commodity
     | "account" spacing+ directiveValue inlineComment? lineEnd                                            -- account
     | "tag" spacing+ directiveValue inlineComment? lineEnd                                                -- tag
