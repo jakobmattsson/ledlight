@@ -49,18 +49,14 @@ module.exports = ({
         'commodity', amount?.commodity, declarations.commodities, posting.location, warnings,
       );
     }
-    for (const comment of posting.comments || []) {
-      for (const tag of comment.tags || []) {
-        warnUnlessDeclared('tag', tag.name, declarations.tags, comment.location, warnings);
-      }
+    for (const tag of posting.tags || []) {
+      warnUnlessDeclared('tag', tag.name, declarations.tags, tag.location || posting.location, warnings);
     }
   }
 
   function validateTransactionDeclarations(transaction, declarations, warnings) {
-    for (const comment of transaction.comments) {
-      for (const tag of comment.tags || []) {
-        warnUnlessDeclared('tag', tag.name, declarations.tags, comment.location, warnings);
-      }
+    for (const tag of transaction.tags || []) {
+      warnUnlessDeclared('tag', tag.name, declarations.tags, tag.location || transaction.location, warnings);
     }
     for (const posting of transaction.postings) {
       validatePostingDeclarations(posting, declarations, warnings);

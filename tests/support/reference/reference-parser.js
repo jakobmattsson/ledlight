@@ -30,14 +30,27 @@ module.exports = ({
     return node.children.map((child) => child.ast(source));
   }
 
-  function comment(text, tags, where) {
-    const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
+  function comment(text, where) {
     return {
       text,
-      key: valueTag ? valueTag.name : null,
-      value: valueTag ? valueTag.value : null,
-      ...(tags.length > 0 ? { tags } : {}),
+      key: null,
+      value: null,
       location: where,
+    };
+  }
+
+  function parsedComment(text, tags, where) {
+    const binary = tags.length > 0 && tags[0].value === null;
+    const remainingText = binary
+      ? text.replace(/^:[^\s:;]+(?::[^\s:;]+)*:(?:[ \t]+)?/u, '').trim()
+      : tags.length > 0 ? '' : text;
+    const locatedTags = tags.map((tag) => {
+      Object.defineProperty(tag, 'location', { value: where });
+      return tag;
+    });
+    return {
+      comment: tags.length > 0 && !remainingText ? null : comment(remainingText, where),
+      tags: locatedTags,
     };
   }
 
@@ -71,19 +84,17 @@ module.exports = ({
         date: date.ast(source),
         description: text,
         postings: [],
-        comments: headerComment ? [headerComment] : [],
+        comments: headerComment?.comment ? [headerComment.comment] : [],
         location: location(date, source),
       };
-      if (headerComment?.tags) transaction.tags = [...headerComment.tags];
+      if (headerComment?.tags.length > 0) transaction.tags = [...headerComment.tags];
       for (const item of items) {
         if (item.type === 'posting') {
           transaction.postings.push(item);
         } else {
           const owner = transaction.postings.at(-1) || transaction;
-          const currentComment = { ...item };
-          delete currentComment.type;
-          owner.comments.push(currentComment);
-          if (currentComment.tags) owner.tags = [...(owner.tags || []), ...currentComment.tags];
+          if (item.comment) owner.comments.push(item.comment);
+          if (item.tags.length > 0) owner.tags = [...(owner.tags || []), ...item.tags];
         }
       }
       if (transaction.postings.length === 0) {
@@ -107,7 +118,7 @@ module.exports = ({
         ...expression,
         postingDate: inlineComment ? inlineComment.date : null,
         comments: inlineComment?.comment ? [inlineComment.comment] : [],
-        ...(inlineComment?.comment?.tags ? { tags: inlineComment.comment.tags } : {}),
+        ...(inlineComment?.tags.length > 0 ? { tags: inlineComment.tags } : {}),
         location: location(account, this.args.source),
       };
     },
@@ -199,14 +210,9 @@ module.exports = ({
     indentedComment(_indent, marker, _space, metadata, _lineEnd) {
       const tags = metadata.ast(this.args.source);
       const value = metadata.sourceString.trim();
-      const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
       return {
         type: 'comment',
-        text: value,
-        key: valueTag ? valueTag.name : null,
-        value: valueTag ? valueTag.value : null,
-        ...(tags.length > 0 ? { tags } : {}),
-        location: location(marker, this.args.source),
+        ...parsedComment(value, tags, location(marker, this.args.source)),
       };
     },
     topLevel_comment(semicolon, _space, text, _lineEnd) {
@@ -221,13 +227,13 @@ module.exports = ({
       const text = metadata.sourceString.trim();
       return {
         date: postingDate,
-        comment: postingDate && !text ? null : comment(
-          text, tags, location(_semicolon, this.args.source),
-        ),
+        ...(postingDate && !text
+          ? { comment: null, tags: [] }
+          : parsedComment(text, tags, location(_semicolon, this.args.source))),
       };
     },
     transactionInlineComment(_space1, _semicolon, _space2, metadata) {
-      return comment(this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
+      return parsedComment(this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
         metadata.ast(this.args.source), location(_semicolon, this.args.source));
     },
     inlineComment(_space1, _semicolon, _space2, text) { return text.sourceString.trim(); },

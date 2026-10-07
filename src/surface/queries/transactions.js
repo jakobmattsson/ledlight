@@ -166,6 +166,25 @@ module.exports = ({
           ORDER BY postings.transaction_id, postings.position, comments.position
         `).all(...ids);
       });
+      const transactionTagRows = batches.flatMap((ids) => {
+        const placeholders = ids.map(() => '?').join(', ');
+        return database.prepare(`
+          SELECT transaction_id AS transactionId, position, name, value
+          FROM tags
+          WHERE transaction_id IN (${placeholders})
+          ORDER BY transaction_id, position, ordinal
+        `).all(...ids);
+      });
+      const postingTagRows = batches.flatMap((ids) => {
+        const placeholders = ids.map(() => '?').join(', ');
+        return database.prepare(`
+          SELECT tags.posting_id AS postingId, tags.position, tags.name, tags.value
+          FROM postings
+          JOIN tags ON tags.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, tags.position, tags.ordinal
+        `).all(...ids);
+      });
       const postingsById = new Map(transactions.flatMap((transaction) =>
         transaction.postings.map((posting) => [posting.id, posting])));
       for (const row of [...transactionCommentRows, ...postingCommentRows]) {
@@ -178,6 +197,18 @@ module.exports = ({
           Object.defineProperty(owner, 'positionedComments', { value: [] });
         }
         owner.positionedComments.push({ position: row.position, text: row.text });
+      }
+      for (const row of [...transactionTagRows, ...postingTagRows]) {
+        const owner = row.postingId === undefined
+          ? byId.get(row.transactionId)
+          : postingsById.get(row.postingId);
+        if (!owner) continue;
+        if (!owner.tags) owner.tags = [];
+        owner.tags.push({ name: row.name, value: row.value });
+        if (!Object.hasOwn(owner, 'positionedTags')) {
+          Object.defineProperty(owner, 'positionedTags', { value: [] });
+        }
+        owner.positionedTags.push({ position: row.position, name: row.name, value: row.value });
       }
     }
     return {
@@ -194,12 +225,22 @@ module.exports = ({
                 value: transaction.postings[index].positionedComments,
               });
             }
+            if (Object.hasOwn(transaction.postings[index], 'positionedTags')) {
+              Object.defineProperty(posting, 'positionedTags', {
+                value: transaction.postings[index].positionedTags,
+              });
+            }
             return posting;
           }),
         };
         if (Object.hasOwn(transaction, 'positionedComments')) {
           Object.defineProperty(result, 'positionedComments', {
             value: transaction.positionedComments,
+          });
+        }
+        if (Object.hasOwn(transaction, 'positionedTags')) {
+          Object.defineProperty(result, 'positionedTags', {
+            value: transaction.positionedTags,
           });
         }
         return result;

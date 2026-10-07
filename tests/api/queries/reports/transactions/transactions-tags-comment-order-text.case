@@ -1,0 +1,38 @@
+Transaction text preserves the source order of tags and comments on transaction and posting lines.
+
+========== CLI ==========
+
+ledlight transactions
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+tag Reviewed
+tag Imported
+tag Category
+tag Receipt
+
+2024-01-01 Tagged ; :Reviewed:Imported: header note
+  ; first comment
+  ; Category: books
+  ; second comment
+  Assets:Cash  10 SEK ; :Receipt: card
+  ; posting comment one
+  ; :Imported: follow-up note
+  ; posting comment two
+  Equity:Opening  -10 SEK
+
+========== OUTPUT ==========
+
+2024-01-01 Tagged ; :Reviewed:Imported: header note
+    ; first comment
+    ; Category: books
+    ; second comment
+    Assets:Cash                               10 SEK  ; :Receipt: card
+    ; posting comment one
+    ; :Imported: follow-up note
+    ; posting comment two
+    Equity:Opening

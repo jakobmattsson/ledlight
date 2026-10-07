@@ -25,9 +25,11 @@ module.exports = ({ cliOptions: options }) => ({
           transactionDate: transaction.transactionDate,
           description: transaction.description,
           transactionComments: JSON.stringify(transaction.comments),
+          transactionTags: JSON.stringify(transaction.tags || []),
           postingDate: posting.postingDate,
           account: posting.account,
           postingComments: JSON.stringify(posting.comments),
+          postingTags: JSON.stringify(posting.tags || []),
           quantity: amount.quantity,
           commodity: amount.commodity,
         }))));
@@ -36,7 +38,8 @@ module.exports = ({ cliOptions: options }) => ({
     function formatTransactionsCsv(report) {
       const fields = [
         'transactionId', 'transactionDate', 'description', 'transactionComments',
-        'postingDate', 'account', 'postingComments', 'quantity', 'commodity',
+        'transactionTags', 'postingDate', 'account', 'postingComments', 'postingTags',
+        'quantity', 'commodity',
       ];
       const lines = [fields.join(',')];
       for (const row of transactionRows(report)) {
@@ -123,6 +126,35 @@ module.exports = ({ cliOptions: options }) => ({
     }
 
     function formatTransactionsText(report, descriptions) {
+      const formatTag = ({ name, value }) => value === null
+        ? `:${name}:` : `${name}: ${value}`;
+      function metadataLines(owner) {
+        const comments = owner.positionedComments ??
+          owner.comments.map((text, index) => ({ position: index + 1, text }));
+        const lastCommentPosition = Math.max(0, ...comments.map(({ position }) => position));
+        const tags = owner.positionedTags ??
+          (owner.tags || []).map((tag, index) => ({
+            ...tag, position: lastCommentPosition + index + 1,
+          }));
+        const byPosition = new Map();
+        for (const { position, text } of comments) {
+          byPosition.set(position, { comment: text, tags: [] });
+        }
+        for (const tag of tags) {
+          if (!byPosition.has(tag.position)) byPosition.set(tag.position, { tags: [] });
+          byPosition.get(tag.position).tags.push(tag);
+        }
+        return [...byPosition].sort(([left], [right]) => left - right)
+          .map(([position, { comment, tags: lineTags }]) => {
+            const tagText = lineTags.length > 0 && lineTags.every(({ value }) => value === null)
+              ? `:${lineTags.map(({ name }) => name).join(':')}:`
+              : lineTags.map(formatTag).join(' ');
+            return {
+              position,
+              text: [tagText, comment].filter((part) => part !== undefined && part !== '').join(' '),
+            };
+          });
+      }
       const accountColumnWidth = 34;
       const amountColumnWidth = 12;
       const maximumPostingLineWidth = 61;
@@ -131,16 +163,15 @@ module.exports = ({ cliOptions: options }) => ({
       for (const transaction of report.transactions) {
         const date = transaction.transactionDate;
         const header = `${date} ${transaction.description}`;
-        const transactionComments = transaction.positionedComments ??
-          transaction.comments.map((text) => ({ position: 1, text }));
-        const inlineTransactionComment = transactionComments.find((comment) => comment.position === 0)?.text;
+        const transactionMetadata = metadataLines(transaction);
+        const inlineTransactionComment = transactionMetadata.find((item) => item.position === 0)?.text;
         const inlineHeader = inlineTransactionComment === undefined ? '' : ` ; ${inlineTransactionComment}`;
         const wrapHeaderComment = inlineTransactionComment !== undefined &&
           `${header}${inlineHeader}`.length > 80;
         lines.push(`${header}${wrapHeaderComment ? '' : inlineHeader}`);
         if (wrapHeaderComment) lines.push(`    ; ${inlineTransactionComment}`);
-        for (const comment of transactionComments) {
-          if (comment.position !== 0) lines.push(`    ; ${comment.text}`);
+        for (const item of transactionMetadata) {
+          if (item.position !== 0) lines.push(`    ; ${item.text}`);
         }
         const canElideAmount = transaction.postings.length === 2 &&
           transaction.postings.every((posting) =>
@@ -158,9 +189,8 @@ module.exports = ({ cliOptions: options }) => ({
           ? implicitPostingIndexes.length === 1 ? implicitPostingIndexes[0] : 1
           : -1;
         transaction.postings.forEach((posting, index) => {
-          const postingComments = posting.positionedComments ??
-            posting.comments.map((text) => ({ position: 1, text }));
-          const inlinePostingComment = postingComments.find((comment) => comment.position === 0)?.text;
+          const postingMetadata = metadataLines(posting);
+          const inlinePostingComment = postingMetadata.find((item) => item.position === 0)?.text;
           const postingDateMarker = posting.postingDate && posting.postingDate !== date
             ? `[${posting.postingDate}]` : null;
           const inlinePostingMetadata = postingDateMarker === null
@@ -195,8 +225,8 @@ module.exports = ({ cliOptions: options }) => ({
           const postingComment = wrapPostingComment ? '' : inlineComment;
           lines.push(`    ${body}${postingComment}`);
           if (wrapPostingComment) lines.push(`    ; ${inlinePostingMetadata}`);
-          for (const comment of postingComments) {
-            if (comment.position !== 0) lines.push(`    ; ${comment.text}`);
+          for (const item of postingMetadata) {
+            if (item.position !== 0) lines.push(`    ; ${item.text}`);
           }
         });
         lines.push('');

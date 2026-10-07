@@ -127,24 +127,7 @@ P 2024-01-01 FUND 123.45 SEK ; closing
           }
         }
       ],
-      "comments": [
-        {
-          "text": "Source: statement.csv:4",
-          "key": "Source",
-          "value": "statement.csv:4",
-          "tags": [
-            {
-              "name": "Source",
-              "value": "statement.csv:4"
-            }
-          ],
-          "location": {
-            "source": "fixture.ledger",
-            "line": 9,
-            "column": 3
-          }
-        }
-      ],
+      "comments": [],
       "location": {
         "source": "fixture.ledger",
         "line": 8,

@@ -39,8 +39,7 @@ account Expenses:Shop
       "transactionDate": "2024-01-03",
       "description": "Shop | Third",
       "comments": [
-        "imported",
-        "Project: Home"
+        "imported"
       ],
       "postings": [
         {
@@ -79,6 +78,12 @@ account Expenses:Shop
               "commodity": "SEK"
             }
           ]
+        }
+      ],
+      "tags": [
+        {
+          "name": "Project",
+          "value": "Home"
         }
       ]
     }

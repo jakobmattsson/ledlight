@@ -48,24 +48,7 @@ Parses annotated postings, costs, balance assignments, and assertions.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": "2024-03-02",
-          "comments": [
-            {
-              "text": "Origin: broker",
-              "key": "Origin",
-              "value": "broker",
-              "tags": [
-                {
-                  "name": "Origin",
-                  "value": "broker"
-                }
-              ],
-              "location": {
-                "source": "fixture.ledger",
-                "line": 3,
-                "column": 46
-              }
-            }
-          ],
+          "comments": [],
           "tags": [
             {
               "name": "Origin",
@@ -121,22 +104,6 @@ Parses annotated postings, costs, balance assignments, and assertions.
         }
       ],
       "comments": [
-        {
-          "text": "Header: sale",
-          "key": "Header",
-          "value": "sale",
-          "tags": [
-            {
-              "name": "Header",
-              "value": "sale"
-            }
-          ],
-          "location": {
-            "source": "fixture.ledger",
-            "line": 1,
-            "column": 21
-          }
-        },
         {
           "text": "Generated-ID trade-2",
           "key": null,

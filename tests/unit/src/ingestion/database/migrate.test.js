@@ -31,6 +31,7 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(tables.includes('journal_entries'));
   assert.ok(!tables.includes('transaction_tags'));
   assert.ok(!tables.includes('posting_tags'));
+  assert.ok(tables.includes('tags'));
   assert.ok(!tables.includes('commodity_properties'));
   assert.ok(tables.includes('comments'));
   assert.ok(tables.includes('file_comments'));
@@ -60,6 +61,10 @@ test('creates the current schema in an empty database', (t) => {
   assert.ok(!postingColumns.some((column) => column.startsWith('balance_assignment_')));
   assert.ok(!postingColumns.some((column) => column.startsWith('balance_assertion_')));
   assert.ok(!database.pragma('table_info(comments)').some((column) => column.name === 'line'));
+  assert.deepEqual(
+    database.pragma('table_info(tags)').map((column) => column.name),
+    ['id', 'transaction_id', 'posting_id', 'position', 'ordinal', 'name', 'value'],
+  );
   assert.deepEqual(
     database.pragma('table_info(file_comments)').map((column) => column.name),
     ['entry_id', 'text'],
@@ -288,6 +293,34 @@ test('replaces version 33 resolved amounts with consistently named columns', (t)
     database.pragma('table_info(resolved_posting_amounts)').map((column) => column.name),
     ['id', 'posting_id', 'position', 'amount_quantity', 'amount_commodity', 'balance_quantity'],
   );
+});
+
+test('replaces version 34 caches with separate transaction and posting tags', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '34');
+    CREATE TABLE comments (id INTEGER PRIMARY KEY, text TEXT NOT NULL);
+    INSERT INTO comments (id, text) VALUES (1, ':Reviewed:');
+  `);
+
+  migrateDatabase(database);
+
+  assert.equal(database.prepare('SELECT COUNT(*) FROM comments').pluck().get(), 0);
+  assert.ok(database.pragma('table_info(tags)').some((column) => column.name === 'name'));
+});
+
+test('replaces version 35 caches with tag positions shared with comments', (t) => {
+  const database = temporaryDatabase(t);
+  database.exec(`
+    CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
+    INSERT INTO database_metadata (key, value) VALUES ('schema_version', '35');
+    CREATE TABLE tags (id INTEGER PRIMARY KEY, position INTEGER NOT NULL, name TEXT NOT NULL);
+  `);
+
+  migrateDatabase(database);
+
+  assert.ok(database.pragma('table_info(tags)').some((column) => column.name === 'ordinal'));
 });
 
 test('rejects unsupported schema versions', (t) => {

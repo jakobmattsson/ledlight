@@ -42,8 +42,7 @@ tag Receipt
           "postingDate": "2024-01-01",
           "account": "Expenses:Food",
           "comments": [
-            "expense inline",
-            "Receipt: 1234"
+            "expense inline"
           ],
           "amount": {
             "quantity": "100",
@@ -57,6 +56,12 @@ tag Receipt
             {
               "quantity": "100",
               "commodity": "SEK"
+            }
+          ],
+          "tags": [
+            {
+              "name": "Receipt",
+              "value": "1234"
             }
           ]
         },

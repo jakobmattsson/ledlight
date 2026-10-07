@@ -105,6 +105,19 @@ CREATE TABLE IF NOT EXISTS comments (
   UNIQUE (posting_id, position)
 );
 
+CREATE TABLE IF NOT EXISTS tags (
+  id INTEGER PRIMARY KEY,
+  transaction_id INTEGER REFERENCES transactions(entry_id) ON DELETE CASCADE,
+  posting_id INTEGER REFERENCES postings(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL,
+  ordinal INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  value TEXT,
+  CHECK ((transaction_id IS NULL) != (posting_id IS NULL)),
+  UNIQUE (transaction_id, position, ordinal),
+  UNIQUE (posting_id, position, ordinal)
+);
+
 -- ============================================================================
 -- Derived data from parsing, validation, and valuation
 -- ============================================================================

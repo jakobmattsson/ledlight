@@ -112,6 +112,7 @@ module.exports = ({
     if (postings.length > 0) {
       const transactionIds = [...new Set(postings.map(({ transactionId }) => transactionId))];
       const commentsByTransaction = new Map(transactionIds.map((id) => [id, []]));
+      const tagsByTransaction = new Map(transactionIds.map((id) => [id, []]));
       for (let offset = 0; offset < transactionIds.length; offset += 500) {
         const ids = transactionIds.slice(offset, offset + 500);
         const placeholders = ids.map(() => '?').join(', ');
@@ -132,9 +133,33 @@ module.exports = ({
           ORDER BY postings.transaction_id, postings.position, comments.position
         `).all(...ids);
         for (const comment of postingComments) byId.get(comment.postingId)?.postingComments.push(comment.text);
+        const transactionTags = database.prepare(`
+          SELECT transaction_id AS transactionId, name, value
+          FROM tags
+          WHERE transaction_id IN (${placeholders})
+          ORDER BY transaction_id, position, ordinal
+        `).all(...ids);
+        for (const tag of transactionTags) {
+          tagsByTransaction.get(tag.transactionId).push({ name: tag.name, value: tag.value });
+        }
+        const postingTags = database.prepare(`
+          SELECT tags.posting_id AS postingId, tags.name, tags.value
+          FROM postings
+          JOIN tags ON tags.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, tags.position, tags.ordinal
+        `).all(...ids);
+        for (const tag of postingTags) {
+          const posting = byId.get(tag.postingId);
+          if (!posting) continue;
+          if (!posting.postingTags) posting.postingTags = [];
+          posting.postingTags.push({ name: tag.name, value: tag.value });
+        }
       }
       for (const posting of postings) {
         posting.transactionComments = [...commentsByTransaction.get(posting.transactionId)];
+        const transactionTags = tagsByTransaction.get(posting.transactionId);
+        if (transactionTags.length > 0) posting.transactionTags = [...transactionTags];
       }
     }
     return postings;

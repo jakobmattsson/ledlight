@@ -53,6 +53,10 @@ module.exports = ({
       INSERT INTO comments (transaction_id, posting_id, position, text)
       VALUES (?, ?, ?, ?)
     `),
+      entryTag: database.prepare(`
+      INSERT INTO tags (transaction_id, posting_id, position, ordinal, name, value)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `),
       resolvedPostingAmount: database.prepare(`
       INSERT INTO resolved_posting_amounts (id, posting_id, position, amount_quantity, amount_commodity)
       VALUES (?, ?, ?, ?, ?)
@@ -76,10 +80,20 @@ module.exports = ({
   }
 
   function insertComments(statement, comments, ownerLine, transactionId, postingId) {
-    let followingPosition = 1;
     for (const comment of comments) {
-      const position = comment.location.line === ownerLine ? 0 : followingPosition++;
+      const position = comment.location.line - ownerLine;
       statement.run(transactionId, postingId, position, comment.text);
+    }
+  }
+
+  function insertTags(statement, tags, ownerLine, transactionId, postingId) {
+    let previousPosition = -1;
+    let ordinal = 0;
+    for (const tag of tags) {
+      const position = tag.location.line - ownerLine;
+      ordinal = position === previousPosition ? ordinal + 1 : 0;
+      statement.run(transactionId, postingId, position, ordinal, tag.name, tag.value);
+      previousPosition = position;
     }
   }
 
@@ -89,6 +103,7 @@ module.exports = ({
     );
 
     insertComments(statements.comment, entry.comments, entry.location.line, entryId, null);
+    insertTags(statements.entryTag, entry.tags || [], entry.location.line, entryId, null);
 
     entry.postings.forEach((posting, position) => {
       const amount = amountFields(posting.amount);
@@ -104,6 +119,7 @@ module.exports = ({
         balance.quantity, balance.commodity,
       );
       insertComments(statements.comment, posting.comments, posting.location.line, null, postingId);
+      insertTags(statements.entryTag, posting.tags || [], posting.location.line, null, postingId);
       resolvedPostings[position].forEach((resolvedAmount, amountPosition) => {
         statements.resolvedPostingAmount.run(
           ++counters.resolvedAmount, postingId, amountPosition,

@@ -43,24 +43,7 @@ Parses transaction and posting tags from comments.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comments": [
-            {
-              "text": "Receipt: 1234",
-              "key": "Receipt",
-              "value": "1234",
-              "tags": [
-                {
-                  "name": "Receipt",
-                  "value": "1234"
-                }
-              ],
-              "location": {
-                "source": "fixture.ledger",
-                "line": 3,
-                "column": 22
-              }
-            }
-          ],
+          "comments": [],
           "tags": [
             {
               "name": "Receipt",
@@ -87,15 +70,9 @@ Parses transaction and posting tags from comments.
           "postingDate": null,
           "comments": [
             {
-              "text": ":balanced: complete",
+              "text": "complete",
               "key": null,
               "value": null,
-              "tags": [
-                {
-                  "name": "balanced",
-                  "value": null
-                }
-              ],
               "location": {
                 "source": "fixture.ledger",
                 "line": 4,
@@ -118,39 +95,13 @@ Parses transaction and posting tags from comments.
       ],
       "comments": [
         {
-          "text": ":reviewed:imported: bank statement",
+          "text": "bank statement",
           "key": null,
           "value": null,
-          "tags": [
-            {
-              "name": "reviewed",
-              "value": null
-            },
-            {
-              "name": "imported",
-              "value": null
-            }
-          ],
           "location": {
             "source": "fixture.ledger",
             "line": 1,
             "column": 19
-          }
-        },
-        {
-          "text": "Source: bank export",
-          "key": "Source",
-          "value": "bank export",
-          "tags": [
-            {
-              "name": "Source",
-              "value": "bank export"
-            }
-          ],
-          "location": {
-            "source": "fixture.ledger",
-            "line": 2,
-            "column": 3
           }
         }
       ],

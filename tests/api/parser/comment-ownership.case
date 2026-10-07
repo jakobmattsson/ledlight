@@ -41,22 +41,6 @@ Assigns indented comments to the preceding posting and preserves inline comments
                 "line": 3,
                 "column": 26
               }
-            },
-            {
-              "text": "Receipt: 1234",
-              "key": "Receipt",
-              "value": "1234",
-              "tags": [
-                {
-                  "name": "Receipt",
-                  "value": "1234"
-                }
-              ],
-              "location": {
-                "source": "fixture.ledger",
-                "line": 4,
-                "column": 3
-              }
             }
           ],
           "location": {

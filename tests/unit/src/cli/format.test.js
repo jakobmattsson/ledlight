@@ -458,12 +458,12 @@ test('formats paginated transactions as Ledger-like text, JSON, and flat CSV', (
   );
   assert.equal(
     formatTransactions(report, { format: 'csv' }),
-    'transactionId,transactionDate,description,transactionComments,postingDate,account,' +
-    'postingComments,quantity,commodity\n' +
+    'transactionId,transactionDate,description,transactionComments,transactionTags,postingDate,' +
+    'account,postingComments,postingTags,quantity,commodity\n' +
     '7,2024-01-03,Shop | Groceries,"[""imported"",""Project: Home""]",' +
-    '2024-01-03,Assets:Cash,"[""card""]",-5,SEK\n' +
+    '[],2024-01-03,Assets:Cash,"[""card""]",[],-5,SEK\n' +
     '7,2024-01-03,Shop | Groceries,"[""imported"",""Project: Home""]",' +
-    '2024-01-03,Expenses:Food,[],5,SEK\n',
+    '[],2024-01-03,Expenses:Food,[],[],5,SEK\n',
   );
   assert.equal(
     formatTransactions(report, { format: 'json' }),
@@ -506,13 +506,14 @@ test('formats complete posting rows as text, JSON, and flat CSV', () => {
   assert.equal(
     formatPostings(postings, { format: 'csv' }),
     'postingId,transactionId,transactionDate,description,' +
-    'transactionComments,postingDate,account,postingComments,amountQuantity,amountCommodity,' +
+    'transactionComments,transactionTags,postingDate,account,postingComments,postingTags,' +
+    'amountQuantity,amountCommodity,' +
     'lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,' +
     'balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,' +
     'balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance,' +
     'filename,transactionSourceLine\n' +
-    '8,7,2024-01-02,"Buy, fund","[""imported"",""Project: Savings""]",2024-01-03,' +
-    'Assets:Fund,"[""broker""]",10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25,' +
+    '8,7,2024-01-02,"Buy, fund","[""imported"",""Project: Savings""]",[],2024-01-03,' +
+    'Assets:Fund,"[""broker""]",[],10,FUND,10,SEK,false,100,SEK,true,,,10,FUND,10,FUND,25,' +
     '"/books/included, journal.ledger",12\n',
   );
   assert.match(

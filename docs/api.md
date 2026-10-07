@@ -116,11 +116,14 @@ Commodity `properties` is an array of `{ name, value, comment, location }`;
 `tags`. The amount, balance assignment, and balance assertion fields are an
 amount or `null`. `lotCost` and `cost` are `{ total: boolean, amount }` or
 `null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A comment
-is `{ text, key, value, location }`, plus optional `tags`; `key` and `value`
-are strings or `null`. A comment on the transaction or posting line becomes
+is `{ text, key, value, location }`; `key` and `value` are `null`.
+A comment on the transaction or posting line becomes
 its first comment. An indented comment before the first posting belongs to the
 transaction; one after a posting belongs to that posting. Tags are
-`{ name, value }`, where `value` may be `null`.
+`{ name, value }`, where `value` may be `null`. Tag syntax is extracted from
+comments: a tag-only line creates no comment, and text following binary tags
+remains a comment. Transaction and posting `tags` arrays are present when tags
+were parsed.
 An inline posting date such as `[2024-01-03]` sets `postingDate` and is excluded
 from the posting's comments. A date-only marker creates no comment.
 Top-level semicolon comments are separate `comment` entries in source order.
@@ -438,7 +441,8 @@ page (or page `1` for an empty result).
 The result always contains `order`, `totalTransactions`, and `transactions`.
 Paginated results additionally contain the selected `page`, `pageSize`, and
 `totalPages`. Transactions and their postings each include ordered `comments`
-arrays of text. Postings retain their nullable source `amount`, lot
+arrays of text and optional ordered `tags` arrays of `{ name, value }` objects.
+Tag syntax is excluded from comment text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
@@ -446,9 +450,12 @@ The `transactions` CLI command defaults to
 `--format text` and prints every matching transaction. Its repeatable `--accounts PATTERN` option selects transactions
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the matching transactions or the requested page.
+Text output preserves the relative order of comments and tags, including
+metadata written on the transaction or posting line.
 `--format json` returns the complete API result, while `--format csv`
-returns one row per posting amount with transaction and posting comments encoded
-as JSON arrays in `transactionComments` and `postingComments` columns.
+returns one row per posting amount with transaction and posting comments and tags
+encoded as JSON arrays in separate `transactionComments`, `postingComments`,
+`transactionTags`, and `postingTags` columns.
 
 ### `journal.postings({ from, to, accounts })`
 
@@ -458,10 +465,12 @@ is an array of patterns matched against the posting account; an empty array
 selects every account.
 
 Each result contains `postingId`, `postingDate`, `account`, ordered `postingComments`,
+and optional ordered `transactionTags` and `postingTags` arrays of `{ name, value }` objects.
 the nullable source `amount`, lot cost, transaction cost, balance assignment,
 and balance assertion, and every resolved amount. It also contains the parent
 transaction's `transactionId`, `transactionDate`, `description`,
-and ordered `transactionComments`. `filename` identifies the
+and ordered `transactionComments`. Tag syntax is excluded from comment text.
+`filename` identifies the
 source file containing the transaction, including when it was loaded through an
 `include`. `transactionSourceLine` is the one-based line number of the transaction
 header in that file, not the posting line.
@@ -474,7 +483,8 @@ the journal database is rebuilt.
 The `postings` CLI command supports the same filters and defaults to `--format
 text`. `--format json` preserves the nested API result. `--format csv` emits one
 row per resolved amount and includes every source annotation as separate
-columns, including `filename` and `transactionSourceLine`. Text output also
+columns, including `transactionTags`, `postingTags`, `filename`, and
+`transactionSourceLine`. Text output also
 includes both source fields.
 
 For reconciliation, use the resolved `amounts` rather than the nullable source

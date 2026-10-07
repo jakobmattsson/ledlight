@@ -119,11 +119,20 @@ P 2024-01-01 FUND 123.45 SEK
       FROM comments ORDER BY id
     `).all(),
     [
-      { transaction_comment: 1, position: 0, text: ':imported: bank statement' },
-      { transaction_comment: 1, position: 1, text: 'Source: statement.csv:4' },
-      { transaction_comment: 0, position: 0, text: 'Receipt: 1234' },
+      { transaction_comment: 1, position: 0, text: 'bank statement' },
       { transaction_comment: 0, position: 1, text: 'Imported from the bank statement' },
-      { transaction_comment: 0, position: 0, text: ':balanced:' },
+    ],
+  );
+  assert.deepEqual(
+    database.prepare(`
+      SELECT transaction_id IS NOT NULL AS transaction_tag, position, ordinal, name, value
+      FROM tags ORDER BY id
+    `).all(),
+    [
+      { transaction_tag: 1, position: 0, ordinal: 0, name: 'imported', value: null },
+      { transaction_tag: 1, position: 1, ordinal: 0, name: 'Source', value: 'statement.csv:4' },
+      { transaction_tag: 0, position: 0, ordinal: 0, name: 'Receipt', value: '1234' },
+      { transaction_tag: 0, position: 0, ordinal: 0, name: 'balanced', value: null },
     ],
   );
   assert.deepEqual(
