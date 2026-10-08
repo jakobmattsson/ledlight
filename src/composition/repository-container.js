@@ -8,7 +8,7 @@ const {
   InjectionMode,
   listModules,
   Lifetime,
-} = require('awilix');
+} = require('../lib/awilix');
 const {
   addUniqueName,
   listUniqueModules,

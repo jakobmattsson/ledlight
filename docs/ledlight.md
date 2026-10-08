@@ -282,16 +282,18 @@ The project builds journal operations and API input definitions from the query
 modules. The CLI runner invokes each command's declared API operation and passes
 its result to the command's formatting step. Commands declare how to load any
 additional data needed for text output.
-Awilix supplies each repository factory through a boundary-checking proxy. Code
-outside `cli` cannot resolve CLI modules, and `ingestion` cannot resolve modules
-from `queries`. The complete container is resolved in a unit test so violations
-fail the verification suite even when the affected feature is not otherwise
-exercised. Repository factories use unique lowercase kebab-case filenames;
-Awilix `loadModules` converts each basename to its camel-case dependency name.
-`src/composition/module-container.js` handles the reusable Awilix loading and
-factory checks. `src/composition/repository-container.js` defines this project's
-module paths, dependency boundaries, external services, and query and command
-contracts. Every JavaScript file under `src/impl` is an Awilix factory. The
+The local Awilix subset supplies each repository factory through a
+boundary-checking proxy. Code outside `cli` cannot resolve CLI modules, and
+`ingestion` cannot resolve modules from `queries`. The complete container is
+resolved in a unit test so violations fail the verification suite even when the
+affected feature is not otherwise exercised. Repository factories use unique
+lowercase kebab-case filenames; the subset converts each basename to its
+camel-case dependency name.
+`src/lib/awilix.js` implements the container and module discovery APIs used here.
+`src/composition/module-container.js` handles reusable module
+loading and factory checks. `src/composition/repository-container.js` defines
+this project's module paths, dependency boundaries, external services, and query
+and command contracts. Every JavaScript file under `src/impl` is a factory. The
 `src/run.js` executable creates the container and invokes its
 registered `runCli` module. An injectable `processRuntime` adapter supplies the
 process ID, command-line arguments, and exit-code setter.

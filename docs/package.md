@@ -29,12 +29,14 @@ result types are defined by the Node.js API reference.
 
 ## Node.js and native platform support
 
-Ledlight 0.1 supports Node.js 22.12 and later 22.x releases. The package uses
-`better-sqlite3` 11.7.0,
-so installation also requires a platform supported by that dependency. Its
-prebuilt binaries are preferred. On a platform without a matching prebuilt
-binary, installation requires the compiler and system tooling needed by
-`node-gyp`.
+Ledlight 0.1 supports Node.js 22.14 and later 22.x releases. The package uses
+`better-sqlite3` 13.0.3. Earlier Node.js 22 releases can crash when opening a
+database with that version on some platforms; see the
+[upstream issue](https://github.com/WiseLibs/better-sqlite3/issues/1514).
+Installation also requires a platform supported by that dependency. Its bundled
+prebuilt binaries are used when available. On a platform without a matching
+prebuilt binary, installation requires the compiler and system tooling needed
+by `node-gyp`.
 
 The supported operating-system families are 64-bit Linux, macOS, and Windows
 where `better-sqlite3` installs successfully. Ledlight does not promise a

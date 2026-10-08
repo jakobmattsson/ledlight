@@ -3,11 +3,24 @@
 Ledlight is a standalone Ledger-compatible parser, SQLite store, and reporting
 library.
 
-Install the public package on Node.js 22.12 or later in the Node.js 22 release line:
+Install the public package on Node.js 22.14 or later in the Node.js 22 release line:
 
 ```console
 npm install ledlight
 ```
+
+For repository development, install and select the pinned Node.js 22 release
+with [nvm](https://github.com/nvm-sh/nvm):
+
+```console
+nvm install
+nvm use
+node --version
+```
+
+The repository's `.nvmrc` selects Node.js 22.23.3 for this shell; it does not
+change your nvm default. Run `nvm use` again when you open a new shell in the
+repository.
 
 Install dependencies and run the complete verification suite:
 

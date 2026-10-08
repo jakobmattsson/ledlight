@@ -36,7 +36,6 @@ module.exports = () => {
         lowValue = middleValue;
       } else {
         high = middle;
-        highValue = middleValue;
       }
     }
     return Math.expm1((low + high) / 2);
