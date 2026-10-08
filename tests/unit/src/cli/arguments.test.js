@@ -4,11 +4,13 @@ const { resolveCommands, resolveRepositoryModule } = require('../../../support/r
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { Command } = require('commander');
+const commander = require('commander');
+const { Command } = commander;
 const createArguments = require('../../../../src/impl/cli/cli-arguments');
 const commands = resolveCommands();
 const project = resolveRepositoryModule('src/impl/core/project.js');
 const argumentsModule = createArguments({
+  commander,
   commands,
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
@@ -195,6 +197,7 @@ test('parses valuation choices and explicitly passes the market default', () => 
 
 test('uses the CLI configuration file argument when --file is omitted', () => {
   const configuredArguments = createArguments({
+    commander,
     commands,
     cliConfiguration: {
       apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],

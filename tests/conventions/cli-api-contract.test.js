@@ -5,12 +5,14 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const commander = require('commander');
 const { resolveCommands, resolveRepositoryModule } = require('../support/repository-container');
 const createArguments = require('../../src/impl/cli/cli-arguments');
 
 const commands = resolveCommands();
 const project = resolveRepositoryModule('src/impl/core/project.js');
 const argumentsModule = createArguments({
+  commander,
   commands,
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
@@ -48,6 +50,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
   };
   assert.throws(
     () => createArguments({
+      commander,
       commands,
       cliConfiguration: { apply: (arguments_) => arguments_ },
       project: { apiDefinitions },

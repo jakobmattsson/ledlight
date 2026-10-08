@@ -1,11 +1,10 @@
 'use strict';
 
-const { Command, Help, InvalidArgumentError, Option } = require('commander');
 const HELP_GROUP = Symbol('helpGroup');
 const HELP_DETAILS = Symbol('helpDetails');
 const HELP_EXAMPLES = Symbol('helpExamples');
 
-function formatGroupedHelp(command, helper) {
+function formatGroupedHelp(Help, command, helper) {
   const help = Help.prototype.formatHelp.call(helper, command, helper);
   if (command.parent || command.commands.length === 0) return help;
 
@@ -38,6 +37,7 @@ function formatGroupedHelp(command, helper) {
 }
 
 module.exports = ({
+  commander: { Command, Help, InvalidArgumentError, Option },
   commands,
   cliConfiguration,
   project: { apiDefinitions: projectDefinitions },
@@ -50,7 +50,7 @@ module.exports = ({
       .description('Query Ledger-compatible accounting data').helpOption(false)
       .addHelpCommand(false).exitOverride()
       .configureHelp({
-        formatHelp: formatGroupedHelp,
+        formatHelp: (command, helper) => formatGroupedHelp(Help, command, helper),
         subcommandTerm: (command) => [command.name(), ...command.aliases()].join('|'),
       })
       .configureOutput({ writeErr: () => {}, writeOut: () => {} });
