@@ -7,8 +7,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { spawnSync } = require('node:child_process');
+const { asValue } = require('awilix');
 const Database = require('better-sqlite3');
+const { createRepositoryContainer } = require('../../../../../src/composition/repository-container');
 const { pathsForJournal } = resolveRepositoryModule("src/impl/core/cache-paths.js");
 const {
   ensureDatabaseCurrent,
@@ -517,10 +518,9 @@ commodity EUR
   assert.equal(fs.existsSync(databasePath), true);
 });
 
-test('aggregate CLI builds stale databases but reuses current databases', (t) => {
+test('aggregate command builds stale databases but reuses current databases', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
-  const cliPath = path.resolve(__dirname, '../../../../../src/run.js');
   fs.writeFileSync(journalPath, `commodity SEK
   default
 account Assets:Cash,Main
@@ -530,15 +530,30 @@ account Equity:Opening
   Equity:Opening
 `);
   const { databasePath } = pathsForJournal(journalPath);
+  let stdout = '';
+  let stderr = '';
+  const container = createRepositoryContainer();
+  container.register({
+    currentWorkingDirectory: asValue(() => directory),
+    output: asValue({
+      writeError(value) { stderr += value; },
+      writeOutput(value) { stdout += value; },
+    }),
+    standardInput: asValue({
+      isTTY: () => true,
+      read: () => assert.fail('an explicit journal path must not read stdin'),
+    }),
+  });
+  const executeCli = container.resolve('executeCli');
 
   function runAggregate() {
-    const result = spawnSync(process.execPath, [
-      cliPath, 'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
-    ], { cwd: directory, encoding: 'utf8', env: process.env });
-    assert.ifError(result.error);
-    assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stderr, /^\[MISSING_COMMODITY_FORMAT\] Commodity SEK must declare a format property/u);
-    return result.stdout;
+    stdout = '';
+    stderr = '';
+    assert.equal(executeCli.run([
+      'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
+    ]), 0, stderr);
+    assert.match(stderr, /^\[MISSING_COMMODITY_FORMAT\] Commodity SEK must declare a format property/u);
+    return stdout;
   }
 
   const first = runAggregate();
@@ -558,6 +573,4 @@ account Equity:Opening
   const second = runAggregate();
   assert.equal(second, '     2.005 SEK  Assets:Cash,Main\n10,000     SEK  Assets:LongAccount\n');
   assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
-
-
 });

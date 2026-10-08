@@ -6,6 +6,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { asValue } = require('awilix');
+const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
 
 const cliPath = path.resolve(__dirname, '../../../../src/run.js');
 const source = `commodity SEK
@@ -30,23 +32,55 @@ function fixture(t) {
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(journalPath, source);
   const cacheDirectory = path.join(directory, 'cache');
-  function run(arguments_, input) {
+  const environment = { ...process.env, HOME: directory, LEDLIGHT_CACHE_HOME: cacheDirectory };
+  let stdinSource = source;
+  let stdout = '';
+  let stderr = '';
+  const container = createRepositoryContainer();
+  container.register({
+    currentWorkingDirectory: asValue(() => directory),
+    os: asValue({ tmpdir: () => temporaryDirectory }),
+    output: asValue({
+      handleBrokenPipe() {},
+      writeError(value) { stderr += value; },
+      writeOutput(value) { stdout += value; },
+    }),
+    processEnvironment: asValue(environment),
+    standardInput: asValue({ isTTY: () => false, read: () => stdinSource }),
+  });
+  const executeCli = container.resolve('executeCli');
+
+  function run(arguments_, content) {
+    stdinSource = content ?? source;
+    stdout = '';
+    stderr = '';
+    const status = executeCli.run(arguments_);
+    assert.deepEqual(fs.readdirSync(temporaryDirectory), [], 'stdin storage must be removed');
+    return { status, stdout, stderr };
+  }
+
+  function runProcess(arguments_, input) {
     const result = spawnSync(process.execPath, [cliPath, ...arguments_], {
       cwd: directory,
-      input: input ?? source,
+      input,
       encoding: 'utf8',
-      env: {
-        ...process.env, HOME: directory, TMPDIR: temporaryDirectory,
-        LEDLIGHT_CACHE_HOME: cacheDirectory,
-      },
+      env: { ...environment, TMPDIR: temporaryDirectory },
     });
     assert.ifError(result.error);
     assert.equal(result.signal, null);
     assert.deepEqual(fs.readdirSync(temporaryDirectory), [], 'stdin storage must be removed');
     return result;
   }
-  return { directory, journalPath, cacheDirectory, run };
+  return { directory, journalPath, cacheDirectory, run, runProcess };
 }
+
+test('the CLI entrypoint reads piped stdin', (t) => {
+  const { runProcess } = fixture(t);
+  const result = runProcess(['aggregate', '--denominate', '--include-total', '--format', 'json'], source);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.equal(JSON.parse(result.stdout).at(-1).quantity, '20');
+});
 
 test('path-bearing reports identify stdin instead of the file path', (t) => {
   const { run, journalPath } = fixture(t);
