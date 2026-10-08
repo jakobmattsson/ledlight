@@ -1,0 +1,29 @@
+An investment lot uses a cost commodity other than the default valuation
+commodity. Opposing postings balance the transaction without another warning.
+
+========== CLI ==========
+
+ledlight unrealized-gains --format json <<'LEDGER'
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity STOCK
+  format 1,000 STOCK
+account Assets:Stock
+
+2024-01-01 Foreign-cost round trip
+  Assets:Stock  1 STOCK {10 USD}
+  Assets:Stock  -1 STOCK {10 USD} @ 10 USD
+LEDGER
+
+========== OUTPUT ==========
+
+[]
+
+========== WARNINGS ==========
+
+[FOREIGN_LOT_COST_CURRENCY] Assets:Stock: lot cost in USD must be expressed in the default commodity SEK. Unrealized gains omit affected positions; their totals may be incomplete
+  <stdin>:11:3
+  <stdin>:12:3

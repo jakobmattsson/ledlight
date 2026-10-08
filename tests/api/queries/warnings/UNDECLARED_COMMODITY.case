@@ -1,0 +1,18 @@
+A posting or price uses a commodity before its declaration.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash  1 SEK
+  Equity:Opening
+
+========== WARNINGS ==========
+
+[UNDECLARED_COMMODITY] Commodity SEK must be declared before use
+  {{JOURNAL_PATH}}:4:3

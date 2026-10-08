@@ -56,23 +56,6 @@ module.exports = ({
       return this.balances.get(balanceKey(account, commodity)) || ZERO;
     }
 
-    assignmentCommodity(posting) {
-      if (posting.balanceAssignment.commodity) return posting.balanceAssignment.commodity;
-      const prefix = `${posting.account}\u0000`;
-      const commodities = [...this.balances]
-        .filter(([key, amount]) => key.startsWith(prefix) && compareDecimals(amount, ZERO) !== 0)
-        .map(([key]) => key.slice(prefix.length));
-      if (commodities.length !== 1) {
-        this.warnings.push(createWarning(
-          warningCodes.AMBIGUOUS_BALANCE_ASSIGNMENT,
-          'Cannot infer balance assignment commodity',
-          posting.location,
-        ));
-        return null;
-      }
-      return commodities[0];
-    }
-
     apply(account, amount) {
       addToMap(this.balances, balanceKey(account, amount.commodity), parseDecimal(amount.quantity));
     }
@@ -91,11 +74,7 @@ module.exports = ({
         if (annotation) hasCost = true;
         let amount = posting.amount;
         if (posting.balanceAssignment) {
-          const commodity = this.assignmentCommodity(posting);
-          if (commodity === null) {
-            invalidTransaction = true;
-            return;
-          }
+          const { commodity } = posting.balanceAssignment;
           const target = parseDecimal(posting.balanceAssignment.quantity);
           const current = this.accountBalance(posting.account, commodity);
           amount = {
