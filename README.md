@@ -22,6 +22,11 @@ The repository's `.nvmrc` selects Node.js 22.23.3 for this shell; it does not
 change your nvm default. Run `nvm use` again when you open a new shell in the
 repository.
 
+New Codex worktrees use the same `.nvmrc` during environment setup: the setup
+script loads nvm, selects or installs the pinned Node.js release, then installs
+dependencies. This selection applies to the setup shell; use `nvm use` in later
+shells as needed.
+
 Install dependencies and run the complete verification suite:
 
 ```console
