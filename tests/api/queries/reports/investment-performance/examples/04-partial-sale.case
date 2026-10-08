@@ -1,5 +1,5 @@
 Example: a midyear partial sale separates profit from money withdrawn.
-Two FUND units were bought on 2022-12-31 at 100 USD each, giving the report
+Salary funds two FUND units bought on 2022-12-31 at 100 USD each, giving the report
 an opening value of 200 USD on 2023-01-01. On 2023-07-01, one unit is sold
 for 130 USD (@ 130 USD) while the other closes at 130 USD. The remaining unit
 closes at 140 USD on 2024-01-01. Only FUND is selected, so sale proceeds are a
@@ -25,10 +25,15 @@ commodity FUND
   format 1,000 FUND
 account Assets:Fund
 account Assets:Cash
+account Income:Salary
 account Income:Gains
 P 2022-12-31 FUND 100 USD
 P 2023-07-01 FUND 130 USD
 P 2024-01-01 FUND 140 USD
+
+2022-12-31 Salary
+  Assets:Cash  200 USD
+  Income:Salary  -200 USD
 
 2022-12-31 Purchase
   Assets:Fund  2 FUND {100 USD}

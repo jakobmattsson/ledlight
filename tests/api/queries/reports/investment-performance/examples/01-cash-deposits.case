@@ -1,6 +1,6 @@
 Example: cash deposits change the balance without creating investment profit.
-The only selected holding is Assets:Cash. Deposits of 100 USD on 2023-01-01 and
-50 USD on 2023-07-01 leave 150 USD at the end of the year-long report.
+The only selected holding is Assets:Cash. Salary of 100 USD on 2023-01-01 and
+a 50 USD bonus on 2023-07-01 leave 150 USD at the end of the year-long report.
 Opening value is 0, net contributions are 100 + 50 = 150 USD, and profit/loss
 is ending value 150 - opening value 0 - contributions 150 = 0 USD.
 The value never grows apart from deposits, so both return measures are 0%.
@@ -16,15 +16,16 @@ commodity USD
   default
   format 1,000.00 USD
 account Assets:Cash
-account Equity:Opening
+account Income:Salary
+account Income:Bonus
 
-2023-01-01 Deposit
+2023-01-01 Salary
   Assets:Cash  100 USD
-  Equity:Opening  -100 USD
+  Income:Salary  -100 USD
 
-2023-07-01 Another deposit
+2023-07-01 Bonus
   Assets:Cash  50 USD
-  Equity:Opening  -50 USD
+  Income:Bonus  -50 USD
 
 ========== OUTPUT ==========
 

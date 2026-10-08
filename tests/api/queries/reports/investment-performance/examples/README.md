@@ -10,3 +10,7 @@ text output shows return percentages. Purchases, deposits, price updates, and
 the partial sale happen on different dates, so the money-weighted returns can
 be calculated and compared with the time-weighted return. The partial sale
 shows why the two measures can differ.
+
+The report's `Opening value` is the selected holdings' value before the report
+period. It does not require an `Equity:Opening` journal posting. Cash entering
+these example journals is balanced against salary or bonus income instead.

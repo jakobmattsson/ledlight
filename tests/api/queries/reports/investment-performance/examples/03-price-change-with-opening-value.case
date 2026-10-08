@@ -1,5 +1,5 @@
 Example: a holding bought before the report becomes its opening value.
-One FUND unit was bought on 2022-12-31 at 100 USD and closed at 100 USD.
+Salary funds one FUND unit bought on 2022-12-31 at 100 USD; it closes at 100.
 The report starts on 2023-01-01, so that previous close is opening value 100.
 The quote rises to 110 USD on 2023-07-01 and 120 USD on 2024-01-01, with no
 postings during the report interval. Net contributions are 0, and profit/loss
@@ -20,9 +20,14 @@ commodity FUND
   format 1,000 FUND
 account Assets:Fund
 account Assets:Cash
+account Income:Salary
 P 2022-12-31 FUND 100 USD
 P 2023-07-01 FUND 110 USD
 P 2024-01-01 FUND 120 USD
+
+2022-12-31 Salary
+  Assets:Cash  100 USD
+  Income:Salary  -100 USD
 
 2022-12-31 Purchase
   Assets:Fund  1 FUND {100 USD}

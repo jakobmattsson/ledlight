@@ -1,12 +1,12 @@
 Example: buying a fund with selected cash is an internal exchange.
-The portfolio receives a 100 USD cash deposit on 2023-01-01 and keeps it until
+The portfolio receives 100 USD of salary on 2023-01-01 and keeps it until
 2023-07-01, when it buys one FUND unit for 100 USD. Both cash and FUND are
 selected, so the -100 USD cash movement and +100 USD fund acquisition cancel.
-Only the original deposit contributes to the portfolio over the report year.
+Only the original salary inflow contributes to the portfolio over the report year.
 The unit closes at 100 USD on purchase day and 120 USD on 2024-01-01.
 Opening value is 0, net contributions are 100, and ending value is 120 USD.
 Profit/loss is 120 - 0 - 100 = 20 USD. Time-weighted return is 20%, and the
-100 USD deposited exactly 365 days before the end gives a 20% money-weighted
+100 USD received exactly 365 days before the end gives a 20% money-weighted
 return as well.
 
 ========== CLI ==========
@@ -22,13 +22,13 @@ commodity FUND
   format 1,000 FUND
 account Assets:Cash
 account Assets:Fund
-account Equity:Opening
+account Income:Salary
 P 2023-07-01 FUND 100 USD
 P 2024-01-01 FUND 120 USD
 
-2023-01-01 Deposit
+2023-01-01 Salary
   Assets:Cash  100 USD
-  Equity:Opening  -100 USD
+  Income:Salary  -100 USD
 
 2023-07-01 Purchase
   Assets:Fund  1 FUND {100 USD}
