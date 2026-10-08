@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const {
   createRepositoryContainer,
   $$private: { repositoryModuleName },
-} = require('../../src/impl/composition/repository-container');
+} = require('../../src/composition/repository-container');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const container = createRepositoryContainer();

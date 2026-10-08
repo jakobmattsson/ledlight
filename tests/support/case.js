@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { asValue } = require('awilix');
 const espree = require('espree');
-const { createRepositoryContainer } = require('../../src/impl/composition/repository-container');
+const { createRepositoryContainer } = require('../../src/composition/repository-container');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],

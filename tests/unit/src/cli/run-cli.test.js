@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { asValue } = require('awilix');
-const { createRepositoryContainer } = require('../../../../src/impl/composition/repository-container');
+const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
 
 function runWithExitCode(exitCode) {
   const calls = [];

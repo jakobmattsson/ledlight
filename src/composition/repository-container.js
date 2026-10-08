@@ -18,12 +18,8 @@ const {
   surfaceModule: loadSurfaceModule,
 } = require('./module-container');
 
-const REPOSITORY_ROOT = path.resolve(__dirname, '../../..');
-const REPOSITORY_MODULE_PATTERNS = Object.freeze([
-  'src/impl/cli/*.js',
-  'src/impl/{core,query-support}/*.js',
-  'src/impl/ingestion/**/*.js',
-]);
+const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
+const REPOSITORY_MODULE_PATTERN = 'src/impl/**/*.js';
 const QUERY_MODULE_PATTERN = 'src/surface/queries/*.js';
 const COMMAND_MODULE_PATTERN = 'src/surface/commands/**/*.js';
 const COMMAND_DIRECTORY = path.join(REPOSITORY_ROOT, 'src/surface/commands');
@@ -40,7 +36,7 @@ function commandGroup(relativePath) {
   return segments[0];
 }
 
-const REPOSITORY_MODULES = listUniqueModules(REPOSITORY_MODULE_PATTERNS, {
+const REPOSITORY_MODULES = listUniqueModules(REPOSITORY_MODULE_PATTERN, {
   cwd: REPOSITORY_ROOT,
   reservedNames: ['queries', 'commands'],
 });
@@ -141,7 +137,7 @@ function registerExternalModules(container) {
     envPaths: asValue(require('env-paths')),
     fs: asValue(require('node:fs')),
     os: asValue(require('node:os')),
-    packageMetadata: asValue(require('../../../package.json')),
+    packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
     processEnvironment: asValue(process.env),
     processRuntime: asValue({
@@ -170,7 +166,7 @@ function registerExternalModules(container) {
 function registerRepositoryModules(container) {
   registerExternalModules(container);
   registerModuleFactories(container, {
-    patterns: REPOSITORY_MODULE_PATTERNS,
+    patterns: REPOSITORY_MODULE_PATTERN,
     cwd: REPOSITORY_ROOT,
     modules: REPOSITORY_MODULES,
     displayPath: relativeModulePath,

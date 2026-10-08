@@ -8,6 +8,6 @@
 // node src/run.js total-history --file main.ledger --accounts "Assets:" --format csv
 // node src/run.js unrealized-gains --file main.ledger --accounts "Assets:"
 
-const { createRepositoryContainer } = require('./impl/composition/repository-container');
+const { createRepositoryContainer } = require('./composition/repository-container');
 
 createRepositoryContainer().resolve('runCli').run();

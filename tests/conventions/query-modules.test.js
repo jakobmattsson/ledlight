@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { resolveQuery } = require('../support/repository-container');
-const { createRepositoryContainer } = require('../../src/impl/composition/repository-container');
+const { createRepositoryContainer } = require('../../src/composition/repository-container');
 
 const queryDirectory = path.resolve(__dirname, '../../src/surface/queries');
 
