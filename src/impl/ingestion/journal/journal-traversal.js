@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = ({
+  buffer,
   crypto,
   fs,
   path,
@@ -19,7 +20,7 @@ module.exports = ({
       active.add(absolutePath);
 
       try {
-        const bytes = source ? Buffer.from(source.content, 'utf8') : fs.readFileSync(absolutePath);
+        const bytes = source ? buffer.from(source.content, 'utf8') : fs.readFileSync(absolutePath);
         const content = bytes.toString('utf8');
         if (!filesByPath.has(absolutePath)) {
           filesByPath.set(absolutePath, {

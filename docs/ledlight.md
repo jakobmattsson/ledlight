@@ -295,8 +295,13 @@ loading and factory checks. `src/composition/repository-container.js` defines
 this project's module paths, dependency boundaries, external services, and query
 and command contracts. Every JavaScript file under `src/impl` is a factory. The
 `src/run.js` executable creates the container and invokes its
-registered `runCli` module. An injectable `processRuntime` adapter supplies the
-process ID, command-line arguments, and exit-code setter.
+registered `runCli` module. ESLint rejects Node and browser runtime globals,
+`globalThis`, direct `require()` calls, and `module.require()` in `src/impl` and
+`src/surface`. The CommonJS `module.exports` binding remains available for
+module definitions, as do standard JavaScript built-ins. Composition injects
+external dependencies, including paths and `Buffer`. An injectable
+`processRuntime` adapter supplies process metadata, command-line arguments,
+output streams, and exit behavior.
 
 ## Supported grammar
 

@@ -4,6 +4,7 @@ const { resolveCommands, resolveRepositoryModule } = require('../../../support/r
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const commander = require('commander');
 const createCommand = require('../../../../src/impl/cli/cli-command');
 const createArguments = require('../../../../src/impl/cli/cli-arguments');
 const commands = resolveCommands();
@@ -29,6 +30,7 @@ test('shows command help only with the explicit help option', () => {
 
 test('runs a bare command when CLI configuration supplies the journal path', () => {
   const configuredArguments = createArguments({
+    commander,
     commands,
     cliConfiguration: {
       apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],

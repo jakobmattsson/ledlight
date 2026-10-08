@@ -131,6 +131,7 @@ function loadCommands(dependencies) {
 
 function registerExternalModules(container) {
   container.register({
+    buffer: asValue(Buffer),
     commander: asValue(require('commander')),
     crypto: asValue(require('node:crypto')),
     currentWorkingDirectory: asValue(() => process.cwd()),
@@ -144,7 +145,11 @@ function registerExternalModules(container) {
       pid: () => process.pid,
       commandLineArguments: () => process.argv.slice(2),
       setExitCode: (code) => { process.exitCode = code; },
+      exit: (code) => process.exit(code),
+      standardOutput: process.stdout,
+      standardError: process.stderr,
     }),
+    schemaPath: asValue(path.join(REPOSITORY_ROOT, 'src/surface/database/schema.sql')),
     standardInput: asValue({
       isTTY: () => Boolean(process.stdin.isTTY),
       read: () => require('node:fs').readFileSync(0, 'utf8'),

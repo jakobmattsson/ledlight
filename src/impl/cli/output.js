@@ -1,12 +1,15 @@
 'use strict';
 
-module.exports = () => ({
+module.exports = ({ processRuntime: { exit, standardOutput, standardError } }) => ({
   handleBrokenPipe() {
-    process.stdout.on('error', (error) => {
-      if (error.code === 'EPIPE') process.exit(0);
+    standardOutput.on('error', (error) => {
+      if (error.code === 'EPIPE') {
+        exit(0);
+        return;
+      }
       throw error;
     });
   },
-  writeError: (value) => process.stderr.write(value),
-  writeOutput: (value) => process.stdout.write(value),
+  writeError: (value) => standardError.write(value),
+  writeOutput: (value) => standardOutput.write(value),
 });

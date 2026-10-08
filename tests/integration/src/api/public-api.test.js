@@ -5,11 +5,11 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { execFileSync } = require('node:child_process');
+const { asValue } = require('../../../../src/lib/awilix');
 const packageMetadata = require('../../../../package.json');
+const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
-const cliPath = path.join(ledlightPath, 'src/run.js');
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-api-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
@@ -169,12 +169,32 @@ P 2024-01-01 USD 2 SEK
   assert.deepEqual(correctedJournal.warnings, []);
 });
 
-test('prints CLI help and the public package version without opening a project', () => {
-  assert.match(execFileSync(process.execPath, [cliPath, '--help'], { encoding: 'utf8' }), /^Usage:/u);
-  assert.equal(
-    execFileSync(process.execPath, [cliPath, '--version'], { encoding: 'utf8' }),
-    `${packageMetadata.version}\n`,
-  );
+test('renders CLI help and the public package version without opening a project', () => {
+  const container = createRepositoryContainer();
+  const project = container.resolve('project');
+  let stdout = '';
+  let stderr = '';
+  container.register({
+    project: asValue({
+      ...project,
+      openJournal: () => assert.fail('help and version must not open a project'),
+    }),
+    output: asValue({
+      writeError(value) { stderr += value; },
+      writeOutput(value) { stdout += value; },
+    }),
+  });
+  const executeCli = container.resolve('executeCli');
+  function run(arguments_) {
+    stdout = '';
+    stderr = '';
+    assert.equal(executeCli.run(arguments_), 0);
+    assert.equal(stderr, '');
+    return stdout;
+  }
+
+  assert.match(run(['--help']), /^Usage:/u);
+  assert.equal(run(['--version']), `${packageMetadata.version}\n`);
 });
 
 test('loads SQLite only when a journal is opened', (t) => {
