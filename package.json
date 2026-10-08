@@ -48,6 +48,7 @@
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
+    "report:allure": "allure awesome allure-results --output allure-report --report-name 'Ledlight tests'",
     "test": "worktree-keeper run-tests",
     "test:coverage": "c8 --all --src=src --include='src/**/*.js' --reporter=text-summary --reporter=lcov --reporter=json-summary --reporter=html npm test -- rerun",
     "test:ledger": "node --test tests/integration/src/cases.test.js tests/integration/src/cli/compare-ledger-script.test.js",

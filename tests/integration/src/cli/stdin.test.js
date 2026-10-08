@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('awilix');
+const { asValue } = require('../../../../src/lib/awilix');
 const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
 
 const cliPath = path.resolve(__dirname, '../../../../src/run.js');
