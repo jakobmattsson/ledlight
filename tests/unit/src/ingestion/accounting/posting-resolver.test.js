@@ -11,20 +11,19 @@ function parseTransaction(sourceText) {
   return parse(sourceText, { source: 'fixture.ledger' }).entries[0];
 }
 
-function resolveWithWarnings(transaction) {
-  const warnings = [];
-  const result = new PostingResolver(warnings).resolve(transaction);
-  return { result, warnings };
-}
-
-test('warns and skips transactions with an ambiguous balance assignment commodity', () => {
-  const transaction = parseTransaction(`2024-01-01 Ambiguous assignment
-  Assets:Cash  = 10 SEK
+test('resolves one implicit posting for every explicit commodity', () => {
+  const transaction = parseTransaction(`2024-01-01 Opening
+  Assets:Cash  10 SEK
+  Assets:Fund  2 FUND
   Equity:Opening
 `);
-  transaction.postings[0].balanceAssignment.commodity = null;
 
-  const { result, warnings } = resolveWithWarnings(transaction);
-  assert.equal(result, null);
-  assert.equal(warnings[0].code, 'AMBIGUOUS_BALANCE_ASSIGNMENT');
+  assert.deepEqual(new PostingResolver().resolve(transaction), [
+    [{ quantity: '10', commodity: 'SEK' }],
+    [{ quantity: '2', commodity: 'FUND' }],
+    [
+      { quantity: '-10', commodity: 'SEK' },
+      { quantity: '-2', commodity: 'FUND' },
+    ],
+  ]);
 });
