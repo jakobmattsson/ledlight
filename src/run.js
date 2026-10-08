@@ -10,8 +10,4 @@
 
 const { createRepositoryContainer } = require('./impl/composition/repository-container');
 
-const container = createRepositoryContainer();
-container.resolve('output').handleBrokenPipe();
-
-const exitCode = container.resolve('executeCli').run(process.argv.slice(2));
-if (exitCode !== 0) process.exitCode = exitCode;
+createRepositoryContainer().resolve('runCli').run();

@@ -284,8 +284,9 @@ Awilix `loadModules` converts each basename to its camel-case dependency name.
 `impl/composition/module-container.js` handles the reusable Awilix loading and
 factory checks. `impl/composition/repository-container.js` defines this project's
 module paths, dependency boundaries, external services, and query and command
-contracts. The `src/run.js` executable creates the container and runs the CLI
-through its registered `executeCli` module.
+contracts. The `src/run.js` executable creates the container and invokes its
+registered `runCli` module. An injectable `processRuntime` adapter supplies the
+process ID, command-line arguments, and exit-code setter.
 
 ## Supported grammar
 

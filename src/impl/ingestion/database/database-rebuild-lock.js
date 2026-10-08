@@ -2,6 +2,7 @@
 
 module.exports = ({
   fs,
+  processRuntime,
   publicErrors: { createError, errorCodes },
   systemClock,
 }) => {
@@ -31,7 +32,7 @@ module.exports = ({
     }
 
     try {
-      fs.writeFileSync(descriptor, `${process.pid}\n`);
+      fs.writeFileSync(descriptor, `${processRuntime.pid()}\n`);
       return operation();
     } finally {
       fs.closeSync(descriptor);

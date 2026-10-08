@@ -18,7 +18,12 @@ function temporaryDatabasePath(t) {
 function rebuildLock(systemClock) {
   const publicErrors = createPublicErrors();
   return {
-    ...createRebuildLock({ fs, publicErrors, systemClock }),
+    ...createRebuildLock({
+      fs,
+      processRuntime: { pid: () => 1234 },
+      publicErrors,
+      systemClock,
+    }),
     errorCodes: publicErrors.errorCodes,
   };
 }
@@ -38,7 +43,10 @@ test('waits for another rebuild and releases its own lock', (t) => {
     },
   });
 
-  assert.equal(withRebuildLock(databasePath, () => 'complete'), 'complete');
+  assert.equal(withRebuildLock(databasePath, () => {
+    assert.equal(fs.readFileSync(lockPath, 'utf8'), '1234\n');
+    return 'complete';
+  }), 'complete');
   assert.equal(sleeps, 1);
   assert.equal(fs.existsSync(lockPath), false);
 });

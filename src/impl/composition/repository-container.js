@@ -144,6 +144,11 @@ function registerExternalModules(container) {
     packageMetadata: asValue(require('../../../package.json')),
     path: asValue(require('node:path')),
     processEnvironment: asValue(process.env),
+    processRuntime: asValue({
+      pid: () => process.pid,
+      commandLineArguments: () => process.argv.slice(2),
+      setExitCode: (code) => { process.exitCode = code; },
+    }),
     standardInput: asValue({
       isTTY: () => Boolean(process.stdin.isTTY),
       read: () => require('node:fs').readFileSync(0, 'utf8'),
