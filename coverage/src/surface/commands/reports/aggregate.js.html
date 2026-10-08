@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>64/64</span>
+                <span class='fraction'>71/71</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>64/64</span>
+                <span class='fraction'>71/71</span>
             </div>
         
             
@@ -127,29 +127,43 @@
 <a name='L62'></a><a href='#L62'>62</a>
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
-<a name='L65'></a><a href='#L65'>65</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">29x</span>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">685x</span>
+<span class="cline-any cline-yes">685x</span>
+<span class="cline-any cline-yes">685x</span>
+<span class="cline-any cline-yes">685x</span>
 <span class="cline-any cline-yes">685x</span>
 <span class="cline-any cline-yes">685x</span>
 <span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-yes">685x</span>
 <span class="cline-any cline-yes">685x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
-<span class="cline-any cline-yes">1116x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
+<span class="cline-any cline-yes">1129x</span>
 <span class="cline-any cline-yes">685x</span>
 <span class="cline-any cline-yes">685x</span>
 <span class="cline-any cline-yes">9x</span>
@@ -195,24 +209,31 @@
 &nbsp;
 module.exports = ({ cliOptions: options }) =&gt; ({
   description: 'aggregate postings',
+  examples: [
+    'ledlight aggregate --file main.ledger',
+    'ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --denominate --include-total',
+  ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
   },
   configure(command) {
     options.journal(command);
-    options.date(command, '--from &lt;date&gt;', 'include entries on or after YYYY-MM-DD');
-    options.date(command, '--to &lt;date&gt;', 'include entries on or before YYYY-MM-DD');
+    options.dateRange(
+      command,
+      'include activity on or after YYYY-MM-DD',
+      'include activity through YYYY-MM-DD; also set the valuation cutoff',
+    );
     options.accounts(command);
     options.dateBasis(command);
     options.valuation(command);
-    options.addValue(command, '--group-by &lt;dimension&gt;', 'group totals by account or commodity', {
+    options.addValue(command, '--group-by &lt;dimension&gt;', 'group balances by account or commodity', {
       choices: ['account', 'commodity'],
       defaultValue: 'account',
     });
-    options.addBoolean(command, '--denominate', 'denominate and combine amounts in the journal default currency');
-    options.addBoolean(command, '--with-valuation-value', 'add the valuation value to commodity rows');
-    options.addBoolean(command, '--invert', 'invert the sign of report amounts');
-    options.addBoolean(command, '--include-total', 'append an exact total for each commodity');
+    options.addBoolean(command, '--denominate', 'convert and combine balances in the journal default commodity');
+    options.addBoolean(command, '--with-valuation-value', 'add default-commodity value to each commodity row (excludes --denominate)');
+    options.addBoolean(command, '--invert', 'negate reported quantities and valuation values');
+    options.addBoolean(command, '--include-total', 'append an exact total per commodity (requires account grouping)');
     options.format(command);
   },
   formatCsv(rows, { denominate, groupBy }, format) {
@@ -262,7 +283,7 @@ module.exports = ({ cliOptions: options }) =&gt; ({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-10-08T08:18:49.879Z
+                at 2026-10-08T11:16:34.068Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
