@@ -11,10 +11,10 @@ module.exports = ({ cliOptions: options }) => ({
   },
   helpDetails: `Return measures:
   Time-weighted return
-    Use this to compare portfolio or manager performance without the direct
-    effect of how much you contributed or withdrew and when. Split the
-    portfolio history at each external contribution or withdrawal. Calculate
-    the return in each part and multiply the parts' growth factors. Ledlight
+    Use this to compare portfolio performance without the direct effect of
+    how much you contributed or withdrew and when. The method splits the
+    portfolio history at each external contribution or withdrawal, calculates
+    the return in each part, and multiplies the parts' growth factors. Ledlight
     uses daily closing values and treats flows as occurring at day's end.
 
   Money-weighted return (total)
