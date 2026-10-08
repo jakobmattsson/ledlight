@@ -1,0 +1,58 @@
+Example: a price increase in a selected interval needs no new contribution.
+One FUND unit was bought on 2024-01-01 at 100 USD and closed at 100 USD.
+The report starts on 2024-01-02, so the previous close becomes opening value 100.
+The unit closes at 120 USD on 2024-01-02 and no postings occur in the interval.
+Net contributions are 0, profit/loss is 120 - 100 - 0 = 20 USD, and the
+time-weighted return is 120 / 100 - 1 = 20%.
+The money-weighted fields are null for this one-day interval.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+P 2024-01-01 FUND 100 USD
+P 2024-01-02 FUND 120 USD
+
+2024-01-01 Purchase
+  Assets:Fund  1 FUND {100 USD}
+  Assets:Cash  -100 USD
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-02",
+  "to": "2024-01-02",
+  "commodities": [
+    "FUND"
+  ],
+  "valuationCommodity": "USD",
+  "openingValue": 100,
+  "endingValue": 120,
+  "netContributions": 0,
+  "profitLoss": 20,
+  "timeWeightedReturn": 0.19999999999999996,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-02",
+      "value": 120,
+      "netContributions": 0,
+      "profitLoss": 20,
+      "timeWeightedReturn": 0.19999999999999996,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}
+
+========== WARNINGS ==========

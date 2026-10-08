@@ -1,0 +1,54 @@
+Example: a cash deposit is a contribution, not investment profit.
+The only selected holding is Assets:Cash in USD. The journal adds 100 USD on
+2024-01-01, so the closing value and net contributions are both 100 USD.
+Profit/loss is ending value 100 minus opening value 0 minus contributions 100 = 0.
+The daily value equals the contribution, so the time-weighted return is 0.
+The money-weighted fields are null: all investor cash flows fall on one date,
+which supplies no elapsed time for an annualized return.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Cash'], commodities: ['USD'], from: '2024-01-01', to: '2024-01-01' })
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+account Assets:Cash
+account Equity:Opening
+
+2024-01-01 Deposit
+  Assets:Cash  100 USD
+  Equity:Opening  -100 USD
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-01",
+  "to": "2024-01-01",
+  "commodities": [
+    "USD"
+  ],
+  "valuationCommodity": "USD",
+  "openingValue": 0,
+  "endingValue": 100,
+  "netContributions": 100,
+  "profitLoss": 0,
+  "timeWeightedReturn": 0,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-01",
+      "value": 100,
+      "netContributions": 100,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}
+
+========== WARNINGS ==========

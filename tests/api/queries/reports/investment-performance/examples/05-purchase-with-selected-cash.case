@@ -1,0 +1,65 @@
+Example: buying a fund with selected cash is an internal exchange.
+The first day deposits 100 USD into Assets:Cash. On 2024-01-02 the portfolio
+starts with that 100 USD of cash, then spends it on one FUND unit costing 100.
+Both cash and FUND are selected, so the -100 USD cash movement and +100 USD
+fund acquisition add to zero net contributions during the selected day.
+The unit's closing price is 120 USD. Ending value is 120, profit/loss is
+120 - 100 - 0 = 20 USD, and time-weighted return is 120 / 100 - 1 = 20%.
+The money-weighted fields are null for this one-day interval.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['^Assets:'], commodities: ['USD', 'FUND'], from: '2024-01-02', to: '2024-01-02' })
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+P 2024-01-01 FUND 100 USD
+P 2024-01-02 FUND 120 USD
+
+2024-01-01 Deposit
+  Assets:Cash  100 USD
+  Equity:Opening  -100 USD
+
+2024-01-02 Purchase
+  Assets:Fund  1 FUND {100 USD}
+  Assets:Cash  -100 USD
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-02",
+  "to": "2024-01-02",
+  "commodities": [
+    "USD",
+    "FUND"
+  ],
+  "valuationCommodity": "USD",
+  "openingValue": 100,
+  "endingValue": 120,
+  "netContributions": 0,
+  "profitLoss": 20,
+  "timeWeightedReturn": 0.19999999999999996,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-02",
+      "value": 120,
+      "netContributions": 0,
+      "profitLoss": 20,
+      "timeWeightedReturn": 0.19999999999999996,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}
+
+========== WARNINGS ==========

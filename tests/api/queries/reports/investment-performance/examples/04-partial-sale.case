@@ -1,0 +1,66 @@
+Example: proceeds from a partial sale are a withdrawal from the selected fund.
+On 2024-01-01, two FUND units were bought at 100 USD each; their closing value
+of 200 USD becomes the opening value for the selected 2024-01-02 interval.
+On 2024-01-02, one unit is sold for 130 USD (@ 130 USD), leaving one unit worth
+140 USD at that day's quoted price. Only FUND is selected, so the sale contributes
+-130 USD, while the remaining position has an ending value of 140 USD.
+Profit/loss is 140 - 200 - (-130) = 70 USD. With the withdrawal treated as an
+end-of-day flow, time-weighted return is (140 - (-130)) / 200 - 1 = 35%.
+The money-weighted fields are null for this one-day interval.
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+account Income:Gains
+P 2024-01-01 FUND 100 USD
+P 2024-01-02 FUND 140 USD
+
+2024-01-01 Purchase
+  Assets:Fund  2 FUND {100 USD}
+  Assets:Cash  -200 USD
+
+2024-01-02 Partial sale
+  Assets:Fund  -1 FUND {100 USD} @ 130 USD
+  Assets:Cash  130 USD
+  Income:Gains  -30 USD
+
+========== OUTPUT ==========
+
+{
+  "from": "2024-01-02",
+  "to": "2024-01-02",
+  "commodities": [
+    "FUND"
+  ],
+  "valuationCommodity": "USD",
+  "openingValue": 200,
+  "endingValue": 140,
+  "netContributions": -130,
+  "profitLoss": 70,
+  "timeWeightedReturn": 0.3500000000000001,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-02",
+      "value": 140,
+      "netContributions": -130,
+      "profitLoss": 70,
+      "timeWeightedReturn": 0.3500000000000001,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}
+
+========== WARNINGS ==========
