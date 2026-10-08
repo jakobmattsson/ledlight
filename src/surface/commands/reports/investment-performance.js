@@ -10,7 +10,7 @@ module.exports = ({ cliOptions: options }) => ({
     return journal.commodities({ usage: 'all' });
   },
   helpDetails: `Return measures:
-  Time-weighted return
+  Time-weighted return (total)
     Use this to compare portfolio performance without the direct effect of
     how much you contributed or withdrew and when. The method splits the
     portfolio history at each external contribution or withdrawal, calculates
@@ -75,7 +75,7 @@ module.exports = ({ cliOptions: options }) => ({
       `Net contributions: ${money(report.netContributions)}`,
       `Ending value: ${money(report.endingValue)}`,
       `Profit/loss: ${money(report.profitLoss)}`,
-      `Time-weighted return: ${percent(report.timeWeightedReturn)}`,
+      `Time-weighted return (total): ${percent(report.timeWeightedReturn)}`,
       `Time-weighted return (annualized): ${percent(report.timeWeightedReturnAnnualized)}`,
       `Money-weighted return (total): ${percent(report.moneyWeightedReturnTotal)}`,
       `Money-weighted return (annualized): ${percent(report.moneyWeightedReturn)}`,

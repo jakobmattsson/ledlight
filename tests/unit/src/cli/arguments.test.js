@@ -459,7 +459,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   );
   assert.match(
     usage('investment-performance'),
-    /Return measures:[\s\S]*Time-weighted return[\s\S]*compare portfolio performance[\s\S]*The method splits the[\s\S]*external contribution or withdrawal[\s\S]*multiplies the parts' growth factors[\s\S]*daily closing values[\s\S]*day's end[\s\S]*Money-weighted return \(total\)[\s\S]*your own cumulative return[\s\S]*first to the last[\s\S]*Money-weighted return \(annualized\)[\s\S]*compare your own returns across periods of different lengths[\s\S]*present value/u,
+    /Return measures:[\s\S]*Time-weighted return \(total\)[\s\S]*compare portfolio performance[\s\S]*The method splits the[\s\S]*external contribution or withdrawal[\s\S]*multiplies the parts' growth factors[\s\S]*daily closing values[\s\S]*day's end[\s\S]*Money-weighted return \(total\)[\s\S]*your own cumulative return[\s\S]*first to the last[\s\S]*Money-weighted return \(annualized\)[\s\S]*compare your own returns across periods of different lengths[\s\S]*present value/u,
   );
   assert.match(usage('investment-performance'), /Time-weighted return \(annualized\)[\s\S]*yearly compound rate/u);
   assert.match(usage('aggregate'), /--help\s+show command help/u);
