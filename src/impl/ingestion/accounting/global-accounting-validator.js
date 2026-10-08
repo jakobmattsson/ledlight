@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  rational: { zero, parse, add, neg, cmp, format },
+  rational: { zero, parse, add, neg, format },
   commodityMovements: { annotatedTotal, carriedMovements },
   allocationHistory: { AllocationHistory },
   saleProceedsValidator: { validateSaleProceeds },
@@ -52,8 +52,6 @@ module.exports = ({
     const histories = new Map();
     const positions = new Map();
     const impossible = [];
-    let imbalance = zero;
-    let imbalanceLocation;
     const transactions = entries.filter((entry) => resolvedTransactions.has(entry))
       .sort((left, right) => left.date.localeCompare(right.date));
     const historyFor = (account, commodity) => {
@@ -78,17 +76,10 @@ module.exports = ({
       }
       const incoming = new Set(pairs.map((pair) => pair.incoming));
       const outgoing = new Map(pairs.map((pair) => [pair.outgoing, pair.incoming]));
-      let transactionBalance = zero;
-      let knownBalance = true;
-      let hasInvestment = false;
       transaction.postings.forEach((posting, index) => {
         for (const amount of resolved[index]) {
           const quantity = parse(amount.quantity);
-          if (amount.commodity === valuationCommodity) {
-            transactionBalance = add(transactionBalance, quantity);
-            continue;
-          }
-          hasInvestment = true;
+          if (amount.commodity === valuationCommodity) continue;
           const history = historyFor(posting.account, amount.commodity);
           const key = JSON.stringify([posting.account, amount.commodity]);
           if (!positions.has(key)) {
@@ -105,11 +96,9 @@ module.exports = ({
           if (cost === null) {
             position.known = false;
             history.invalid = true;
-            knownBalance = false;
             continue;
           }
           position.cost = add(position.cost, cost);
-          transactionBalance = add(transactionBalance, cost);
           if (incoming.has(posting) || !quantity.n) continue;
           if (quantity.n > 0n) history.acquire(posting.account, quantity, cost);
           else {
@@ -127,10 +116,6 @@ module.exports = ({
           }
         }
       });
-      if (hasInvestment && knownBalance && transactionBalance.n) {
-        imbalance = add(imbalance, transactionBalance);
-        imbalanceLocation = transaction.location;
-      }
     }
 
     const residuals = new Set();
@@ -155,11 +140,6 @@ module.exports = ({
       warnings.push(createWarning(warningCodes.RESIDUAL_COST_BASIS,
         `${position.account}: zero ${position.commodity} units retain cost basis ` +
         `${format(position.cost)} ${valuationCommodity}`, position.location));
-    }
-    if (cmp(imbalance, zero) !== 0) {
-      warnings.push(createWarning(warningCodes.RESULT_MISMATCH,
-        'Realized plus unrealized result differs from cash flows and remaining ' +
-        `market value by ${format(neg(imbalance))} ${valuationCommodity}`, imbalanceLocation));
     }
   }
   return { validateGlobalAccounting };

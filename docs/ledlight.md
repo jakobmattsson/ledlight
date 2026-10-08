@@ -659,8 +659,6 @@ command, independent of report dates or account filters:
   settlement dates are allowed when both timelines remain feasible.
 - `RESIDUAL_COST_BASIS` identifies closed account/commodity positions with
   nonzero remaining basis, including offsetting residuals within one account.
-- `RESULT_MISMATCH` identifies a net imbalance in investment transactions valued
-  at their recorded acquisition costs.
 - `FOREIGN_LOT_COST_CURRENCY` identifies non-default commodity postings with lot
   costs outside the journal default commodity. These postings remain available
   to other reports, but affected positions are omitted from unrealized gains,

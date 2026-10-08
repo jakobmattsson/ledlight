@@ -1,4 +1,5 @@
-An investment lot uses a cost commodity other than the default valuation commodity.
+An investment lot uses a cost commodity other than the default valuation
+commodity. Opposing postings balance the transaction without another warning.
 
 ========== CLI ==========
 
@@ -11,18 +12,10 @@ commodity USD
 commodity STOCK
   format 1,000 STOCK
 account Assets:Stock
-account Assets:USD
-account Assets:Cash
-P 2024-01-01 STOCK 30 SEK
-P 2024-01-01 USD 2 SEK
 
-2024-01-01 Buy dollars
-  Assets:USD  10 USD {2 SEK}
-  Assets:Cash  -20 SEK
-
-2024-01-01 Buy shares
+2024-01-01 Foreign-cost round trip
   Assets:Stock  1 STOCK {10 USD}
-  Assets:USD
+  Assets:Stock  -1 STOCK {10 USD} @ 10 USD
 LEDGER
 
 ========== OUTPUT ==========
@@ -32,7 +25,5 @@ LEDGER
 ========== WARNINGS ==========
 
 [FOREIGN_LOT_COST_CURRENCY] Assets:Stock: lot cost in USD must be expressed in the default commodity SEK. Unrealized gains omit affected positions; their totals may be incomplete
-  <stdin>:19:3
-
-[INVALID_COMMODITY_TRADE] Negative USD posting must use both a lot cost ({...} or {{...}}) and a transaction price (@ or @@); the default commodity is SEK
-  <stdin>:20:3
+  <stdin>:11:3
+  <stdin>:12:3

@@ -1,7 +1,7 @@
 Global correctness: incorrect-realized-result (run 1).
 The remaining position has no unrealized gain, but booked realized gain is 100
-USD below the result implied by cash flows. A result-mismatch warning must
-expose the difference.
+USD below the result implied by cash flows. The unbalanced transaction warning
+exposes the difference.
 
 ========== CLI ==========
 
@@ -34,7 +34,4 @@ LEDGER
 ========== WARNINGS ==========
 
 [UNBALANCED_TRANSACTION] Transaction does not balance: 100 USD
-  <stdin>:16:1
-
-[RESULT_MISMATCH] Realized plus unrealized result differs from cash flows and remaining market value by -100 USD
   <stdin>:16:1
