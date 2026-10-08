@@ -80,4 +80,7 @@ test('rejects unsupported or repeated configuration settings', (t) => {
 
   fs.writeFileSync(configurationPath, '--file first.ledger\n--file second.ledger\n');
   assert.throws(() => configuredArguments.apply(['aggregate']), /may only contain one --file option/u);
+
+  fs.writeFileSync(configurationPath, '--file ""\n');
+  assert.throws(() => configuredArguments.apply(['aggregate']), /--file option expects a path/u);
 });

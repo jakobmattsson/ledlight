@@ -1,0 +1,47 @@
+Print preserves sale cost, lot cost, and balance assertions.
+
+========== API ==========
+
+print()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+account Income:Gain
+2024-01-01 Buy
+  Assets:Fund  2 FUND {10 SEK}
+  Assets:Cash  -20 SEK
+2024-01-02 Sell
+  Assets:Fund  -1 FUND {10 SEK} @@ 12 SEK = 1 FUND
+  Assets:Cash  12 SEK
+  Income:Gain  -2 SEK
+
+========== OUTPUT ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+
+commodity FUND
+  format 1,000 FUND
+
+account Assets:Fund
+
+account Assets:Cash
+
+account Income:Gain
+
+2024-01-01 Buy
+    Assets:Fund  2 FUND {10 SEK}
+    Assets:Cash  -20 SEK
+
+2024-01-02 Sell
+    Assets:Fund  -1 FUND {10 SEK} @@ 12 SEK = 1 FUND
+    Assets:Cash  12 SEK
+    Income:Gain  -2 SEK

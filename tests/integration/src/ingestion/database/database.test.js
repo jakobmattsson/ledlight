@@ -27,6 +27,20 @@ function temporaryDirectory(t) {
   return directory;
 }
 
+test('requires a source journal and preserves filesystem errors from rebuilds', (t) => {
+  const directory = temporaryDirectory(t);
+  const databasePath = path.join(directory, 'journal.sqlite');
+  const journalPath = path.join(directory, 'missing.ledger');
+
+  assert.throws(() => ensureDatabaseCurrent(databasePath), {
+    code: 'LEDLIGHT_DATABASE',
+    message: 'Cannot update the database without a journal path',
+  });
+  assert.throws(() => buildDatabase(databasePath, journalPath), {
+    code: 'ENOENT',
+  });
+});
+
 test('stores a journal as normalized, queryable SQLite data', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'all.ledger');

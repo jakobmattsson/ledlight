@@ -39,6 +39,9 @@ const formatInvestmentPerformanceCsv = (report) =>
 const formatCommodities = (rows, output) => formatCommand('commodities', rows, output);
 const formatPostings = (rows, output) => formatCommand('postings', rows, output);
 const formatTags = (rows, output) => formatCommand('tags', rows, output);
+const formatTransactions = (transactions, descriptions) => formatCommand('transactions', {
+  transactions,
+}, { format: 'text' }, descriptions);
 
 const rows = [
   { account: 'Assets:Cash,Main', quantity: '2.005', commodity: 'SEK' },
@@ -75,6 +78,37 @@ test('formats grouped warnings for a terminal', () => {
   }]), '[SYNTAX_ERROR] Expected a posting\n' +
     '  /books/main.ledger:12:3 (affected lines 10-13)\n' +
     '  /books/included.ledger:4\n');
+});
+
+test('prints transaction annotations and balance markers with declared precision', () => {
+  const posting = (account, amount, overrides) => ({
+    postingDate: '2024-01-01', account, comments: [], tags: [], amount,
+    amounts: [amount], lotCost: null, cost: null,
+    balanceAssignment: null, balanceAssertion: null, ...overrides,
+  });
+  const output = formatTransactions([{
+    transactionDate: '2024-01-01', description: 'Annotated trade', comments: [], tags: [],
+    postings: [
+      posting('Assets:Fund', { quantity: '2', commodity: 'FUND' }, {
+        lotCost: { quantity: '12.5', commodity: 'SEK', isTotal: false },
+        cost: { quantity: '25', commodity: 'SEK', isTotal: true },
+      }),
+      posting('Assets:Cash', { quantity: '-25', commodity: 'SEK' }, {
+        balanceAssertion: { quantity: '75', commodity: 'SEK' },
+      }),
+      posting('Assets:Assigned', { quantity: '3', commodity: 'FUND' }, {
+        amount: null,
+        balanceAssignment: { quantity: '3', commodity: 'FUND' },
+      }),
+    ],
+  }], [
+    { commodity: 'FUND', format: '1,000 FUND' },
+    { commodity: 'SEK', format: '1,000.00 SEK' },
+  ]);
+
+  assert.match(output, /Assets:Fund\s+2 FUND \{12\.50 SEK\} @@ 25\.00 SEK/u);
+  assert.match(output, /Assets:Cash\s+-25\.00 SEK = 75\.00 SEK/u);
+  assert.match(output, /Assets:Assigned\s+3 FUND = 3 FUND/u);
 });
 
 test('puts aligned amounts before left-aligned accounts', () => {

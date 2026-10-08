@@ -1,0 +1,16 @@
+Investment performance rejects a commodity that is both included and excluded.
+
+========== API ==========
+
+investmentPerformance({ commodities: ['FUND'], excludeCommodities: ['FUND'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+commodity FUND
+account Assets:Fund
+
+========== ERROR ==========
+
+A commodity cannot be both included and excluded
