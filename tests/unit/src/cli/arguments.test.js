@@ -86,7 +86,7 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
   assert.deepEqual(argumentsModule.apiInputCoverage.investmentPerformance.outputInputs, ['format']);
   assert.deepEqual(argumentsModule.apiInputCoverage.print, {
     command: 'print',
-    inputs: ['journalPath'],
+    inputs: ['journalPath', 'density', 'sortDeclarations'],
     outputInputs: [],
   });
 });

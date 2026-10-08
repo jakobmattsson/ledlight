@@ -1,0 +1,100 @@
+Postings expose their own comments separately from transaction comments.
+
+========== CLI ==========
+
+ledlight postings --format json
+
+========== API ==========
+
+postings()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Expenses:Food
+account Assets:Bank
+tag Receipt
+
+2024-01-01 Groceries ; transaction inline
+  ; transaction detail
+  Expenses:Food  100 SEK ; expense inline
+  ; Receipt: 1234
+  Assets:Bank  -100 SEK ; bank inline
+  ; bank detail
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 1,
+    "transactionId": 5,
+    "transactionDate": "2024-01-01",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Groceries",
+    "transactionComments": [
+      "transaction inline",
+      "transaction detail"
+    ],
+    "postingDate": "2024-01-01",
+    "account": "Expenses:Food",
+    "postingComments": [
+      "expense inline"
+    ],
+    "amount": {
+      "quantity": "100",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "100",
+        "commodity": "SEK",
+        "balance": "100"
+      }
+    ],
+    "postingTags": [
+      {
+        "name": "Receipt",
+        "value": "1234"
+      }
+    ]
+  },
+  {
+    "postingId": 2,
+    "transactionId": 5,
+    "transactionDate": "2024-01-01",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Groceries",
+    "transactionComments": [
+      "transaction inline",
+      "transaction detail"
+    ],
+    "postingDate": "2024-01-01",
+    "account": "Assets:Bank",
+    "postingComments": [
+      "bank inline",
+      "bank detail"
+    ],
+    "amount": {
+      "quantity": "-100",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-100",
+        "commodity": "SEK",
+        "balance": "-100"
+      }
+    ]
+  }
+]

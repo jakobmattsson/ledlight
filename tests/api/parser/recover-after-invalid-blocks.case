@@ -44,7 +44,6 @@ tag Imported
       "type": "transaction",
       "date": "2024-01-02",
       "description": "Valid",
-      "comment": null,
       "postings": [
         {
           "type": "posting",
@@ -58,7 +57,7 @@ tag Imported
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 9,
@@ -74,7 +73,7 @@ tag Imported
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": null,
+          "comments": [],
           "location": {
             "source": "fixture.ledger",
             "line": 10,
@@ -82,7 +81,7 @@ tag Imported
           }
         }
       ],
-      "notes": [],
+      "comments": [],
       "location": {
         "source": "fixture.ledger",
         "line": 8,

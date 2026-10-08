@@ -32,13 +32,14 @@ account Equity:Opening
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 8,
     "description": "Buy fund",
-    "transactionComment": "imported",
-    "transactionNotes": [
-      "Project: Savings"
+    "transactionComments": [
+      "imported"
     ],
     "postingDate": "2024-01-03",
     "account": "Assets:Cash",
-    "postingComment": "[2024-01-03] card",
+    "postingComments": [
+      "card"
+    ],
     "amount": {
       "quantity": "-100",
       "commodity": "SEK"
@@ -53,6 +54,12 @@ account Equity:Opening
         "commodity": "SEK",
         "balance": "-100"
       }
+    ],
+    "transactionTags": [
+      {
+        "name": "Project",
+        "value": "Savings"
+      }
     ]
   },
   {
@@ -62,13 +69,12 @@ account Equity:Opening
     "filename": "{{JOURNAL_PATH}}",
     "transactionSourceLine": 8,
     "description": "Buy fund",
-    "transactionComment": "imported",
-    "transactionNotes": [
-      "Project: Savings"
+    "transactionComments": [
+      "imported"
     ],
     "postingDate": "2024-01-02",
     "account": "Assets:Fund",
-    "postingComment": null,
+    "postingComments": [],
     "amount": {
       "quantity": "10",
       "commodity": "FUND"
@@ -90,6 +96,12 @@ account Equity:Opening
         "quantity": "10",
         "commodity": "FUND",
         "balance": "10"
+      }
+    ],
+    "transactionTags": [
+      {
+        "name": "Project",
+        "value": "Savings"
       }
     ]
   }

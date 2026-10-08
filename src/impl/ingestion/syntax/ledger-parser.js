@@ -55,17 +55,38 @@ module.exports = ({
       if (quote) {
         if (code === quote) quote = 0;
       } else if (code === 34 || code === 39) quote = code;
-      else if (code === 59) return { text: input.slice(0, index).trimEnd(), comment: input.slice(index + 1).trim() };
+      else if (code === 59) return { text: input.slice(0, index).trimEnd(), comment: input.slice(index + 1).trim(), index };
     }
     return { text: input.trimEnd(), comment: null };
   }
 
   function parseCommentTags(comment) {
-    if (comment === null) return [];
-    const binary = /^:([^\s:;]+(?::[^\s:;]+)*:)(?:[ \t]+.*)?$/u.exec(comment);
-    if (binary) return binary[1].slice(0, -1).split(':').map((name) => ({ name, value: null }));
+    const binary = /^:([^\s:;]+(?::[^\s:;]+)*:)(?:[ \t]+(.*))?$/u.exec(comment);
+    if (binary) {
+      return {
+        tags: binary[1].slice(0, -1).split(':').map((name) => ({ name, value: null })),
+        text: binary[2]?.trim() ?? '',
+        tagged: true,
+      };
+    }
     const value = /^([^\s:;]+):[ \t]+(.*)$/u.exec(comment);
-    return value ? [{ name: value[1], value: value[2].trim() }] : [];
+    return value
+      ? { tags: [{ name: value[1], value: value[2].trim() }], text: '', tagged: true }
+      : { tags: [], text: comment, tagged: false };
+  }
+
+  function parseComment(text, source, line, column) {
+    const parsed = parseCommentTags(text);
+    const location = sourceLocation(source, line, column);
+    const tags = parsed.tags.map((tag) => {
+      Object.defineProperty(tag, 'location', { value: location });
+      return tag;
+    });
+    return {
+      comment: parsed.tagged && !parsed.text
+        ? null : { text: parsed.text, key: null, value: null, location },
+      tags,
+    };
   }
 
   function findFieldSeparator(input) {
@@ -92,10 +113,15 @@ module.exports = ({
     const parts = splitComment(text.slice(cursor));
     const description = parts.text.trim();
     if (!description) throw syntaxError('Expected a transaction description', source, line, cursor + 1);
-    const tags = parseCommentTags(parts.comment);
+    const parsedComment = parts.comment === null ? null : parseComment(
+      parts.comment, source, line, cursor + parts.index + 1,
+    );
+    const tags = parsedComment?.tags || [];
     return {
       type: 'transaction', date, description,
-      comment: parts.comment, ...(tags.length > 0 ? { tags } : {}), postings: [], notes: [], location: sourceLocation(source, line, 1),
+      ...(tags.length > 0 ? { tags } : {}), postings: [],
+      comments: parsedComment?.comment ? [parsedComment.comment] : [],
+      location: sourceLocation(source, line, 1),
     };
   }
 
@@ -111,12 +137,17 @@ module.exports = ({
     const expression = parseAmountExpression(expressionText, sourceLocation(source, line, expressionColumn));
     const postingDateMatch = parts.comment && /^\[(\d{4}-\d{2}-\d{2})\](?:\s|$)/u.exec(parts.comment);
     const commentAfterDate = postingDateMatch ? parts.comment.slice(postingDateMatch[0].length).trimStart() : parts.comment;
-    const tags = parseCommentTags(commentAfterDate);
+    const parsedComment = parts.comment === null || (postingDateMatch && !commentAfterDate) ? null : parseComment(
+      commentAfterDate, source, line, indent + parts.index + 1,
+    );
+    const tags = parsedComment?.tags || [];
     return {
       type: 'posting', account,
       ...(expression || { amount: null, lotCost: null, cost: null, balanceAssignment: null, balanceAssertion: null }),
       postingDate: postingDateMatch ? assertDate(postingDateMatch[1], source, line, raw.indexOf('[') + 2) : null,
-      comment: parts.comment, ...(tags.length > 0 ? { tags } : {}), location: sourceLocation(source, line, indent + 1),
+      comments: parsedComment?.comment ? [parsedComment.comment] : [],
+      ...(tags.length > 0 ? { tags } : {}),
+      location: sourceLocation(source, line, indent + 1),
     };
   }
 
@@ -192,20 +223,25 @@ module.exports = ({
 
       const marker = trimmed[0];
       if (marker === ';') {
-        if (transaction && first > 0) {
-          const text = trimmed.slice(1).trim();
-          const tags = parseCommentTags(text);
-          const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
-          transaction.notes.push({
-            text,
-            key: valueTag ? valueTag.name : null,
-            value: valueTag ? valueTag.value : null,
-            ...(tags.length > 0 ? { tags } : {}),
-            location: sourceLocation(source, lineNumber, first + 1),
+        if (first === 0) {
+          transaction = null;
+          commodity = null;
+          entries.push({
+            type: 'comment', text: trimmed.slice(1).trim(),
+            location: sourceLocation(source, lineNumber, 1),
           });
-          if (tags.length > 0) transaction.tags = [...(transaction.tags || []), ...tags];
+          continue;
         }
-        if (first === 0 || transaction) continue;
+        if (transaction && first > 0) {
+          const owner = transaction.postings.at(-1) || transaction;
+          const commentText = trimmed.slice(1).trim();
+          const parsedComment = parseComment(commentText, source, lineNumber, first + 1);
+          if (parsedComment.comment) owner.comments.push(parsedComment.comment);
+          if (parsedComment.tags.length > 0) {
+            owner.tags = [...(owner.tags || []), ...parsedComment.tags];
+          }
+        }
+        if (transaction) continue;
       }
       if (first > 0) {
         if (transaction) transaction.postings.push(parsePosting(raw, source, lineNumber));

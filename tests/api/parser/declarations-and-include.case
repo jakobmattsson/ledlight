@@ -16,6 +16,15 @@ commodity SEK ; currency
   "source": "fixture.ledger",
   "entries": [
     {
+      "type": "comment",
+      "text": "Header comment",
+      "location": {
+        "source": "fixture.ledger",
+        "line": 1,
+        "column": 1
+      }
+    },
+    {
       "type": "include",
       "comment": null,
       "location": {

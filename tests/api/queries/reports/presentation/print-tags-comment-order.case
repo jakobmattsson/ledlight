@@ -1,0 +1,60 @@
+Print preserves the source order of tags and comments on transaction and posting lines.
+
+========== CLI ==========
+
+ledlight print
+
+========== API ==========
+
+print()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+tag Reviewed
+tag Imported
+tag Category
+tag Receipt
+; Root note
+
+2024-01-01 Tagged ; :Reviewed:Imported: header note
+  ; first comment
+  ; Category: books
+  ; second comment
+  Assets:Cash  10 SEK ; [2024-01-02] :Receipt: card
+  ; posting comment one
+  ; :Imported: follow-up note
+  ; posting comment two
+  Equity:Opening  -10 SEK
+
+========== OUTPUT ==========
+
+commodity SEK
+  default
+
+account Assets:Cash
+
+account Equity:Opening
+
+tag Reviewed
+
+tag Imported
+
+tag Category
+
+tag Receipt
+
+; Root note
+
+2024-01-01 Tagged  ; :Reviewed:Imported: header note
+    ; first comment
+    ; Category: books
+    ; second comment
+    Assets:Cash     10 SEK  ; [2024-01-02] :Receipt: card
+    ; posting comment one
+    ; :Imported: follow-up note
+    ; posting comment two
+    Equity:Opening  -10 SEK

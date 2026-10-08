@@ -5,11 +5,11 @@ module.exports = ({
   path,
 }) => {
 
-  const SCHEMA_VERSION = '30';
+  const SCHEMA_VERSION = '36';
   const schema = fs.readFileSync(path.join(__dirname, '../../../surface/database/schema.sql'), 'utf8');
 
   const supportedVersions = new Set([
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', SCHEMA_VERSION,
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', SCHEMA_VERSION,
   ]);
 
   function tableExists(database, name) {
@@ -37,8 +37,12 @@ module.exports = ({
           DROP TABLE IF EXISTS posting_tags;
           DROP TABLE IF EXISTS ingestion_warnings;
           DROP TABLE IF EXISTS transaction_tags;
+          DROP TABLE IF EXISTS tags;
           DROP TABLE IF EXISTS resolved_posting_amounts;
+          DROP TABLE IF EXISTS comments;
+          DROP TABLE IF EXISTS notes;
           DROP TABLE IF EXISTS transaction_notes;
+          DROP TABLE IF EXISTS file_comments;
           DROP TABLE IF EXISTS postings;
           DROP TABLE IF EXISTS prices;
           DROP TABLE IF EXISTS valuation_prices;

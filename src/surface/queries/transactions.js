@@ -33,7 +33,7 @@ module.exports = ({
       JOIN resolved_posting_amounts AS nonzero_amounts
         ON nonzero_amounts.posting_id = nonzero_postings.id
       WHERE nonzero_postings.transaction_id = transactions.entry_id
-        AND decimal_cmp(nonzero_amounts.quantity, '0') != 0
+        AND decimal_cmp(nonzero_amounts.amount_quantity, '0') != 0
     )`];
     const filterParameters = [];
     if (id !== undefined) {
@@ -69,14 +69,13 @@ module.exports = ({
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
-        transactions.description,
-        transactions.comment
+        transactions.description
       FROM transactions
       ${filter}
       ORDER BY transactions.entry_id ${direction}
       ${paginationClause}
     `).all(...filterParameters, ...paginationParameters);
-    const transactions = transactionRows.map((row) => ({ ...row, notes: [], postings: [] }));
+    const transactions = transactionRows.map((row) => ({ ...row, comments: [], postings: [] }));
     if (transactions.length > 0) {
       const byId = new Map(transactions.map((transaction) =>
         [transaction.transactionId, transaction]));
@@ -92,9 +91,7 @@ module.exports = ({
             postings.transaction_id AS transactionId,
             postings.id AS postingId,
             postings.posting_date AS postingDate,
-            postings.line AS sourceLine,
             postings.account,
-            postings.comment,
             postings.amount_quantity AS amountQuantity,
             postings.amount_commodity AS amountCommodity,
             postings.lot_cost_quantity AS lotCostQuantity,
@@ -103,12 +100,10 @@ module.exports = ({
             postings.cost_quantity AS costQuantity,
             postings.cost_commodity AS costCommodity,
             postings.cost_is_total AS costIsTotal,
-            postings.balance_assignment_quantity AS balanceAssignmentQuantity,
-            postings.balance_assignment_commodity AS balanceAssignmentCommodity,
-            postings.balance_assertion_quantity AS balanceAssertionQuantity,
-            postings.balance_assertion_commodity AS balanceAssertionCommodity,
-            amounts.quantity,
-            amounts.commodity
+            postings.balance_quantity AS balanceQuantity,
+            postings.balance_commodity AS balanceCommodity,
+            amounts.amount_quantity AS quantity,
+            amounts.amount_commodity AS commodity
           FROM postings
           JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
@@ -119,11 +114,14 @@ module.exports = ({
         const transaction = byId.get(row.transactionId);
         let posting = transaction.postings.find((item) => item.id === row.postingId);
         if (!posting) {
+          const balance = row.balanceQuantity === null
+            ? null
+            : { quantity: row.balanceQuantity, commodity: row.balanceCommodity };
           posting = {
             id: row.postingId,
             postingDate: row.postingDate,
             account: row.account,
-            comment: row.comment,
+            comments: [],
             amount: row.amountQuantity === null
               ? null
               : { quantity: row.amountQuantity, commodity: row.amountCommodity },
@@ -141,41 +139,68 @@ module.exports = ({
                 commodity: row.costCommodity,
                 isTotal: Boolean(row.costIsTotal),
               },
-            balanceAssignment: row.balanceAssignmentQuantity === null
-              ? null
-              : {
-                quantity: row.balanceAssignmentQuantity,
-                commodity: row.balanceAssignmentCommodity,
-              },
-            balanceAssertion: row.balanceAssertionQuantity === null
-              ? null
-              : {
-                quantity: row.balanceAssertionQuantity,
-                commodity: row.balanceAssertionCommodity,
-              },
+            balanceAssignment: row.amountQuantity === null ? balance : null,
+            balanceAssertion: row.amountQuantity === null ? null : balance,
             amounts: [],
           };
-          Object.defineProperty(posting, 'sourceLine', { value: row.sourceLine });
           transaction.postings.push(posting);
         }
         posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
       }
-      const noteRows = batches.flatMap((ids) => {
+      const transactionCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
         return database.prepare(`
-          SELECT transaction_id AS transactionId, line, text
-          FROM transaction_notes
+          SELECT transaction_id AS transactionId, text
+          FROM comments
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position
         `).all(...ids);
       });
-      for (const row of noteRows) {
-        const transaction = byId.get(row.transactionId);
-        transaction.notes.push(row.text);
-        if (!Object.hasOwn(transaction, 'positionedNotes')) {
-          Object.defineProperty(transaction, 'positionedNotes', { value: [] });
-        }
-        transaction.positionedNotes.push({ line: row.line, text: row.text });
+      const postingCommentRows = batches.flatMap((ids) => {
+        const placeholders = ids.map(() => '?').join(', ');
+        return database.prepare(`
+          SELECT comments.posting_id AS postingId, comments.text
+          FROM postings
+          JOIN comments ON comments.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, comments.position
+        `).all(...ids);
+      });
+      const transactionTagRows = batches.flatMap((ids) => {
+        const placeholders = ids.map(() => '?').join(', ');
+        return database.prepare(`
+          SELECT transaction_id AS transactionId, name, value
+          FROM tags
+          WHERE transaction_id IN (${placeholders})
+          ORDER BY transaction_id, position, ordinal
+        `).all(...ids);
+      });
+      const postingTagRows = batches.flatMap((ids) => {
+        const placeholders = ids.map(() => '?').join(', ');
+        return database.prepare(`
+          SELECT tags.posting_id AS postingId, tags.name, tags.value
+          FROM postings
+          JOIN tags ON tags.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, tags.position, tags.ordinal
+        `).all(...ids);
+      });
+      const postingsById = new Map(transactions.flatMap((transaction) =>
+        transaction.postings.map((posting) => [posting.id, posting])));
+      for (const row of [...transactionCommentRows, ...postingCommentRows]) {
+        const owner = row.postingId === undefined
+          ? byId.get(row.transactionId)
+          : postingsById.get(row.postingId);
+        if (!owner) continue;
+        owner.comments.push(row.text);
+      }
+      for (const row of [...transactionTagRows, ...postingTagRows]) {
+        const owner = row.postingId === undefined
+          ? byId.get(row.transactionId)
+          : postingsById.get(row.postingId);
+        if (!owner) continue;
+        if (!owner.tags) owner.tags = [];
+        owner.tags.push({ name: row.name, value: row.value });
       }
     }
     return {
@@ -183,23 +208,10 @@ module.exports = ({
       ...(page === undefined ? {} : { page: selectedPage, pageSize }),
       totalTransactions,
       ...(page === undefined ? {} : { totalPages }),
-      transactions: transactions.map((transaction) => {
-        const result = {
-          ...transaction,
-          postings: transaction.postings.map(({ id: _id, ...posting }, index) => {
-            Object.defineProperty(posting, 'sourceLine', {
-              value: transaction.postings[index].sourceLine,
-            });
-            return posting;
-          }),
-        };
-        if (Object.hasOwn(transaction, 'positionedNotes')) {
-          Object.defineProperty(result, 'positionedNotes', {
-            value: transaction.positionedNotes,
-          });
-        }
-        return result;
-      }),
+      transactions: transactions.map((transaction) => ({
+        ...transaction,
+        postings: transaction.postings.map(({ id: _id, ...posting }) => posting),
+      })),
     };
   }
 

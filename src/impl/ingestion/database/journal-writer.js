@@ -27,31 +27,38 @@ module.exports = ({
       INSERT INTO source_files (id, path, sha256, size)
       VALUES (?, ?, ?, ?)
     `),
+      fileComment: database.prepare(`
+      INSERT INTO file_comments (entry_id, text)
+      VALUES (?, ?)
+    `),
       journalEntry: database.prepare(`
       INSERT INTO journal_entries (id, source_file_id, line)
       VALUES (?, ?, ?)
     `),
       transaction: database.prepare(`
       INSERT INTO transactions
-        (entry_id, date, description, comment)
-      VALUES (?, ?, ?, ?)
+        (entry_id, date, description)
+      VALUES (?, ?, ?)
     `),
       posting: database.prepare(`
       INSERT INTO postings
-        (id, transaction_id, position, posting_date, line, account,
+        (id, transaction_id, position, posting_date, account,
          amount_quantity, amount_commodity,
          lot_cost_quantity, lot_cost_commodity, lot_cost_is_total,
          cost_quantity, cost_commodity, cost_is_total,
-         balance_assignment_quantity, balance_assignment_commodity,
-         balance_assertion_quantity, balance_assertion_commodity, comment)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         balance_quantity, balance_commodity)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
-      note: database.prepare(`
-      INSERT INTO transaction_notes (transaction_id, position, line, text)
+      comment: database.prepare(`
+      INSERT INTO comments (transaction_id, posting_id, position, text)
       VALUES (?, ?, ?, ?)
     `),
+      entryTag: database.prepare(`
+      INSERT INTO tags (transaction_id, posting_id, position, ordinal, name, value)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `),
       resolvedPostingAmount: database.prepare(`
-      INSERT INTO resolved_posting_amounts (id, posting_id, position, quantity, commodity)
+      INSERT INTO resolved_posting_amounts (id, posting_id, position, amount_quantity, amount_commodity)
       VALUES (?, ?, ?, ?, ?)
     `),
       price: database.prepare(`
@@ -72,27 +79,47 @@ module.exports = ({
     };
   }
 
+  function insertComments(statement, comments, ownerLine, transactionId, postingId) {
+    for (const comment of comments) {
+      const position = comment.location.line - ownerLine;
+      statement.run(transactionId, postingId, position, comment.text);
+    }
+  }
+
+  function insertTags(statement, tags, ownerLine, transactionId, postingId) {
+    let previousPosition = -1;
+    let ordinal = 0;
+    for (const tag of tags) {
+      const position = tag.location.line - ownerLine;
+      ordinal = position === previousPosition ? ordinal + 1 : 0;
+      statement.run(transactionId, postingId, position, ordinal, tag.name, tag.value);
+      previousPosition = position;
+    }
+  }
+
   function insertTransaction(statements, entryId, entry, counters, resolvedPostings) {
     statements.transaction.run(
-      entryId, entry.date, entry.description, entry.comment,
+      entryId, entry.date, entry.description,
     );
+
+    insertComments(statements.comment, entry.comments, entry.location.line, entryId, null);
+    insertTags(statements.entryTag, entry.tags || [], entry.location.line, entryId, null);
 
     entry.postings.forEach((posting, position) => {
       const amount = amountFields(posting.amount);
       const lotCost = amountFields(posting.lotCost && posting.lotCost.amount);
       const cost = amountFields(posting.cost && posting.cost.amount);
-      const assignment = amountFields(posting.balanceAssignment);
-      const assertion = amountFields(posting.balanceAssertion);
+      const balance = amountFields(posting.balanceAssignment || posting.balanceAssertion);
       const postingId = ++counters.posting;
       statements.posting.run(
         postingId, entryId, position, posting.postingDate || entry.date,
-        posting.location.line,
         posting.account, amount.quantity, amount.commodity,
         lotCost.quantity, lotCost.commodity, posting.lotCost ? Number(posting.lotCost.total) : null,
         cost.quantity, cost.commodity, posting.cost ? Number(posting.cost.total) : null,
-        assignment.quantity, assignment.commodity, assertion.quantity, assertion.commodity,
-        posting.comment,
+        balance.quantity, balance.commodity,
       );
+      insertComments(statements.comment, posting.comments, posting.location.line, null, postingId);
+      insertTags(statements.entryTag, posting.tags || [], posting.location.line, null, postingId);
       resolvedPostings[position].forEach((resolvedAmount, amountPosition) => {
         statements.resolvedPostingAmount.run(
           ++counters.resolvedAmount, postingId, amountPosition,
@@ -101,17 +128,15 @@ module.exports = ({
       });
     });
 
-    entry.notes.forEach((note, position) => {
-      statements.note.run(
-        entryId, position, note.location.line, note.text,
-      );
-    });
   }
 
   function insertEntry(
     statements, entryId, entry, counters, resolvedTransactions, ignoredProperties, usage,
   ) {
     switch (entry.type) {
+      case 'comment':
+        statements.fileComment.run(entryId, entry.text);
+        break;
       case 'transaction':
         insertTransaction(statements, entryId, entry, counters, resolvedTransactions.get(entry));
         break;

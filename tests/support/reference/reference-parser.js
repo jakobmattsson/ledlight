@@ -30,6 +30,30 @@ module.exports = ({
     return node.children.map((child) => child.ast(source));
   }
 
+  function comment(text, where) {
+    return {
+      text,
+      key: null,
+      value: null,
+      location: where,
+    };
+  }
+
+  function parsedComment(text, tags, where) {
+    const binary = tags.length > 0 && tags[0].value === null;
+    const remainingText = binary
+      ? text.replace(/^:[^\s:;]+(?::[^\s:;]+)*:(?:[ \t]+)?/u, '').trim()
+      : tags.length > 0 ? '' : text;
+    const locatedTags = tags.map((tag) => {
+      Object.defineProperty(tag, 'location', { value: where });
+      return tag;
+    });
+    return {
+      comment: tags.length > 0 && !remainingText ? null : comment(remainingText, where),
+      tags: locatedTags,
+    };
+  }
+
   function parseDate(value, node, source) {
     const year = Number(value.slice(0, 4));
     const month = Number(value.slice(5, 7));
@@ -50,32 +74,33 @@ module.exports = ({
       };
     },
 
-    topLevel_transaction(date, _space, description, comment, _lineEnd, body) {
+    topLevel_transaction(date, _space, description, inlineComment, _lineEnd, body) {
       const source = this.args.source;
       const text = description.sourceString.trim();
       const items = values(body, source).filter((item) => item !== null);
-      const postings = items.filter((item) => item.type === 'posting');
-      const transactionComment = optionalValue(comment, source);
-      const tags = [
-        ...(transactionComment ? transactionComment.tags : []),
-        ...items.filter((item) => item.type === 'note').flatMap((item) => item.tags || []),
-      ];
+      const headerComment = optionalValue(inlineComment, source);
       const transaction = {
         type: 'transaction',
         date: date.ast(source),
         description: text,
-        comment: transactionComment ? transactionComment.comment : null,
+        postings: [],
+        comments: headerComment?.comment ? [headerComment.comment] : [],
         location: location(date, source),
       };
-      if (postings.length === 0) {
+      if (headerComment?.tags.length > 0) transaction.tags = [...headerComment.tags];
+      for (const item of items) {
+        if (item.type === 'posting') {
+          transaction.postings.push(item);
+        } else {
+          const owner = transaction.postings.at(-1) || transaction;
+          if (item.comment) owner.comments.push(item.comment);
+          if (item.tags.length > 0) owner.tags = [...(owner.tags || []), ...item.tags];
+        }
+      }
+      if (transaction.postings.length === 0) {
         throw syntaxError('Transaction has no postings', source, transaction.location.line, transaction.location.column);
       }
-      return {
-        ...transaction,
-        ...(tags.length > 0 ? { tags } : {}),
-        postings,
-        notes: items.filter((item) => item.type === 'note').map(({ type: _type, ...note }) => note),
-      };
+      return transaction;
     },
 
     posting(_indent, account, amountPart, _space, comment, _lineEnd) {
@@ -86,14 +111,14 @@ module.exports = ({
         balanceAssignment: null,
         balanceAssertion: null,
       };
-      const postingComment = optionalValue(comment, this.args.source);
+      const inlineComment = optionalValue(comment, this.args.source);
       return {
         type: 'posting',
         account: account.sourceString.trim(),
         ...expression,
-        postingDate: postingComment ? postingComment.date : null,
-        comment: postingComment ? postingComment.comment : null,
-        ...(postingComment && postingComment.tags.length > 0 ? { tags: postingComment.tags } : {}),
+        postingDate: inlineComment ? inlineComment.date : null,
+        comments: inlineComment?.comment ? [inlineComment.comment] : [],
+        ...(inlineComment?.tags.length > 0 ? { tags: inlineComment.tags } : {}),
         location: location(account, this.args.source),
       };
     },
@@ -185,29 +210,31 @@ module.exports = ({
     indentedComment(_indent, marker, _space, metadata, _lineEnd) {
       const tags = metadata.ast(this.args.source);
       const value = metadata.sourceString.trim();
-      const valueTag = tags.length === 1 && tags[0].value !== null ? tags[0] : null;
       return {
-        type: 'note',
-        text: value,
-        key: valueTag ? valueTag.name : null,
-        value: valueTag ? valueTag.value : null,
-        ...(tags.length > 0 ? { tags } : {}),
-        location: location(marker, this.args.source),
+        type: 'comment',
+        ...parsedComment(value, tags, location(marker, this.args.source)),
       };
     },
-    topLevel_comment(_semicolon, _space, _text, _lineEnd) { return null; },
-    postingComment(_semicolon, _space, _open, date, _close, _dateSpace, metadata) {
+    topLevel_comment(semicolon, _space, text, _lineEnd) {
       return {
-        date: optionalValue(date, this.args.source),
-        comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
-        tags: metadata.ast(this.args.source),
+        type: 'comment', text: text.sourceString.trim(),
+        location: location(semicolon, this.args.source),
       };
     },
-    transactionComment(_space1, _semicolon, _space2, metadata) {
+    postingInlineComment(_semicolon, _space, _open, date, _close, _dateSpace, metadata) {
+      const tags = metadata.ast(this.args.source);
+      const postingDate = optionalValue(date, this.args.source);
+      const text = metadata.sourceString.trim();
       return {
-        comment: this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
-        tags: metadata.ast(this.args.source),
+        date: postingDate,
+        ...(postingDate && !text
+          ? { comment: null, tags: [] }
+          : parsedComment(text, tags, location(_semicolon, this.args.source))),
       };
+    },
+    transactionInlineComment(_space1, _semicolon, _space2, metadata) {
+      return parsedComment(this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
+        metadata.ast(this.args.source), location(_semicolon, this.args.source));
     },
     inlineComment(_space1, _semicolon, _space2, text) { return text.sourceString.trim(); },
     metadataComment_tags(tags, _space, _text) { return tags.ast(this.args.source); },

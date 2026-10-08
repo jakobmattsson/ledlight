@@ -439,28 +439,38 @@ to journal comment metadata.
 hash, and its traversal order. `checkDatabaseSync` rebuilds the current source
 manifest and reports added, removed, and changed files.
 
-The main query tables are `transactions`, `postings`, `transaction_notes`,
+The main query tables are `transactions`, `postings`, `comments`,
 `resolved_posting_amounts`, `prices`, `valuation_prices`, and the three
 declaration tables. `tag_declarations` stores `tag` directives and their usage
 status. Commodity declarations store the format and default status used by the
 public `commodities` query. `valuation_prices` is derived from `prices` at the
 end of each database build and is not an independent journal source.
-`journal_entries` preserves source file and line information shared by entry
-types. Its ID also preserves global source order. Quantities are stored as
-`TEXT`, exactly as parsed, so SQL storage never rounds an accounting value
-through binary floating point.
+`journal_entries` preserves source file, line, and order for every stored
+top-level entry, including file comments. Quantities are stored as `TEXT`,
+exactly as parsed, so SQL storage never rounds an accounting value through
+binary floating point.
+`comments` stores transaction and posting comments together. Position zero
+identifies a comment on the transaction or posting line; subsequent positions
+identify following indented comment lines. An indented comment belongs to the
+preceding posting when one exists, and otherwise to the transaction.
+`file_comments` stores top-level comment text. Its `entry_id` links to the
+comment's source file and line in `journal_entries`.
 Price directives use `base_commodity`, `quote_quantity`, and `quote_commodity`;
 for example, `P 2024-01-01 FUND 10 SEK` prices the base commodity `FUND` as a
 quote of `10 SEK`.
 
 Each posting has a non-null `posting_date`: its explicit posting date when one
-is present, otherwise the transaction's primary date. This preserves source
+is present, otherwise the transaction's primary date. Inline posting date
+markers are excluded from stored comment text. This preserves source
 timing for reconciliation. Aggregate reports use this posting date by default.
 Callers can instead select the transaction's primary date so all postings in a
 transaction take effect atomically.
 
 Balance assignments and implicit balancing postings are resolved during the
-database build and stored in `resolved_posting_amounts`. This makes aggregate
+database build and stored in `resolved_posting_amounts`. In `postings`, both
+balance assignments and assertions use `balance_quantity` and
+`balance_commodity`; a missing source amount identifies an assignment, while
+an explicit source amount identifies an assertion. This makes aggregate
 reports a direct SQL operation rather than a replay of Ledger semantics at
 query time.
 

@@ -2,7 +2,7 @@ Ledlight {
   document = topLevel* end
 
   topLevel
-    = date spacing+ description transactionComment? lineEnd (indentedComment | posting)+                  -- transaction
+    = date spacing+ description transactionInlineComment? lineEnd (indentedComment | posting)+            -- transaction
     | "commodity" spacing+ commoditySymbol inlineComment? spacing* lineEnd commodityBody*                 -- commodity
     | "account" spacing+ directiveValue inlineComment? lineEnd                                            -- account
     | "tag" spacing+ directiveValue inlineComment? lineEnd                                                -- tag
@@ -14,7 +14,7 @@ Ledlight {
   description = (~forbiddenDescriptionCharacter any)+
   indentedComment = spacing+ ";" spacing* metadataComment lineEnd
 
-  posting = spacing+ account amountPart? spacing* postingComment? lineEnd
+  posting = spacing+ account amountPart? spacing* postingInlineComment? lineEnd
   account = (~forbiddenAccountCharacter any)+
   amountPart = postingAmountSeparator amountExpression?
 
@@ -37,8 +37,8 @@ Ledlight {
 
   commoditySymbol = (~forbiddenCommodityCharacter any)+
 
-  postingComment = ";" spacing* ("[" date "]" spacing*)? metadataComment
-  transactionComment = spacing* ";" spacing* metadataComment
+  postingInlineComment = ";" spacing* ("[" date "]" spacing*)? metadataComment
+  transactionInlineComment = spacing* ";" spacing* metadataComment
   inlineComment = spacing* ";" spacing* commentText
   metadataComment = binaryTags (spacing+ commentText)?     -- tags
                   | tagName ":" spacing+ commentText       -- value

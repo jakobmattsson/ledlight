@@ -50,25 +50,13 @@ module.exports = ({
       );
     }
     for (const tag of posting.tags || []) {
-      warnUnlessDeclared('tag', tag.name, declarations.tags, posting.location, warnings);
+      warnUnlessDeclared('tag', tag.name, declarations.tags, tag.location || posting.location, warnings);
     }
   }
 
   function validateTransactionDeclarations(transaction, declarations, warnings) {
-    const noteTagCount = transaction.notes.reduce(
-      (count, note) => count + (note.tags || []).length,
-      0,
-    );
-    const headerTags = (transaction.tags || []).slice(
-      0, (transaction.tags || []).length - noteTagCount,
-    );
-    for (const tag of headerTags) {
-      warnUnlessDeclared('tag', tag.name, declarations.tags, transaction.location, warnings);
-    }
-    for (const note of transaction.notes) {
-      for (const tag of note.tags || []) {
-        warnUnlessDeclared('tag', tag.name, declarations.tags, note.location, warnings);
-      }
+    for (const tag of transaction.tags || []) {
+      warnUnlessDeclared('tag', tag.name, declarations.tags, tag.location || transaction.location, warnings);
     }
     for (const posting of transaction.postings) {
       validatePostingDeclarations(posting, declarations, warnings);

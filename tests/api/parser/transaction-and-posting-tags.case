@@ -16,7 +16,6 @@ Parses transaction and posting tags from comments.
       "type": "transaction",
       "date": "2024-01-01",
       "description": "Tagged",
-      "comment": ":reviewed:imported: bank statement",
       "tags": [
         {
           "name": "reviewed",
@@ -44,7 +43,7 @@ Parses transaction and posting tags from comments.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": "Receipt: 1234",
+          "comments": [],
           "tags": [
             {
               "name": "Receipt",
@@ -69,7 +68,18 @@ Parses transaction and posting tags from comments.
           "balanceAssignment": null,
           "balanceAssertion": null,
           "postingDate": null,
-          "comment": ":balanced: complete",
+          "comments": [
+            {
+              "text": "complete",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 4,
+                "column": 26
+              }
+            }
+          ],
           "tags": [
             {
               "name": "balanced",
@@ -83,21 +93,15 @@ Parses transaction and posting tags from comments.
           }
         }
       ],
-      "notes": [
+      "comments": [
         {
-          "text": "Source: bank export",
-          "key": "Source",
-          "value": "bank export",
-          "tags": [
-            {
-              "name": "Source",
-              "value": "bank export"
-            }
-          ],
+          "text": "bank statement",
+          "key": null,
+          "value": null,
           "location": {
             "source": "fixture.ledger",
-            "line": 2,
-            "column": 3
+            "line": 1,
+            "column": 19
           }
         }
       ],

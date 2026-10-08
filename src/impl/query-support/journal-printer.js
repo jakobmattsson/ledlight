@@ -4,8 +4,31 @@ module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
   const quantityText = (quantity) => formatDecimal(parseDecimal(quantity));
   const amountText = (quantity, commodity) => `${quantityText(quantity)} ${commodity}`;
   const withComment = (text, comment) => comment === null ? text : `${text}  ; ${comment}`;
+  const tagText = ({ name, value }) => value === null ? `:${name}:` : `${name}: ${value}`;
+  const entryRank = { comment: 0, account: 1, tag: 2, commodity: 3, price: 4, transaction: 5 };
 
-  function postingText(posting, accountWidth) {
+  function metadataLines(owner) {
+    const byPosition = new Map();
+    for (const { position, text } of owner.comments) {
+      byPosition.set(position, { comment: text, tags: [] });
+    }
+    for (const tag of owner.tags) {
+      if (!byPosition.has(tag.position)) byPosition.set(tag.position, { tags: [] });
+      byPosition.get(tag.position).tags.push(tag);
+    }
+    return [...byPosition].sort(([left], [right]) => left - right)
+      .map(([position, { comment, tags }]) => {
+        const tagsText = tags.length > 0 && tags.every(({ value }) => value === null)
+          ? `:${tags.map(({ name }) => name).join(':')}:`
+          : tags.map(tagText).join(' ');
+        return {
+          position,
+          text: [tagsText, comment].filter((part) => part !== undefined && part !== '').join(' '),
+        };
+      });
+  }
+
+  function postingText(posting, accountWidth, transactionDate) {
     const expression = [];
     if (posting.amountQuantity !== null) {
       expression.push(amountText(posting.amountQuantity, posting.amountCommodity));
@@ -21,39 +44,43 @@ module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
         posting.costQuantity, posting.costCommodity,
       )}`);
     }
-    if (posting.balanceAssignmentQuantity !== null) {
-      expression.push(`= ${amountText(
-        posting.balanceAssignmentQuantity, posting.balanceAssignmentCommodity,
-      )}`);
-    }
-    if (posting.balanceAssertionQuantity !== null) {
-      expression.push(`= ${amountText(
-        posting.balanceAssertionQuantity, posting.balanceAssertionCommodity,
-      )}`);
+    if (posting.balanceQuantity !== null) {
+      expression.push(`= ${amountText(posting.balanceQuantity, posting.balanceCommodity)}`);
     }
     const account = expression.length === 0
       ? posting.account
       : posting.account.padEnd(accountWidth);
     const line = `    ${account}${expression.length ? `  ${expression.join(' ')}` : ''}`;
-    return withComment(line, posting.comment);
+    const metadata = metadataLines(posting);
+    const inline = metadata.find(({ position }) => position === 0)?.text;
+    const dateMarker = posting.postingDate === transactionDate
+      ? null : `[${posting.postingDate}]`;
+    const inlineText = [dateMarker, inline]
+      .filter((part) => part !== null && part !== undefined && part !== '').join(' ');
+    return [
+      withComment(line, dateMarker === null && inline === undefined ? null : inlineText),
+      ...metadata.filter(({ position }) => position !== 0)
+        .map(({ text }) => `    ; ${text}`),
+    ];
   }
 
   function transactionText(entry) {
-    const lines = [withComment(`${entry.date} ${entry.description}`, entry.comment)];
+    const metadata = metadataLines(entry);
+    const inline = metadata.find(({ position }) => position === 0)?.text ?? null;
+    const lines = [withComment(`${entry.date} ${entry.description}`, inline)];
+    lines.push(...metadata.filter(({ position }) => position !== 0)
+      .map(({ text }) => `    ; ${text}`));
     const accountWidth = Math.max(0, ...entry.postings.map(({ account }) => account.length));
-    const children = [
-      ...entry.postings.map((posting) => ({
-        line: posting.line,
-        text: postingText(posting, accountWidth),
-      })),
-      ...entry.notes.map((note) => ({ line: note.line, text: `    ; ${note.text}` })),
-    ].sort((left, right) => left.line - right.line);
-    lines.push(...children.map(({ text }) => text));
+    for (const posting of entry.postings) {
+      lines.push(...postingText(posting, accountWidth, entry.date));
+    }
     return lines.join('\n');
   }
 
   function entryText(entry) {
     switch (entry.type) {
+      case 'comment':
+        return `; ${entry.text}`;
       case 'account':
       case 'tag':
         return withComment(`${entry.type} ${entry.name}`, entry.comment);
@@ -76,19 +103,21 @@ module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
     }
   }
 
-  function printJournal(database) {
+  function printJournal(database, { density, sortDeclarations }) {
     const ids = database.prepare('SELECT id FROM journal_entries ORDER BY id').pluck().all();
     if (ids.length === 0) return '';
     const entries = new Map();
+    const postings = new Map();
     const load = (type, sql, decorate) => {
       for (const row of database.prepare(sql).all()) {
         entries.set(row.entryId, { type, ...(decorate ? decorate(row) : row) });
       }
     };
 
+    load('comment', 'SELECT entry_id AS entryId, text FROM file_comments');
     load('transaction', `
-      SELECT entry_id AS entryId, date, description, comment FROM transactions
-    `, (row) => ({ ...row, postings: [], notes: [] }));
+      SELECT entry_id AS entryId, date, description FROM transactions
+    `, (row) => ({ ...row, postings: [], comments: [], tags: [] }));
     load('account', `
       SELECT entry_id AS entryId, name, comment FROM account_declarations
     `);
@@ -105,29 +134,54 @@ module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
       FROM prices
     `);
 
-    for (const posting of database.prepare(`
-      SELECT transaction_id AS transactionId, line, account,
-        amount_quantity AS amountQuantity, amount_commodity AS amountCommodity,
+    for (const row of database.prepare(`
+      SELECT id AS postingId, transaction_id AS transactionId, posting_date AS postingDate,
+        account, amount_quantity AS amountQuantity, amount_commodity AS amountCommodity,
         lot_cost_quantity AS lotCostQuantity, lot_cost_commodity AS lotCostCommodity,
         lot_cost_is_total AS lotCostIsTotal,
         cost_quantity AS costQuantity, cost_commodity AS costCommodity,
         cost_is_total AS costIsTotal,
-        balance_assignment_quantity AS balanceAssignmentQuantity,
-        balance_assignment_commodity AS balanceAssignmentCommodity,
-        balance_assertion_quantity AS balanceAssertionQuantity,
-        balance_assertion_commodity AS balanceAssertionCommodity, comment
+        balance_quantity AS balanceQuantity, balance_commodity AS balanceCommodity
       FROM postings ORDER BY transaction_id, position
     `).all()) {
-      entries.get(posting.transactionId).postings.push(posting);
+      const posting = { ...row, comments: [], tags: [] };
+      entries.get(row.transactionId).postings.push(posting);
+      postings.set(row.postingId, posting);
     }
-    for (const note of database.prepare(`
-      SELECT transaction_id AS transactionId, line, text
-      FROM transaction_notes ORDER BY transaction_id, position
+    for (const row of database.prepare(`
+      SELECT transaction_id AS transactionId, posting_id AS postingId, position, text
+      FROM comments ORDER BY id
     `).all()) {
-      entries.get(note.transactionId).notes.push(note);
+      const owner = row.postingId === null ? entries.get(row.transactionId) : postings.get(row.postingId);
+      owner.comments.push({ position: row.position, text: row.text });
+    }
+    for (const row of database.prepare(`
+      SELECT transaction_id AS transactionId, posting_id AS postingId,
+        position, name, value
+      FROM tags ORDER BY transaction_id, posting_id, position, ordinal
+    `).all()) {
+      const owner = row.postingId === null ? entries.get(row.transactionId) : postings.get(row.postingId);
+      owner.tags.push({ position: row.position, name: row.name, value: row.value });
     }
 
-    return `${ids.map((id) => entryText(entries.get(id))).join('\n\n')}\n`;
+    const orderedIds = sortDeclarations
+      ? ids.toSorted((leftId, rightId) => {
+        const left = entries.get(leftId);
+        const right = entries.get(rightId);
+        if (entryRank[left.type] !== entryRank[right.type]) {
+          return entryRank[left.type] - entryRank[right.type];
+        }
+        if (left.type === 'price') {
+          const commodityOrder = left.baseCommodity.localeCompare(right.baseCommodity, 'en');
+          if (commodityOrder !== 0) return commodityOrder;
+          const dateOrder = left.date.localeCompare(right.date, 'en');
+          if (dateOrder !== 0) return dateOrder;
+        }
+        return leftId - rightId;
+      })
+      : ids;
+    return `${orderedIds.map((id) => entryText(entries.get(id)))
+      .join(density === 'compact' ? '\n' : '\n\n')}\n`;
   }
 
   return { printJournal };

@@ -1,0 +1,66 @@
+Sorted print groups entries and orders prices by commodity and date.
+
+========== CLI ==========
+
+ledlight print --sort-declarations
+
+========== API ==========
+
+print({ sortDeclarations: true })
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Assets:Cash
+tag Reviewed
+commodity USD
+P 2024-03-01 USD 3 SEK
+account Equity:Opening
+P 2024-01-01 USD 2 SEK
+commodity EUR
+P 2024-02-01 EUR 4 SEK
+; First root comment
+2024-01-01 Opening ; :Reviewed: memo
+  Assets:Cash  1 SEK
+  Equity:Opening  -1 SEK
+2024-01-02 Closing
+  Assets:Cash  -1 SEK
+  Equity:Opening  1 SEK
+; Second root comment
+P 2024-01-01 EUR 5 SEK
+
+========== OUTPUT ==========
+
+; First root comment
+
+; Second root comment
+
+account Assets:Cash
+
+account Equity:Opening
+
+tag Reviewed
+
+commodity SEK
+  default
+
+commodity USD
+
+commodity EUR
+
+P 2024-01-01 EUR 5 SEK
+
+P 2024-02-01 EUR 4 SEK
+
+P 2024-01-01 USD 2 SEK
+
+P 2024-03-01 USD 3 SEK
+
+2024-01-01 Opening  ; :Reviewed: memo
+    Assets:Cash     1 SEK
+    Equity:Opening  -1 SEK
+
+2024-01-02 Closing
+    Assets:Cash     -1 SEK
+    Equity:Opening  1 SEK

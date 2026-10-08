@@ -1,10 +1,13 @@
-Keeps unrecognized tag-like comment text as plain comments.
+Assigns indented comments to the preceding posting and preserves inline comments.
 
 ========== TEXT ==========
 
-2024-01-01 Untagged ; ordinary :embedded:
-  Assets:Cash  1 SEK ; :two words:
-  Equity:Opening  -1 SEK ; Key:: value
+2024-01-01 Groceries ; transaction inline
+  ; transaction detail
+  Expenses:Food  100 SEK ; expense inline
+  ; Receipt: 1234
+  Assets:Bank  -100 SEK ; bank inline
+  ; bank detail
 
 ========== JSON ==========
 
@@ -14,13 +17,13 @@ Keeps unrecognized tag-like comment text as plain comments.
     {
       "type": "transaction",
       "date": "2024-01-01",
-      "description": "Untagged",
+      "description": "Groceries",
       "postings": [
         {
           "type": "posting",
-          "account": "Assets:Cash",
+          "account": "Expenses:Food",
           "amount": {
-            "quantity": "1",
+            "quantity": "100",
             "commodity": "SEK"
           },
           "lotCost": null,
@@ -30,37 +33,7 @@ Keeps unrecognized tag-like comment text as plain comments.
           "postingDate": null,
           "comments": [
             {
-              "text": ":two words:",
-              "key": null,
-              "value": null,
-              "location": {
-                "source": "fixture.ledger",
-                "line": 2,
-                "column": 22
-              }
-            }
-          ],
-          "location": {
-            "source": "fixture.ledger",
-            "line": 2,
-            "column": 3
-          }
-        },
-        {
-          "type": "posting",
-          "account": "Equity:Opening",
-          "amount": {
-            "quantity": "-1",
-            "commodity": "SEK"
-          },
-          "lotCost": null,
-          "cost": null,
-          "balanceAssignment": null,
-          "balanceAssertion": null,
-          "postingDate": null,
-          "comments": [
-            {
-              "text": "Key:: value",
+              "text": "expense inline",
               "key": null,
               "value": null,
               "location": {
@@ -74,18 +47,74 @@ Keeps unrecognized tag-like comment text as plain comments.
             "source": "fixture.ledger",
             "line": 3,
             "column": 3
+          },
+          "tags": [
+            {
+              "name": "Receipt",
+              "value": "1234"
+            }
+          ]
+        },
+        {
+          "type": "posting",
+          "account": "Assets:Bank",
+          "amount": {
+            "quantity": "-100",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "postingDate": null,
+          "comments": [
+            {
+              "text": "bank inline",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 5,
+                "column": 25
+              }
+            },
+            {
+              "text": "bank detail",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 6,
+                "column": 3
+              }
+            }
+          ],
+          "location": {
+            "source": "fixture.ledger",
+            "line": 5,
+            "column": 3
           }
         }
       ],
       "comments": [
         {
-          "text": "ordinary :embedded:",
+          "text": "transaction inline",
           "key": null,
           "value": null,
           "location": {
             "source": "fixture.ledger",
             "line": 1,
-            "column": 21
+            "column": 22
+          }
+        },
+        {
+          "text": "transaction detail",
+          "key": null,
+          "value": null,
+          "location": {
+            "source": "fixture.ledger",
+            "line": 2,
+            "column": 3
           }
         }
       ],

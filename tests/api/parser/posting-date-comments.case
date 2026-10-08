@@ -1,11 +1,10 @@
-Parses semicolon comments at the top level.
+Parses posting dates separately from their comments.
 
 ========== TEXT ==========
 
-; top-level comment
-2024-01-01 Transaction
-  Assets:Cash  1 SEK
-  Equity:Opening
+2024-01-01 Dated postings
+  Assets:Cash  10 SEK ; [2024-01-02] card
+  Equity:Opening  -10 SEK ; [2024-01-03]
 
 ========== JSON ==========
 
@@ -13,51 +12,56 @@ Parses semicolon comments at the top level.
   "source": "fixture.ledger",
   "entries": [
     {
-      "type": "comment",
-      "text": "top-level comment",
-      "location": {
-        "source": "fixture.ledger",
-        "line": 1,
-        "column": 1
-      }
-    },
-    {
       "type": "transaction",
       "date": "2024-01-01",
-      "description": "Transaction",
+      "description": "Dated postings",
       "postings": [
         {
           "type": "posting",
           "account": "Assets:Cash",
           "amount": {
-            "quantity": "1",
+            "quantity": "10",
             "commodity": "SEK"
           },
           "lotCost": null,
           "cost": null,
           "balanceAssignment": null,
           "balanceAssertion": null,
-          "postingDate": null,
-          "comments": [],
+          "postingDate": "2024-01-02",
+          "comments": [
+            {
+              "text": "card",
+              "key": null,
+              "value": null,
+              "location": {
+                "source": "fixture.ledger",
+                "line": 2,
+                "column": 23
+              }
+            }
+          ],
           "location": {
             "source": "fixture.ledger",
-            "line": 3,
+            "line": 2,
             "column": 3
           }
         },
         {
           "type": "posting",
           "account": "Equity:Opening",
-          "amount": null,
+          "amount": {
+            "quantity": "-10",
+            "commodity": "SEK"
+          },
           "lotCost": null,
           "cost": null,
           "balanceAssignment": null,
           "balanceAssertion": null,
-          "postingDate": null,
+          "postingDate": "2024-01-03",
           "comments": [],
           "location": {
             "source": "fixture.ledger",
-            "line": 4,
+            "line": 3,
             "column": 3
           }
         }
@@ -65,7 +69,7 @@ Parses semicolon comments at the top level.
       "comments": [],
       "location": {
         "source": "fixture.ledger",
-        "line": 2,
+        "line": 1,
         "column": 1
       }
     }

@@ -9,8 +9,8 @@ module.exports = ({
       SELECT
         amounts.id,
         postings.account,
-        amounts.quantity,
-        amounts.commodity
+        amounts.amount_quantity AS quantity,
+        amounts.amount_commodity AS commodity
       FROM resolved_posting_amounts AS amounts
       JOIN postings ON postings.id = amounts.posting_id
       ORDER BY postings.posting_date, postings.transaction_id,
@@ -18,7 +18,7 @@ module.exports = ({
     `).all();
     const updateBalance = database.prepare(`
       UPDATE resolved_posting_amounts
-      SET running_balance = ?
+      SET balance_quantity = ?
       WHERE id = ?
     `);
     const balancesByAccount = new Map();

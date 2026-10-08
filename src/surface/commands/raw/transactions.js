@@ -24,10 +24,12 @@ module.exports = ({ cliOptions: options }) => ({
           transactionId: transaction.transactionId,
           transactionDate: transaction.transactionDate,
           description: transaction.description,
-          transactionComment: transaction.comment ?? '',
+          transactionComments: JSON.stringify(transaction.comments),
+          transactionTags: JSON.stringify(transaction.tags || []),
           postingDate: posting.postingDate,
           account: posting.account,
-          postingComment: posting.comment ?? '',
+          postingComments: JSON.stringify(posting.comments),
+          postingTags: JSON.stringify(posting.tags || []),
           quantity: amount.quantity,
           commodity: amount.commodity,
         }))));
@@ -35,8 +37,9 @@ module.exports = ({ cliOptions: options }) => ({
 
     function formatTransactionsCsv(report) {
       const fields = [
-        'transactionId', 'transactionDate', 'description', 'transactionComment',
-        'postingDate', 'account', 'postingComment', 'quantity', 'commodity',
+        'transactionId', 'transactionDate', 'description', 'transactionComments',
+        'transactionTags', 'postingDate', 'account', 'postingComments', 'postingTags',
+        'quantity', 'commodity',
       ];
       const lines = [fields.join(',')];
       for (const row of transactionRows(report)) {
@@ -123,6 +126,8 @@ module.exports = ({ cliOptions: options }) => ({
     }
 
     function formatTransactionsText(report, descriptions) {
+      const formatTag = ({ name, value }) => value === null
+        ? `:${name}:` : `${name}: ${value}`;
       const accountColumnWidth = 34;
       const amountColumnWidth = 12;
       const maximumPostingLineWidth = 61;
@@ -131,17 +136,14 @@ module.exports = ({ cliOptions: options }) => ({
       for (const transaction of report.transactions) {
         const date = transaction.transactionDate;
         const header = `${date} ${transaction.description}`;
-        const inlineTransactionComment = transaction.comment === null
-          ? ''
-          : ` ; ${transaction.comment}`;
-        const multilineTransactionComment = transaction.comment !== null &&
-          `${header}${inlineTransactionComment}`.length > 80;
-        lines.push(`${header}${multilineTransactionComment ? '' : inlineTransactionComment}`);
-        if (multilineTransactionComment) lines.push(`    ; ${transaction.comment}`);
-        const positionedNotes = transaction.positionedNotes ?? transaction.notes.map((text) => ({
-          line: Number.NEGATIVE_INFINITY, text,
-        }));
-        let noteIndex = 0;
+        const inlineTransactionComment = transaction.comments[0];
+        const inlineHeader = inlineTransactionComment === undefined ? '' : ` ; ${inlineTransactionComment}`;
+        const wrapHeaderComment = inlineTransactionComment !== undefined &&
+          `${header}${inlineHeader}`.length > 80;
+        lines.push(`${header}${wrapHeaderComment ? '' : inlineHeader}`);
+        if (wrapHeaderComment) lines.push(`    ; ${inlineTransactionComment}`);
+        for (const comment of transaction.comments.slice(1)) lines.push(`    ; ${comment}`);
+        for (const tag of transaction.tags || []) lines.push(`    ; ${formatTag(tag)}`);
         const canElideAmount = transaction.postings.length === 2 &&
           transaction.postings.every((posting) =>
             posting.amounts.length === 1 && posting.lotCost === null && posting.cost === null &&
@@ -158,12 +160,14 @@ module.exports = ({ cliOptions: options }) => ({
           ? implicitPostingIndexes.length === 1 ? implicitPostingIndexes[0] : 1
           : -1;
         transaction.postings.forEach((posting, index) => {
-          while (noteIndex < positionedNotes.length &&
-                 positionedNotes[noteIndex].line <
-                   (posting.sourceLine ?? Number.POSITIVE_INFINITY)) {
-            lines.push(`    ; ${positionedNotes[noteIndex].text}`);
-            noteIndex += 1;
-          }
+          const inlinePostingComment = posting.comments[0];
+          const postingDateMarker = posting.postingDate && posting.postingDate !== date
+            ? `[${posting.postingDate}]` : null;
+          const inlinePostingMetadata = postingDateMarker === null
+            ? inlinePostingComment
+            : inlinePostingComment === undefined || inlinePostingComment === ''
+              ? postingDateMarker
+              : `${postingDateMarker} ${inlinePostingComment}`;
           const formattedExpression = formatPostingExpression(posting, formats);
           const expression = index === elidedAmountIndex ? '' : formattedExpression.text;
           const alignmentWidth = posting.lotCost !== null || posting.cost !== null
@@ -179,23 +183,21 @@ module.exports = ({ cliOptions: options }) => ({
               ? `${posting.account}  ${alignedExpression(10)}`
               : `${posting.account.padEnd(accountColumnWidth)}  ` +
                 alignedExpression(amountColumnWidth);
-          const inlineComment = posting.comment === null ? '' : `  ; ${posting.comment}`;
+          const inlineComment = inlinePostingMetadata === undefined ? '' : `  ; ${inlinePostingMetadata}`;
           const maximumWidth = expression === '' ? maximumPostingLineWidth : 80;
           const projectedLineLength = expression === ''
             ? 4 + Math.min(posting.account.length, accountColumnWidth) +
               (posting.amount !== null && posting.account.length > accountColumnWidth ? 2 : 0) +
               inlineComment.length
             : `    ${body}${inlineComment}`.length;
-          const multilineComment = posting.comment !== null &&
+          const wrapPostingComment = inlinePostingMetadata !== undefined &&
             projectedLineLength > maximumWidth;
-          const postingComment = multilineComment ? '' : inlineComment;
+          const postingComment = wrapPostingComment ? '' : inlineComment;
           lines.push(`    ${body}${postingComment}`);
-          if (multilineComment) lines.push(`    ; ${posting.comment}`);
+          if (wrapPostingComment) lines.push(`    ; ${inlinePostingMetadata}`);
+          for (const comment of posting.comments.slice(1)) lines.push(`    ; ${comment}`);
+          for (const tag of posting.tags || []) lines.push(`    ; ${formatTag(tag)}`);
         });
-        while (noteIndex < positionedNotes.length) {
-          lines.push(`    ; ${positionedNotes[noteIndex].text}`);
-          noteIndex += 1;
-        }
         lines.push('');
       }
       if (lines.length === 0) return '';

@@ -38,15 +38,16 @@ account Expenses:Shop
       "transactionId": 7,
       "transactionDate": "2024-01-03",
       "description": "Shop | Third",
-      "comment": "imported",
-      "notes": [
-        "Project: Home"
+      "comments": [
+        "imported"
       ],
       "postings": [
         {
           "postingDate": "2024-01-03",
           "account": "Assets:Cash",
-          "comment": "card",
+          "comments": [
+            "card"
+          ],
           "amount": {
             "quantity": "-5",
             "commodity": "SEK"
@@ -65,7 +66,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-03",
           "account": "Expenses:Shop",
-          "comment": null,
+          "comments": [],
           "amount": null,
           "lotCost": null,
           "cost": null,
@@ -78,19 +79,24 @@ account Expenses:Shop
             }
           ]
         }
+      ],
+      "tags": [
+        {
+          "name": "Project",
+          "value": "Home"
+        }
       ]
     },
     {
       "transactionId": 6,
       "transactionDate": "2024-01-02",
       "description": "Second",
-      "comment": null,
-      "notes": [],
+      "comments": [],
       "postings": [
         {
           "postingDate": "2024-01-02",
           "account": "Assets:Cash",
-          "comment": null,
+          "comments": [],
           "amount": {
             "quantity": "20",
             "commodity": "SEK"
@@ -109,7 +115,7 @@ account Expenses:Shop
         {
           "postingDate": "2024-01-02",
           "account": "Equity:Opening",
-          "comment": null,
+          "comments": [],
           "amount": {
             "quantity": "-20",
             "commodity": "SEK"

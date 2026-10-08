@@ -8,11 +8,12 @@ function postingCsvRows(postings) {
     transactionId: posting.transactionId,
     transactionDate: posting.transactionDate,
     description: posting.description,
-    transactionComment: posting.transactionComment ?? '',
-    transactionNotes: JSON.stringify(posting.transactionNotes),
+    transactionComments: JSON.stringify(posting.transactionComments),
+    transactionTags: JSON.stringify(posting.transactionTags || []),
     postingDate: posting.postingDate,
     account: posting.account,
-    postingComment: posting.postingComment ?? '',
+    postingComments: JSON.stringify(posting.postingComments),
+    postingTags: JSON.stringify(posting.postingTags || []),
     amountQuantity: posting.amount?.quantity ?? '',
     amountCommodity: posting.amount?.commodity ?? '',
     lotCostQuantity: posting.lotCost?.quantity ?? '',
@@ -42,8 +43,9 @@ module.exports = ({ cliOptions: options }) => ({
   },
   formatCsv(postings, _cliOptions, { csvField }) {
     const fields = [
-      'postingId', 'transactionId', 'transactionDate', 'description', 'transactionComment',
-      'transactionNotes', 'postingDate', 'account', 'postingComment',
+      'postingId', 'transactionId', 'transactionDate', 'description',
+      'transactionComments', 'transactionTags', 'postingDate', 'account',
+      'postingComments', 'postingTags',
       'amountQuantity', 'amountCommodity', 'lotCostQuantity', 'lotCostCommodity',
       'lotCostIsTotal', 'costQuantity', 'costCommodity', 'costIsTotal',
       'balanceAssignmentQuantity', 'balanceAssignmentCommodity',
@@ -61,7 +63,12 @@ module.exports = ({ cliOptions: options }) => ({
     if (postings.length === 0) return '';
     const rows = postingCsvRows(postings).map((row) => ({
       ...row,
-      transactionNotes: JSON.parse(row.transactionNotes).join(' | '),
+      transactionComments: JSON.parse(row.transactionComments).join(' | '),
+      transactionTags: JSON.parse(row.transactionTags)
+        .map(({ name, value }) => value === null ? `:${name}:` : `${name}: ${value}`).join(' | '),
+      postingComments: JSON.parse(row.postingComments).join(' | '),
+      postingTags: JSON.parse(row.postingTags)
+        .map(({ name, value }) => value === null ? `:${name}:` : `${name}: ${value}`).join(' | '),
     }));
     return formatTextTable(rows, [
       { heading: 'Transaction', value: (row) => row.transactionDate },
@@ -70,9 +77,10 @@ module.exports = ({ cliOptions: options }) => ({
       { heading: 'Account', value: (row) => row.account },
       { heading: 'Amount', value: (row) => row.resolvedQuantity, align: 'right' },
       { heading: 'Commodity', value: (row) => row.resolvedCommodity },
-      { heading: 'Transaction comment', value: (row) => row.transactionComment },
-      { heading: 'Notes', value: (row) => row.transactionNotes },
-      { heading: 'Posting comment', value: (row) => row.postingComment },
+      { heading: 'Transaction comments', value: (row) => row.transactionComments },
+      { heading: 'Transaction tags', value: (row) => row.transactionTags },
+      { heading: 'Posting comments', value: (row) => row.postingComments },
+      { heading: 'Posting tags', value: (row) => row.postingTags },
       { heading: 'Filename', value: (row) => row.filename },
       { heading: 'Transaction source line', value: (row) => row.transactionSourceLine },
     ]);

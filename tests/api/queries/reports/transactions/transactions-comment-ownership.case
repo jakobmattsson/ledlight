@@ -1,0 +1,93 @@
+Transactions expose inline and following comments under their Ledger owner.
+
+========== CLI ==========
+
+ledlight transactions --format json
+
+========== API ==========
+
+transactions()
+
+========== FILE ==========
+
+commodity SEK
+  default
+account Expenses:Food
+account Assets:Bank
+tag Receipt
+
+2024-01-01 Groceries ; transaction inline
+  ; transaction detail
+  Expenses:Food  100 SEK ; expense inline
+  ; Receipt: 1234
+  Assets:Bank  -100 SEK ; bank inline
+  ; bank detail
+
+========== OUTPUT ==========
+
+{
+  "order": "oldest",
+  "totalTransactions": 1,
+  "transactions": [
+    {
+      "transactionId": 5,
+      "transactionDate": "2024-01-01",
+      "description": "Groceries",
+      "comments": [
+        "transaction inline",
+        "transaction detail"
+      ],
+      "postings": [
+        {
+          "postingDate": "2024-01-01",
+          "account": "Expenses:Food",
+          "comments": [
+            "expense inline"
+          ],
+          "amount": {
+            "quantity": "100",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "100",
+              "commodity": "SEK"
+            }
+          ],
+          "tags": [
+            {
+              "name": "Receipt",
+              "value": "1234"
+            }
+          ]
+        },
+        {
+          "postingDate": "2024-01-01",
+          "account": "Assets:Bank",
+          "comments": [
+            "bank inline",
+            "bank detail"
+          ],
+          "amount": {
+            "quantity": "-100",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "-100",
+              "commodity": "SEK"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

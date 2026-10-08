@@ -38,11 +38,14 @@ commodity SEK
   format 1,000.00 SEK
 include transactions.ledger
 P 2024-01-01 FUND 123.45 SEK
+; Root file comment
 `);
   fs.writeFileSync(transactionsPath, `2024-01-02 Bank | Deposit ; :imported: bank statement
   ; Source: statement.csv:4
   Assets:Cash  8.000000000000000001 SEK ; Receipt: 1234
+  ; Imported from the bank statement
   Equity:Opening  ; :balanced:
+; Included file comment
 `);
 
   const result = buildDatabase(databasePath, journalPath);
@@ -54,7 +57,7 @@ P 2024-01-01 FUND 123.45 SEK
       postings: result.postings,
       prices: result.prices,
     },
-    { files: 2, entries: 4, transactions: 1, postings: 2, prices: 1 },
+    { files: 2, entries: 6, transactions: 1, postings: 2, prices: 1 },
   );
 
   const database = new Database(databasePath, { readonly: true });
@@ -88,7 +91,8 @@ P 2024-01-01 FUND 123.45 SEK
   );
   assert.deepEqual(
     database.prepare(`
-      SELECT postings.account, amounts.quantity, amounts.commodity, amounts.running_balance
+      SELECT postings.account, amounts.amount_quantity, amounts.amount_commodity,
+        amounts.balance_quantity
       FROM resolved_posting_amounts AS amounts
       JOIN postings ON postings.id = amounts.posting_id
       ORDER BY amounts.id
@@ -96,22 +100,53 @@ P 2024-01-01 FUND 123.45 SEK
     [
       {
         account: 'Assets:Cash',
-        quantity: '8.000000000000000001',
-        commodity: 'SEK',
-        running_balance: '8.000000000000000001',
+        amount_quantity: '8.000000000000000001',
+        amount_commodity: 'SEK',
+        balance_quantity: '8.000000000000000001',
       },
       {
         account: 'Equity:Opening',
-        quantity: '-8.000000000000000001',
-        commodity: 'SEK',
-        running_balance: '-8.000000000000000001',
+        amount_quantity: '-8.000000000000000001',
+        amount_commodity: 'SEK',
+        balance_quantity: '-8.000000000000000001',
       },
     ],
   );
   assert.equal(result.postingBalances, 2);
   assert.deepEqual(
-    database.prepare('SELECT position, text FROM transaction_notes').get(),
-    { position: 0, text: 'Source: statement.csv:4' },
+    database.prepare(`
+      SELECT transaction_id IS NOT NULL AS transaction_comment, position, text
+      FROM comments ORDER BY id
+    `).all(),
+    [
+      { transaction_comment: 1, position: 0, text: 'bank statement' },
+      { transaction_comment: 0, position: 1, text: 'Imported from the bank statement' },
+    ],
+  );
+  assert.deepEqual(
+    database.prepare(`
+      SELECT transaction_id IS NOT NULL AS transaction_tag, position, ordinal, name, value
+      FROM tags ORDER BY id
+    `).all(),
+    [
+      { transaction_tag: 1, position: 0, ordinal: 0, name: 'imported', value: null },
+      { transaction_tag: 1, position: 1, ordinal: 0, name: 'Source', value: 'statement.csv:4' },
+      { transaction_tag: 0, position: 0, ordinal: 0, name: 'Receipt', value: '1234' },
+      { transaction_tag: 0, position: 0, ordinal: 0, name: 'balanced', value: null },
+    ],
+  );
+  assert.deepEqual(
+    database.prepare(`
+      SELECT file_comments.entry_id, source_files.path, entries.line, file_comments.text
+      FROM file_comments
+      JOIN journal_entries AS entries ON entries.id = file_comments.entry_id
+      JOIN source_files ON source_files.id = entries.source_file_id
+      ORDER BY file_comments.entry_id
+    `).all(),
+    [
+      { entry_id: 4, path: transactionsPath, line: 6, text: 'Included file comment' },
+      { entry_id: 6, path: journalPath, line: 7, text: 'Root file comment' },
+    ],
   );
   assert.deepEqual(
     database.prepare("SELECT format, is_default FROM commodity_declarations WHERE symbol = 'SEK'").get(),
@@ -128,6 +163,75 @@ P 2024-01-01 FUND 123.45 SEK
   );
   assert.equal(result.valuationPrices, 4);
   assert.equal(database.pragma('integrity_check', { simple: true }), 'ok');
+});
+
+test('stores assignments and assertions in the same balance columns', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+2024-01-01 Initial balance
+  Assets:Cash  90 SEK
+  Equity:Opening
+2024-01-02 Assigned balance
+  Assets:Cash  = 100 SEK
+  Equity:Opening
+2024-01-03 Asserted balance
+  Assets:Cash  5 SEK = 105 SEK
+  Equity:Opening
+`);
+
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(database.prepare(`
+    SELECT transactions.date, postings.amount_quantity, postings.balance_quantity,
+      postings.balance_commodity, amounts.amount_quantity AS resolved_quantity
+    FROM postings
+    JOIN transactions ON transactions.entry_id = postings.transaction_id
+    JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
+    WHERE postings.account = 'Assets:Cash'
+    ORDER BY transactions.date
+  `).all(), [
+    {
+      date: '2024-01-01', amount_quantity: '90', balance_quantity: null,
+      balance_commodity: null, resolved_quantity: '90',
+    },
+    {
+      date: '2024-01-02', amount_quantity: null, balance_quantity: '100',
+      balance_commodity: 'SEK', resolved_quantity: '10',
+    },
+    {
+      date: '2024-01-03', amount_quantity: '5', balance_quantity: '105',
+      balance_commodity: 'SEK', resolved_quantity: '5',
+    },
+  ]);
+});
+
+test('stores posting dates separately from comment text', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+2024-01-01 Dated postings
+  Assets:Cash  10 SEK ; [2024-01-02] card
+  Equity:Opening  -10 SEK ; [2024-01-03]
+`);
+
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath, { readonly: true });
+  t.after(() => database.close());
+  assert.deepEqual(database.prepare(`
+    SELECT postings.posting_date, comments.text
+    FROM postings
+    LEFT JOIN comments ON comments.posting_id = postings.id
+    ORDER BY postings.position
+  `).all(), [
+    { posting_date: '2024-01-02', text: 'card' },
+    { posting_date: '2024-01-03', text: null },
+  ]);
 });
 
 test('stores lot costs separately from transaction costs', (t) => {
@@ -189,7 +293,8 @@ test('materializes exact account and commodity balances in posting-date order', 
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
     SELECT postings.account, postings.posting_date AS date,
-      amounts.quantity, amounts.commodity, amounts.running_balance AS balance
+      amounts.amount_quantity AS quantity, amounts.amount_commodity AS commodity,
+      amounts.balance_quantity AS balance
     FROM resolved_posting_amounts AS amounts
     JOIN postings ON postings.id = amounts.posting_id
     WHERE postings.account LIKE 'Assets:%'

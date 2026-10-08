@@ -37,10 +37,8 @@ module.exports = ({
         source_files.path AS filename,
         entries.line AS transactionSourceLine,
         transactions.description,
-        transactions.comment AS transactionComment,
         postings.posting_date AS postingDate,
         postings.account,
-        postings.comment AS postingComment,
         postings.amount_quantity AS amountQuantity,
         postings.amount_commodity AS amountCommodity,
         postings.lot_cost_quantity AS lotCostQuantity,
@@ -49,13 +47,11 @@ module.exports = ({
         postings.cost_quantity AS costQuantity,
         postings.cost_commodity AS costCommodity,
         postings.cost_is_total AS costIsTotal,
-        postings.balance_assignment_quantity AS balanceAssignmentQuantity,
-        postings.balance_assignment_commodity AS balanceAssignmentCommodity,
-        postings.balance_assertion_quantity AS balanceAssertionQuantity,
-        postings.balance_assertion_commodity AS balanceAssertionCommodity,
-        amounts.quantity,
-        amounts.commodity,
-        amounts.running_balance AS balance
+        postings.balance_quantity AS balanceQuantity,
+        postings.balance_commodity AS balanceCommodity,
+        amounts.amount_quantity AS quantity,
+        amounts.amount_commodity AS commodity,
+        amounts.balance_quantity AS balance
       FROM postings
       JOIN transactions ON transactions.entry_id = postings.transaction_id
       JOIN journal_entries AS entries ON entries.id = transactions.entry_id
@@ -69,6 +65,9 @@ module.exports = ({
     for (const row of rows) {
       let posting = byId.get(row.postingId);
       if (!posting) {
+        const balance = row.balanceQuantity === null
+          ? null
+          : { quantity: row.balanceQuantity, commodity: row.balanceCommodity };
         posting = {
           postingId: row.postingId,
           transactionId: row.transactionId,
@@ -76,11 +75,10 @@ module.exports = ({
           filename: row.filename,
           transactionSourceLine: row.transactionSourceLine,
           description: row.description,
-          transactionComment: row.transactionComment,
-          transactionNotes: [],
+          transactionComments: [],
           postingDate: row.postingDate,
           account: row.account,
-          postingComment: row.postingComment,
+          postingComments: [],
           amount: row.amountQuantity === null
             ? null
             : { quantity: row.amountQuantity, commodity: row.amountCommodity },
@@ -98,18 +96,8 @@ module.exports = ({
               commodity: row.costCommodity,
               isTotal: Boolean(row.costIsTotal),
             },
-          balanceAssignment: row.balanceAssignmentQuantity === null
-            ? null
-            : {
-              quantity: row.balanceAssignmentQuantity,
-              commodity: row.balanceAssignmentCommodity,
-            },
-          balanceAssertion: row.balanceAssertionQuantity === null
-            ? null
-            : {
-              quantity: row.balanceAssertionQuantity,
-              commodity: row.balanceAssertionCommodity,
-            },
+          balanceAssignment: row.amountQuantity === null ? balance : null,
+          balanceAssertion: row.amountQuantity === null ? null : balance,
           amounts: [],
         };
         byId.set(row.postingId, posting);
@@ -123,17 +111,55 @@ module.exports = ({
     }
     if (postings.length > 0) {
       const transactionIds = [...new Set(postings.map(({ transactionId }) => transactionId))];
-      const placeholders = transactionIds.map(() => '?').join(', ');
-      const notesByTransaction = new Map(transactionIds.map((id) => [id, []]));
-      const notes = database.prepare(`
-        SELECT transaction_id AS transactionId, text
-        FROM transaction_notes
-        WHERE transaction_id IN (${placeholders})
-        ORDER BY transaction_id, position
-      `).all(...transactionIds);
-      for (const note of notes) notesByTransaction.get(note.transactionId).push(note.text);
+      const commentsByTransaction = new Map(transactionIds.map((id) => [id, []]));
+      const tagsByTransaction = new Map(transactionIds.map((id) => [id, []]));
+      for (let offset = 0; offset < transactionIds.length; offset += 500) {
+        const ids = transactionIds.slice(offset, offset + 500);
+        const placeholders = ids.map(() => '?').join(', ');
+        const transactionComments = database.prepare(`
+          SELECT transaction_id AS transactionId, text
+          FROM comments
+          WHERE transaction_id IN (${placeholders})
+          ORDER BY transaction_id, position
+        `).all(...ids);
+        for (const comment of transactionComments) {
+          commentsByTransaction.get(comment.transactionId).push(comment.text);
+        }
+        const postingComments = database.prepare(`
+          SELECT comments.posting_id AS postingId, comments.text
+          FROM postings
+          JOIN comments ON comments.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, comments.position
+        `).all(...ids);
+        for (const comment of postingComments) byId.get(comment.postingId)?.postingComments.push(comment.text);
+        const transactionTags = database.prepare(`
+          SELECT transaction_id AS transactionId, name, value
+          FROM tags
+          WHERE transaction_id IN (${placeholders})
+          ORDER BY transaction_id, position, ordinal
+        `).all(...ids);
+        for (const tag of transactionTags) {
+          tagsByTransaction.get(tag.transactionId).push({ name: tag.name, value: tag.value });
+        }
+        const postingTags = database.prepare(`
+          SELECT tags.posting_id AS postingId, tags.name, tags.value
+          FROM postings
+          JOIN tags ON tags.posting_id = postings.id
+          WHERE postings.transaction_id IN (${placeholders})
+          ORDER BY postings.transaction_id, postings.position, tags.position, tags.ordinal
+        `).all(...ids);
+        for (const tag of postingTags) {
+          const posting = byId.get(tag.postingId);
+          if (!posting) continue;
+          if (!posting.postingTags) posting.postingTags = [];
+          posting.postingTags.push({ name: tag.name, value: tag.value });
+        }
+      }
       for (const posting of postings) {
-        posting.transactionNotes = [...notesByTransaction.get(posting.transactionId)];
+        posting.transactionComments = [...commentsByTransaction.get(posting.transactionId)];
+        const transactionTags = tagsByTransaction.get(posting.transactionId);
+        if (transactionTags.length > 0) posting.transactionTags = [...transactionTags];
       }
     }
     return postings;

@@ -43,6 +43,56 @@ test('rejects malformed Ledger text instead of returning a partial AST', () => {
   );
 });
 
+test('exposes transaction and posting tags separately from comments', (t) => {
+  const { openJournal, parseLedgerText } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-entry-tags-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const source = `commodity SEK
+  default
+account Assets:Cash
+account Equity:Opening
+tag Reviewed
+tag Imported
+tag Source
+tag Receipt
+2024-01-01 Tagged ; :Reviewed:Imported: bank statement
+  ; Source: statement.csv
+  Assets:Cash  1 SEK ; [2024-01-02] :Receipt: card payment
+  Equity:Opening  -1 SEK
+`;
+  fs.writeFileSync(journalPath, source);
+
+  const parsed = parseLedgerText(source).entries.at(-1);
+  assert.deepEqual(parsed.tags, [
+    { name: 'Reviewed', value: null },
+    { name: 'Imported', value: null },
+    { name: 'Source', value: 'statement.csv' },
+  ]);
+  assert.deepEqual(parsed.comments.map(({ text }) => text), ['bank statement']);
+  assert.deepEqual(parsed.postings[0].tags, [{ name: 'Receipt', value: null }]);
+  assert.deepEqual(parsed.postings[0].comments.map(({ text }) => text), ['card payment']);
+
+  const journal = openJournal(journalPath);
+  const transaction = journal.transactions().transactions[0];
+  assert.deepEqual(transaction.tags, parsed.tags);
+  assert.deepEqual(transaction.comments, ['bank statement']);
+  assert.deepEqual(transaction.postings[0].tags, parsed.postings[0].tags);
+  assert.deepEqual(transaction.postings[0].comments, ['card payment']);
+  assert.equal(transaction.postings[0].postingDate, '2024-01-02');
+  assert.deepEqual(Object.getOwnPropertyNames(transaction), Object.keys(transaction));
+  assert.deepEqual(
+    Object.getOwnPropertyNames(transaction.postings[0]),
+    Object.keys(transaction.postings[0]),
+  );
+
+  const posting = journal.postings({ accounts: ['Assets:Cash'] })[0];
+  assert.deepEqual(posting.transactionTags, parsed.tags);
+  assert.deepEqual(posting.postingTags, parsed.postings[0].tags);
+  assert.deepEqual(posting.transactionComments, ['bank statement']);
+  assert.deepEqual(posting.postingComments, ['card payment']);
+});
+
 test('exposes stable error code strings instead of public error classes', (t) => {
   const ledlight = require(ledlightPath);
 
@@ -200,7 +250,7 @@ ${entries}`);
   assert.equal(paginated.transactions[0].description, 'Entry 501');
 });
 
-test('print returns plain journal text and rejects unknown options', (t) => {
+test('print returns plain journal text and validates its options', (t) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-print-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -217,6 +267,16 @@ test('print returns plain journal text and rejects unknown options', (t) => {
   database.close();
   assert.equal(journal.print(), 'account Assets:Database\n');
   assert.equal(journal.print({}), 'account Assets:Database\n');
+  assert.equal(journal.print({ density: 'compact', sortDeclarations: true }),
+    'account Assets:Database\n');
+  assert.throws(
+    () => journal.print({ density: 'dense' }),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+  );
+  assert.throws(
+    () => journal.print({ sortDeclarations: 'true' }),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+  );
   assert.throws(
     () => journal.print({ unknown: true }),
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&

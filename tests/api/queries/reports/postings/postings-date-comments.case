@@ -1,0 +1,82 @@
+Posting dates stay separate from posting comments in the CLI and API.
+
+========== CLI ==========
+
+ledlight postings --format json
+
+========== API ==========
+
+postings()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Equity:Opening
+
+2024-01-01 Dated postings
+  Assets:Cash  10 SEK ; [2024-01-02] card
+  Equity:Opening  -10 SEK ; [2024-01-03]
+
+========== OUTPUT ==========
+
+[
+  {
+    "postingId": 1,
+    "transactionId": 4,
+    "transactionDate": "2024-01-01",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Dated postings",
+    "transactionComments": [],
+    "postingDate": "2024-01-02",
+    "account": "Assets:Cash",
+    "postingComments": [
+      "card"
+    ],
+    "amount": {
+      "quantity": "10",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "10",
+        "commodity": "SEK",
+        "balance": "10"
+      }
+    ]
+  },
+  {
+    "postingId": 2,
+    "transactionId": 4,
+    "transactionDate": "2024-01-01",
+    "filename": "{{JOURNAL_PATH}}",
+    "transactionSourceLine": 7,
+    "description": "Dated postings",
+    "transactionComments": [],
+    "postingDate": "2024-01-03",
+    "account": "Equity:Opening",
+    "postingComments": [],
+    "amount": {
+      "quantity": "-10",
+      "commodity": "SEK"
+    },
+    "lotCost": null,
+    "cost": null,
+    "balanceAssignment": null,
+    "balanceAssertion": null,
+    "amounts": [
+      {
+        "quantity": "-10",
+        "commodity": "SEK",
+        "balance": "-10"
+      }
+    ]
+  }
+]

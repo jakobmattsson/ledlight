@@ -24,17 +24,26 @@ The singular `--account` is not supported.
 
 ### `journal.print()`
 
-Returns a plain string containing a pretty-printed, complete journal. It has
-no options; omit the argument or pass `{}`. The output is built from stored
-journal data, follows entry order, expands included files, and contains
-declarations, price directives, and transactions, including zero amounts. It
-aligns posting amounts, normalizes numeric text, and preserves stored comments
-and transaction notes. Source-only
+Returns a plain string containing a pretty-printed, complete journal. The output
+is built from stored journal data, follows entry order by default, expands
+included files, and contains declarations, price directives, and transactions,
+including zero amounts. It
+aligns posting amounts, normalizes numeric text, and preserves stored comments,
+tags, posting dates, and their order within each transaction. Source-only
 details not represented in the database, such as comments on commodity
 properties, are omitted. Entries rejected during ingestion are also omitted.
 The string is empty when the journal has no stored entries.
 
+`density` accepts `'spacious'` (the default, one blank line between entries) or
+`'compact'` (no blank lines between entries). `sortDeclarations` defaults to
+`false`. When `true`, it prints root comments, accounts, tags, commodities,
+prices, then transactions. Entries retain source order within each group except
+prices, which sort by base commodity and then date; equal prices retain source
+order.
+
 `ledlight print --file JOURNAL` writes the same string to standard output.
+Use `--density compact` or `--density spacious` and `--sort-declarations` for
+these options.
 It has no filters or output-format options.
 
 ## Query parameter conventions
@@ -113,7 +122,7 @@ not use the warning and recovery behavior of `openJournal`.
 
 The result is `{ source, entries }`. `entries` preserves source order. Every
 entry has `type` and `location: { source, line, column }`, with one-based line
-and column numbers. Comments are `string | null`. Amounts are
+and column numbers. Directive comments are `string | null`. Amounts are
 `{ quantity: string, commodity: string }`; the original decimal precision is
 preserved in `quantity`. Entry shapes are:
 
@@ -123,17 +132,27 @@ preserved in `quantity`. Entry shapes are:
 | `account`, `tag` | `name`, `comment`, `location` |
 | `commodity` | `symbol`, `properties`, `comment`, `location` |
 | `price` | `date`, `commodity`, `price` (amount), `comment`, `location` |
-| `transaction` | `date`, `description`, `postings`, `notes`, `comment`, `location`; optional `tags` |
+| `comment` | `text`, `location` |
+| `transaction` | `date`, `description`, `postings`, `comments`, `location`; optional `tags` |
 
 Commodity `properties` is an array of `{ name, value, comment, location }`;
 `value` is a string or `null`. A transaction posting contains `type: 'posting'`,
 `account`, `amount`, `lotCost`, `cost`, `balanceAssignment`,
-`balanceAssertion`, `postingDate`, `comment`, and `location`, plus optional
+`balanceAssertion`, `postingDate`, `comments`, and `location`, plus optional
 `tags`. The amount, balance assignment, and balance assertion fields are an
 amount or `null`. `lotCost` and `cost` are `{ total: boolean, amount }` or
-`null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A note
-is `{ text, key, value, location }`, plus optional `tags`; `key` and `value`
-are strings or `null`. Tags are `{ name, value }`, where `value` may be `null`.
+`null`; they represent `{...}` / `{{...}}` and `@` / `@@` respectively. A comment
+is `{ text, key, value, location }`; `key` and `value` are `null`.
+A comment on the transaction or posting line becomes
+its first comment. An indented comment before the first posting belongs to the
+transaction; one after a posting belongs to that posting. Tags are
+`{ name, value }`, where `value` may be `null`. Tag syntax is extracted from
+comments: a tag-only line creates no comment, and text following binary tags
+remains a comment. Transaction and posting `tags` arrays are present when tags
+were parsed.
+An inline posting date such as `[2024-01-03]` sets `postingDate` and is excluded
+from the posting's comments. A date-only marker creates no comment.
+Top-level semicolon comments are separate `comment` entries in source order.
 
 For example:
 
@@ -143,7 +162,7 @@ const ast = parseLedgerText(
   { source: 'proposed.ledger' },
 );
 const transaction = ast.entries[0];
-console.log(transaction.notes[0].text); // Generated-ID trade-1
+console.log(transaction.comments[0].text); // Generated-ID trade-1
 console.log(transaction.postings[0].lotCost.amount.quantity); // 8
 ```
 
@@ -447,8 +466,9 @@ and leading zeros are rejected. Pages beyond the result are clamped to the last
 page (or page `1` for an empty result).
 The result always contains `order`, `totalTransactions`, and `transactions`.
 Paginated results additionally contain the selected `page`, `pageSize`, and
-`totalPages`. Transactions include
-their ordered note text. Postings retain their nullable source `amount`, lot
+`totalPages`. Transactions and their postings each include ordered `comments`
+arrays of text and optional ordered `tags` arrays of `{ name, value }` objects.
+Tag syntax is excluded from comment text. Postings retain their nullable source `amount`, lot
 cost, transaction cost, balance assignment, and balance assertion, as well as
 the existing resolved `amounts` array.
 
@@ -456,8 +476,13 @@ The `transactions` CLI command defaults to
 `--format text` and prints every matching transaction. Its repeatable `--accounts PATTERN` option selects transactions
 by account pattern, and `--id ID` selects one transaction. Text output is a Ledger-style
 journal containing the matching transactions or the requested page.
+Text output groups comments before tags for each transaction and posting.
+Use `journal.print()` when the original relative order and inline placement
+of this metadata matter.
 `--format json` returns the complete API result, while `--format csv`
-returns one row per posting amount with transaction and posting fields.
+returns one row per posting amount with transaction and posting comments and tags
+encoded as JSON arrays in separate `transactionComments`, `postingComments`,
+`transactionTags`, and `postingTags` columns.
 
 ### `journal.postings({ from, to, accounts })`
 
@@ -466,11 +491,13 @@ Returns all matching postings in journal order. All options are optional.
 is an array of patterns matched against the posting account; an empty array
 selects every account.
 
-Each result contains `postingId`, `postingDate`, `account`, `postingComment`,
+Each result contains `postingId`, `postingDate`, `account`, ordered `postingComments`,
+and optional ordered `transactionTags` and `postingTags` arrays of `{ name, value }` objects.
 the nullable source `amount`, lot cost, transaction cost, balance assignment,
 and balance assertion, and every resolved amount. It also contains the parent
 transaction's `transactionId`, `transactionDate`, `description`,
-`transactionComment`, and ordered `transactionNotes`. `filename` identifies the
+and ordered `transactionComments`. Tag syntax is excluded from comment text.
+`filename` identifies the
 source file containing the transaction, including when it was loaded through an
 `include`. `transactionSourceLine` is the one-based line number of the transaction
 header in that file, not the posting line.
@@ -483,7 +510,8 @@ the journal database is rebuilt.
 The `postings` CLI command supports the same filters and defaults to `--format
 text`. `--format json` preserves the nested API result. `--format csv` emits one
 row per resolved amount and includes every source annotation as separate
-columns, including `filename` and `transactionSourceLine`. Text output also
+columns, including `transactionTags`, `postingTags`, `filename`, and
+`transactionSourceLine`. Text output also
 includes both source fields.
 
 For reconciliation, use the resolved `amounts` rather than the nullable source
