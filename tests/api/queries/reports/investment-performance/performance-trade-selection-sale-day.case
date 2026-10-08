@@ -43,6 +43,7 @@ P 2024-01-02 FUND 140 USD
   "netContributions": -65,
   "profitLoss": 15,
   "timeWeightedReturn": 0.125,
+  "timeWeightedReturnAnnualized": null,
   "moneyWeightedReturn": null,
   "moneyWeightedReturnTotal": null,
   "points": [
@@ -52,6 +53,7 @@ P 2024-01-02 FUND 140 USD
       "netContributions": -65,
       "profitLoss": 15,
       "timeWeightedReturn": 0.125,
+      "timeWeightedReturnAnnualized": null,
       "moneyWeightedReturn": null,
       "moneyWeightedReturnTotal": null
     }

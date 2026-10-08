@@ -35,6 +35,7 @@ P 2024-01-03 FUND 12 SEK
   "netContributions": 0,
   "profitLoss": 20,
   "timeWeightedReturn": 0.19999999999999996,
+  "timeWeightedReturnAnnualized": null,
   "moneyWeightedReturn": null,
   "moneyWeightedReturnTotal": null,
   "points": [
@@ -44,6 +45,7 @@ P 2024-01-03 FUND 12 SEK
       "netContributions": 0,
       "profitLoss": 20,
       "timeWeightedReturn": 0.19999999999999996,
+      "timeWeightedReturnAnnualized": null,
       "moneyWeightedReturn": null,
       "moneyWeightedReturnTotal": null
     }

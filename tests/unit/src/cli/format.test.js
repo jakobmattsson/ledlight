@@ -157,14 +157,16 @@ test('writes one investment performance CSV row with nested API fields', () => {
     netContributions: 10,
     profitLoss: 0,
     timeWeightedReturn: null,
+    timeWeightedReturnAnnualized: null,
     moneyWeightedReturn: null,
     moneyWeightedReturnTotal: null,
     points: [{ date: '2024-01-01', value: 10 }],
   };
   assert.equal(formatInvestmentPerformanceCsv(report),
     'from,to,commodities,valuationCommodity,openingValue,endingValue,netContributions,' +
-    'profitLoss,timeWeightedReturn,moneyWeightedReturn,moneyWeightedReturnTotal,points\n' +
-    ',,"[""FUND,A""]",USD,0,10,10,0,,,,"[{""date"":""2024-01-01"",""value"":10}]"\n');
+    'profitLoss,timeWeightedReturn,timeWeightedReturnAnnualized,moneyWeightedReturn,' +
+    'moneyWeightedReturnTotal,points\n' +
+    ',,"[""FUND,A""]",USD,0,10,10,0,,,,,"[{""date"":""2024-01-01"",""value"":10}]"\n');
 });
 
 test('formats tag and commodity listings as text, JSON, and CSV', () => {

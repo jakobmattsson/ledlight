@@ -29,6 +29,8 @@ The zero-value days between August and October contribute no market return.
 Compounding the factors gives 1.00 * 1.00 * 1.25 * 0.875 * 1.00 * 1.20 - 1
 = 31.25% time-weighted return. Net contributions are 200 + 120 - 350 + 300
 = 270 USD, while profit/loss is ending value 360 - contributions 270 = 90.
+Annualizing the 31.25% over January 1 to December 31 (364 days), including
+the zero-value interval, gives 31.35%.
 Simply dividing profit by net contributions gives 90 / 270 = 33.33%, which
 is neither return measure. For money-weighting, the investor's dated flows
 are -200, -120, +350, -300, and the final +360 USD valuation. Those amounts
@@ -118,6 +120,7 @@ Net contributions: 270.00 USD
 Ending value: 360.00 USD
 Profit/loss: 90.00 USD
 Time-weighted return: 31.25 %
+Time-weighted return (annualized): 31.35 %
 Money-weighted return (total): 38.88 %
 Money-weighted return (annualized): 39.01 %
 

@@ -44,6 +44,7 @@ P 2024-01-02 FUND 140 USD
   "netContributions": 70,
   "profitLoss": 70,
   "timeWeightedReturn": 0.3500000000000001,
+  "timeWeightedReturnAnnualized": 3.7310021617952444e+47,
   "moneyWeightedReturn": 3.731002132170442e+47,
   "moneyWeightedReturnTotal": 0.34999999997063236,
   "points": [
@@ -53,6 +54,7 @@ P 2024-01-02 FUND 140 USD
       "netContributions": 200,
       "profitLoss": 0,
       "timeWeightedReturn": 0,
+      "timeWeightedReturnAnnualized": null,
       "moneyWeightedReturn": null,
       "moneyWeightedReturnTotal": null
     },
@@ -62,6 +64,7 @@ P 2024-01-02 FUND 140 USD
       "netContributions": 70,
       "profitLoss": 70,
       "timeWeightedReturn": 0.3500000000000001,
+      "timeWeightedReturnAnnualized": 3.7310021617952444e+47,
       "moneyWeightedReturn": 3.731002132170442e+47,
       "moneyWeightedReturnTotal": 0.34999999997063236
     }

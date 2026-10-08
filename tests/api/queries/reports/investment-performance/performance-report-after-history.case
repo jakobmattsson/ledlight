@@ -48,6 +48,7 @@ P 2024-01-01 HOME 1000 SEK
   "netContributions": 0,
   "profitLoss": 0,
   "timeWeightedReturn": null,
+  "timeWeightedReturnAnnualized": null,
   "moneyWeightedReturn": null,
   "moneyWeightedReturnTotal": null,
   "points": []

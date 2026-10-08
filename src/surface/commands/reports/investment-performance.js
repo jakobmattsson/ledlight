@@ -17,6 +17,12 @@ module.exports = ({ cliOptions: options }) => ({
     the return in each part, and multiplies the parts' growth factors. Ledlight
     uses daily closing values and treats flows as occurring at day's end.
 
+  Time-weighted return (annualized)
+    Use this to compare time-weighted returns across periods of different
+    lengths. It is the yearly compound rate implied by the time-weighted
+    return from the first invested day to the report end, or to the day the
+    portfolio last reaches zero.
+
   Money-weighted return (total)
     Use this to see your own cumulative return, including how much you
     contributed or withdrew and when. It is the annualized XIRR compounded
@@ -46,6 +52,7 @@ module.exports = ({ cliOptions: options }) => ({
     const fields = [
       'from', 'to', 'commodities', 'valuationCommodity', 'openingValue',
       'endingValue', 'netContributions', 'profitLoss', 'timeWeightedReturn',
+      'timeWeightedReturnAnnualized',
       'moneyWeightedReturn', 'moneyWeightedReturnTotal', 'points',
     ];
     const value = (field) => {
@@ -69,6 +76,7 @@ module.exports = ({ cliOptions: options }) => ({
       `Ending value: ${money(report.endingValue)}`,
       `Profit/loss: ${money(report.profitLoss)}`,
       `Time-weighted return: ${percent(report.timeWeightedReturn)}`,
+      `Time-weighted return (annualized): ${percent(report.timeWeightedReturnAnnualized)}`,
       `Money-weighted return (total): ${percent(report.moneyWeightedReturnTotal)}`,
       `Money-weighted return (annualized): ${percent(report.moneyWeightedReturn)}`,
     ].join('\n') + '\n';

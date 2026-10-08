@@ -1,0 +1,47 @@
+Annualized time-weighted return uses the first and last investor flow dates.
+The requested interval starts a year before the first purchase and ends eleven
+months after the complete sale. Those empty edges do not extend the return
+period. A 100 USD fund purchase on January 1 becomes 110 USD on February 1;
+the total return is 10% over 31 days and the annualized return is
+(1.10)^(365 / 31) - 1 = 207.16%.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts Assets:Fund --from 2022-01-01 --to 2024-01-01 --format text
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+account Income:Gains
+P 2023-01-01 FUND 100 USD
+P 2023-02-01 FUND 110 USD
+
+2023-01-01 Purchase
+  Assets:Fund  1 FUND {100 USD}
+  Assets:Cash  -100 USD
+
+2023-02-01 Complete sale
+  Assets:Fund  -1 FUND {100 USD} @ 110 USD
+  Assets:Cash  110 USD
+  Income:Gains  -10 USD
+
+========== OUTPUT ==========
+
+Investment performance from 2022-01-01 to 2024-01-01
+Instruments: 1
+Opening value: 0.00 USD
+Net contributions: -10.00 USD
+Ending value: 0.00 USD
+Profit/loss: 10.00 USD
+Time-weighted return: 10.00 %
+Time-weighted return (annualized): 207.16 %
+Money-weighted return (total): 10.00 %
+Money-weighted return (annualized): 207.16 %
+
+========== WARNINGS ==========

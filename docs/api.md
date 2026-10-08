@@ -381,6 +381,7 @@ The result contains:
   netContributions,
   profitLoss,
   timeWeightedReturn,
+  timeWeightedReturnAnnualized,
   moneyWeightedReturn,
   moneyWeightedReturnTotal,
   points,
@@ -389,6 +390,12 @@ The result contains:
 
 Performance values and the corresponding fields in each daily point are
 JavaScript numbers. Return fields are `null` when they cannot be calculated.
+`timeWeightedReturnAnnualized` compounds the total time-weighted return to a
+365-day rate. The span starts at `from` when there is an opening value, or at
+the first funded day otherwise. It ends at `to` if holdings remain, or at the
+last day that contributes a return if the selected value reaches zero. It is
+calculated for any positive span, including periods shorter than one year.
+A gap without selected holdings between investments remains part of that span.
 The precision boundary for these numeric monetary fields is tracked in the
 improvement backlog.
 

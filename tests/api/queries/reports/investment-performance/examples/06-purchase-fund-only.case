@@ -5,9 +5,10 @@ The FUND purchase on 2023-07-01 contributes 100 USD to the selected holding;
 its closing value then is 100 USD and its value on 2024-01-01 is 120 USD.
 Opening value is 0, net contributions are 100, and ending value is 120 USD.
 Profit/loss is 120 - 0 - 100 = 20 USD and time-weighted return is 20%.
-The money-weighted total return is 20% over the 184 days from purchase to end.
-Annualizing gives (120 / 100)^(365 / 184) - 1 = 43.57%, versus 20% in case 05
-when the selected cash received the salary at the start of the full year.
+Both total return measures are 20% over the 184 days from purchase to end.
+Annualizing either one gives (120 / 100)^(365 / 184) - 1 = 43.57%, versus
+20% in case 05 when the selected cash received the salary at the start of
+the full year. The earlier salary date is outside this selected portfolio.
 "Instruments: 2" lists both explicit commodities, although the selected fund
 account holds no USD.
 
@@ -45,6 +46,7 @@ Net contributions: 100.00 USD
 Ending value: 120.00 USD
 Profit/loss: 20.00 USD
 Time-weighted return: 20.00 %
+Time-weighted return (annualized): 43.57 %
 Money-weighted return (total): 20.00 %
 Money-weighted return (annualized): 43.57 %
 

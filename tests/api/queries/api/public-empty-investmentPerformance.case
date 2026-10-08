@@ -22,6 +22,7 @@ account Assets:Cash
   "netContributions": 0,
   "profitLoss": 0,
   "timeWeightedReturn": null,
+  "timeWeightedReturnAnnualized": null,
   "moneyWeightedReturn": null,
   "moneyWeightedReturnTotal": null,
   "points": []

@@ -12,6 +12,7 @@ end at 150 + 330 + 210 = 690 USD. Without rebalancing, the original two of
 each would end at 300 + 220 + 140 = 660 USD.
 Net contributions are 600 USD and profit/loss is 690 - 0 - 600 = 90 USD.
 The time-weighted factors are 480 / 600 and 690 / 480, giving 15% overall.
+Over the 364 days from January 1 to December 31, that is 15.04% annualized.
 The 600 USD invested on January 1 grows to 690 USD on December 31: the total
 money-weighted return is 15%, with a slightly higher annualized rate over
 this 364-day interval.
@@ -76,6 +77,7 @@ Net contributions: 600.00 USD
 Ending value: 690.00 USD
 Profit/loss: 90.00 USD
 Time-weighted return: 15.00 %
+Time-weighted return (annualized): 15.04 %
 Money-weighted return (total): 15.00 %
 Money-weighted return (annualized): 15.04 %
 
