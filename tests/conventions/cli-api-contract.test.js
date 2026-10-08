@@ -16,23 +16,7 @@ const argumentsModule = createArguments({
   project,
 });
 
-test('defines one CLI command for every journal operation', () => {
-  assert.deepEqual(argumentsModule.apiCommands, {
-    aggregate: 'aggregate',
-    totalHistory: 'total-history',
-    unrealizedGains: 'unrealized-gains',
-    investmentPerformance: 'investment-performance',
-    accounts: 'accounts',
-    tags: 'tags',
-    commodities: 'commodities',
-    prices: 'prices',
-    transactions: 'transactions',
-    postings: 'postings',
-    print: 'print',
-  });
-});
-
-test('every public journal operation has a CLI command', (t) => {
+test('defines exactly one CLI command for every public journal operation', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-api-contract-'));
   const previousCacheHome = process.env.LEDLIGHT_CACHE_HOME;
   process.env.LEDLIGHT_CACHE_HOME = path.join(directory, 'cache');
@@ -48,7 +32,11 @@ test('every public journal operation has a CLI command', (t) => {
   const journalOperations = Object.entries(journal)
     .filter(([, value]) => typeof value === 'function')
     .map(([name]) => name);
-  assert.deepEqual(journalOperations.sort(), Object.keys(argumentsModule.apiCommands).sort());
+  assert.deepEqual(commands.map(({ operation }) => operation).sort(), journalOperations.sort());
+  assert.deepEqual(
+    argumentsModule.apiCommands,
+    Object.fromEntries(commands.map(({ operation, name }) => [operation, name])),
+  );
 });
 
 test('fails when a locally declared API input has no actual CLI option', () => {
