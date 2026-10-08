@@ -4,7 +4,6 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
-const { asValue } = require('awilix');
 const espree = require('espree');
 const { createRepositoryContainer } = require('../../src/impl/composition/repository-container');
 const { executeCli } = require('../../src/impl/cli/execute-cli');
@@ -220,10 +219,10 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
   }
   const container = createRepositoryContainer();
   container.register({
-    standardInput: asValue({ isTTY: () => false, read: () => heredoc }),
-    currentWorkingDirectory: asValue(() => temporaryDirectory),
-    os: asValue({ tmpdir: () => temporaryDirectory }),
-    processEnvironment: asValue({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
+    standardInput: { isTTY: () => false, read: () => heredoc },
+    currentWorkingDirectory: () => temporaryDirectory,
+    os: { tmpdir: () => temporaryDirectory },
+    processEnvironment: { ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') },
   });
   const modules = {
     reportCommand: container.resolve('reportCommand'),
