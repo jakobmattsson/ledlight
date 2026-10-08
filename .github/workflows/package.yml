@@ -25,12 +25,54 @@ jobs:
         if: ${{ always() && hashFiles('coverage/coverage-summary.json') != '' }}
         run: node scripts/ci/coverage-summary.js
       - name: Upload coverage report
-        if: ${{ always() && hashFiles('coverage/lcov.info') != '' }}
+        if: ${{ always() && hashFiles('coverage/index.html') != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-lcov
-          path: coverage/lcov.info
+          name: coverage-report
+          path: coverage/
           retention-days: 14
+
+  coverage-pages:
+    name: Publish coverage to GitHub Pages
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}coverage/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report
+      - name: Assemble Pages site
+        run: |
+          mkdir site
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git archive refs/remotes/origin/gh-pages | tar -x -C site
+          fi
+          rm -rf site/coverage
+          cp -R coverage-report site/coverage
+          touch site/.nojekyll
+          if [ ! -f site/index.html ]; then
+            printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > site/index.html
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Show published report
+        run: echo "[Browse line-by-line coverage](${{ steps.deployment.outputs.page_url }}coverage/)" >> "$GITHUB_STEP_SUMMARY"
 
   package:
     name: Node.js 22 on ${{ matrix.os }}
