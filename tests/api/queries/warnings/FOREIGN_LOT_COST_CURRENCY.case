@@ -1,4 +1,4 @@
-Demonstrates FOREIGN_LOT_COST_CURRENCY using a complete journal.
+An investment lot uses a cost commodity other than the default valuation commodity.
 
 ========== CLI ==========
 

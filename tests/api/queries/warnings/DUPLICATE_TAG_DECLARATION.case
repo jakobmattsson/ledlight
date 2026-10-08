@@ -1,4 +1,4 @@
-Demonstrates DUPLICATE_TAG_DECLARATION using a complete journal.
+A tag is declared twice; the first declaration remains authoritative.
 
 ========== API ==========
 

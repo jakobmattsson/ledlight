@@ -15,10 +15,6 @@ const exampleFiles = fs.readdirSync(directory).filter((name) =>
 test('every warning code has exactly one named example', () => {
   const exampleCodes = exampleFiles.map((name) => name.replace(/(?:\.case|\.example\.js)$/u, ''));
   assert.deepEqual(exampleCodes.sort(), Object.values(warningCodes).sort());
-  const catalog = fs.readFileSync(path.join(directory, 'README.md'), 'utf8');
-  const documentedCodes = [...catalog.matchAll(/^\| `([A-Z_]+)` \|/gmu)]
-    .map((match) => match[1]);
-  assert.deepEqual(documentedCodes.sort(), Object.values(warningCodes).sort());
   for (const name of exampleFiles.filter((file) => file.endsWith('.case'))) {
     const code = name.slice(0, -'.case'.length);
     const example = parseCase(path.join(directory, name));

@@ -1,4 +1,4 @@
-Demonstrates MULTIPLE_IMPLICIT_POSTINGS using a complete journal.
+A transaction has more than one posting with an inferred amount and cannot be resolved.
 
 ========== API ==========
 

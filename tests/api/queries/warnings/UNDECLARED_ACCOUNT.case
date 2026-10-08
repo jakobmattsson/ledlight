@@ -1,4 +1,4 @@
-Demonstrates UNDECLARED_ACCOUNT using a complete journal.
+A posting uses an account before its declaration.
 
 ========== API ==========
 

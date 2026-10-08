@@ -1,4 +1,4 @@
-Demonstrates INVALID_COMMODITY_TRADE using a complete journal.
+A posting violates the supported commodity and cost annotation rules.
 
 ========== API ==========
 

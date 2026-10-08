@@ -1,4 +1,4 @@
-Demonstrates RESIDUAL_COST_BASIS using a complete journal.
+A closed position still has nonzero booked cost basis.
 
 ========== CLI ==========
 

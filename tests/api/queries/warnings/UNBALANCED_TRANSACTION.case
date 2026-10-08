@@ -1,4 +1,4 @@
-Demonstrates UNBALANCED_TRANSACTION using a complete journal.
+A transaction's resolved postings leave a nonzero residual.
 
 ========== API ==========
 

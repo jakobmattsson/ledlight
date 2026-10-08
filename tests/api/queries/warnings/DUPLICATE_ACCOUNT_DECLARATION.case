@@ -1,4 +1,4 @@
-Demonstrates DUPLICATE_ACCOUNT_DECLARATION using a complete journal.
+An account is declared twice; the first declaration remains authoritative.
 
 ========== API ==========
 

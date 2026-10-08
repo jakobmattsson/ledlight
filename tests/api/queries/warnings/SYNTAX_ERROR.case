@@ -1,4 +1,4 @@
-Demonstrates SYNTAX_ERROR using a complete journal.
+A malformed top-level block is skipped during parser recovery.
 
 ========== API ==========
 

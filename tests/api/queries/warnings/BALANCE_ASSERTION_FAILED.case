@@ -1,4 +1,4 @@
-Demonstrates BALANCE_ASSERTION_FAILED using a complete journal.
+The resulting account balance differs from an asserted balance.
 
 ========== API ==========
 

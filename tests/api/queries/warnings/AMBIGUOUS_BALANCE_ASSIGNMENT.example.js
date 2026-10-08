@@ -1,5 +1,8 @@
 'use strict';
 
+// A balance assignment has no commodity and the account's holdings cannot
+// identify one. Ordinary Ledger text without that commodity is rejected by
+// the parser, so this example removes it from a parsed journal in memory.
 const { resolveRepositoryModule } = require('../../../support/repository-container');
 
 const { parse } = resolveRepositoryModule('src/impl/ingestion/syntax/ledger-parser.js');

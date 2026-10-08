@@ -1,4 +1,4 @@
-Demonstrates UNDECLARED_TAG using a complete journal.
+A transaction or posting uses a tag before its declaration.
 
 ========== API ==========
 
