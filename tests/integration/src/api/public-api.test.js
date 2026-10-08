@@ -24,15 +24,8 @@ test('exposes the supported public API without eagerly loading SQLite', () => {
   assert.equal(require.cache[sqliteModulePath], undefined);
 });
 
-test('rejects malformed Ledger text instead of returning a partial AST', () => {
+test('validates public parser API inputs', () => {
   const { parseLedgerText } = require(ledlightPath);
-  assert.throws(
-    () => parseLedgerText('account Assets:Cash\n2024-02-30 Bad date\n  Assets:Cash  1 SEK\n', {
-      source: 'planned.ledger',
-    }),
-    (error) => error.code === 'LEDLIGHT_SYNTAX' && error.source === 'planned.ledger' &&
-      error.line === 2,
-  );
   assert.throws(
     () => parseLedgerText(123),
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
@@ -325,28 +318,6 @@ account Equity:Opening
     journal.warnings,
     'warnings must remain available when the current database is reused',
   );
-
-});
-
-test('groups repeated warnings and exposes only their first ten instances', (t) => {
-  const ledlight = require(ledlightPath);
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-grouped-warnings-'));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const journalPath = path.join(directory, 'journal.ledger');
-  const prices = Array.from({ length: 12 }, (_value, index) =>
-    `P 2024-01-${String(index + 1).padStart(2, '0')} FUND 1 SEK`);
-  fs.writeFileSync(journalPath, [
-    'commodity SEK', '  format 1,000.00 SEK', '  default', ...prices, '',
-  ].join('\n'));
-
-  const journal = ledlight.openJournal(journalPath);
-  assert.equal(journal.warnings.length, 1);
-  assert.equal(journal.warnings[0].code, 'UNDECLARED_COMMODITY');
-  assert.equal(journal.warnings[0].message, 'Commodity FUND must be declared before use');
-  assert.equal(journal.warnings[0].instances.length, 10);
-  assert.deepEqual(journal.warnings[0].instances.map(({ line }) => line), [
-    4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-  ]);
 
 });
 

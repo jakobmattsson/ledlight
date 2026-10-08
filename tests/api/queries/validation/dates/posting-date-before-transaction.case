@@ -1,0 +1,30 @@
+Only an explicitly earlier posting date warns; equal, later, and inherited dates are allowed.
+
+========== API ==========
+
+accounts()
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+account Assets:Cash
+account Assets:Bank
+account Assets:Other
+account Equity:Opening
+
+2024-01-05 Undated postings
+  Assets:Cash  1 SEK
+  Equity:Opening  -1 SEK
+
+2024-01-05 Mixed posting dates
+  Assets:Cash  1 SEK ; [2024-01-04]
+  Assets:Bank  -1 SEK ; [2024-01-05]
+  Assets:Other  1 SEK ; [2024-01-06]
+  Equity:Opening  -1 SEK
+
+========== WARNINGS ==========
+
+[POSTING_DATE_BEFORE_TRANSACTION] Posting date 2024-01-04 must not precede transaction date 2024-01-05
+  {{JOURNAL_PATH}}:14:3

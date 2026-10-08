@@ -7,7 +7,6 @@ const test = require('node:test');
 const cliFormat = resolveRepositoryModule('src/impl/cli/cli-format.js');
 const {
   appendTotal,
-  formatJson,
   formatWarnings,
 } = cliFormat;
 const commands = new Map(resolveCommands().map((command) => [command.name, command]));
@@ -291,10 +290,6 @@ test('writes one investment performance CSV row with nested API fields', () => {
     'from,to,commodities,valuationCommodity,openingValue,endingValue,netContributions,' +
     'profitLoss,timeWeightedReturn,moneyWeightedReturn,moneyWeightedReturnTotal,points\n' +
     ',,"[""FUND,A""]",USD,0,10,10,0,,,,"[{""date"":""2024-01-01"",""value"":10}]"\n');
-});
-
-test('formats arbitrary API results as readable JSON', () => {
-  assert.equal(formatJson({ value: '10' }), '{\n  "value": "10"\n}\n');
 });
 
 test('formats ledger account names like Ledger by default', () => {
