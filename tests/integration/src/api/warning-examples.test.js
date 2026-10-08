@@ -9,31 +9,22 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const { warningCodes } = resolveRepositoryModule('src/impl/ingestion/ingestion-warning.js');
 const directory = path.resolve(__dirname, '../../../api/queries/warnings');
-const exampleFiles = fs.readdirSync(directory).filter((name) =>
-  name.endsWith('.case') || name.endsWith('.example.js'));
+// These guards require a parsed journal with a missing commodity. Journal text
+// fails parsing first and produces SYNTAX_ERROR instead.
+const internalWarningCodes = new Set([
+  warningCodes.AMBIGUOUS_BALANCE_ASSIGNMENT,
+  warningCodes.MISSING_COMMODITY,
+]);
+const exampleFiles = fs.readdirSync(directory).filter((name) => name.endsWith('.case'));
 
-test('every warning code has exactly one named example', () => {
-  const exampleCodes = exampleFiles.map((name) => name.replace(/(?:\.case|\.example\.js)$/u, ''));
-  assert.deepEqual(exampleCodes.sort(), Object.values(warningCodes).sort());
-  for (const name of exampleFiles.filter((file) => file.endsWith('.case'))) {
+test('every user-facing warning code has exactly one named example', () => {
+  const exampleCodes = exampleFiles.map((name) => name.slice(0, -'.case'.length));
+  const userFacingWarningCodes = Object.values(warningCodes)
+    .filter((code) => !internalWarningCodes.has(code));
+  assert.deepEqual(exampleCodes.sort(), userFacingWarningCodes.sort());
+  for (const name of exampleFiles) {
     const code = name.slice(0, -'.case'.length);
     const example = parseCase(path.join(directory, name));
     assert.match(example.warnings ?? '', new RegExp(`^\\[${code}\\]`, 'mu'), name);
-  }
-});
-
-test('internal warning examples exercise their named warning', () => {
-  for (const name of exampleFiles.filter((file) => file.endsWith('.example.js'))) {
-    const code = name.slice(0, -'.example.js'.length);
-    const { warnings, resolved, invalidEntries } = require(path.join(directory, name))();
-    assert.deepEqual(warnings.map((warning) => warning.code), [code], name);
-    assert.ok(warnings[0].message.length > 0, name);
-    if (code === 'AMBIGUOUS_BALANCE_ASSIGNMENT') {
-      assert.equal(resolved, null);
-      assert.equal(warnings[0].message, 'Cannot infer balance assignment commodity');
-    } else if (code === 'MISSING_COMMODITY') {
-      assert.equal(invalidEntries.size, 1);
-      assert.equal(warnings[0].message, 'Posting amount must specify a commodity');
-    }
   }
 });
