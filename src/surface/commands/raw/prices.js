@@ -2,12 +2,16 @@
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'show prices',
+  examples: [
+    'ledlight prices --file main.ledger',
+    'ledlight prices --file main.ledger --mode directives --format csv',
+  ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
   },
   configure(command) {
     options.journal(command);
-    options.addValue(command, '--mode <mode>', 'select effective prices or journal price directives', {
+    options.addValue(command, '--mode <mode>', 'show effective prices or explicit journal P directives', {
       choices: ['effective', 'directives'],
       defaultValue: 'effective',
     });

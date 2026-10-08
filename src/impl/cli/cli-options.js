@@ -48,32 +48,33 @@ module.exports = ({ commander: { InvalidArgumentError, Option } }) => {
 
   function accounts(command) {
     return addValue(
-      command, '--accounts <pattern>', 'include accounts matching a pattern (repeatable)',
+      command, '--accounts <pattern>', 'include matching accounts (repeatable; ^ and $ anchor names)',
       { repeatable: true },
     );
   }
 
   function usage(command, noun) {
     return addValue(
-      command, '--usage <selection>', `select all, used, or unused ${noun}`,
+      command, '--usage <selection>', `select ${noun} by journal use`,
       { choices: ['all', 'used', 'unused'], defaultValue: 'used' },
     );
   }
 
-  function date(command, flags, description) {
-    return addValue(command, flags, description);
+  function dateRange(command, fromDescription, toDescription) {
+    addValue(command, '--from <date>', fromDescription);
+    return addValue(command, '--to <date>', toDescription);
   }
 
   function dateBasis(command) {
     return addValue(
-      command, '--date-basis <basis>', 'select posting or transaction dates',
+      command, '--date-basis <basis>', 'use posting or transaction dates to select activity',
       { choices: ['posting', 'transaction'], defaultValue: 'posting' },
     );
   }
 
   function valuation(command) {
     return addValue(
-      command, '--valuation <valuation>', 'value holdings at cost or market prices',
+      command, '--valuation <method>', 'value holdings using recorded lot costs or market prices',
       { choices: ['cost', 'market'], defaultValue: 'market' },
     );
   }
@@ -90,7 +91,7 @@ module.exports = ({ commander: { InvalidArgumentError, Option } }) => {
   }
 
   return {
-    accounts, addBoolean, addValue, date, dateBasis, details, format,
+    accounts, addBoolean, addValue, dateBasis, dateRange, details, format,
     journal, usage, valuation,
   };
 };

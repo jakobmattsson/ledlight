@@ -4,6 +4,7 @@ const { resolveCommands, resolveRepositoryModule } = require('../../../support/r
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const { Command } = require('commander');
 const createArguments = require('../../../../src/impl/cli/cli-arguments');
 const commands = resolveCommands();
 const project = resolveRepositoryModule('src/impl/core/project.js');
@@ -12,7 +13,7 @@ const argumentsModule = createArguments({
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
 });
-const { apiCommands, parseArguments, usage } = argumentsModule;
+const { parseArguments, usage } = argumentsModule;
 
 function withoutCliOptions(value) {
   const parsed = { ...value };
@@ -25,18 +26,39 @@ function apiArguments(arguments_) {
 }
 
 test('documents the effective default for every enum option in command help', () => {
-  for (const command of Object.values(apiCommands)) {
+  for (const definition of commands) {
+    const command = definition.name;
+    const configured = new Command(command);
+    definition.configure(configured);
     const parsed = parseArguments([
       command, '--file', '/journal',
     ]);
     const options = { ...parsed.options, ...parsed.cliOptions };
-    const helpOptions = usage(command).split(/\n(?= {2}--)/u).slice(1);
-    for (const helpOption of helpOptions.filter((entry) => entry.includes('(choices:'))) {
-      const flag = /^ {2}--([\w-]+)/u.exec(helpOption)[1];
-      const input = flag.replace(/-([a-z])/gu, (_, letter) => letter.toUpperCase());
-      const documentedDefault = /default:\s+"([^"]+)"/u.exec(helpOption);
-      assert.ok(documentedDefault, `${command} --${flag} must document its default`);
-      assert.equal(documentedDefault[1], options[input], `${command} --${flag}`);
+    const help = usage(command);
+    for (const option of configured.options.filter((candidate) => candidate.argChoices)) {
+      const flag = option.long;
+      const input = option.attributeName();
+      const optionHelp = help.split(/\n(?= {2}--)/u)
+        .find((entry) => entry.startsWith(`  ${flag} `));
+      assert.ok(optionHelp, `${command} ${flag} must appear in help`);
+      for (const choice of option.argChoices) {
+        assert.match(optionHelp, new RegExp(`"${choice}"`, 'u'), `${command} ${flag}`);
+      }
+      const documentedDefault = /default:\s+"([^"]+)"/u.exec(optionHelp);
+      assert.ok(documentedDefault, `${command} ${flag} must document its default`);
+      assert.equal(documentedDefault[1], options[input], `${command} ${flag}`);
+    }
+  }
+});
+
+test('shows a runnable example in every command help page', () => {
+  for (const { name, examples } of commands) {
+    assert.ok(Array.isArray(examples) && examples.length > 0, name);
+    const help = usage(name);
+    assert.match(help, /\n\nExamples:\n/u, name);
+    for (const example of examples) {
+      assert.ok(example.startsWith(`ledlight ${name} --file `), example);
+      assert.ok(help.includes(`  ${example}`), example);
     }
   }
 });
@@ -368,7 +390,7 @@ test('maps every remaining API parameter to CLI arguments', () => {
   });
   assert.match(
     usage('transactions'),
-    /--order <order>\s+sort transactions \(choices: "newest", "oldest", default:\s+"oldest"\)/u,
+    /--order <order>\s+sort transactions by journal entry order \(choices:\s+"newest", "oldest", default:\s+"oldest"\)/u,
   );
   assert.match(usage('transactions'), /--page-size <number>\s+set the page size/u);
 });
@@ -401,6 +423,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /--version\s+show the package version/u);
   assert.match(usage(), /--help\s+show help/u);
   assert.match(usage(), /ledlight <command> --help/u);
+  assert.match(usage(), /Example:\n {2}ledlight aggregate --file main\.ledger/u);
   assert.match(
     usage(),
     /raw:\n {2}accounts\s+show accounts[\s\S]* {2}commodities\s+show commodities[\s\S]* {2}postings\s+show postings[\s\S]* {2}prices\s+show prices[\s\S]* {2}tags\s+show tags[\s\S]* {2}transactions\s+show transactions/u,

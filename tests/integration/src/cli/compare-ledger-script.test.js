@@ -32,6 +32,13 @@ function runComparison(directory, args) {
   return result;
 }
 
+test('comparison command help explains its parameters and shows examples', () => {
+  const result = runComparison(root, ['--help']);
+  assert.match(result.stdout, /--case <name>\s+compare one named matrix case/u);
+  assert.match(result.stdout, /default: all; see --list/u);
+  assert.match(result.stdout, /Examples:\n {2}ledlight-cmp --list\n {2}ledlight-cmp --file main\.ledger/u);
+});
+
 test('comparison matrix applies ISO dates to every Ledger command', (t) => {
   const { directory, journal } = withJournal(t, parseCase(fixture).file);
   const matrix = runComparison(directory, ['--list']);

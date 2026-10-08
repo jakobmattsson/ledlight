@@ -24,16 +24,22 @@ function loadMatrix() {
 }
 
 function usage() {
-  return `Usage: ledlight-cmp --file <journal> [options]
+  return `Usage: ledlight-cmp [--file <journal>] [options]
 
 Compare the verified Ledger and Ledlight command equivalents against any journal.
+Provide --file for comparisons; --list and --help work without a journal.
 
 Options:
-  --file <path>        root journal to compare
-  --case <name>        run one matrix row (repeatable; defaults to every runnable row)
-  --ledger-bin <path>  Ledger executable (defaults to LEDGER_BIN or ledger)
-  --list               print the complete equivalence matrix without running it
+  --file <path>        read the root journal file to compare
+  --case <name>        compare one named matrix case (repeatable; default: all; see --list)
+  --ledger-bin <path>  use this Ledger executable (default: LEDGER_BIN or ledger)
+  --list               show matrix case names and command pairs without running them
   --help               show this help
+
+Examples:
+  ledlight-cmp --list
+  ledlight-cmp --file main.ledger
+  ledlight-cmp --file main.ledger --case accounts
 `;
 }
 

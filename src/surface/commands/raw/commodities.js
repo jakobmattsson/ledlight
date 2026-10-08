@@ -2,9 +2,13 @@
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'show commodities',
+  examples: [
+    'ledlight commodities --file main.ledger',
+    'ledlight commodities --file main.ledger --usage all --details',
+  ],
   configure(command) {
     options.journal(command);
-    options.usage(command, 'commodities declarations');
+    options.usage(command, 'commodity declarations');
     options.details(command, 'include comments, formats, and usage');
     options.format(command);
   },
