@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791465065562,
+  "lastUpdate": 1791472185207,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -662,6 +662,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 13.848897,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "72d4d82c420b99dfa5e6ec52838eadc107dd96eb",
+          "message": "Merge pull request #110 from jakobmattsson/codex/investment-performance-examples\n\nExplain investment performance returns with worked examples",
+          "timestamp": "2026-10-08T17:09:19+02:00",
+          "tree_id": "2637f16f46830c574fd97a23e861770fcf2b856b",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/72d4d82c420b99dfa5e6ec52838eadc107dd96eb"
+        },
+        "date": 1791472184459,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1679.982639,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.365622,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 13.785422,
             "unit": "ms"
           }
         ]
