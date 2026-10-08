@@ -24,7 +24,8 @@ summary and uploads a `coverage-report` artifact. Open its `index.html` to see
 which source lines and branches ran. Successful pushes to `main` also publish
 the report at [GitHub Pages](https://jakobmattsson.github.io/ledlight/coverage/).
 Set the repository's Pages source to **GitHub Actions** in Settings → Pages to
-enable publishing. The existing benchmark history remains under `dev/bench/`.
+enable publishing. Coverage and benchmark history are both kept on the
+`gh-pages` branch, and each workflow deploys the current site content.
 Local `npm test` runs without coverage; use `npm run test:coverage` and open
 `coverage/index.html` to inspect the report locally.
 

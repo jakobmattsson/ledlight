@@ -29,7 +29,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage/
+          path: |
+            coverage/
+            !coverage/tmp/**
+            !coverage/lcov-report/**
           retention-days: 14
 
   coverage-pages:
@@ -37,8 +40,11 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: test
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
     permissions:
-      contents: read
+      contents: write
       pages: write
       id-token: write
     environment:
@@ -54,16 +60,25 @@ jobs:
           path: coverage-report
       - name: Assemble Pages site
         run: |
+          git fetch origin gh-pages
+          git worktree add --detach pages-checkout refs/remotes/origin/gh-pages
+          rm -rf pages-checkout/coverage
+          cp -R coverage-report pages-checkout/coverage
+          touch pages-checkout/.nojekyll
+          if [ ! -f pages-checkout/index.html ]; then
+            printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > pages-checkout/index.html
+          fi
+          git -C pages-checkout add -A
+          if ! git -C pages-checkout diff --cached --quiet; then
+            git -C pages-checkout -c user.name=github-actions -c user.email=github-actions[bot]@users.noreply.github.com commit -m "Update code coverage report"
+            if ! git -C pages-checkout push origin HEAD:gh-pages; then
+              git fetch origin gh-pages
+              git -C pages-checkout rebase origin/gh-pages
+              git -C pages-checkout push origin HEAD:gh-pages
+            fi
+          fi
           mkdir site
-          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            git archive refs/remotes/origin/gh-pages | tar -x -C site
-          fi
-          rm -rf site/coverage
-          cp -R coverage-report site/coverage
-          touch site/.nojekyll
-          if [ ! -f site/index.html ]; then
-            printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > site/index.html
-          fi
+          git -C pages-checkout archive HEAD | tar -x -C site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
