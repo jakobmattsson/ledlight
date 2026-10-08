@@ -1,0 +1,43 @@
+A balance assignment without a commodity is skipped as a syntax error. The
+API returns the valid transaction and exposes the parser warning to the user.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash  1 SEK
+  Equity:Opening
+
+2024-01-02 Missing commodity
+  Assets:Cash  = 1
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  },
+  {
+    "account": "Equity:Opening",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  }
+]
+
+========== WARNINGS ==========
+
+[SYNTAX_ERROR] Expected a commodity symbol for balance assignment
+  {{JOURNAL_PATH}}:11:19 (affected lines 10-12)

@@ -205,7 +205,7 @@ warning group is:
 At most the first ten instances of each warning group are exposed.
 Warnings cover the entire journal and do not depend on the report command,
 account selection, or snapshot date. Global investment checks include
-`IMPOSSIBLE_COST_BASIS`, `RESIDUAL_COST_BASIS`, and `RESULT_MISMATCH`;
+`IMPOSSIBLE_COST_BASIS` and `RESIDUAL_COST_BASIS`;
 they are computed during ingestion and remain available on cached opens.
 
 Warnings are stored with the database snapshot and therefore remain available

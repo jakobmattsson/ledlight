@@ -1,0 +1,21 @@
+A posting date earlier than its transaction date produces a warning.
+
+========== API ==========
+
+accounts()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Equity:Opening
+2024-01-05 Earlier posting
+  Assets:Cash  1 SEK ; [2024-01-04]
+  Equity:Opening  -1 SEK
+
+========== WARNINGS ==========
+
+[POSTING_DATE_BEFORE_TRANSACTION] Posting date 2024-01-04 must not precede transaction date 2024-01-05
+  {{JOURNAL_PATH}}:7:3

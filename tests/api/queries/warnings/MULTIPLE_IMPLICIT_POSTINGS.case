@@ -1,0 +1,21 @@
+A transaction has more than one posting with an inferred amount and cannot be resolved.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Ambiguous
+  Assets:Cash
+  Equity:Opening
+
+========== WARNINGS ==========
+
+[MULTIPLE_IMPLICIT_POSTINGS] Transaction has multiple implicit postings
+  {{JOURNAL_PATH}}:6:1

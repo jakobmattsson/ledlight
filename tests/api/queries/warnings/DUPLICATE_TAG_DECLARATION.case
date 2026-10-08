@@ -1,0 +1,15 @@
+A tag is declared twice; the first declaration remains authoritative.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+tag Reviewed
+tag Reviewed
+
+========== WARNINGS ==========
+
+[DUPLICATE_TAG_DECLARATION] Tag Reviewed has already been declared
+  {{JOURNAL_PATH}}:2:1

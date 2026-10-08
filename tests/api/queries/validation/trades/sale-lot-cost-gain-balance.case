@@ -43,6 +43,3 @@ account Income:Capital Gains
 
 [UNBALANCED_TRANSACTION] Transaction does not balance: 200 SEK
   {{JOURNAL_PATH}}:20:1
-
-[RESULT_MISMATCH] Realized plus unrealized result differs from cash flows and remaining market value by -200 SEK
-  {{JOURNAL_PATH}}:20:1

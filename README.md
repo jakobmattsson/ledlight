@@ -19,10 +19,14 @@ npm test
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.
 
-The full GitHub Actions test job shows total and per-file coverage in the workflow
-run summary and uploads `coverage/lcov.info` as an artifact for line-level data.
-Local `npm test` runs without coverage; use `npm run test:coverage` to generate
-the report locally when needed.
+The full GitHub Actions test job shows total and per-file coverage in its run
+summary and uploads a `coverage-report` artifact. Open its `index.html` to see
+which source lines and branches ran. Successful pushes to `main` also publish
+the report at [GitHub Pages](https://jakobmattsson.github.io/ledlight/coverage/).
+The report lives in `coverage/` on the existing `gh-pages` branch alongside
+benchmark history in `dev/bench/`; no Pages source change is required.
+Local `npm test` runs without coverage; use `npm run test:coverage` and open
+`coverage/index.html` to inspect the report locally.
 
 Run `ledlight` or `ledlight --help` to list the available commands. Run
 `ledlight <command> --help` for the options accepted by one command. Run

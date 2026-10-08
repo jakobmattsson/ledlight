@@ -38,5 +38,5 @@ for (const [name, coverage] of [['**Total**', report.total], ...files]) {
   lines.push(`| ${label} | ${metrics.map((metric) => percentage(coverage, metric)).join(' | ')} |`);
 }
 
-lines.push('', 'Download the `coverage-lcov` artifact for line-level coverage data.', '');
+lines.push('', 'Download the `coverage-report` artifact and open `index.html` to inspect covered and uncovered source lines.', '');
 fs.appendFileSync(summaryPath, `${lines.join('\n')}\n`);

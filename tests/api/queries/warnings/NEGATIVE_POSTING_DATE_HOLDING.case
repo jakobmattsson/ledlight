@@ -1,0 +1,32 @@
+A disposal precedes the available acquisition when posting dates are used.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Cash
+account Assets:Fund
+account Assets:Other
+
+2024-01-01 Buy fund
+  Assets:Fund  1 FUND {100 SEK} ; [2024-01-03]
+  Assets:Cash  -100 SEK
+
+2024-01-02 Sell fund
+  Assets:Fund  -1 FUND {100 SEK} @ 100 SEK
+  Assets:Cash  100 SEK
+2024-01-01 Other account purchase
+  Assets:Other  1 FUND {100 SEK}
+  Assets:Cash  -100 SEK
+
+========== WARNINGS ==========
+
+[NEGATIVE_POSTING_DATE_HOLDING] Assets:Fund: holding is -1 FUND on 2024-01-02 using posting dates; disposals must not precede available acquisitions
+  {{JOURNAL_PATH}}:15:3
