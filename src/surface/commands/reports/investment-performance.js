@@ -11,21 +11,21 @@ module.exports = ({ cliOptions: options }) => ({
   },
   helpDetails: `Return measures:
   Time-weighted return
-    Split the portfolio history at each external contribution or withdrawal.
-    Calculate the return in each part and multiply the parts' growth factors.
-    Ledlight uses daily closing values and treats flows as occurring at day's
-    end.
+    Use this to compare portfolio or manager performance without the direct
+    effect of how much you contributed or withdrew and when. Split the
+    portfolio history at each external contribution or withdrawal. Calculate
+    the return in each part and multiply the parts' growth factors. Ledlight
+    uses daily closing values and treats flows as occurring at day's end.
 
   Money-weighted return (total)
-    The cumulative investor return accounting for the amount and date of the
-    opening value, contributions, withdrawals, and ending value. It is the
-    annualized XIRR compounded over the interval from the first to the last
-    non-zero investor cash flow.
+    Use this to see your own cumulative return, including how much you
+    contributed or withdrew and when. It is the annualized XIRR compounded
+    over the interval from the first to the last non-zero investor cash flow.
 
   Money-weighted return (annualized)
+    Use this to compare your own returns across periods of different lengths.
     The yearly compound rate (XIRR) that makes the present value of the dated
-    opening value, contributions, withdrawals, and ending value equal zero.
-    It allows periods of different lengths to be compared.`,
+    opening value, contributions, withdrawals, and ending value equal zero.`,
   configure(command) {
     options.journal(command);
     options.dateRange(
