@@ -24,5 +24,8 @@ account Assets:Fund
 
 ========== WARNINGS ==========
 
+[POSTING_DATE_BEFORE_TRANSACTION] Posting date 2024-01-03 must not precede transaction date 2024-01-04
+  {{JOURNAL_PATH}}:10:3
+
 [IMPOSSIBLE_COST_BASIS] Sell fund: Assets:Fund sold 1 FUND with cost 100 SEK; insufficient acquired units are available
   {{JOURNAL_PATH}}:14:3
