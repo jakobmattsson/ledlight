@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const cliPath = path.resolve(__dirname, '../../../../src/impl/cli/run.js');
+const cliPath = path.resolve(__dirname, '../../../../src/run.js');
 const source = `commodity SEK
   default
   format 1,000.00 SEK

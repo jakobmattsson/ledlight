@@ -288,6 +288,13 @@ from `queries`. The complete container is resolved in a unit test so violations
 fail the verification suite even when the affected feature is not otherwise
 exercised. Repository factories use unique lowercase kebab-case filenames;
 Awilix `loadModules` converts each basename to its camel-case dependency name.
+`src/composition/module-container.js` handles the reusable Awilix loading and
+factory checks. `src/composition/repository-container.js` defines this project's
+module paths, dependency boundaries, external services, and query and command
+contracts. Every JavaScript file under `src/impl` is an Awilix factory. The
+`src/run.js` executable creates the container and invokes its
+registered `runCli` module. An injectable `processRuntime` adapter supplies the
+process ID, command-line arguments, and exit-code setter.
 
 ## Supported grammar
 

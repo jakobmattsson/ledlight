@@ -9,35 +9,23 @@ const {
   listModules,
   Lifetime,
 } = require('awilix');
+const {
+  addUniqueName,
+  listUniqueModules,
+  moduleName: repositoryModuleName,
+  proxyDependencies,
+  registerModuleFactories,
+  surfaceModule: loadSurfaceModule,
+} = require('./module-container');
 
-const REPOSITORY_ROOT = path.resolve(__dirname, '../../..');
-const REPOSITORY_MODULE_PATTERNS = Object.freeze([
-  'src/impl/cli/cli-arguments.js',
-  'src/impl/cli/cli-command.js',
-  'src/impl/cli/cli-configuration.js',
-  'src/impl/cli/cli-format.js',
-  'src/impl/cli/cli-options.js',
-  'src/impl/cli/cli-stdin-journal.js',
-  'src/impl/cli/output.js',
-  'src/impl/cli/report-command.js',
-  'src/impl/core/*.js',
-  'src/impl/ingestion/**/*.js',
-  'src/impl/query-support/*.js',
-]);
+const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
+const REPOSITORY_MODULE_PATTERN = 'src/impl/**/*.js';
 const QUERY_MODULE_PATTERN = 'src/surface/queries/*.js';
 const COMMAND_MODULE_PATTERN = 'src/surface/commands/**/*.js';
 const COMMAND_DIRECTORY = path.join(REPOSITORY_ROOT, 'src/surface/commands');
 
 function relativeModulePath(fileName) {
   return path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
-}
-
-function repositoryModuleName(fileName) {
-  const baseName = path.basename(fileName, path.extname(fileName));
-  if (!/^[a-z]+(?:-[a-z]+)*$/u.test(baseName)) {
-    throw new Error(`Repository module filename must use lowercase kebab-case: ${fileName}`);
-  }
-  return baseName.replace(/-([a-z])/gu, (_match, letter) => letter.toUpperCase());
 }
 
 function commandGroup(relativePath) {
@@ -48,24 +36,10 @@ function commandGroup(relativePath) {
   return segments[0];
 }
 
-function repositoryModules() {
-  const modules = listModules(REPOSITORY_MODULE_PATTERNS, { cwd: REPOSITORY_ROOT });
-  const locations = new Map();
-  for (const module of modules) {
-    const name = repositoryModuleName(module.path);
-    const previous = locations.get(name);
-    if (previous) {
-      throw new Error(`Duplicate repository module name ${name}: ${previous} and ${module.path}`);
-    }
-    if (name === 'queries' || name === 'commands') {
-      throw new Error(`Repository module name is reserved for a collection: ${module.path}`);
-    }
-    locations.set(name, module.path);
-  }
-  return modules;
-}
-
-const REPOSITORY_MODULES = repositoryModules();
+const REPOSITORY_MODULES = listUniqueModules(REPOSITORY_MODULE_PATTERN, {
+  cwd: REPOSITORY_ROOT,
+  reservedNames: ['queries', 'commands'],
+});
 const REGISTRATION_LOCATIONS = new Map([
   ...REPOSITORY_MODULES.map(({ path: fileName }) => [
     repositoryModuleName(fileName),
@@ -103,33 +77,16 @@ function assertDependencyAllowed(consumerFile, dependencyName) {
 
 function restrictedDependencies(fileName, dependencies) {
   const consumerFile = relativeModulePath(fileName);
-  return new Proxy(dependencies, {
-    get(target, property, receiver) {
-      if (typeof property === 'string') assertDependencyAllowed(consumerFile, property);
-      return Reflect.get(target, property, receiver);
-    },
-  });
-}
-
-function moduleFactory(fileName) {
-  const factory = require(fileName);
-  if (typeof factory !== 'function') {
-    throw new TypeError(`${relativeModulePath(fileName)} must export an Awilix factory.`);
-  }
-  return factory;
+  return proxyDependencies(dependencies, (name) => assertDependencyAllowed(consumerFile, name));
 }
 
 function surfaceModule(fileName, kind, dependencies) {
-  const module = moduleFactory(fileName)(restrictedDependencies(fileName, dependencies));
-  if (!module || typeof module !== 'object' || Array.isArray(module)) {
-    throw new TypeError(`${relativeModulePath(fileName)} must return a ${kind} object.`);
-  }
-  return module;
-}
-
-function addUniqueName(names, name, kind) {
-  if (names.has(name)) throw new Error(`Duplicate ${kind} name: ${name}`);
-  names.add(name);
+  return loadSurfaceModule(
+    fileName,
+    kind,
+    restrictedDependencies(fileName, dependencies),
+    relativeModulePath(fileName),
+  );
 }
 
 function queryFromFile(fileName, dependencies, names) {
@@ -180,9 +137,14 @@ function registerExternalModules(container) {
     envPaths: asValue(require('env-paths')),
     fs: asValue(require('node:fs')),
     os: asValue(require('node:os')),
-    packageMetadata: asValue(require('../../../package.json')),
+    packageMetadata: asValue(require('../../package.json')),
     path: asValue(require('node:path')),
     processEnvironment: asValue(process.env),
+    processRuntime: asValue({
+      pid: () => process.pid,
+      commandLineArguments: () => process.argv.slice(2),
+      setExitCode: (code) => { process.exitCode = code; },
+    }),
     standardInput: asValue({
       isTTY: () => Boolean(process.stdin.isTTY),
       read: () => require('node:fs').readFileSync(0, 'utf8'),
@@ -203,28 +165,12 @@ function registerExternalModules(container) {
 
 function registerRepositoryModules(container) {
   registerExternalModules(container);
-  const factoryLocations = new Map(REPOSITORY_MODULES.map(({ path: fileName }) => {
-    const factory = moduleFactory(fileName);
-    const name = repositoryModuleName(fileName);
-    if (container.hasRegistration(name)) {
-      throw new Error(`Repository module name conflicts with an existing registration: ${name}`);
-    }
-    return [factory, fileName];
-  }));
-  container.loadModules(REPOSITORY_MODULE_PATTERNS, {
+  registerModuleFactories(container, {
+    patterns: REPOSITORY_MODULE_PATTERN,
     cwd: REPOSITORY_ROOT,
-    formatName: 'camelCase',
-    resolverOptions: {
-      lifetime: Lifetime.SINGLETON,
-      register(factory, options) {
-        const fileName = factoryLocations.get(factory);
-        if (!fileName) throw new Error('Awilix loaded an unknown repository module factory');
-        return asFunction(
-          (dependencies) => factory(restrictedDependencies(fileName, dependencies)),
-          options,
-        );
-      },
-    },
+    modules: REPOSITORY_MODULES,
+    displayPath: relativeModulePath,
+    wrapDependencies: restrictedDependencies,
   });
   container.register('queries', asFunction(loadQueries, { lifetime: Lifetime.SINGLETON }));
   container.register('commands', asFunction(loadCommands, { lifetime: Lifetime.SINGLETON }));

@@ -3,7 +3,7 @@
 const {
   createRepositoryContainer,
   $$private: { assertDependencyAllowed, commandGroup, repositoryModuleName },
-} = require('../../src/impl/composition/repository-container');
+} = require('../../src/composition/repository-container');
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
