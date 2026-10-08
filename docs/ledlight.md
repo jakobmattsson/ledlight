@@ -281,6 +281,10 @@ from `queries`. The complete container is resolved in a unit test so violations
 fail the verification suite even when the affected feature is not otherwise
 exercised. Repository factories use unique lowercase kebab-case filenames;
 Awilix `loadModules` converts each basename to its camel-case dependency name.
+`impl/composition/module-container.js` handles the reusable Awilix loading and
+factory checks. `impl/composition/repository-container.js` defines this project's
+module paths, dependency boundaries, external services, and query and command
+contracts.
 
 ## Supported grammar
 
