@@ -2,7 +2,13 @@ version = 1
 name = "ledlight"
 
 [setup]
-script = "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\" && . \"$NVM_DIR/nvm.sh\" && { nvm use || nvm install; } && npm install"
+script = '''
+set -e
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+. "$NVM_DIR/nvm.sh"
+nvm use || nvm install
+npm install
+'''
 
 [[actions]]
 name = "Run tests"
