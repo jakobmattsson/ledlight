@@ -28,6 +28,12 @@ test('divides exact decimal values to a bounded scale', () => {
   );
   assert.equal(formatDecimal(divideDecimals(parseDecimal('-1'), parseDecimal('3'), 2)), '-0.33');
   assert.throws(() => divideDecimals(parseDecimal('1'), parseDecimal('0'), 10), /divide by zero/u);
+  for (const scale of [-1, 0.5]) {
+    assert.throws(
+      () => divideDecimals(parseDecimal('1'), parseDecimal('2'), scale),
+      /Decimal scale must be a non-negative integer/u,
+    );
+  }
 });
 
 test('requires digits on both sides of a decimal point', () => {

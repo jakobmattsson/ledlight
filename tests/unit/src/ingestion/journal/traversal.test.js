@@ -72,6 +72,15 @@ test('reports missing include directories as unmatched patterns', (t) => {
   );
 });
 
+test('rejects wildcards in include directory components', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'all.ledger');
+  fs.writeFileSync(journalPath, 'include parts*/item?.ledger\n');
+
+  assert.throws(() => loadJournal(journalPath), /Wildcards in include directories are not supported/u);
+  assert.throws(() => loadJournalManifest(journalPath), /Wildcards in include directories are not supported/u);
+});
+
 test('loads a file once when multiple include branches reach it', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'all.ledger');

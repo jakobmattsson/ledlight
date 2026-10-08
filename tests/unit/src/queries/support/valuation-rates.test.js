@@ -61,6 +61,18 @@ test('prefers an older direct quote and falls back from an unusable newer quote'
   assert.equal(resolve('FUND', '2024-02-01'), '10');
 });
 
+test('rejects invalid valuation-rate lookup arguments', () => {
+  const resolve = createLedgerValuationRateResolver([], 'SEK');
+  assert.throws(() => resolve('', '2024-01-01'), {
+    code: 'LEDLIGHT_INVALID_API_INPUT',
+    name: 'TypeError',
+  });
+  assert.throws(() => resolve('FUND', null), {
+    code: 'LEDLIGHT_INVALID_API_INPUT',
+    name: 'TypeError',
+  });
+});
+
 test('selects materialized rates from one common latest date', (t) => {
   const database = new Database(':memory:');
   t.after(() => database.close());
