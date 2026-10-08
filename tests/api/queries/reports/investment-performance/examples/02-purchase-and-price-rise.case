@@ -1,11 +1,11 @@
-Example: a holding bought before the report becomes its opening value.
-One FUND unit was bought on 2022-12-31 at 100 USD and closed at 100 USD.
-The report starts on 2023-01-01, so that previous close is opening value 100.
-The quote rises to 110 USD on 2023-07-01 and 120 USD on 2024-01-01, with no
-postings during the report interval. Net contributions are 0, and profit/loss
-is 120 - 100 - 0 = 20 USD. Time-weighted return is 120 / 100 - 1 = 20%.
-Treating the 100 USD opening value as invested for 365 days also gives a 20%
-money-weighted return.
+Example: the acquisition cost is the contribution; later prices set the value.
+One FUND unit is bought for 100 USD on 2023-01-01, recorded as {100 USD}.
+Its closing price is 100 USD then, 110 USD on 2023-07-01, and 120 USD on
+2024-01-01. Only FUND is selected, so the cash payment is outside the report.
+Opening value is 0, net contributions are 100, and ending value is 120 USD.
+Profit/loss is 120 - 0 - 100 = 20 USD. The two growth factors are 110 / 100
+and 120 / 110, giving a time-weighted return of 20%. The 100 USD invested for
+exactly 365 days grows to 120 USD, so the money-weighted returns are also 20%.
 
 ========== API ==========
 
@@ -24,11 +24,11 @@ commodity FUND
   format 1,000 FUND
 account Assets:Fund
 account Assets:Cash
-P 2022-12-31 FUND 100 USD
+P 2023-01-01 FUND 100 USD
 P 2023-07-01 FUND 110 USD
 P 2024-01-01 FUND 120 USD
 
-2022-12-31 Purchase
+2023-01-01 Purchase
   Assets:Fund  1 FUND {100 USD}
   Assets:Cash  -100 USD
 
@@ -36,8 +36,8 @@ P 2024-01-01 FUND 120 USD
 
 Investment performance from 2023-01-01 to 2024-01-01
 Instruments: 1
-Opening value: 100.00 USD
-Net contributions: 0.00 USD
+Opening value: 0.00 USD
+Net contributions: 100.00 USD
 Ending value: 120.00 USD
 Profit/loss: 20.00 USD
 Time-weighted return: 20.00 %

@@ -1,17 +1,20 @@
-Example: proceeds from a partial sale are a withdrawal from the selected fund.
-On 2024-01-01, two FUND units were bought at 100 USD each; their closing value
-of 200 USD becomes the opening value for the selected 2024-01-02 interval.
-On 2024-01-02, one unit is sold for 130 USD (@ 130 USD), leaving one unit worth
-140 USD at that day's quoted price. Only FUND is selected, so the sale contributes
--130 USD, while the remaining position has an ending value of 140 USD.
-Profit/loss is 140 - 200 - (-130) = 70 USD. With the withdrawal treated as an
-end-of-day flow, time-weighted return is (140 - (-130)) / 200 - 1 = 35%.
-The money-weighted returns cannot be calculated for this one-day interval, so
-the text formatter shows their null API values as n/a.
+Example: a midyear partial sale separates profit from money withdrawn.
+Two FUND units were bought on 2022-12-31 at 100 USD each, giving the report
+an opening value of 200 USD on 2023-01-01. On 2023-07-01, one unit is sold
+for 130 USD (@ 130 USD) while the other closes at 130 USD. The remaining unit
+closes at 140 USD on 2024-01-01. Only FUND is selected, so sale proceeds are a
+-130 USD contribution; ending value is the remaining 140 USD unit.
+Profit/loss is 140 - 200 - (-130) = 70 USD. The return before the sale is
+(130 + 130) / 200 - 1 = 30%; afterwards it is 140 / 130 - 1 = 7.69%.
+Compounding those factors gives 40% time-weighted return. Money-weighted
+return uses the actual dates of the 200 USD opening value, 130 USD withdrawal,
+and 140 USD ending value. The annual rate r solves
+-200 + 130 / (1 + r)^(181 / 365) + 140 / (1 + r) = 0, giving 49.65%.
+The total money-weighted return is also 49.65% because the period is one year.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
+investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2023-01-01', to: '2024-01-01' })
 
 ========== API FORMAT ==========
 
@@ -27,28 +30,29 @@ commodity FUND
 account Assets:Fund
 account Assets:Cash
 account Income:Gains
-P 2024-01-01 FUND 100 USD
-P 2024-01-02 FUND 140 USD
+P 2022-12-31 FUND 100 USD
+P 2023-07-01 FUND 130 USD
+P 2024-01-01 FUND 140 USD
 
-2024-01-01 Purchase
+2022-12-31 Purchase
   Assets:Fund  2 FUND {100 USD}
   Assets:Cash  -200 USD
 
-2024-01-02 Partial sale
+2023-07-01 Partial sale
   Assets:Fund  -1 FUND {100 USD} @ 130 USD
   Assets:Cash  130 USD
   Income:Gains  -30 USD
 
 ========== OUTPUT ==========
 
-Investment performance from 2024-01-02 to 2024-01-02
+Investment performance from 2023-01-01 to 2024-01-01
 Instruments: 1
 Opening value: 200.00 USD
 Net contributions: -130.00 USD
 Ending value: 140.00 USD
 Profit/loss: 70.00 USD
-Time-weighted return: 35.00 %
-Money-weighted return (total): n/a
-Money-weighted return (annualized): n/a
+Time-weighted return: 40.00 %
+Money-weighted return (total): 49.65 %
+Money-weighted return (annualized): 49.65 %
 
 ========== WARNINGS ==========

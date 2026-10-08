@@ -6,9 +6,8 @@ test-owned Ledger journal, and the report's text output. The case runner calls
 the API and formats its result with the same text formatter as the CLI. It
 discovers these files recursively.
 
-The cases use one-day reporting intervals to keep the arithmetic short. The
-text output shows return percentages and `n/a` for returns that cannot be
-calculated. The underlying money-weighted API fields are `null` because cash
-flows on one date provide no elapsed time for an annualized return. For a
-full-year example of the money-weighted returns, see
-[`../performance-cli-returns.case`](../performance-cli-returns.case).
+Each case reports from 2023-01-01 through 2024-01-01, exactly 365 days. The
+text output shows return percentages. Purchases, deposits, price updates, and
+the partial sale happen on different dates, so the money-weighted returns can
+be calculated and compared with the time-weighted return. The partial sale
+shows why the two measures can differ.
