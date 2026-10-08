@@ -20,7 +20,10 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install --yes ledger
       - run: npm ci
-      - run: npm run test:coverage
+      - name: Run tests with coverage and Allure results
+        env:
+          ALLURE_RESULTS_DIR: allure-results
+        run: npm run test:coverage
       - name: Show coverage in job summary
         if: ${{ always() && hashFiles('coverage/coverage-summary.json') != '' }}
         run: node scripts/ci/coverage-summary.js
@@ -35,9 +38,20 @@ jobs:
             !coverage/lcov-report/**
           retention-days: 14
 
-  publish-coverage:
-    name: Publish coverage to gh-pages
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      - name: Generate test report
+        if: ${{ always() && hashFiles('allure-results/*-result.json') != '' }}
+        run: npm run report:allure
+      - name: Upload test report
+        if: ${{ always() && hashFiles('allure-report/index.html') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: allure-report/
+          retention-days: 14
+
+  publish-reports:
+    name: Publish reports to gh-pages
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -49,21 +63,29 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
-          name: coverage-report
-          path: coverage-report
-      - name: Update gh-pages report
+          pattern: '*-report'
+          path: reports
+      - name: Update gh-pages reports
         run: |
+          if [ ! -f reports/coverage-report/index.html ] && [ ! -f reports/test-report/index.html ]; then
+            echo "No report artifacts were produced"
+            exit 1
+          fi
           git fetch origin gh-pages
           git worktree add --detach pages-checkout refs/remotes/origin/gh-pages
-          rm -rf pages-checkout/coverage
-          cp -R coverage-report pages-checkout/coverage
-          touch pages-checkout/.nojekyll
-          if [ ! -f pages-checkout/index.html ]; then
-            printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > pages-checkout/index.html
+          if [ -f reports/coverage-report/index.html ]; then
+            rm -rf pages-checkout/coverage
+            cp -R reports/coverage-report pages-checkout/coverage
           fi
+          if [ -f reports/test-report/index.html ]; then
+            rm -rf pages-checkout/tests
+            cp -R reports/test-report pages-checkout/tests
+          fi
+          touch pages-checkout/.nojekyll
+          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="tests/">Test results and timings</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > pages-checkout/index.html
           git -C pages-checkout add -A
           if ! git -C pages-checkout diff --cached --quiet; then
-            git -C pages-checkout -c user.name=github-actions -c user.email=github-actions[bot]@users.noreply.github.com commit -m "Update code coverage report"
+            git -C pages-checkout -c user.name=github-actions -c user.email=github-actions[bot]@users.noreply.github.com commit -m "Update test and coverage reports"
             if ! git -C pages-checkout push origin HEAD:gh-pages; then
               git fetch origin gh-pages
               git -C pages-checkout rebase origin/gh-pages
@@ -75,7 +97,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds"
       - name: Show coverage report
+        if: ${{ hashFiles('reports/coverage-report/index.html') != '' }}
         run: echo "[Browse line-by-line coverage](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/coverage/)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Show test report
+        if: ${{ hashFiles('reports/test-report/index.html') != '' }}
+        run: echo "[Browse test results and timings](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/tests/)" >> "$GITHUB_STEP_SUMMARY"
 
   package:
     name: Node.js 22 on ${{ matrix.os }}

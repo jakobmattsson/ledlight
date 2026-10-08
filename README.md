@@ -39,10 +39,12 @@ The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 
 The full GitHub Actions test job shows total and per-file coverage in its run
 summary and uploads a `coverage-report` artifact. Open its `index.html` to see
-which source lines and branches ran. Successful pushes to `main` also publish
-the report at [GitHub Pages](https://jakobmattsson.github.io/ledlight/coverage/).
-The report lives in `coverage/` on the existing `gh-pages` branch alongside
-benchmark history in `dev/bench/`; no Pages source change is required.
+which source lines and branches ran. The same test run also uploads an Allure
+report with individual test results and durations. Pushes to `main` publish
+available reports at [coverage](https://jakobmattsson.github.io/ledlight/coverage/)
+and [test results](https://jakobmattsson.github.io/ledlight/tests/) on the
+existing `gh-pages` branch, alongside benchmark history in `dev/bench/`.
+Reports from failed test runs are published when test results are available.
 Local `npm test` runs without coverage; use `npm run test:coverage` and open
 `coverage/index.html` to inspect the report locally.
 

@@ -23,7 +23,7 @@ const runtimeGlobals = [...new Set([
 
 module.exports = [
   {
-    ignores: ["node_modules/**", "tmp/**"],
+    ignores: ["node_modules/**", "tmp/**", "coverage/**", "allure-results/**", "allure-report/**"],
   },
   js.configs.recommended,
   {

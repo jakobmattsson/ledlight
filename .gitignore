@@ -1,5 +1,7 @@
 node_modules/
 coverage/
+allure-results/
+allure-report/
 tmp/
 *.sqlite
 *.sqlite-shm
