@@ -7,7 +7,7 @@ set -e
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}" # Keep a configured nvm path or use the default.
 . "$NVM_DIR/nvm.sh" # Load nvm into this shell to select Node.
 nvm use || nvm install
-npm install
+npm ci
 '''
 
 [[actions]]
