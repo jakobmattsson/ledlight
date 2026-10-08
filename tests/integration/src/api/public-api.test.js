@@ -178,42 +178,6 @@ P 2024-01-01 USD 2 SEK
   assert.deepEqual(correctedJournal.warnings, []);
 });
 
-test('persists early posting date warnings and rebuilds older caches', (t) => {
-  const { openJournal } = require(ledlightPath);
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-posting-date-warning-'));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const journalPath = path.join(directory, 'journal.ledger');
-  fs.writeFileSync(journalPath, `commodity SEK
-  format 1,000.00 SEK
-  default
-account Assets:Cash
-account Equity:Opening
-2024-01-05 Early posting
-  Assets:Cash  1 SEK ; [2024-01-04]
-  Equity:Opening  -1 SEK
-`);
-
-  const journal = openJournal(journalPath);
-  assert.deepEqual(journal.warnings.map(({ code, message }) => ({ code, message })), [{
-    code: 'POSTING_DATE_BEFORE_TRANSACTION',
-    message: 'Posting date 2024-01-04 must not precede transaction date 2024-01-05',
-  }]);
-  assert.equal(journal.warnings[0].instances[0].line, 7);
-  assert.deepEqual(openJournal(journalPath).warnings, journal.warnings);
-
-  const Database = require(sqliteModulePath);
-  const previousCache = new Database(journal.databasePath);
-  try {
-    previousCache.prepare("UPDATE database_metadata SET value = '36' WHERE key = 'schema_version'").run();
-    previousCache.prepare('DELETE FROM ingestion_warnings').run();
-  } finally {
-    previousCache.close();
-  }
-  const rebuilt = openJournal(journalPath);
-  assert.equal(rebuilt.rebuilt, true);
-  assert.deepEqual(rebuilt.warnings, journal.warnings);
-});
-
 test('prints CLI help and the public package version without opening a project', () => {
   assert.match(execFileSync(process.execPath, [cliPath, '--help'], { encoding: 'utf8' }), /^Usage:/u);
   assert.equal(

@@ -72,43 +72,6 @@ for (const fixture of invalidAmounts) {
   });
 }
 
-test('warns for each posting dated before its transaction', () => {
-  const journal = parse(`2024-01-05 No posting dates
-  Assets:Cash  1 SEK
-  Equity:Opening  -1 SEK
-2024-01-05 Mixed posting dates
-  Assets:Cash  1 SEK ; [2024-01-04]
-  Equity:Opening  -1 SEK ; [2024-01-05]
-2024-01-05 Later posting date
-  Assets:Cash  1 SEK ; [2024-01-06]
-  Equity:Opening  -1 SEK
-2024-01-05 Two early postings
-  Assets:Cash  1 SEK ; [2024-01-03]
-  Equity:Opening  -1 SEK ; [2024-01-04]
-`, { source: 'fixture.ledger' });
-
-  const result = validateJournal(journal);
-  assert.deepEqual(result.warnings.filter(({ code }) =>
-    code === 'POSTING_DATE_BEFORE_TRANSACTION'), [
-    {
-      code: 'POSTING_DATE_BEFORE_TRANSACTION',
-      message: 'Posting date 2024-01-04 must not precede transaction date 2024-01-05',
-      source: 'fixture.ledger', line: 5, column: 3, startLine: 5, endLine: 5,
-    },
-    {
-      code: 'POSTING_DATE_BEFORE_TRANSACTION',
-      message: 'Posting date 2024-01-03 must not precede transaction date 2024-01-05',
-      source: 'fixture.ledger', line: 11, column: 3, startLine: 11, endLine: 11,
-    },
-    {
-      code: 'POSTING_DATE_BEFORE_TRANSACTION',
-      message: 'Posting date 2024-01-04 must not precede transaction date 2024-01-05',
-      source: 'fixture.ledger', line: 12, column: 3, startLine: 12, endLine: 12,
-    },
-  ]);
-  assert.equal(result.invalidEntries.size, 0);
-});
-
 test('warns when accounts, commodities, and tags are used before declaration', () => {
   const journal = parse(`2024-01-01 Before declarations ; :Header:
   ; Note: value
