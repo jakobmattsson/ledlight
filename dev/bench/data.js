@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791401195752,
+  "lastUpdate": 1791465065562,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -623,6 +623,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 10.982854,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "90182147966d9d572905140e78da5729890daa85",
+          "message": "Merge pull request #109 from jakobmattsson/codex/fix-journal-performance-benchmark\n\nFix journal performance fixture validation",
+          "timestamp": "2026-10-08T15:10:28+02:00",
+          "tree_id": "fc3a756dd982a7130eee6e49a4fec118f9cc02e7",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/90182147966d9d572905140e78da5729890daa85"
+        },
+        "date": 1791465064034,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1660.35772,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.892562,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 13.848897,
             "unit": "ms"
           }
         ]
