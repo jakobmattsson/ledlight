@@ -28,6 +28,10 @@ const QUERY_MODULE_PATTERN = 'src/surface/queries/*.js';
 const COMMAND_MODULE_PATTERN = 'src/surface/commands/**/*.js';
 const COMMAND_DIRECTORY = path.join(REPOSITORY_ROOT, 'src/surface/commands');
 
+function relativeModulePath(fileName) {
+  return path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
+}
+
 function repositoryModuleName(fileName) {
   const baseName = path.basename(fileName, path.extname(fileName));
   if (!/^[a-z]+(?:-[a-z]+)*$/u.test(baseName)) {
@@ -65,7 +69,7 @@ const REPOSITORY_MODULES = repositoryModules();
 const REGISTRATION_LOCATIONS = new Map([
   ...REPOSITORY_MODULES.map(({ path: fileName }) => [
     repositoryModuleName(fileName),
-    path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/'),
+    relativeModulePath(fileName),
   ]),
   ['queries', 'src/surface/queries'],
   ['commands', 'src/surface/commands'],
@@ -98,7 +102,7 @@ function assertDependencyAllowed(consumerFile, dependencyName) {
 }
 
 function restrictedDependencies(fileName, dependencies) {
-  const consumerFile = path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
+  const consumerFile = relativeModulePath(fileName);
   return new Proxy(dependencies, {
     get(target, property, receiver) {
       if (typeof property === 'string') assertDependencyAllowed(consumerFile, property);
@@ -107,51 +111,64 @@ function restrictedDependencies(fileName, dependencies) {
   });
 }
 
+function moduleFactory(fileName) {
+  const factory = require(fileName);
+  if (typeof factory !== 'function') {
+    throw new TypeError(`${relativeModulePath(fileName)} must export an Awilix factory.`);
+  }
+  return factory;
+}
+
+function surfaceModule(fileName, kind, dependencies) {
+  const module = moduleFactory(fileName)(restrictedDependencies(fileName, dependencies));
+  if (!module || typeof module !== 'object' || Array.isArray(module)) {
+    throw new TypeError(`${relativeModulePath(fileName)} must return a ${kind} object.`);
+  }
+  return module;
+}
+
+function addUniqueName(names, name, kind) {
+  if (names.has(name)) throw new Error(`Duplicate ${kind} name: ${name}`);
+  names.add(name);
+}
+
+function queryFromFile(fileName, dependencies, names) {
+  const name = repositoryModuleName(fileName);
+  const query = surfaceModule(fileName, 'query', dependencies);
+  const relativeName = relativeModulePath(fileName);
+  addUniqueName(names, name, 'query');
+  if (typeof query.inputSchema?.safeParse !== 'function') {
+    throw new TypeError(`${relativeName} must expose an inputSchema.`);
+  }
+  if (typeof query.execute !== 'function') {
+    throw new TypeError(`${relativeName} must expose an execute function.`);
+  }
+  if (query.execute.length !== 3) {
+    throw new TypeError(
+      `${relativeName} execute must accept database, options, and caches.`,
+    );
+  }
+  return Object.freeze({ ...query, name });
+}
+
 function loadQueries(dependencies) {
   const names = new Set();
   return Object.freeze(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
-    .map(({ path: fileName }) => {
-      const name = repositoryModuleName(fileName);
-      const query = require(fileName)(restrictedDependencies(fileName, dependencies));
-      if (!query || typeof query !== 'object' || Array.isArray(query)) {
-        throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must return a query object.`);
-      }
-      if (names.has(name)) throw new Error(`Duplicate query name: ${name}`);
-      if (typeof query.inputSchema?.safeParse !== 'function') {
-        throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must expose an inputSchema.`);
-      }
-      if (typeof query.execute !== 'function') {
-        throw new TypeError(`${path.relative(REPOSITORY_ROOT, fileName)} must expose an execute function.`);
-      }
-      if (query.execute.length !== 3) {
-        throw new TypeError(
-          `${path.relative(REPOSITORY_ROOT, fileName)} execute must accept database, options, and caches.`,
-        );
-      }
-      names.add(name);
-      return Object.freeze({ ...query, name });
-    }));
+    .map(({ path: fileName }) => queryFromFile(fileName, dependencies, names)));
+}
+
+function commandFromFile(fileName, dependencies, names) {
+  const group = commandGroup(path.relative(COMMAND_DIRECTORY, fileName));
+  const command = surfaceModule(fileName, 'command', dependencies);
+  const name = path.basename(fileName, '.js');
+  addUniqueName(names, name, 'command');
+  return { ...command, name, operation: repositoryModuleName(fileName), group };
 }
 
 function loadCommands(dependencies) {
   const names = new Set();
   const commands = listModules(COMMAND_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
-    .map(({ path: fileName }) => {
-      const relativeName = path.relative(REPOSITORY_ROOT, fileName);
-      const group = commandGroup(path.relative(COMMAND_DIRECTORY, fileName));
-      const factory = require(fileName);
-      if (typeof factory !== 'function') {
-        throw new TypeError(`${relativeName} must export an Awilix factory.`);
-      }
-      const command = factory(restrictedDependencies(fileName, dependencies));
-      if (!command || typeof command !== 'object' || Array.isArray(command)) {
-        throw new TypeError(`${relativeName} must return a command object.`);
-      }
-      const name = path.basename(fileName, '.js');
-      if (names.has(name)) throw new Error(`Duplicate command name: ${name}`);
-      names.add(name);
-      return { ...command, name, operation: repositoryModuleName(fileName), group };
-    });
+    .map(({ path: fileName }) => commandFromFile(fileName, dependencies, names));
   return Object.freeze(commands.sort((left, right) => left.name.localeCompare(right.name, 'en')));
 }
 
@@ -187,11 +204,7 @@ function registerExternalModules(container) {
 function registerRepositoryModules(container) {
   registerExternalModules(container);
   const factoryLocations = new Map(REPOSITORY_MODULES.map(({ path: fileName }) => {
-    const relativeName = path.relative(REPOSITORY_ROOT, fileName);
-    const factory = require(fileName);
-    if (typeof factory !== 'function') {
-      throw new TypeError(`${relativeName} must export an Awilix factory.`);
-    }
+    const factory = moduleFactory(fileName);
     const name = repositoryModuleName(fileName);
     if (container.hasRegistration(name)) {
       throw new Error(`Repository module name conflicts with an existing registration: ${name}`);
