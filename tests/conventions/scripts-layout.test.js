@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const scriptsDirectory = path.resolve(__dirname, '../../../scripts');
+const scriptsDirectory = path.resolve(__dirname, '../../scripts');
 
 test('scripts are grouped in subdirectories', () => {
   const rootFiles = fs.readdirSync(scriptsDirectory, { withFileTypes: true })

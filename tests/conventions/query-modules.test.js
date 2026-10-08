@@ -1,14 +1,13 @@
 'use strict';
 
-const { resolveQuery } = require('../../../support/repository-container');
-const { createRepositoryContainer } = require('../../../../src/impl/composition/repository-container');
-
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { resolveQuery } = require('../support/repository-container');
+const { createRepositoryContainer } = require('../../src/impl/composition/repository-container');
 
-const queryDirectory = path.resolve(__dirname, '../../../../src/surface/queries');
+const queryDirectory = path.resolve(__dirname, '../../src/surface/queries');
 
 test('registers all queries as one immutable dependency', () => {
   const container = createRepositoryContainer();
