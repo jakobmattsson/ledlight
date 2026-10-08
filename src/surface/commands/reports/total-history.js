@@ -11,8 +11,11 @@ module.exports = ({ cliOptions: options }) => ({
   },
   configure(command) {
     options.journal(command);
-    options.fromDate(command, 'show daily totals from YYYY-MM-DD; earlier activity still counts');
-    options.toDate(command, 'show daily totals through YYYY-MM-DD');
+    options.dateRange(
+      command,
+      'show daily totals from YYYY-MM-DD; earlier activity still counts',
+      'show daily totals through YYYY-MM-DD',
+    );
     options.accounts(command);
     options.dateBasis(command);
     options.valuation(command);

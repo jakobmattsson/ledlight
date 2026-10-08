@@ -40,8 +40,11 @@ module.exports = ({ cliOptions: options }) => ({
   ],
   configure(command) {
     options.journal(command);
-    options.fromDate(command, 'include postings dated on or after YYYY-MM-DD');
-    options.toDate(command, 'include postings dated on or before YYYY-MM-DD');
+    options.dateRange(
+      command,
+      'include postings dated on or after YYYY-MM-DD',
+      'include postings dated on or before YYYY-MM-DD',
+    );
     options.accounts(command);
     options.format(command);
   },

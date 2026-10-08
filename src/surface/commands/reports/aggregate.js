@@ -11,8 +11,11 @@ module.exports = ({ cliOptions: options }) => ({
   },
   configure(command) {
     options.journal(command);
-    options.fromDate(command, 'include activity on or after YYYY-MM-DD');
-    options.toDate(command, 'include activity through YYYY-MM-DD; also set the valuation cutoff');
+    options.dateRange(
+      command,
+      'include activity on or after YYYY-MM-DD',
+      'include activity through YYYY-MM-DD; also set the valuation cutoff',
+    );
     options.accounts(command);
     options.dateBasis(command);
     options.valuation(command);
