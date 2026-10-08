@@ -2,7 +2,7 @@ Total sale prices and separately expensed fees affect contributions and profit o
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['^Assets:'], includeCommodities: ['FUND'] })
 
 ========== FILE ==========
 

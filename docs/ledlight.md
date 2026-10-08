@@ -165,7 +165,7 @@ underlying result.
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
-| `--commodities NAME` | `options.commodities` | Investment instrument selection |
+| `--include-commodities NAME` | `options.includeCommodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `print --density DENSITY` | `options.density` | `compact` or `spacious`; defaults to `spacious` |
 | `print --sort-declarations` | `options.sortDeclarations` | Print declarations before transactions |

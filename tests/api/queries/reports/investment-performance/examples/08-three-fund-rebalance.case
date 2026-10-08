@@ -19,7 +19,7 @@ this 364-day interval.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts '^Assets:Funds:' --commodities ALPHA --commodities BETA --commodities GAMMA --from 2023-01-01 --to 2023-12-31 --format text
+ledlight investment-performance --accounts '^Assets:Funds:' --include-commodities ALPHA --include-commodities BETA --include-commodities GAMMA --from 2023-01-01 --to 2023-12-31 --format text
 
 ========== FILE ==========
 

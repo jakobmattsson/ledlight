@@ -14,7 +14,7 @@ account holds no USD.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts Assets:Fund --commodities USD --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
+ledlight investment-performance --accounts Assets:Fund --include-commodities USD --include-commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

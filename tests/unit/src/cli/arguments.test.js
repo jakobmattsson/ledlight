@@ -297,9 +297,8 @@ test('parses investment performance selections and output format', () => {
     '--from', '2024-01-01',
     '--to', '2024-12-31',
     '--accounts', 'Assets:',
-    '--commodities', 'FUND_A',
-    '--commodities', 'FUND_B',
-    '--exclude-commodities', 'SEK',
+    '--include-commodities', 'FUND_A',
+    '--include-commodities', 'FUND_B',
     '--format', 'json',
   ]), {
     command: 'investment-performance',
@@ -308,10 +307,27 @@ test('parses investment performance selections and output format', () => {
       from: '2024-01-01',
       to: '2024-12-31',
       accounts: ['Assets:'],
-      commodities: ['FUND_A', 'FUND_B'],
-      excludeCommodities: ['SEK'],
+      includeCommodities: ['FUND_A', 'FUND_B'],
     },
   });
+  assert.deepEqual(apiArguments([
+    'investment-performance', '--file', '/journal', '--exclude-commodities', 'SEK',
+  ]), {
+    command: 'investment-performance',
+    journalPath: '/journal',
+    options: { excludeCommodities: ['SEK'] },
+  });
+  for (const selections of [
+    ['--include-commodities', 'FUND', '--exclude-commodities', 'SEK'],
+    ['--exclude-commodities', 'SEK', '--include-commodities', 'FUND'],
+  ]) {
+    assert.throws(() => parseArguments([
+      'investment-performance', '--file', '/journal', ...selections,
+    ]), /cannot be used with option/u);
+  }
+  assert.throws(() => parseArguments([
+    'investment-performance', '--file', '/journal', '--commodities', 'FUND',
+  ]), /unknown option/u);
   assert.deepEqual(apiArguments(['investment-performance', '--file', '/journal']), {
     command: 'investment-performance',
     journalPath: '/journal',
@@ -413,7 +429,7 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
     ['aggregate', '--group-by', 'currency'],
     ['aggregate', '--unknown'],
     ['aggregate', '--file', '/journal', '--account', 'Assets:Cash'],
-    ['investment-performance', '--commodities'],
+    ['investment-performance', '--include-commodities'],
     ['investment-performance', '--from', '2024-01-01', '--from', '2024-02-01'],
     ['investment-performance', '--csv'],
     ['unrealized-gains', '--denominate'],

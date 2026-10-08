@@ -1,6 +1,6 @@
 Example: time-weight the actual changing portfolio, excluding external flows.
 Only Assets:Investments is selected; Assets:Cash is outside this report.
-With no --commodities option, the report discovers EQUITY and BOND from the
+With no --include-commodities option, the report discovers EQUITY and BOND from the
 selected accounts.
 EQUITY rises from 100 to 300 USD (+200%) over the year, while BOND falls from
 100 to 60 USD (-40%). In January, 200 USD buys one of each at 100 USD.

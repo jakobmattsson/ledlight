@@ -2,7 +2,7 @@ Cash flows outside the selected interval need no conversion prices.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:Portfolio'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
+investmentPerformance({ accounts: ['Assets:Portfolio'], includeCommodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
 
 ========== FILE ==========
 
