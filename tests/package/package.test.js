@@ -97,7 +97,7 @@ account Equity:Opening
     };
     run(process.execPath, ['-e', `
       const assert = require('node:assert/strict');
-      const ledlight = require('ledlight');
+      const ledlight = require('@jakobm/ledlight');
       assert.equal(typeof ledlight.openJournal, 'function');
       assert.deepEqual(Object.keys(ledlight), ['openJournal', 'parseLedgerText']);
       assert.equal(ledlight.parseLedgerText('account Assets:Cash').entries[0].name, 'Assets:Cash');
@@ -108,7 +108,7 @@ account Equity:Opening
     `], { cwd: projectDirectory, env: consumerEnvironment });
     run(process.execPath, ['--input-type=module', '-e', `
       import assert from 'node:assert/strict';
-      import ledlight from 'ledlight';
+      import ledlight from '@jakobm/ledlight';
       assert.equal(typeof ledlight.openJournal, 'function');
     `], { cwd: projectDirectory, env: consumerEnvironment });
 

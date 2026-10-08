@@ -6,7 +6,7 @@ library.
 Install the public package on Node.js 22.14 or later in the Node.js 22 release line:
 
 ```console
-npm install ledlight
+npm install @jakobm/ledlight
 ```
 
 For repository development, install and select the pinned Node.js 22 release
@@ -55,7 +55,7 @@ Run `ledlight` or `ledlight --help` to list the available commands. Run
 Use the JavaScript API from the package root:
 
 ```js
-const { openJournal } = require('ledlight');
+const { openJournal } = require('@jakobm/ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
 ```

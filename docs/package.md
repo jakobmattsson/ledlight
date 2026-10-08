@@ -1,6 +1,6 @@
 # Package support and versioning
 
-Ledlight is distributed as the public `ledlight` npm package under the MIT
+Ledlight is distributed as the public `@jakobm/ledlight` npm package under the MIT
 license. The package contains the CommonJS entry point, CLI, runtime source,
 license, README, and consumer documentation. Repository configuration, tests,
 fixtures, the Ohm-based reference parser, and the improvement backlog are not
@@ -11,13 +11,13 @@ published.
 CommonJS is the canonical module format:
 
 ```js
-const ledlight = require('ledlight');
+const ledlight = require('@jakobm/ledlight');
 ```
 
 Node.js ESM applications can import the CommonJS default export:
 
 ```js
-import ledlight from 'ledlight';
+import ledlight from '@jakobm/ledlight';
 ```
 
 There is no separate native ESM build. The package root is the only exported
