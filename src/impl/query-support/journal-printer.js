@@ -5,6 +5,7 @@ module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
   const amountText = (quantity, commodity) => `${quantityText(quantity)} ${commodity}`;
   const withComment = (text, comment) => comment === null ? text : `${text}  ; ${comment}`;
   const tagText = ({ name, value }) => value === null ? `:${name}:` : `${name}: ${value}`;
+  const entryRank = { comment: 0, account: 1, tag: 2, commodity: 3, price: 4, transaction: 5 };
 
   function metadataLines(owner) {
     const byPosition = new Map();
@@ -102,7 +103,7 @@ module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
     }
   }
 
-  function printJournal(database) {
+  function printJournal(database, { density, sortDeclarations }) {
     const ids = database.prepare('SELECT id FROM journal_entries ORDER BY id').pluck().all();
     if (ids.length === 0) return '';
     const entries = new Map();
@@ -163,7 +164,24 @@ module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
       owner.tags.push({ position: row.position, name: row.name, value: row.value });
     }
 
-    return `${ids.map((id) => entryText(entries.get(id))).join('\n\n')}\n`;
+    const orderedIds = sortDeclarations
+      ? ids.toSorted((leftId, rightId) => {
+        const left = entries.get(leftId);
+        const right = entries.get(rightId);
+        if (entryRank[left.type] !== entryRank[right.type]) {
+          return entryRank[left.type] - entryRank[right.type];
+        }
+        if (left.type === 'price') {
+          const commodityOrder = left.baseCommodity.localeCompare(right.baseCommodity, 'en');
+          if (commodityOrder !== 0) return commodityOrder;
+          const dateOrder = left.date.localeCompare(right.date, 'en');
+          if (dateOrder !== 0) return dateOrder;
+        }
+        return leftId - rightId;
+      })
+      : ids;
+    return `${orderedIds.map((id) => entryText(entries.get(id)))
+      .join(density === 'compact' ? '\n' : '\n\n')}\n`;
   }
 
   return { printJournal };

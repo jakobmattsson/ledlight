@@ -1,0 +1,37 @@
+Sorting and compact spacing can be combined.
+
+========== CLI ==========
+
+ledlight print --density compact --sort-declarations
+
+========== API ==========
+
+print({ density: 'compact', sortDeclarations: true })
+
+========== FILE ==========
+
+commodity SEK
+  default
+tag Reviewed
+account Equity:Opening
+commodity USD
+P 2024-01-01 USD 2 SEK
+account Assets:Cash
+; Root comment
+2024-01-01 Opening ; :Reviewed:
+  Assets:Cash  1 SEK
+  Equity:Opening  -1 SEK
+
+========== OUTPUT ==========
+
+; Root comment
+account Equity:Opening
+account Assets:Cash
+tag Reviewed
+commodity SEK
+  default
+commodity USD
+P 2024-01-01 USD 2 SEK
+2024-01-01 Opening  ; :Reviewed:
+    Assets:Cash     1 SEK
+    Equity:Opening  -1 SEK

@@ -250,7 +250,7 @@ ${entries}`);
   assert.equal(paginated.transactions[0].description, 'Entry 501');
 });
 
-test('print returns plain journal text and rejects unknown options', (t) => {
+test('print returns plain journal text and validates its options', (t) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-print-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -267,6 +267,16 @@ test('print returns plain journal text and rejects unknown options', (t) => {
   database.close();
   assert.equal(journal.print(), 'account Assets:Database\n');
   assert.equal(journal.print({}), 'account Assets:Database\n');
+  assert.equal(journal.print({ density: 'compact', sortDeclarations: true }),
+    'account Assets:Database\n');
+  assert.throws(
+    () => journal.print({ density: 'dense' }),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+  );
+  assert.throws(
+    () => journal.print({ sortDeclarations: 'true' }),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+  );
   assert.throws(
     () => journal.print({ unknown: true }),
     (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&

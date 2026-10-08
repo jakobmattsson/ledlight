@@ -24,17 +24,26 @@ The singular `--account` is not supported.
 
 ### `journal.print()`
 
-Returns a plain string containing a pretty-printed, complete journal. It has
-no options; omit the argument or pass `{}`. The output is built from stored
-journal data, follows entry order, expands included files, and contains
-declarations, price directives, and transactions, including zero amounts. It
+Returns a plain string containing a pretty-printed, complete journal. The output
+is built from stored journal data, follows entry order by default, expands
+included files, and contains declarations, price directives, and transactions,
+including zero amounts. It
 aligns posting amounts, normalizes numeric text, and preserves stored comments,
 tags, posting dates, and their order within each transaction. Source-only
 details not represented in the database, such as comments on commodity
 properties, are omitted. Entries rejected during ingestion are also omitted.
 The string is empty when the journal has no stored entries.
 
+`density` accepts `'spacious'` (the default, one blank line between entries) or
+`'compact'` (no blank lines between entries). `sortDeclarations` defaults to
+`false`. When `true`, it prints root comments, accounts, tags, commodities,
+prices, then transactions. Entries retain source order within each group except
+prices, which sort by base commodity and then date; equal prices retain source
+order.
+
 `ledlight print --file JOURNAL` writes the same string to standard output.
+Use `--density compact` or `--density spacious` and `--sort-declarations` for
+these options.
 It has no filters or output-format options.
 
 ## Query parameter conventions

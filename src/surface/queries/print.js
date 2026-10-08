@@ -5,11 +5,13 @@ module.exports = ({
   journalPrinter: { printJournal },
   zod: { z },
 }) => {
-  const inputSchema = z.strictObject({});
+  const inputSchema = z.strictObject({
+    density: z.enum(['compact', 'spacious']).default('spacious'),
+    sortDeclarations: z.boolean().default(false),
+  });
 
   function print(database, options, _caches) {
-    parseOptions(inputSchema, options, 'print');
-    return printJournal(database);
+    return printJournal(database, parseOptions(inputSchema, options, 'print'));
   }
 
   return { inputSchema, execute: print };
