@@ -23,9 +23,8 @@ The full GitHub Actions test job shows total and per-file coverage in its run
 summary and uploads a `coverage-report` artifact. Open its `index.html` to see
 which source lines and branches ran. Successful pushes to `main` also publish
 the report at [GitHub Pages](https://jakobmattsson.github.io/ledlight/coverage/).
-Set the repository's Pages source to **GitHub Actions** in Settings → Pages to
-enable publishing. Coverage and benchmark history are both kept on the
-`gh-pages` branch, and each workflow deploys the current site content.
+The report lives in `coverage/` on the existing `gh-pages` branch alongside
+benchmark history in `dev/bench/`; no Pages source change is required.
 Local `npm test` runs without coverage; use `npm run test:coverage` and open
 `coverage/index.html` to inspect the report locally.
 

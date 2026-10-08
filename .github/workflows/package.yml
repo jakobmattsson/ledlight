@@ -35,21 +35,14 @@ jobs:
             !coverage/lcov-report/**
           retention-days: 14
 
-  coverage-pages:
-    name: Publish coverage to GitHub Pages
+  publish-coverage:
+    name: Publish coverage to gh-pages
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: test
     runs-on: ubuntu-latest
-    concurrency:
-      group: pages-publish
-      cancel-in-progress: false
     permissions:
       contents: write
       pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}coverage/
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,7 +51,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage-report
-      - name: Assemble Pages site
+      - name: Update gh-pages report
         run: |
           git fetch origin gh-pages
           git worktree add --detach pages-checkout refs/remotes/origin/gh-pages
@@ -77,17 +70,12 @@ jobs:
               git -C pages-checkout push origin HEAD:gh-pages
             fi
           fi
-          mkdir site
-          git -C pages-checkout archive HEAD | tar -x -C site
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-      - name: Show published report
-        run: echo "[Browse line-by-line coverage](${{ steps.deployment.outputs.page_url }}coverage/)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds"
+      - name: Show coverage report
+        run: echo "[Browse line-by-line coverage](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/coverage/)" >> "$GITHUB_STEP_SUMMARY"
 
   package:
     name: Node.js 22 on ${{ matrix.os }}
