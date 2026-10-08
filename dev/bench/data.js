@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791472185207,
+  "lastUpdate": 1791482544127,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -701,6 +701,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 13.785422,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ae60dd6f6febcb4699af27b2008c6ea6d1036239",
+          "message": "Merge pull request #111 from jakobmattsson/codex/scope-ledlight-package\n\nScope npm package as @jakobm/ledlight",
+          "timestamp": "2026-10-08T20:01:59+02:00",
+          "tree_id": "15ae75b8554d5f8188c79a439e9e43bfc76720a8",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/ae60dd6f6febcb4699af27b2008c6ea6d1036239"
+        },
+        "date": 1791482542009,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1557.973142,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 7.93856,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 9.649918,
             "unit": "ms"
           }
         ]
