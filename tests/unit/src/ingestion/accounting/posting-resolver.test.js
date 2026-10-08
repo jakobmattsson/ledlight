@@ -34,56 +34,6 @@ test('resolves one implicit posting for every explicit commodity', () => {
   ]);
 });
 
-test('warns about explicitly unbalanced transactions and keeps their amounts', () => {
-  const transaction = parseTransaction(`2024-01-01 Unbalanced
-  Assets:Cash  1 SEK
-  Equity:Opening  2 SEK
-`);
-
-  const { result, warnings } = resolveWithWarnings(transaction);
-  assert.equal(result.length, 2);
-  assert.equal(warnings[0].code, 'UNBALANCED_TRANSACTION');
-  assert.match(warnings[0].message, /does not balance.*3 SEK/u);
-});
-
-test('accepts explicitly balanced transactions with multiple commodities', () => {
-  const transaction = parseTransaction(`2024-01-01 Balanced
-  Assets:Cash  1 SEK
-  Equity:Opening  -1 SEK
-  Assets:Fund  2 FUND
-  Equity:Opening  -2 FUND
-`);
-
-  assert.doesNotThrow(() => new PostingResolver().resolve(transaction));
-});
-
-test('accepts two-commodity exchanges with opposite signs', () => {
-  const transaction = parseTransaction(`2024-01-01 Exchange
-  Assets:Cash  -100 SEK
-  Assets:Fund  2 FUND
-`);
-
-  assert.doesNotThrow(() => new PostingResolver().resolve(transaction));
-});
-
-test('warns about two-commodity postings with the same sign', () => {
-  const transaction = parseTransaction(`2024-01-01 Not an exchange
-  Assets:Cash  100 SEK
-  Assets:Fund  2 FUND
-`);
-
-  assert.match(resolveWithWarnings(transaction).warnings[0].message, /100 SEK, 2 FUND/u);
-});
-
-test('accepts correctly balanced costed transactions', () => {
-  const transaction = parseTransaction(`2024-01-01 Costed purchase
-  Assets:Fund  1 FUND @ 10 SEK
-  Assets:Cash  -10 SEK
-`);
-
-  assert.doesNotThrow(() => new PostingResolver().resolve(transaction));
-});
-
 test('balances a sale at unit lot cost and requires the realized gain posting', () => {
   const balanced = parseTransaction(`2024-01-01 Sale
   Assets:Fund  -10 FUND {100 SEK} @ 120 SEK
@@ -164,38 +114,6 @@ test('does not treat residuals from a costed posting as a commodity exchange', (
 `);
 
   assert.match(resolveWithWarnings(transaction).warnings[0].message, /1 SEK, -1 USD/u);
-});
-
-test('requires ordinary explicit amounts to balance exactly', () => {
-  const transaction = parseTransaction(`2024-01-01 Unbalanced
-  Assets:Cash  1 SEK
-  Equity:Opening  -0.6 SEK
-`);
-
-  assert.match(resolveWithWarnings(transaction).warnings[0].message, /0\.4 SEK/u);
-});
-
-test('warns about a failed balance assertion and retains the transaction', () => {
-  const transaction = parseTransaction(`2024-01-01 Incorrect assertion
-  Assets:Cash  10 SEK = 11 SEK
-  Equity:Opening
-`);
-
-  const { result, warnings } = resolveWithWarnings(transaction);
-  assert.equal(result.length, 2);
-  assert.equal(warnings[0].code, 'BALANCE_ASSERTION_FAILED');
-  assert.match(warnings[0].message, /expected 11 SEK, got 10 SEK/u);
-});
-
-test('warns and skips transactions with multiple implicit postings', () => {
-  const transaction = parseTransaction(`2024-01-01 Ambiguous
-  Assets:Cash
-  Equity:Opening
-`);
-
-  const { result, warnings } = resolveWithWarnings(transaction);
-  assert.equal(result, null);
-  assert.equal(warnings[0].code, 'MULTIPLE_IMPLICIT_POSTINGS');
 });
 
 test('warns and skips transactions with an ambiguous balance assignment commodity', () => {

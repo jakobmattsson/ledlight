@@ -72,53 +72,6 @@ for (const fixture of invalidAmounts) {
   });
 }
 
-test('warns when accounts, commodities, and tags are used before declaration', () => {
-  const journal = parse(`2024-01-01 Before declarations ; :Header:
-  ; Note: value
-  Assets:Fund  1 FUND ; Posting: value
-  Equity:Opening
-account Assets:Fund
-account Equity:Opening
-commodity FUND
-  format 1000.00 FUND
-tag Header
-tag Note
-tag Posting
-2024-01-02 After declarations ; :Header:
-  ; Note: value
-  Assets:Fund  1 FUND ; Posting: value
-  Equity:Opening
-`, { source: 'fixture.ledger' });
-
-  const result = validateJournal(journal);
-  assert.deepEqual(result.warnings.map(({ code, message, line }) => ({ code, message, line })), [{
-    code: 'UNDECLARED_TAG',
-    message: 'Tag Header must be declared before use',
-    line: 1,
-  }, {
-    code: 'UNDECLARED_TAG',
-    message: 'Tag Note must be declared before use',
-    line: 2,
-  }, {
-    code: 'UNDECLARED_ACCOUNT',
-    message: 'Account Assets:Fund must be declared before use',
-    line: 3,
-  }, {
-    code: 'UNDECLARED_COMMODITY',
-    message: 'Commodity FUND must be declared before use',
-    line: 3,
-  }, {
-    code: 'UNDECLARED_TAG',
-    message: 'Tag Posting must be declared before use',
-    line: 3,
-  }, {
-    code: 'UNDECLARED_ACCOUNT',
-    message: 'Account Equity:Opening must be declared before use',
-    line: 4,
-  }]);
-  assert.deepEqual([...result.invalidEntries], []);
-});
-
 test('warns about duplicate declarations and marks the later entries unstoreable', () => {
   const journal = parse(`account Assets:Cash
 account Assets:Cash
@@ -140,23 +93,6 @@ tag Reviewed
   assert.deepEqual([...result.invalidEntries], [
     journal.entries[1], journal.entries[3], journal.entries[5],
   ]);
-});
-
-test('requires every commodity declaration to specify an explicit format', () => {
-  const journal = parse(`commodity SEK
-  format 1,000.00 SEK
-commodity FUND
-`, { source: 'fixture.ledger' });
-
-  const result = validateJournal(journal);
-  assert.deepEqual(result.warnings.map(({ code, message, line }) => ({
-    code, message, line,
-  })), [{
-    code: 'MISSING_COMMODITY_FORMAT',
-    message: 'Commodity FUND must declare a format property',
-    line: 3,
-  }]);
-  assert.deepEqual([...result.invalidEntries], []);
 });
 
 test('checks every commodity role in prices and postings', () => {

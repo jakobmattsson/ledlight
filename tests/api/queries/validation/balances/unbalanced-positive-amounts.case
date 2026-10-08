@@ -1,0 +1,33 @@
+An unbalanced transaction with two positive amounts retains both postings.
+
+========== API ==========
+
+aggregate({ accounts: ['^Assets:Cash$'] })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+2024-01-01 Unbalanced
+  Assets:Cash  1 SEK
+  Equity:Opening  2 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "1"
+  }
+]
+
+========== WARNINGS ==========
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: 3 SEK
+  {{JOURNAL_PATH}}:8:1

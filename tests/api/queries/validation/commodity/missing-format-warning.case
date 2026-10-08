@@ -1,0 +1,35 @@
+A commodity without a format warns but remains available in listings.
+
+========== API ==========
+
+commodities({ usage: 'all' })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity FUND
+
+========== OUTPUT ==========
+
+[
+  {
+    "commodity": "FUND",
+    "comment": null,
+    "format": null,
+    "isDefault": false,
+    "used": false
+  },
+  {
+    "commodity": "SEK",
+    "comment": null,
+    "format": "1,000.00 SEK",
+    "isDefault": false,
+    "used": false
+  }
+]
+
+========== WARNINGS ==========
+
+[MISSING_COMMODITY_FORMAT] Commodity FUND must declare a format property
+  {{JOURNAL_PATH}}:3:1

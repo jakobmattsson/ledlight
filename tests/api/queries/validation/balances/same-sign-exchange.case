@@ -1,0 +1,23 @@
+Two positive commodity postings do not form a balanced exchange.
+
+========== API ==========
+
+accounts()
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+2024-01-01 Not an exchange
+  Assets:Cash  100 SEK
+  Assets:Fund  2 FUND
+
+========== WARNINGS ==========
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: 100 SEK, 2 FUND
+  {{JOURNAL_PATH}}:8:1
