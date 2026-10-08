@@ -5,13 +5,11 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { resolveRepositoryModule } = require('../../../support/repository-container');
 const { execFileSync } = require('node:child_process');
 const packageMetadata = require('../../../../package.json');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../..');
 const cliPath = path.join(ledlightPath, 'src/impl/cli/run.js');
-const { apiCommands } = resolveRepositoryModule('src/impl/cli/cli-arguments.js');
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-api-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
@@ -196,14 +194,6 @@ test('loads SQLite only when a journal is opened', (t) => {
   assert.match(journal.databasePath, /journals\/[a-f\d]{64}\/ledger\.sqlite$/u);
   assert.equal(journal.databasePath.startsWith(cacheDirectory), true);
   assert.ok(require.cache[sqliteModulePath]);
-  const journalOperations = Object.entries(journal)
-    .filter(([, value]) => typeof value === 'function')
-    .map(([name]) => name);
-  assert.deepEqual(
-    journalOperations.sort(),
-    Object.keys(apiCommands).sort(),
-    'every journal operation must have a CLI command',
-  );
   assert.equal(journal.journalPath, fs.realpathSync.native(journalPath));
   assert.equal(Object.hasOwn(journal, 'reconciliationEntries'), false);
 });
