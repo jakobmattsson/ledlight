@@ -20,17 +20,9 @@ const {
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../../..');
 const REPOSITORY_MODULE_PATTERNS = Object.freeze([
-  'src/impl/cli/cli-arguments.js',
-  'src/impl/cli/cli-command.js',
-  'src/impl/cli/cli-configuration.js',
-  'src/impl/cli/cli-format.js',
-  'src/impl/cli/cli-options.js',
-  'src/impl/cli/cli-stdin-journal.js',
-  'src/impl/cli/output.js',
-  'src/impl/cli/report-command.js',
-  'src/impl/core/*.js',
+  'src/impl/cli/!(cli-modules|execute-cli|run).js',
+  'src/impl/{core,query-support}/*.js',
   'src/impl/ingestion/**/*.js',
-  'src/impl/query-support/*.js',
 ]);
 const QUERY_MODULE_PATTERN = 'src/surface/queries/*.js';
 const COMMAND_MODULE_PATTERN = 'src/surface/commands/**/*.js';
