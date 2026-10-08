@@ -1,0 +1,1 @@
+{"id":"79ced7ba5aff8d34e8e245c21da98787.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/integration/src/cli/stdin.test.js#the CLI entrypoint reads piped stdin","name":"the CLI entrypoint reads piped stdin","status":"passed","testResultsByEnv":{"default":"892658c0511c562bc1d7e305b70ac0d2"}}

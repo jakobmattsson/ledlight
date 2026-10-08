@@ -1,0 +1,1 @@
+{"id":"3b6fa1b8b30694535df70de3d4b57aa0.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/core/decimal.test.js#rounds exact division ties to even for Ledger price presentation","name":"rounds exact division ties to even for Ledger price presentation","status":"passed","testResultsByEnv":{"default":"d0ebc5552096210b7f7cbf642506466c"}}

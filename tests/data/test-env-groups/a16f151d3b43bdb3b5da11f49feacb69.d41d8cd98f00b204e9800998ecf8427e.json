@@ -1,1 +1,0 @@
-{"id":"a16f151d3b43bdb3b5da11f49feacb69.d41d8cd98f00b204e9800998ecf8427e","fullName":"ledlight:tests/unit/src/ingestion/database/read.test.js#closes the database when a query fails","name":"closes the database when a query fails","status":"passed","testResultsByEnv":{"default":"4a9dbe969a69d69300aca08413296325"}}

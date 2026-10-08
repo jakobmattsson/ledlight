@@ -1,1 +1,0 @@
-{"id":"a42afd9cbef5ccecc8263aa7ec34ee36.d41d8cd98f00b204e9800998ecf8427e","fullName":"ledlight:tests/unit/src/cli/configuration.test.js#falls back to the user .ledlightrc and expands its home directory","name":"falls back to the user .ledlightrc and expands its home directory","status":"passed","testResultsByEnv":{"default":"f05c1528edc4be4489d67a21ecdb7007"}}

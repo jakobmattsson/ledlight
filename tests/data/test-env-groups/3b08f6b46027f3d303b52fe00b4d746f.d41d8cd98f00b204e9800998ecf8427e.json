@@ -1,0 +1,1 @@
+{"id":"3b08f6b46027f3d303b52fe00b4d746f.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/cli/run-cli.test.js#the CLI entrypoint leaves the process exit code alone after success","name":"the CLI entrypoint leaves the process exit code alone after success","status":"passed","testResultsByEnv":{"default":"0e97341e8c95b14a6e567f79e6a66d18"}}

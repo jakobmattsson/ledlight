@@ -1,0 +1,1 @@
+{"id":"a76b07c3a24a72cd64d41f3939bf9d44.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/ingestion/database/migrate.test.js#recreates a supported legacy cache with the current schema","name":"recreates a supported legacy cache with the current schema","status":"passed","testResultsByEnv":{"default":"a7baa87658a1986348d7d8930eb6ec01"}}

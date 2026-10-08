@@ -1,1 +1,0 @@
-{"id":"c049ed50ec0134bf0fbda358275f6584.d41d8cd98f00b204e9800998ecf8427e","fullName":"ledlight:tests/conventions/repository-container.test.js#prevents dependencies on CLI modules from outside the CLI","name":"prevents dependencies on CLI modules from outside the CLI","status":"passed","testResultsByEnv":{"default":"df3abc497c08375e5405e9bb93107639"}}

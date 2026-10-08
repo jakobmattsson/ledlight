@@ -1,1 +1,0 @@
-{"id":"f27044f002fe7f1fc952c729ca6ca9b3.d41d8cd98f00b204e9800998ecf8427e","fullName":"ledlight:tests/integration/src/api/public-api.test.js#loads SQLite only when a journal is opened","name":"loads SQLite only when a journal is opened","status":"passed","testResultsByEnv":{"default":"b0e0a8b9d579a5c37d719225cf9a798f"}}

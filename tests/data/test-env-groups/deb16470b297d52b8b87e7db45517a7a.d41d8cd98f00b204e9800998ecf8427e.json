@@ -1,0 +1,1 @@
+{"id":"deb16470b297d52b8b87e7db45517a7a.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/cli/arguments.test.js#rejects missing commands, values, duplicate dates, and unknown options","name":"rejects missing commands, values, duplicate dates, and unknown options","status":"passed","testResultsByEnv":{"default":"394ddb3fd57e0b9701eba828d85914d4"}}

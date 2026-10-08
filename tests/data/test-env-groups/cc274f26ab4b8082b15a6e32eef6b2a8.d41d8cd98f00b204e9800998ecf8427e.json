@@ -1,0 +1,1 @@
+{"id":"cc274f26ab4b8082b15a6e32eef6b2a8.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/queries/investment-flows.test.js#reports a missing price when an unannotated trade needs conversion","name":"reports a missing price when an unannotated trade needs conversion","status":"passed","testResultsByEnv":{"default":"821a558d3895dfce7e6c991850e1c5f1"}}

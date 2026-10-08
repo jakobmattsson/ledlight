@@ -1,0 +1,1 @@
+{"id":"cab0cea3b8b389bf36970384224a6dbf.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/cli/arguments.test.js#uses the CLI configuration file argument when --file is omitted","name":"uses the CLI configuration file argument when --file is omitted","status":"passed","testResultsByEnv":{"default":"4ba47e7bb29b49b3c80e9bf76359bb1a"}}
