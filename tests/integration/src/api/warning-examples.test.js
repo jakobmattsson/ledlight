@@ -9,19 +9,11 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const { warningCodes } = resolveRepositoryModule('src/impl/ingestion/ingestion-warning.js');
 const directory = path.resolve(__dirname, '../../../api/queries/warnings');
-// These guards require a parsed journal with a missing commodity. Journal text
-// fails parsing first and produces SYNTAX_ERROR instead.
-const internalWarningCodes = new Set([
-  warningCodes.AMBIGUOUS_BALANCE_ASSIGNMENT,
-  warningCodes.MISSING_COMMODITY,
-]);
 const exampleFiles = fs.readdirSync(directory).filter((name) => name.endsWith('.case'));
 
-test('every user-facing warning code has exactly one named example', () => {
+test('every warning code has exactly one named example', () => {
   const exampleCodes = exampleFiles.map((name) => name.slice(0, -'.case'.length));
-  const userFacingWarningCodes = Object.values(warningCodes)
-    .filter((code) => !internalWarningCodes.has(code));
-  assert.deepEqual(exampleCodes.sort(), userFacingWarningCodes.sort());
+  assert.deepEqual(exampleCodes.sort(), Object.values(warningCodes).sort());
   for (const name of exampleFiles) {
     const code = name.slice(0, -'.case'.length);
     const example = parseCase(path.join(directory, name));

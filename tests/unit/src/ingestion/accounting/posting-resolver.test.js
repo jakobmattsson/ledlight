@@ -197,15 +197,3 @@ test('warns and skips transactions with multiple implicit postings', () => {
   assert.equal(result, null);
   assert.equal(warnings[0].code, 'MULTIPLE_IMPLICIT_POSTINGS');
 });
-
-test('warns and skips transactions with an ambiguous balance assignment commodity', () => {
-  const transaction = parseTransaction(`2024-01-01 Ambiguous assignment
-  Assets:Cash  = 10 SEK
-  Equity:Opening
-`);
-  transaction.postings[0].balanceAssignment.commodity = null;
-
-  const { result, warnings } = resolveWithWarnings(transaction);
-  assert.equal(result, null);
-  assert.equal(warnings[0].code, 'AMBIGUOUS_BALANCE_ASSIGNMENT');
-});

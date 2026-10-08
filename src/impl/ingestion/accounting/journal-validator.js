@@ -63,18 +63,6 @@ module.exports = ({
     }
   }
 
-  function requireCommodity(amount, label, location, warnings) {
-    if (!amount || typeof amount.commodity !== 'string' || amount.commodity.length === 0) {
-      warnings.push(createWarning(
-        warningCodes.MISSING_COMMODITY,
-        `${label} must specify a commodity`,
-        location,
-      ));
-      return false;
-    }
-    return true;
-  }
-
   function validateCommodityTrade(posting, defaultCommodity, warnings) {
     if (!posting.amount || !defaultCommodity) return;
     if (posting.amount.commodity === defaultCommodity) {
@@ -138,16 +126,7 @@ module.exports = ({
   }
 
   function validatePosting(posting, defaultCommodity, warnings, carried) {
-    let storable = true;
-    if (posting.amount) {
-      storable = requireCommodity(
-        posting.amount, 'Posting amount', posting.location, warnings,
-      ) && storable;
-    }
     if (posting.lotCost) {
-      storable = requireCommodity(
-        posting.lotCost.amount, 'Lot cost', posting.location, warnings,
-      ) && storable;
       const costCommodity = posting.lotCost.amount.commodity;
       if (defaultCommodity && costCommodity && costCommodity !== defaultCommodity &&
           posting.amount?.commodity !== defaultCommodity) {
@@ -160,19 +139,8 @@ module.exports = ({
         ));
       }
     }
-    if (posting.cost) {
-      storable = requireCommodity(
-        posting.cost.amount, 'Posting cost', posting.location, warnings,
-      ) && storable;
-    }
-    if (posting.balanceAssertion) {
-      storable = requireCommodity(
-        posting.balanceAssertion, 'Balance assertion', posting.location, warnings,
-      ) && storable;
-    }
     validateSelfCommodityCosts(posting, warnings);
     if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
-    return storable;
   }
 
   function validateResolvedCommodityTrades(transaction, resolved, defaultCommodity, warnings) {
@@ -225,10 +193,9 @@ module.exports = ({
         validateTransactionDeclarations(entry, declarations, warnings);
         const carried = new Set(carriedMovements(entry, effectiveDefaultCommodity)
           .flatMap(({ outgoing, incoming }) => [outgoing, incoming]));
-        const postingResults = entry.postings.map((posting) => validatePosting(
+        entry.postings.forEach((posting) => validatePosting(
           posting, effectiveDefaultCommodity, warnings, carried,
         ));
-        if (!postingResults.every(Boolean)) invalidEntries.add(entry);
       } else if (entry.type === 'price') {
         warnUnlessDeclared(
           'commodity', entry.commodity, declarations.commodities, entry.location, warnings,
@@ -236,9 +203,6 @@ module.exports = ({
         warnUnlessDeclared(
           'commodity', entry.price?.commodity, declarations.commodities, entry.location, warnings,
         );
-        if (!requireCommodity(entry.price, 'Price', entry.location, warnings)) {
-          invalidEntries.add(entry);
-        }
       }
     }
     return { invalidEntries, journal, warnings };
