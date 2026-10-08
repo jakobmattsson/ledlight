@@ -1,0 +1,15 @@
+Demonstrates DUPLICATE_TAG_DECLARATION using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+tag Reviewed
+tag Reviewed
+
+========== WARNINGS ==========
+
+[DUPLICATE_TAG_DECLARATION] Tag Reviewed has already been declared
+  {{JOURNAL_PATH}}:2:1

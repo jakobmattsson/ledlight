@@ -1,0 +1,21 @@
+Demonstrates BALANCE_ASSERTION_FAILED using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Incorrect assertion
+  Assets:Cash  10 SEK = 11 SEK
+  Equity:Opening
+
+========== WARNINGS ==========
+
+[BALANCE_ASSERTION_FAILED] Balance assertion failed: expected 11 SEK, got 10 SEK
+  {{JOURNAL_PATH}}:7:3

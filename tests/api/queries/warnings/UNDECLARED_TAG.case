@@ -1,0 +1,21 @@
+Demonstrates UNDECLARED_TAG using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Opening ; :Reviewed:
+  Assets:Cash  1 SEK
+  Equity:Opening
+
+========== WARNINGS ==========
+
+[UNDECLARED_TAG] Tag Reviewed must be declared before use
+  {{JOURNAL_PATH}}:6:20

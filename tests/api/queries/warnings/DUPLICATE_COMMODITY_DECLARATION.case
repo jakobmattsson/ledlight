@@ -1,0 +1,17 @@
+Demonstrates DUPLICATE_COMMODITY_DECLARATION using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity SEK
+  format 1,000.00 SEK
+
+========== WARNINGS ==========
+
+[DUPLICATE_COMMODITY_DECLARATION] Commodity SEK has already been declared
+  {{JOURNAL_PATH}}:3:1

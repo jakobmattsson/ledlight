@@ -1,0 +1,14 @@
+Demonstrates MISSING_COMMODITY_FORMAT using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+
+========== WARNINGS ==========
+
+[MISSING_COMMODITY_FORMAT] Commodity SEK must declare a format property
+  {{JOURNAL_PATH}}:1:1

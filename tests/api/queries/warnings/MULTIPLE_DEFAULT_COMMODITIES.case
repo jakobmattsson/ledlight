@@ -1,0 +1,19 @@
+Demonstrates MULTIPLE_DEFAULT_COMMODITIES using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+commodity USD
+  format 1,000.00 USD
+  default
+
+========== WARNINGS ==========
+
+[MULTIPLE_DEFAULT_COMMODITIES] Multiple commodity declarations are marked default; using the first at {{JOURNAL_PATH}}:3:3
+  {{JOURNAL_PATH}}:6:3

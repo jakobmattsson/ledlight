@@ -1,5 +1,8 @@
 # Query cases
 
+The [warning catalog](warnings/README.md) contains one runnable example for
+every ingestion warning code and explains the check behind each warning.
+
 Each `.case` file anywhere under this directory runs as one integration test in
 the current process. Organize cases in subdirectories by behavior. Text before
 the first section is a human-readable comment. Put one

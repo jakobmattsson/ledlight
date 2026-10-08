@@ -1,0 +1,31 @@
+Demonstrates IMPOSSIBLE_COST_BASIS using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity USD
+  format 1,000 USD
+  default
+commodity FUND
+  format 1,000 FUND
+account Assets:Broker
+account Assets:Cash
+account Income:Gains
+P 2024-01-01 FUND 1 USD
+
+2024-01-01 Purchase
+  Assets:Broker  3 FUND {{1 USD}}
+  Assets:Cash  -1 USD
+
+2024-02-01 Sale
+  Assets:Broker  -1 FUND {{0.34 USD}} @@ 1 USD
+  Assets:Cash  1 USD
+  Income:Gains
+
+========== WARNINGS ==========
+
+[IMPOSSIBLE_COST_BASIS] Sale: Assets:Broker sold 1 FUND with cost 0.34 USD; allowed range is 1/3 to 1/3 USD
+  {{JOURNAL_PATH}}:16:3

@@ -1,0 +1,19 @@
+Demonstrates SYNTAX_ERROR using a complete journal.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+2024-02-30 Invalid date
+  Assets:Cash  10 SEK
+  Equity:Opening
+
+========== WARNINGS ==========
+
+[SYNTAX_ERROR] Invalid date "2024-02-30"
+  {{JOURNAL_PATH}}:4:1 (affected lines 4-6)
