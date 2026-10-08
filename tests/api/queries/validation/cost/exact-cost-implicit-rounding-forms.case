@@ -1,0 +1,61 @@
+An implicit posting receives the full exact residual for each cost form.
+
+========== API ==========
+
+aggregate({ accounts: ['^Expenses:Rounding'] })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Fund
+account Assets:Cash
+account Expenses:Rounding1
+account Expenses:Rounding2
+account Expenses:Rounding3
+account Expenses:Rounding4
+2024-01-01 Unit lot cost
+  Assets:Fund  1.234 FUND {2.00 SEK}
+  Assets:Cash  -2.47 SEK
+  Expenses:Rounding1
+2024-01-02 Unit transaction price
+  Assets:Fund  1.234 FUND @ 2.00 SEK
+  Assets:Cash  -2.47 SEK
+  Expenses:Rounding2
+2024-01-03 Total lot cost
+  Assets:Fund  1.234 FUND {{2.468 SEK}}
+  Assets:Cash  -2.47 SEK
+  Expenses:Rounding3
+2024-01-04 Total transaction price
+  Assets:Fund  1.234 FUND @@ 2.468 SEK
+  Assets:Cash  -2.47 SEK
+  Expenses:Rounding4
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Expenses:Rounding1",
+    "commodity": "SEK",
+    "quantity": "0.002"
+  },
+  {
+    "account": "Expenses:Rounding2",
+    "commodity": "SEK",
+    "quantity": "0.002"
+  },
+  {
+    "account": "Expenses:Rounding3",
+    "commodity": "SEK",
+    "quantity": "0.002"
+  },
+  {
+    "account": "Expenses:Rounding4",
+    "commodity": "SEK",
+    "quantity": "0.002"
+  }
+]
+
+========== WARNINGS ==========

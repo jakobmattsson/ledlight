@@ -63,6 +63,18 @@ module.exports = ({
     }
   }
 
+  function validatePostingDates(transaction, warnings) {
+    for (const posting of transaction.postings) {
+      if (posting.postingDate && posting.postingDate < transaction.date) {
+        warnings.push(createWarning(
+          warningCodes.POSTING_DATE_BEFORE_TRANSACTION,
+          `Posting date ${posting.postingDate} must not precede transaction date ${transaction.date}`,
+          posting.location,
+        ));
+      }
+    }
+  }
+
   function validateCommodityTrade(posting, defaultCommodity, warnings) {
     if (!posting.amount || !defaultCommodity) return;
     if (posting.amount.commodity === defaultCommodity) {
@@ -191,6 +203,7 @@ module.exports = ({
         }
       } else if (entry.type === 'transaction') {
         validateTransactionDeclarations(entry, declarations, warnings);
+        validatePostingDates(entry, warnings);
         const carried = new Set(carriedMovements(entry, effectiveDefaultCommodity)
           .flatMap(({ outgoing, incoming }) => [outgoing, incoming]));
         entry.postings.forEach((posting) => validatePosting(

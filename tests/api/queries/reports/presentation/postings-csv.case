@@ -1,0 +1,30 @@
+Posting CSV flattens costs, comments, tags, balances, and source locations.
+
+========== CLI ==========
+
+ledlight postings --format csv
+
+========== FILE ==========
+
+commodity SEK ; Local currency
+  default
+  format 1,000.00 SEK
+commodity FUND ; Traded fund
+  format 1,000 FUND
+tag Reviewed
+account Assets:Cash ; Everyday "account"
+account Assets:Fund
+account Equity:Opening
+P 2024-01-01 FUND 12 SEK ; Closing, official
+2024-01-02 Buy fund ; imported
+  ; Reviewed: manually
+  Assets:Fund  1 FUND {10 SEK} ; broker
+  Assets:Cash  -10 SEK
+
+========== OUTPUT ==========
+
+postingId,transactionId,transactionDate,description,transactionComments,transactionTags,postingDate,account,postingComments,postingTags,amountQuantity,amountCommodity,lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance,filename,transactionSourceLine
+1,8,2024-01-02,Buy fund,"[""imported""]","[{""name"":""Reviewed"",""value"":""manually""}]",2024-01-02,Assets:Fund,"[""broker""]",[],1,FUND,10,SEK,false,,,,,,,,1,FUND,1,{{JOURNAL_PATH}},11
+2,8,2024-01-02,Buy fund,"[""imported""]","[{""name"":""Reviewed"",""value"":""manually""}]",2024-01-02,Assets:Cash,[],[],-10,SEK,,,,,,,,,,,-10,SEK,-10,{{JOURNAL_PATH}},11
+
+========== WARNINGS ==========

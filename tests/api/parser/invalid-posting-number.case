@@ -10,5 +10,9 @@ Rejects a nonnumeric posting amount.
 {
   "code": "LEDLIGHT_SYNTAX",
   "source": "bad.ledger",
-  "line": 2
+  "line": 2,
+  "runtime": {
+    "column": 16,
+    "message": "bad.ledger:2:16: Expected a number for posting amount"
+  }
 }

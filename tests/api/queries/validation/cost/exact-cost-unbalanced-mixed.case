@@ -1,0 +1,52 @@
+Exact cost residuals are reported even when their commodity amounts could resemble an exchange.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Fund
+account Assets:Cash
+account Assets:Other
+2024-01-01 Incorrect unit cost
+  Assets:Fund  1.234 FUND @ 2.00 SEK
+  Assets:Cash  -2.48 SEK
+2024-01-02 Mixed cost and exchange
+  Assets:Fund  1 FUND @ 10 SEK
+  Assets:Cash  -9 SEK
+  Assets:Other  -1 USD
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "-11.48"
+  },
+  {
+    "account": "Assets:Fund",
+    "commodity": "FUND",
+    "quantity": "2.234"
+  },
+  {
+    "account": "Assets:Other",
+    "commodity": "USD",
+    "quantity": "-1"
+  }
+]
+
+========== WARNINGS ==========
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: -0.012 SEK
+  {{JOURNAL_PATH}}:10:1
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: 1 SEK, -1 USD
+  {{JOURNAL_PATH}}:13:1

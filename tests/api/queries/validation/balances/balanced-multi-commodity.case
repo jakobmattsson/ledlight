@@ -1,0 +1,47 @@
+Explicitly balanced postings in two commodities produce no warnings.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+2024-01-01 Balanced
+  Assets:Cash  1 SEK
+  Equity:Opening  -1 SEK
+  Assets:Fund  2 FUND
+  Equity:Opening  -2 FUND
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "1"
+  },
+  {
+    "account": "Assets:Fund",
+    "commodity": "FUND",
+    "quantity": "2"
+  },
+  {
+    "account": "Equity:Opening",
+    "commodity": "FUND",
+    "quantity": "-2"
+  },
+  {
+    "account": "Equity:Opening",
+    "commodity": "SEK",
+    "quantity": "-1"
+  }
+]
+
+========== WARNINGS ==========

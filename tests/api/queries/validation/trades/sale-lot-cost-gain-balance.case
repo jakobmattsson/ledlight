@@ -1,0 +1,45 @@
+Unit and total lot costs use the recorded basis when balancing sale gains.
+
+========== API ==========
+
+aggregate({ accounts: ['^Income:Capital Gains$'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+account Income:Capital Gains
+2024-01-01 Purchase
+  Assets:Fund  30 FUND {100 SEK}
+  Assets:Cash  -3000 SEK
+2024-01-02 Unit lot sale
+  Assets:Fund  -10 FUND {100 SEK} @ 120 SEK
+  Assets:Cash  1200 SEK
+  Income:Capital Gains  -200 SEK
+2024-01-03 Total lot sale
+  Assets:Fund  -10 FUND {{1000 SEK}} @@ 1200 SEK
+  Assets:Cash  1200 SEK
+  Income:Capital Gains  -200 SEK
+2024-01-04 Missing gain
+  Assets:Fund  -10 FUND {100 SEK} @ 120 SEK
+  Assets:Cash  1200 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Income:Capital Gains",
+    "commodity": "SEK",
+    "quantity": "-400"
+  }
+]
+
+========== WARNINGS ==========
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: 200 SEK
+  {{JOURNAL_PATH}}:20:1

@@ -1,0 +1,53 @@
+Use before declaration warns without discarding either transaction.
+
+========== API ==========
+
+aggregate({ accounts: ['^Assets:Fund$'] })
+
+========== FILE ==========
+
+2024-01-01 Before declarations ; :Header:
+  ; Note: value
+  Assets:Fund  1 FUND ; Posting: value
+  Equity:Opening
+account Assets:Fund
+account Equity:Opening
+commodity FUND
+  format 1000.00 FUND
+tag Header
+tag Note
+tag Posting
+2024-01-02 After declarations ; :Header:
+  ; Note: value
+  Assets:Fund  1 FUND ; Posting: value
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Fund",
+    "commodity": "FUND",
+    "quantity": "2"
+  }
+]
+
+========== WARNINGS ==========
+
+[UNDECLARED_TAG] Tag Header must be declared before use
+  {{JOURNAL_PATH}}:1:32
+
+[UNDECLARED_TAG] Tag Note must be declared before use
+  {{JOURNAL_PATH}}:2:3
+
+[UNDECLARED_ACCOUNT] Account Assets:Fund must be declared before use
+  {{JOURNAL_PATH}}:3:3
+
+[UNDECLARED_COMMODITY] Commodity FUND must be declared before use
+  {{JOURNAL_PATH}}:3:3
+
+[UNDECLARED_TAG] Tag Posting must be declared before use
+  {{JOURNAL_PATH}}:3:23
+
+[UNDECLARED_ACCOUNT] Account Equity:Opening must be declared before use
+  {{JOURNAL_PATH}}:4:3

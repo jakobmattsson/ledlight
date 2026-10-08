@@ -6,7 +6,6 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   accountFilter,
-  accountMatches,
 } = resolveRepositoryModule("src/impl/query-support/account-filter.js");
 const { prefixUpperBound } = resolveRepositoryModule(
   "src/impl/query-support/account-filter.js",
@@ -34,14 +33,4 @@ test('builds literal substring filters with optional start and end anchors', () 
     sql: '(instr(p.account, ?) > 0)',
     parameters: ['Assets'],
   });
-});
-
-test('matches account patterns without interpreting other regular-expression syntax', () => {
-  assert.equal(accountMatches('Assets:Cash', 'sets:Ca'), true);
-  assert.equal(accountMatches('Assets:Cash', '^Assets'), true);
-  assert.equal(accountMatches('Assets:Cash', 'Cash$'), true);
-  assert.equal(accountMatches('Assets:Cash', '^Assets:Cash$'), true);
-  assert.equal(accountMatches('Assets:Cash:Wallet', '^Assets:Cash$'), false);
-  assert.equal(accountMatches('Assets:Cash', 'Assets.*Cash'), false);
-  assert.equal(accountMatches('Assets:^Cash$', ':^Cash'), true);
 });

@@ -1,0 +1,30 @@
+Performance text uses the valuation commodity's declared precision for its opening value.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts Assets:Cash --from 2024-01-02 --to 2024-01-02
+
+========== FILE ==========
+
+commodity EUR
+  default
+  format 1,000.000 EUR
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash  1234.5678 EUR
+  Equity:Opening
+
+========== OUTPUT ==========
+
+Investment performance from 2024-01-02 to 2024-01-02
+Instruments: 1
+Opening value: 1,234.568 EUR
+Net contributions: 0.000 EUR
+Ending value: 1,234.568 EUR
+Profit/loss: 0.000 EUR
+Time-weighted return: n/a
+Money-weighted return (total): n/a
+Money-weighted return (annualized): n/a
+
+========== WARNINGS ==========

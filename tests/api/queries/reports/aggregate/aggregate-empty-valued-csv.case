@@ -1,0 +1,18 @@
+An empty valued aggregate still writes its CSV header.
+
+========== CLI ==========
+
+ledlight aggregate --denominate --format csv
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+
+========== OUTPUT ==========
+
+account,amount,commodity
+
+========== WARNINGS ==========

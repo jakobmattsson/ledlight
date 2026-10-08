@@ -1,0 +1,26 @@
+Total history text uses the declared precision and grouping separators.
+
+========== CLI ==========
+
+ledlight total-history --accounts Assets:Cash
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash  2.005 SEK
+  Equity:Opening
+2024-01-02 Increase
+  Assets:Cash  9997.995 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+2024-01-01       2.01 SEK
+2024-01-02  10,000.00 SEK
+
+========== WARNINGS ==========

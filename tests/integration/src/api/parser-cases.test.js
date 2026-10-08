@@ -57,10 +57,15 @@ for (const name of fs.readdirSync(casesDirectory).filter((file) => file.endsWith
     } else {
       assert.equal(warningsSeparator, -1, 'ERROR cases cannot have WARNINGS');
       const expected = JSON.parse(contents.slice(separator + header.length));
-      for (const parse of [parseLedgerText, referenceParser.parseStrict]) {
+      const { runtime, ...sharedExpected } = expected;
+      for (const [parse, specificExpected] of [
+        [parseLedgerText, runtime], [referenceParser.parseStrict, undefined],
+      ]) {
         assert.throws(() => parse(sourceText, { source: expected.source }), (error) => {
           assert.ok(error instanceof SyntaxError);
-          for (const [key, value] of Object.entries(expected)) assert.equal(error[key], value);
+          for (const [key, value] of Object.entries({ ...sharedExpected, ...specificExpected })) {
+            assert.equal(error[key], value);
+          }
           return true;
         });
       }

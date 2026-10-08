@@ -10,5 +10,9 @@ commodity SEK
 {
   "code": "LEDLIGHT_SYNTAX",
   "source": "bad.ledger",
-  "line": 2
+  "line": 2,
+  "runtime": {
+    "column": 3,
+    "message": "bad.ledger:2:3: Unsupported commodity property \"nomarket\""
+  }
 }

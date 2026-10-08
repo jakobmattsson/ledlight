@@ -11,5 +11,9 @@ Rejects auxiliary dates in transaction headers.
 {
   "code": "LEDLIGHT_SYNTAX",
   "source": "bad.ledger",
-  "line": 1
+  "line": 1,
+  "runtime": {
+    "column": 11,
+    "message": "bad.ledger:1:11: Expected whitespace after transaction date"
+  }
 }
