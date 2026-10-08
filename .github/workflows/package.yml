@@ -94,4 +94,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+        if: runner.os != 'Windows'
+      - run: npm ci --ignore-scripts
+        if: runner.os == 'Windows'
       - run: npm run test:package
