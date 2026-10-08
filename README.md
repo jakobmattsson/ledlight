@@ -9,7 +9,7 @@ Install the public package on Node.js 22.14 or later in the Node.js 22 release l
 npm install ledlight
 ```
 
-For repository development, install and select the latest Node.js 22 release
+For repository development, install and select the pinned Node.js 22 release
 with [nvm](https://github.com/nvm-sh/nvm):
 
 ```console
@@ -18,8 +18,9 @@ nvm use
 node --version
 ```
 
-The repository's `.nvmrc` selects Node.js 22 for this shell; it does not change
-your nvm default. Run `nvm use` again when you open a new shell in the repository.
+The repository's `.nvmrc` selects Node.js 22.23.3 for this shell; it does not
+change your nvm default. Run `nvm use` again when you open a new shell in the
+repository.
 
 Install dependencies and run the complete verification suite:
 
