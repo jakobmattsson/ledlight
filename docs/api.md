@@ -4,7 +4,7 @@ Ledlight is a CommonJS module. The package root exports `openJournal` and
 `parseLedgerText`:
 
 ```js
-const { openJournal, parseLedgerText } = require('ledlight');
+const { openJournal, parseLedgerText } = require('@jakobm/ledlight');
 ```
 
 Dates use `YYYY-MM-DD`. Accounting quantities and valuation rates are exact

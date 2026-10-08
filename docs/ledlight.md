@@ -45,7 +45,7 @@ The current implementation provides:
 The public API is exported from the package root:
 
 ```js
-const { openJournal, parseLedgerText } = require('ledlight');
+const { openJournal, parseLedgerText } = require('@jakobm/ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
 const ast = parseLedgerText('account Assets:Cash\n');
@@ -67,7 +67,7 @@ Open a journal once when running several reports so the source freshness check
 runs once:
 
 ```js
-const { openJournal } = require('ledlight');
+const { openJournal } = require('@jakobm/ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
 const aggregate = journal.aggregate({ to: '2024-12-31' });
@@ -511,7 +511,7 @@ every other character is literal. By default there is one row per account and
 commodity:
 
 ```js
-const { openJournal } = require('ledlight');
+const { openJournal } = require('@jakobm/ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
 const balanceSheet = journal.aggregate({
@@ -747,7 +747,7 @@ performance reports continue to use market valuation. The `dateBasis` option is 
 `posting` (the default) or `transaction`.
 
 ```js
-const { openJournal } = require('ledlight');
+const { openJournal } = require('@jakobm/ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
 const history = journal.totalHistory({
