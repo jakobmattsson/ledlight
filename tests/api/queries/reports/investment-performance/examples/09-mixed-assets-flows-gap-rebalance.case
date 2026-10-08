@@ -1,5 +1,7 @@
 Example: time-weight the actual changing portfolio, excluding external flows.
 Only Assets:Investments is selected; Assets:Cash is outside this report.
+With no --commodities option, the report discovers EQUITY and BOND from the
+selected accounts.
 EQUITY rises from 100 to 300 USD (+200%) over the year, while BOND falls from
 100 to 60 USD (-40%). In January, 200 USD buys one of each at 100 USD.
 By March, EQUITY is 120 and BOND is 80: their combined
@@ -34,7 +36,7 @@ and dates give 38.88% total and 39.01% annualized return.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts '^Assets:Investments:' --commodities EQUITY --commodities BOND --from 2023-01-01 --to 2023-12-31 --format text
+ledlight investment-performance --accounts '^Assets:Investments:' --from 2023-01-01 --to 2023-12-31 --format text
 
 ========== FILE ==========
 
