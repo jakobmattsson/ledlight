@@ -3,7 +3,7 @@
 Ledlight is a standalone Ledger-compatible parser, SQLite store, and reporting
 library.
 
-Install the public package on Node.js 22.12 or later in the Node.js 22 release line:
+Install the public package on Node.js 22.14 or later in the Node.js 22 release line:
 
 ```console
 npm install ledlight

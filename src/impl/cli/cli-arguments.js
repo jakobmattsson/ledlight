@@ -124,7 +124,9 @@ module.exports = ({
       if (!(error.code?.startsWith('commander.') || error instanceof InvalidArgumentError)) throw error;
       const message = error.message.replace(/^error: /u, '');
       const command = program.commands.find((candidate) => candidate.name() === arguments_[0]);
-      throw new Error(`${message}\n\n${(command || program).helpInformation().trimEnd()}`);
+      throw new Error(`${message}\n\n${(command || program).helpInformation().trimEnd()}`, {
+        cause: error,
+      });
     }
     if (!selectedCommand) throw new Error(usage());
     const definition = commandByName.get(selectedCommand.name);
