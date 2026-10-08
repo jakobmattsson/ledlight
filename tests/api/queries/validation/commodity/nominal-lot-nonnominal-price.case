@@ -1,0 +1,36 @@
+A nominal lot cost does not hide an invalid transaction price on the default commodity.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Incorrect price
+  Assets:Cash  100 SEK {1 SEK} @ 2 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "commodity": "SEK",
+    "quantity": "100"
+  },
+  {
+    "account": "Equity:Opening",
+    "commodity": "SEK",
+    "quantity": "-100"
+  }
+]
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] Transaction price expressed in the posting commodity SEK must value one SEK at exactly one SEK
+  {{JOURNAL_PATH}}:7:3

@@ -1,0 +1,52 @@
+Undeclared commodities are reported in price directives and every posting annotation.
+
+========== API ==========
+
+accounts()
+
+========== FILE ==========
+
+account Assets:Fund
+account Equity:Opening
+P 2024-01-01 FUND 10 SEK
+2024-01-02 Trade
+  Assets:Fund  1 FUND {10 LOT} @ 11 PRICE = 1 ASSERTION
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Fund",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  },
+  {
+    "account": "Equity:Opening",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  }
+]
+
+========== WARNINGS ==========
+
+[UNDECLARED_COMMODITY] Commodity FUND must be declared before use
+  {{JOURNAL_PATH}}:3:1
+  {{JOURNAL_PATH}}:5:3
+
+[UNDECLARED_COMMODITY] Commodity SEK must be declared before use
+  {{JOURNAL_PATH}}:3:1
+
+[UNDECLARED_COMMODITY] Commodity LOT must be declared before use
+  {{JOURNAL_PATH}}:5:3
+
+[UNDECLARED_COMMODITY] Commodity PRICE must be declared before use
+  {{JOURNAL_PATH}}:5:3
+
+[UNDECLARED_COMMODITY] Commodity ASSERTION must be declared before use
+  {{JOURNAL_PATH}}:5:3
+
+[BALANCE_ASSERTION_FAILED] Balance assertion failed: expected 1 ASSERTION, got 0 ASSERTION
+  {{JOURNAL_PATH}}:5:3

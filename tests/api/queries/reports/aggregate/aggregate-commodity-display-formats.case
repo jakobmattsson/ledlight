@@ -1,0 +1,31 @@
+Aggregate text respects each commodity's declared precision and separators.
+
+========== CLI ==========
+
+ledlight aggregate --accounts '^Assets:'
+
+========== FILE ==========
+
+commodity BTC
+  format 1000.00000000 BTC
+commodity EUR
+  format 1,000.00 EUR
+commodity JPY
+  format 1,000 JPY
+account Assets:Bitcoin
+account Assets:Euros
+account Assets:Yen
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Bitcoin  1234.5 BTC
+  Assets:Euros  1234.5 EUR
+  Assets:Yen  1234.5 JPY
+  Equity:Opening
+
+========== OUTPUT ==========
+
+ 1234.50000000 BTC  Assets:Bitcoin
+1,234.50       EUR  Assets:Euros
+1,235          JPY  Assets:Yen
+
+========== WARNINGS ==========

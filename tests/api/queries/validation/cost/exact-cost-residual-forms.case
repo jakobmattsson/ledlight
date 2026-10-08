@@ -1,0 +1,39 @@
+Each cost annotation form reports its exact sub-cent residual.
+
+========== API ==========
+
+aggregate({ accounts: ['^Expenses:Rounding'] })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000.000 FUND
+account Assets:Fund
+account Assets:Cash
+account Expenses:Rounding
+2024-01-01 Unit lot cost
+  Assets:Fund  1.234 FUND {2.00 SEK}
+  Assets:Cash  -2.47 SEK
+2024-01-02 Unit transaction price
+  Assets:Fund  1.234 FUND @ 2.00 SEK
+  Assets:Cash  -2.47 SEK
+2024-01-03 Total lot cost
+  Assets:Fund  1.234 FUND {{2.468 SEK}}
+  Assets:Cash  -2.47 SEK
+2024-01-04 Total transaction price
+  Assets:Fund  1.234 FUND @@ 2.468 SEK
+  Assets:Cash  -2.47 SEK
+
+========== OUTPUT ==========
+
+[]
+
+========== WARNINGS ==========
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: -0.002 SEK
+  {{JOURNAL_PATH}}:8:1
+  {{JOURNAL_PATH}}:11:1
+  {{JOURNAL_PATH}}:14:1
+  {{JOURNAL_PATH}}:17:1

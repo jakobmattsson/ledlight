@@ -1,0 +1,33 @@
+Investment performance text presents values and unavailable returns clearly.
+
+========== CLI ==========
+
+ledlight investment-performance
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+P 2024-01-01 FUND 12 SEK
+2024-01-01 Purchase
+  Assets:Fund  10 FUND {10 SEK}
+  Assets:Cash  -100 SEK
+
+========== OUTPUT ==========
+
+Investment performance from 2024-01-01 to 2024-01-01
+Instruments: 2
+Opening value: 0.00 SEK
+Net contributions: 0.00 SEK
+Ending value: 20.00 SEK
+Profit/loss: 20.00 SEK
+Time-weighted return: n/a
+Money-weighted return (total): n/a
+Money-weighted return (annualized): n/a
+
+========== WARNINGS ==========

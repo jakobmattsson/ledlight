@@ -1,0 +1,29 @@
+Tag CSV includes the used tag names.
+
+========== CLI ==========
+
+ledlight tags --format csv
+
+========== FILE ==========
+
+commodity SEK ; Local currency
+  default
+  format 1,000.00 SEK
+commodity FUND ; Traded fund
+  format 1,000 FUND
+tag Reviewed
+account Assets:Cash ; Everyday "account"
+account Assets:Fund
+account Equity:Opening
+P 2024-01-01 FUND 12 SEK ; Closing, official
+2024-01-02 Buy fund ; imported
+  ; Reviewed: manually
+  Assets:Fund  1 FUND {10 SEK} ; broker
+  Assets:Cash  -10 SEK
+
+========== OUTPUT ==========
+
+tag
+Reviewed
+
+========== WARNINGS ==========

@@ -1,0 +1,36 @@
+A single implicit posting resolves every commodity in the transaction.
+
+========== API ==========
+
+aggregate({ accounts: ['^Equity:Opening$'] })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Cash
+account Assets:Fund
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash  10 SEK
+  Assets:Fund  2 FUND
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Equity:Opening",
+    "commodity": "FUND",
+    "quantity": "-2"
+  },
+  {
+    "account": "Equity:Opening",
+    "commodity": "SEK",
+    "quantity": "-10"
+  }
+]
+
+========== WARNINGS ==========

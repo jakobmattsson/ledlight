@@ -1,0 +1,22 @@
+Total history text uses the valuation commodity's declared precision.
+
+========== CLI ==========
+
+ledlight total-history --accounts Assets:Cash
+
+========== FILE ==========
+
+commodity EUR
+  default
+  format 1,000.000 EUR
+account Assets:Cash
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Cash  1234.5678 EUR
+  Equity:Opening
+
+========== OUTPUT ==========
+
+2024-01-01  1,234.568 EUR
+
+========== WARNINGS ==========
