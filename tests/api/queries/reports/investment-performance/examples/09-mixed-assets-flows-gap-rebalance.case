@@ -1,0 +1,127 @@
+Example: time-weight the actual changing portfolio, excluding external flows.
+Only Assets:Investments is selected; Assets:Cash is outside this report.
+With no --include-commodities option, the report discovers EQUITY and BOND from the
+selected accounts.
+EQUITY rises from 100 to 300 USD (+200%) over the year, while BOND falls from
+100 to 60 USD (-40%). In January, 200 USD buys one of each at 100 USD.
+By March, EQUITY is 120 and BOND is 80: their combined
+value is still 200. A 120 USD bonus buys another EQUITY, raising the selected
+value to 320 without creating a 60% investment return that day.
+In May, prices are 160 and 80. Selling one EQUITY for 160 and buying two BOND
+units for 160 changes the holdings from two EQUITY and one BOND to one EQUITY
+and three BOND. Both sides of this reallocation are selected, so its net
+external flow is zero and the value remains 400.
+In August, EQUITY is 200 and BOND is 50. All units are sold for 350 USD; the
+cash stays in an account outside this report. Selected value is zero through
+September. In October, only 300 USD is reinvested: one EQUITY at 250 and one
+BOND at 50. The remaining 50 USD stays outside the selection in Assets:Cash.
+At year-end, EQUITY is 300 and BOND is 60, so selected value is 360.
+
+For each date below, V is the selected closing value and F is its signed
+external flow. Ledlight assumes flows occur at the end of their posting day:
+  Jan 01: V = 200, F = +200, first funded factor = 200 / 200 = 1.00
+  Mar 01: V = 320, F = +120, factor = (320 - 120) / 200 = 1.00
+  May 01: V = 400, F =    0, factor = 400 / 320 = 1.25
+  Aug 01: V =   0, F = -350, factor = (0 - (-350)) / 400 = 0.875
+  Oct 01: V = 300, F = +300, restart factor = 300 / 300 = 1.00
+  Dec 31: V = 360, F =    0, factor = 360 / 300 = 1.20
+The zero-value days between August and October contribute no market return.
+Compounding the factors gives 1.00 * 1.00 * 1.25 * 0.875 * 1.00 * 1.20 - 1
+= 31.25% time-weighted return. Net contributions are 200 + 120 - 350 + 300
+= 270 USD, while profit/loss is ending value 360 - contributions 270 = 90.
+Annualizing the 31.25% over January 1 to December 31 (364 days), including
+the zero-value interval, gives 31.35%.
+Simply dividing profit by net contributions gives 90 / 270 = 33.33%, which
+is neither return measure. For money-weighting, the investor's dated flows
+are -200, -120, +350, -300, and the final +360 USD valuation. Those amounts
+and dates give 38.88% total and 39.01% annualized return.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts '^Assets:Investments:' --from 2023-01-01 --to 2023-12-31 --format text
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity EQUITY
+  format 1,000 EQUITY
+commodity BOND
+  format 1,000 BOND
+account Assets:Cash
+account Assets:Investments:Equity
+account Assets:Investments:Bonds
+account Income:Salary
+account Income:Bonus
+account Income:Gains
+account Expenses:Losses
+P 2023-01-01 EQUITY 100 USD
+P 2023-01-01 BOND 100 USD
+P 2023-03-01 EQUITY 120 USD
+P 2023-03-01 BOND 80 USD
+P 2023-05-01 EQUITY 160 USD
+P 2023-05-01 BOND 80 USD
+P 2023-08-01 EQUITY 200 USD
+P 2023-08-01 BOND 50 USD
+P 2023-10-01 EQUITY 250 USD
+P 2023-10-01 BOND 50 USD
+P 2023-12-31 EQUITY 300 USD
+P 2023-12-31 BOND 60 USD
+
+2023-01-01 Salary
+  Assets:Cash  200 USD
+  Income:Salary  -200 USD
+
+2023-01-01 Initial investment
+  Assets:Investments:Equity  1 EQUITY {100 USD}
+  Assets:Investments:Bonds  1 BOND {100 USD}
+  Assets:Cash  -200 USD
+
+2023-03-01 Bonus
+  Assets:Cash  120 USD
+  Income:Bonus  -120 USD
+
+2023-03-01 Invest bonus
+  Assets:Investments:Equity  1 EQUITY {120 USD}
+  Assets:Cash  -120 USD
+
+2023-05-01 Sell one equity unit
+  Assets:Investments:Equity  -1 EQUITY {100 USD} @ 160 USD
+  Assets:Cash  160 USD
+  Income:Gains  -60 USD
+
+2023-05-01 Reallocate into bonds
+  Assets:Investments:Bonds  2 BOND {80 USD}
+  Assets:Cash  -160 USD
+
+2023-08-01 Sell remaining equity
+  Assets:Investments:Equity  -1 EQUITY {120 USD} @ 200 USD
+  Assets:Cash  200 USD
+  Income:Gains  -80 USD
+
+2023-08-01 Sell all bonds
+  Assets:Investments:Bonds  -1 BOND {100 USD} @ 50 USD
+  Assets:Investments:Bonds  -2 BOND {80 USD} @ 50 USD
+  Assets:Cash  150 USD
+  Expenses:Losses  110 USD
+
+2023-10-01 Reenter both markets
+  Assets:Investments:Equity  1 EQUITY {250 USD}
+  Assets:Investments:Bonds  1 BOND {50 USD}
+  Assets:Cash  -300 USD
+
+========== OUTPUT ==========
+
+Investment performance from 2023-01-01 to 2023-12-31
+Instruments: 2
+Opening value: 0.00 USD
+Net contributions: 270.00 USD
+Ending value: 360.00 USD
+Profit/loss: 90.00 USD
+Time-weighted return (total): 31.25 %
+Time-weighted return (annualized): 31.35 %
+Money-weighted return (total): 38.88 %
+Money-weighted return (annualized): 39.01 %
+
+========== WARNINGS ==========

@@ -32,6 +32,7 @@ LEDGER
   "netContributions": 0,
   "profitLoss": 20,
   "timeWeightedReturn": null,
+  "timeWeightedReturnAnnualized": null,
   "moneyWeightedReturn": null,
   "moneyWeightedReturnTotal": null,
   "points": []

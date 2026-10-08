@@ -34,6 +34,7 @@ account Equity:Opening
   "netContributions": 2,
   "profitLoss": 0,
   "timeWeightedReturn": 0,
+  "timeWeightedReturnAnnualized": null,
   "moneyWeightedReturn": null,
   "moneyWeightedReturnTotal": null,
   "points": [
@@ -43,6 +44,7 @@ account Equity:Opening
       "netContributions": 2,
       "profitLoss": 0,
       "timeWeightedReturn": 0,
+      "timeWeightedReturnAnnualized": null,
       "moneyWeightedReturn": null,
       "moneyWeightedReturnTotal": null
     }

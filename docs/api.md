@@ -84,7 +84,7 @@ all default to `false`.
 | `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `groupBy`, `denominate`, `withValuationValue`, `invert`, `includeTotal` |
 | `totalHistory` | `from`, `to`: select daily closing totals, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
 | `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
-| `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities`, `excludeCommodities` |
+| `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `includeCommodities`, `excludeCommodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
 | `transactions` | No date filter; results include transaction and posting dates. | `accounts`, `id`, `order`, `page`, `pageSize` |
 | `accounts` | No date filter. | `accounts`, `usage` |
@@ -337,10 +337,10 @@ in the CLI.
 
 ### `journal.investmentPerformance(options)`
 
-Options are `from`, `to`, `accounts`, `commodities`, and
+Options are `from`, `to`, `accounts`, `includeCommodities`, and
 `excludeCommodities`. The three selections are arrays of non-empty strings.
 Account values use the shared account-pattern syntax. Commodity inclusion and
-exclusion cannot overlap.
+exclusion are mutually exclusive; omit both to discover held commodities.
 
 The interval is inclusive and uses posting dates. Earlier positions contribute
 to the opening value, which is the closing value immediately before `from` (or
@@ -381,6 +381,7 @@ The result contains:
   netContributions,
   profitLoss,
   timeWeightedReturn,
+  timeWeightedReturnAnnualized,
   moneyWeightedReturn,
   moneyWeightedReturnTotal,
   points,
@@ -389,6 +390,13 @@ The result contains:
 
 Performance values and the corresponding fields in each daily point are
 JavaScript numbers. Return fields are `null` when they cannot be calculated.
+`timeWeightedReturn` is the total return over the measured period.
+`timeWeightedReturnAnnualized` compounds the total time-weighted return to a
+365-day rate. The span starts at `from` when there is an opening value, or at
+the first funded day otherwise. It ends at `to` if holdings remain, or at the
+last day that contributes a return if the selected value reaches zero. It is
+calculated for any positive span, including periods shorter than one year.
+A gap without selected holdings between investments remains part of that span.
 The precision boundary for these numeric monetary fields is tracked in the
 improvement backlog.
 

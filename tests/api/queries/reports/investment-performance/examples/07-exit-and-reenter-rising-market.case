@@ -1,0 +1,85 @@
+Example: leave a rising market completely, then buy back in later.
+The FUND quote rises by 10 USD on the first of every month, from 100 USD in
+January to 210 USD in December. Only Assets:Fund is selected for the report.
+Salary funds one unit bought for 100 USD on 2023-01-01. It is sold for 130 USD
+on 2023-04-01, leaving zero FUND units through July despite rising quotes.
+The 130 USD proceeds remain in Assets:Cash. An additional 40 USD bonus funds
+the 170 USD repurchase on 2023-08-01. One unit is still held on 2023-12-31,
+valued at the latest quote of 210 USD from December 1.
+The selected fund has flows of +100, -130, and +170 USD, so net contributions
+are 140 USD. Ending value 210 minus opening value 0 minus contributions 140
+gives 70 USD profit. The time-weighted factors are 130 / 100 before the sale
+and 210 / 170 after the repurchase; gains while holding zero units do not
+enter the return. Their product minus one is 60.59%.
+Annualizing that return over January 1 to December 31 (364 days), including
+the months without selected holdings, gives 60.80%.
+The investor cash flows are -100 USD on January 1, +130 on April 1, -170 on
+August 1, and +210 on December 31. The annual rate r solves
+-100 + 130 / (1 + r)^(90 / 365) - 170 / (1 + r)^(212 / 365)
+  + 210 / (1 + r)^(364 / 365) = 0, giving 103.45% annualized.
+Compounding that rate over the 364-day interval gives 103.05% total.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts Assets:Fund --include-commodities FUND --from 2023-01-01 --to 2023-12-31 --format text
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Cash
+account Assets:Fund
+account Income:Salary
+account Income:Bonus
+account Income:Gains
+P 2023-01-01 FUND 100 USD
+P 2023-02-01 FUND 110 USD
+P 2023-03-01 FUND 120 USD
+P 2023-04-01 FUND 130 USD
+P 2023-05-01 FUND 140 USD
+P 2023-06-01 FUND 150 USD
+P 2023-07-01 FUND 160 USD
+P 2023-08-01 FUND 170 USD
+P 2023-09-01 FUND 180 USD
+P 2023-10-01 FUND 190 USD
+P 2023-11-01 FUND 200 USD
+P 2023-12-01 FUND 210 USD
+
+2023-01-01 Salary
+  Assets:Cash  100 USD
+  Income:Salary  -100 USD
+
+2023-01-01 First purchase
+  Assets:Fund  1 FUND {100 USD}
+  Assets:Cash  -100 USD
+
+2023-04-01 Complete sale
+  Assets:Fund  -1 FUND {100 USD} @ 130 USD
+  Assets:Cash  130 USD
+  Income:Gains  -30 USD
+
+2023-08-01 Bonus
+  Assets:Cash  40 USD
+  Income:Bonus  -40 USD
+
+2023-08-01 Repurchase
+  Assets:Fund  1 FUND {170 USD}
+  Assets:Cash  -170 USD
+
+========== OUTPUT ==========
+
+Investment performance from 2023-01-01 to 2023-12-31
+Instruments: 1
+Opening value: 0.00 USD
+Net contributions: 140.00 USD
+Ending value: 210.00 USD
+Profit/loss: 70.00 USD
+Time-weighted return (total): 60.59 %
+Time-weighted return (annualized): 60.80 %
+Money-weighted return (total): 103.05 %
+Money-weighted return (annualized): 103.45 %
+
+========== WARNINGS ==========

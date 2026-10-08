@@ -34,6 +34,7 @@ account Equity:Opening
   "netContributions": 15,
   "profitLoss": 0,
   "timeWeightedReturn": 0,
+  "timeWeightedReturnAnnualized": 0,
   "moneyWeightedReturn": 1.2050086219990732e-7,
   "moneyWeightedReturnTotal": 6.602786574217044e-10,
   "points": [
@@ -43,6 +44,7 @@ account Equity:Opening
       "netContributions": 10,
       "profitLoss": 0,
       "timeWeightedReturn": 0,
+      "timeWeightedReturnAnnualized": null,
       "moneyWeightedReturn": null,
       "moneyWeightedReturnTotal": null
     },
@@ -52,6 +54,7 @@ account Equity:Opening
       "netContributions": 12,
       "profitLoss": 0,
       "timeWeightedReturn": 0,
+      "timeWeightedReturnAnnualized": 0,
       "moneyWeightedReturn": -1.8785104916184833e-7,
       "moneyWeightedReturnTotal": -5.146604568699153e-10
     },
@@ -61,6 +64,7 @@ account Equity:Opening
       "netContributions": 15,
       "profitLoss": 0,
       "timeWeightedReturn": 0,
+      "timeWeightedReturnAnnualized": 0,
       "moneyWeightedReturn": 1.2050086219990732e-7,
       "moneyWeightedReturnTotal": 6.602786574217044e-10
     }

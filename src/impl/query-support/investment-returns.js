@@ -41,14 +41,28 @@ module.exports = () => {
     return Math.expm1((low + high) / 2);
   }
 
-  function totalReturnFromXirr(annualizedReturn, cashFlows) {
-    if (annualizedReturn === null) return null;
+  function cashFlowSpanYears(cashFlows) {
     const dates = cashFlows
       .filter(({ amount }) => Math.abs(amount) > 1e-9)
       .map(({ date }) => date)
       .sort();
     if (dates.length < 2 || dates[0] === dates.at(-1)) return null;
-    const years = daysBetween(dates[0], dates.at(-1)) / 365;
+    return daysBetween(dates[0], dates.at(-1)) / 365;
+  }
+
+  function annualizedTimeWeightedReturn(totalReturn, from, to) {
+    if (totalReturn === null) return null;
+    if (from === null || to === null) return null;
+    const years = daysBetween(from, to) / 365;
+    if (years <= 0) return null;
+    const annualizedReturn = Math.expm1(Math.log1p(totalReturn) / years);
+    return Number.isFinite(annualizedReturn) ? annualizedReturn : null;
+  }
+
+  function totalReturnFromXirr(annualizedReturn, cashFlows) {
+    if (annualizedReturn === null) return null;
+    const years = cashFlowSpanYears(cashFlows);
+    if (years === null) return null;
     return Math.expm1(Math.log1p(annualizedReturn) * years);
   }
 
@@ -64,6 +78,7 @@ module.exports = () => {
         netContributions: 0,
         profitLoss: 0,
         timeWeightedReturn: null,
+        timeWeightedReturnAnnualized: null,
         moneyWeightedReturn: null,
         moneyWeightedReturnTotal: null,
         points: [],
@@ -81,6 +96,10 @@ module.exports = () => {
     let growthFactor = 1;
     let hasReturn = false;
     let validReturn = true;
+    // Exclude empty time before the first investment and after the last exit,
+    // while retaining any empty interval between investments.
+    let returnStartDate = Math.abs(openingValue) > 1e-9 ? effectiveFrom : null;
+    let lastReturnDate = null;
     let netContributions = 0;
     const investorCashFlows = [];
     if (Math.abs(openingValue) > 1e-9) investorCashFlows.push({ date: effectiveFrom, amount: -openingValue });
@@ -101,12 +120,14 @@ module.exports = () => {
         priorValue = row.value;
         const pointCashFlows = [...investorCashFlows, { date: row.date, amount: row.value }];
         const moneyWeightedReturn = xirr(pointCashFlows);
+        const timeWeightedReturn = validReturn && hasReturn ? growthFactor - 1 : null;
         points.push({
           date: row.date,
           value: row.value,
           netContributions,
           profitLoss: row.value - openingValue - netContributions,
-          timeWeightedReturn: validReturn && hasReturn ? growthFactor - 1 : null,
+          timeWeightedReturn,
+          timeWeightedReturnAnnualized: annualizedTimeWeightedReturn(timeWeightedReturn, returnStartDate, lastReturnDate),
           moneyWeightedReturn,
           moneyWeightedReturnTotal: totalReturnFromXirr(moneyWeightedReturn, pointCashFlows),
         });
@@ -121,15 +142,19 @@ module.exports = () => {
       }
       growthFactor *= factor;
       hasReturn = true;
+      returnStartDate ??= row.date;
+      lastReturnDate = row.date;
       priorValue = row.value;
       const pointCashFlows = [...investorCashFlows, { date: row.date, amount: row.value }];
       const moneyWeightedReturn = xirr(pointCashFlows);
+      const timeWeightedReturn = validReturn ? growthFactor - 1 : null;
       points.push({
         date: row.date,
         value: row.value,
         netContributions,
         profitLoss: row.value - openingValue - netContributions,
-        timeWeightedReturn: validReturn ? growthFactor - 1 : null,
+        timeWeightedReturn,
+        timeWeightedReturnAnnualized: annualizedTimeWeightedReturn(timeWeightedReturn, returnStartDate, lastReturnDate),
         moneyWeightedReturn,
         moneyWeightedReturnTotal: totalReturnFromXirr(moneyWeightedReturn, pointCashFlows),
       });
@@ -137,6 +162,7 @@ module.exports = () => {
     const terminalCashFlows = [...investorCashFlows];
     if (Math.abs(endingValue) > 1e-9) terminalCashFlows.push({ date: effectiveTo, amount: endingValue });
     const moneyWeightedReturn = xirr(terminalCashFlows);
+    const timeWeightedReturn = validReturn && hasReturn ? growthFactor - 1 : null;
     return {
       from: effectiveFrom,
       to: effectiveTo,
@@ -146,7 +172,10 @@ module.exports = () => {
       endingValue,
       netContributions,
       profitLoss: endingValue - openingValue - netContributions,
-      timeWeightedReturn: validReturn && hasReturn ? growthFactor - 1 : null,
+      timeWeightedReturn,
+      timeWeightedReturnAnnualized: annualizedTimeWeightedReturn(
+        timeWeightedReturn, returnStartDate, Math.abs(endingValue) > 1e-9 ? effectiveTo : lastReturnDate,
+      ),
       moneyWeightedReturn,
       moneyWeightedReturnTotal: totalReturnFromXirr(moneyWeightedReturn, terminalCashFlows),
       points,

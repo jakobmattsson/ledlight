@@ -53,6 +53,7 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
           endingValue: 0,
           profitLoss: 0,
           timeWeightedReturn: null,
+          timeWeightedReturnAnnualized: null,
           moneyWeightedReturnTotal: null,
           moneyWeightedReturn: null,
         }),
@@ -133,6 +134,7 @@ test('delegates report behavior to the public Node API and only formats results'
         endingValue: 0,
         profitLoss: 0,
         timeWeightedReturn: null,
+        timeWeightedReturnAnnualized: null,
         moneyWeightedReturnTotal: null,
         moneyWeightedReturn: null,
       };

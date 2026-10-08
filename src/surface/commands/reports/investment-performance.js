@@ -10,22 +10,28 @@ module.exports = ({ cliOptions: options }) => ({
     return journal.commodities({ usage: 'all' });
   },
   helpDetails: `Return measures:
-  Time-weighted return
-    The compounded daily investment return after removing each day's net
-    external cash flow from its closing value. Cash flows are treated as
-    occurring at the end of the day, so their amount and timing do not affect
-    the measured investment performance.
+  Time-weighted return (total)
+    Use this to compare portfolio performance without the direct effect of
+    how much you contributed or withdrew and when. The method splits the
+    portfolio history at each external contribution or withdrawal, calculates
+    the return in each part, and multiplies the parts' growth factors. Ledlight
+    uses daily closing values and treats flows as occurring at day's end.
+
+  Time-weighted return (annualized)
+    Use this to compare time-weighted returns across periods of different
+    lengths. It is the yearly compound rate implied by the time-weighted
+    return from the first invested day to the report end, or to the day the
+    portfolio last reaches zero.
 
   Money-weighted return (total)
-    The cumulative investor return accounting for the amount and date of the
-    opening value, contributions, withdrawals, and ending value. It is the
-    annualized XIRR compounded over the interval from the first to the last
-    non-zero investor cash flow.
+    Use this to see your own cumulative return, including how much you
+    contributed or withdrew and when. It is the annualized XIRR compounded
+    over the interval from the first to the last non-zero investor cash flow.
 
   Money-weighted return (annualized)
+    Use this to compare your own returns across periods of different lengths.
     The yearly compound rate (XIRR) that makes the present value of the dated
-    opening value, contributions, withdrawals, and ending value equal zero.
-    It allows periods of different lengths to be compared.`,
+    opening value, contributions, withdrawals, and ending value equal zero.`,
   configure(command) {
     options.journal(command);
     options.dateRange(
@@ -34,11 +40,11 @@ module.exports = ({ cliOptions: options }) => ({
       'end the return period on YYYY-MM-DD',
     );
     options.accounts(command);
-    options.addValue(command, '--commodities <name>', 'include an exact commodity symbol (repeatable; default: discover from holdings)', {
-      repeatable: true,
+    options.addValue(command, '--include-commodities <name>', 'include an exact commodity symbol (repeatable; default: discover from holdings)', {
+      repeatable: true, conflicts: 'excludeCommodities',
     });
     options.addValue(command, '--exclude-commodities <name>', 'exclude an exact commodity symbol (repeatable)', {
-      repeatable: true,
+      repeatable: true, conflicts: 'includeCommodities',
     });
     options.format(command);
   },
@@ -46,6 +52,7 @@ module.exports = ({ cliOptions: options }) => ({
     const fields = [
       'from', 'to', 'commodities', 'valuationCommodity', 'openingValue',
       'endingValue', 'netContributions', 'profitLoss', 'timeWeightedReturn',
+      'timeWeightedReturnAnnualized',
       'moneyWeightedReturn', 'moneyWeightedReturnTotal', 'points',
     ];
     const value = (field) => {
@@ -68,7 +75,8 @@ module.exports = ({ cliOptions: options }) => ({
       `Net contributions: ${money(report.netContributions)}`,
       `Ending value: ${money(report.endingValue)}`,
       `Profit/loss: ${money(report.profitLoss)}`,
-      `Time-weighted return: ${percent(report.timeWeightedReturn)}`,
+      `Time-weighted return (total): ${percent(report.timeWeightedReturn)}`,
+      `Time-weighted return (annualized): ${percent(report.timeWeightedReturnAnnualized)}`,
       `Money-weighted return (total): ${percent(report.moneyWeightedReturnTotal)}`,
       `Money-weighted return (annualized): ${percent(report.moneyWeightedReturn)}`,
     ].join('\n') + '\n';

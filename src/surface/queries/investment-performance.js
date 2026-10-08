@@ -12,20 +12,20 @@ module.exports = ({
 
   const optionsSchema = z.strictObject({
     accounts,
-    commodities: stringList.default([]),
+    includeCommodities: stringList.default([]),
     excludeCommodities: stringList.default([]),
     ...dateRange,
   }).superRefine(validateDateRange).superRefine((input, context) => {
-    if (input.commodities.some((commodity) => input.excludeCommodities.includes(commodity))) {
+    if (input.includeCommodities.length > 0 && input.excludeCommodities.length > 0) {
       context.addIssue({
         code: 'custom',
-        message: 'A commodity cannot be both included and excluded',
+        message: 'Include and exclude commodity selections cannot be combined',
       });
     }
   });
 
   function selectedCommodities(database, options) {
-    if (options.commodities.length > 0) return options.commodities;
+    if (options.includeCommodities.length > 0) return options.includeCommodities;
     const clauses = ["p.posting_date <= COALESCE(?, '9999-12-31')"];
     const parameters = [options.to ?? null];
     if (options.accounts.length > 0) {

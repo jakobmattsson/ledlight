@@ -41,6 +41,7 @@ P 2024-01-01 FUND 120 USD
   "netContributions": 100,
   "profitLoss": 20,
   "timeWeightedReturn": 0.19999999999999996,
+  "timeWeightedReturnAnnualized": null,
   "moneyWeightedReturn": null,
   "moneyWeightedReturnTotal": null,
   "points": [
@@ -50,6 +51,7 @@ P 2024-01-01 FUND 120 USD
       "netContributions": 100,
       "profitLoss": 20,
       "timeWeightedReturn": 0.19999999999999996,
+      "timeWeightedReturnAnnualized": null,
       "moneyWeightedReturn": null,
       "moneyWeightedReturnTotal": null
     }

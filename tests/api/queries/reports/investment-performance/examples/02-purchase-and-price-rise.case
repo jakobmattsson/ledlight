@@ -1,0 +1,50 @@
+Example: the acquisition cost is the contribution; later prices set the value.
+One FUND unit is bought for 100 USD on 2023-01-01, recorded as {100 USD}.
+Its closing price is 100 USD then, 110 USD on 2023-07-01, and 120 USD on
+2024-01-01. Salary funds the purchase, but only FUND is selected: the salary
+and cash payment are outside the report, while the fund cost contributes 100.
+Opening value is 0, net contributions are 100, and ending value is 120 USD.
+Profit/loss is 120 - 0 - 100 = 20 USD. The two growth factors are 110 / 100
+and 120 / 110, giving a time-weighted return of 20%. The 100 USD invested for
+exactly 365 days grows to 120 USD, so the money-weighted returns are also 20%.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts Assets:Fund --include-commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+account Income:Salary
+P 2023-01-01 FUND 100 USD
+P 2023-07-01 FUND 110 USD
+P 2024-01-01 FUND 120 USD
+
+2023-01-01 Salary
+  Assets:Cash  100 USD
+  Income:Salary  -100 USD
+
+2023-01-01 Purchase
+  Assets:Fund  1 FUND {100 USD}
+  Assets:Cash  -100 USD
+
+========== OUTPUT ==========
+
+Investment performance from 2023-01-01 to 2024-01-01
+Instruments: 1
+Opening value: 0.00 USD
+Net contributions: 100.00 USD
+Ending value: 120.00 USD
+Profit/loss: 20.00 USD
+Time-weighted return (total): 20.00 %
+Time-weighted return (annualized): 20.00 %
+Money-weighted return (total): 20.00 %
+Money-weighted return (annualized): 20.00 %
+
+========== WARNINGS ==========

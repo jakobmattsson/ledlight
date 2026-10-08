@@ -2,7 +2,7 @@ Moving settlement cash among selected accounts or adding unrelated cash does not
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['^Assets:'], includeCommodities: ['FUND'] })
 
 ========== FILE ==========
 
@@ -44,6 +44,7 @@ P 2024-01-02 FUND 140 USD
   "netContributions": 35,
   "profitLoss": 35,
   "timeWeightedReturn": 0.34999999999999987,
+  "timeWeightedReturnAnnualized": 3.731002161794979e+47,
   "moneyWeightedReturn": 3.731002132170442e+47,
   "moneyWeightedReturnTotal": 0.34999999997063236,
   "points": [
@@ -53,6 +54,7 @@ P 2024-01-02 FUND 140 USD
       "netContributions": 100,
       "profitLoss": 20,
       "timeWeightedReturn": 0.19999999999999996,
+      "timeWeightedReturnAnnualized": null,
       "moneyWeightedReturn": null,
       "moneyWeightedReturnTotal": null
     },
@@ -62,6 +64,7 @@ P 2024-01-02 FUND 140 USD
       "netContributions": 35,
       "profitLoss": 35,
       "timeWeightedReturn": 0.34999999999999987,
+      "timeWeightedReturnAnnualized": 3.731002161794979e+47,
       "moneyWeightedReturn": 3.731002132170442e+47,
       "moneyWeightedReturnTotal": 0.34999999997063236
     }

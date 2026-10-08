@@ -1,0 +1,40 @@
+Annualized time-weighted return remains calculable after a complete loss.
+The fund is bought for 100 USD on January 1 and is worth zero on February 1.
+The 31-day total return and its annualized equivalent are both -100%.
+There is no positive ending value or withdrawal, so money-weighted XIRR has
+no positive investor cash flow and remains unavailable.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts Assets:Fund --from 2023-01-01 --to 2023-02-01 --format text
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+P 2023-01-01 FUND 100 USD
+P 2023-02-01 FUND 0 USD
+
+2023-01-01 Purchase
+  Assets:Fund  1 FUND {100 USD}
+  Assets:Cash  -100 USD
+
+========== OUTPUT ==========
+
+Investment performance from 2023-01-01 to 2023-02-01
+Instruments: 1
+Opening value: 0.00 USD
+Net contributions: 100.00 USD
+Ending value: 0.00 USD
+Profit/loss: -100.00 USD
+Time-weighted return (total): -100.00 %
+Time-weighted return (annualized): -100.00 %
+Money-weighted return (total): n/a
+Money-weighted return (annualized): n/a
+
+========== WARNINGS ==========

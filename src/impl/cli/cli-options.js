@@ -29,6 +29,7 @@ module.exports = ({ commander: { InvalidArgumentError, Option } }) => {
     }
     if (settings.required) option.makeOptionMandatory();
     if (settings.defaultValue !== undefined) option.default(settings.defaultValue);
+    if (settings.conflicts) option.conflicts(settings.conflicts);
     if (settings.outputInput) option.outputInput = true;
     return command.addOption(option);
   }

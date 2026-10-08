@@ -165,7 +165,7 @@ underlying result.
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
-| `--commodities NAME` | `options.commodities` | Investment instrument selection |
+| `--include-commodities NAME` | `options.includeCommodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
 | `print --density DENSITY` | `options.density` | `compact` or `spacious`; defaults to `spacious` |
 | `print --sort-declarations` | `options.sortDeclarations` | Print declarations before transactions |
@@ -196,6 +196,10 @@ result is needed. Investment performance CSV has one data row; its
 `commodities` and `points` cells contain compact JSON arrays. JSON is required
 to retain fields such as `valuationValue` and other API-only metadata in other
 reports.
+
+For small journals with explained calculations and text output, see the
+[investment performance CLI examples](../tests/api/queries/reports/investment-performance/examples/README.md).
+
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.

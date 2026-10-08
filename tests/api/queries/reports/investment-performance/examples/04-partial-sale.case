@@ -1,0 +1,60 @@
+Example: a midyear partial sale separates profit from money withdrawn.
+Salary funds two FUND units bought on 2022-12-31 at 100 USD each, giving the report
+an opening value of 200 USD on 2023-01-01. On 2023-07-01, one unit is sold
+for 130 USD (@ 130 USD) while the other closes at 130 USD. The remaining unit
+closes at 140 USD on 2024-01-01. Only FUND is selected, so sale proceeds are a
+-130 USD contribution; ending value is the remaining 140 USD unit.
+Profit/loss is 140 - 200 - (-130) = 70 USD. The return before the sale is
+(130 + 130) / 200 - 1 = 30%; afterwards it is 140 / 130 - 1 = 7.69%.
+Compounding those factors gives 40% time-weighted return. Money-weighted
+return uses the actual dates of the 200 USD opening value, 130 USD withdrawal,
+and 140 USD ending value. The annual rate r solves
+-200 + 130 / (1 + r)^(181 / 365) + 140 / (1 + r) = 0, giving 49.65%.
+The total money-weighted return is also 49.65% because the period is one year.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts Assets:Fund --include-commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+account Income:Salary
+account Income:Gains
+P 2022-12-31 FUND 100 USD
+P 2023-07-01 FUND 130 USD
+P 2024-01-01 FUND 140 USD
+
+2022-12-31 Salary
+  Assets:Cash  200 USD
+  Income:Salary  -200 USD
+
+2022-12-31 Purchase
+  Assets:Fund  2 FUND {100 USD}
+  Assets:Cash  -200 USD
+
+2023-07-01 Partial sale
+  Assets:Fund  -1 FUND {100 USD} @ 130 USD
+  Assets:Cash  130 USD
+  Income:Gains  -30 USD
+
+========== OUTPUT ==========
+
+Investment performance from 2023-01-01 to 2024-01-01
+Instruments: 1
+Opening value: 200.00 USD
+Net contributions: -130.00 USD
+Ending value: 140.00 USD
+Profit/loss: 70.00 USD
+Time-weighted return (total): 40.00 %
+Time-weighted return (annualized): 40.00 %
+Money-weighted return (total): 49.65 %
+Money-weighted return (annualized): 49.65 %
+
+========== WARNINGS ==========
