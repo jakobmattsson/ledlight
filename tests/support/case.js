@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
-const { asValue } = require('../../src/composition/awilix-subset');
+const { asValue } = require('../../src/lib/awilix');
 const espree = require('espree');
 const { createRepositoryContainer } = require('../../src/composition/repository-container');
 

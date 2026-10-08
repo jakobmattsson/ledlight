@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('node:path');
-const { asFunction, listModules, Lifetime } = require('./awilix-subset');
+const { asFunction, listModules, Lifetime } = require('../lib/awilix');
 
 function moduleName(fileName) {
   const baseName = path.basename(fileName, path.extname(fileName));

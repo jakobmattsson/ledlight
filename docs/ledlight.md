@@ -289,8 +289,8 @@ resolved in a unit test so violations fail the verification suite even when the
 affected feature is not otherwise exercised. Repository factories use unique
 lowercase kebab-case filenames; the subset converts each basename to its
 camel-case dependency name.
-`src/composition/awilix-subset.js` implements the container and module discovery
-APIs used here. `src/composition/module-container.js` handles reusable module
+`src/lib/awilix.js` implements the container and module discovery APIs used here.
+`src/composition/module-container.js` handles reusable module
 loading and factory checks. `src/composition/repository-container.js` defines
 this project's module paths, dependency boundaries, external services, and query
 and command contracts. Every JavaScript file under `src/impl` is a factory. The

@@ -12,7 +12,7 @@ const {
   InjectionMode,
   listModules,
   Lifetime,
-} = require('../../src/composition/awilix-subset');
+} = require('../../src/lib/awilix');
 
 test('lists exact, direct, and nested modules without duplicates', (context) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-modules-'));
