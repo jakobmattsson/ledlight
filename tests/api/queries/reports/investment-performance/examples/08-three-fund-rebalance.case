@@ -1,0 +1,82 @@
+Example: rebalance three funds midyear without adding or withdrawing money.
+Salary funds two units each of ALPHA, BETA, and GAMMA at 100 USD per unit on
+2023-01-01, so the selected holdings start at 600 USD. On 2023-07-01 their
+prices are 120, 80, and 40 USD; the six units are worth 240 + 160 + 80 = 480.
+One ALPHA unit is sold for 120 USD, and those proceeds buy one BETA for 80 USD
+and one GAMMA for 40 USD. The holdings become one ALPHA, three BETA, and three
+GAMMA, still worth 120 + 240 + 120 = 480 USD. The selected fund flows on that
+date are -120 + 80 + 40 = 0: rebalancing is not an external contribution.
+On 2023-12-31, prices are 150, 110, and 70 USD. Their individual price returns
+since January are +50%, +10%, and -30%, respectively. The rebalanced holdings
+end at 150 + 330 + 210 = 690 USD. Without rebalancing, the original two of
+each would end at 300 + 220 + 140 = 660 USD.
+Net contributions are 600 USD and profit/loss is 690 - 0 - 600 = 90 USD.
+The time-weighted factors are 480 / 600 and 690 / 480, giving 15% overall.
+The 600 USD invested on January 1 grows to 690 USD on December 31: the total
+money-weighted return is 15%, with a slightly higher annualized rate over
+this 364-day interval.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts '^Assets:Funds:' --commodities ALPHA --commodities BETA --commodities GAMMA --from 2023-01-01 --to 2023-12-31 --format text
+
+========== FILE ==========
+
+commodity USD
+  default
+  format 1,000.00 USD
+commodity ALPHA
+  format 1,000 ALPHA
+commodity BETA
+  format 1,000 BETA
+commodity GAMMA
+  format 1,000 GAMMA
+account Assets:Cash
+account Assets:Funds:Alpha
+account Assets:Funds:Beta
+account Assets:Funds:Gamma
+account Income:Salary
+account Income:Gains
+P 2023-01-01 ALPHA 100 USD
+P 2023-01-01 BETA 100 USD
+P 2023-01-01 GAMMA 100 USD
+P 2023-07-01 ALPHA 120 USD
+P 2023-07-01 BETA 80 USD
+P 2023-07-01 GAMMA 40 USD
+P 2023-12-31 ALPHA 150 USD
+P 2023-12-31 BETA 110 USD
+P 2023-12-31 GAMMA 70 USD
+
+2023-01-01 Salary
+  Assets:Cash  600 USD
+  Income:Salary  -600 USD
+
+2023-01-01 Buy three funds
+  Assets:Funds:Alpha  2 ALPHA {100 USD}
+  Assets:Funds:Beta  2 BETA {100 USD}
+  Assets:Funds:Gamma  2 GAMMA {100 USD}
+  Assets:Cash  -600 USD
+
+2023-07-01 Sell one Alpha
+  Assets:Funds:Alpha  -1 ALPHA {100 USD} @ 120 USD
+  Assets:Cash  120 USD
+  Income:Gains  -20 USD
+
+2023-07-01 Buy more Beta and Gamma
+  Assets:Funds:Beta  1 BETA {80 USD}
+  Assets:Funds:Gamma  1 GAMMA {40 USD}
+  Assets:Cash  -120 USD
+
+========== OUTPUT ==========
+
+Investment performance from 2023-01-01 to 2023-12-31
+Instruments: 3
+Opening value: 0.00 USD
+Net contributions: 600.00 USD
+Ending value: 690.00 USD
+Profit/loss: 90.00 USD
+Time-weighted return: 15.00 %
+Money-weighted return (total): 15.00 %
+Money-weighted return (annualized): 15.04 %
+
+========== WARNINGS ==========
