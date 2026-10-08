@@ -20,7 +20,7 @@ const {
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../../..');
 const REPOSITORY_MODULE_PATTERNS = Object.freeze([
-  'src/impl/cli/!(cli-modules|execute-cli|run).js',
+  'src/impl/cli/*.js',
   'src/impl/{core,query-support}/*.js',
   'src/impl/ingestion/**/*.js',
 ]);

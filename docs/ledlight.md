@@ -284,7 +284,8 @@ Awilix `loadModules` converts each basename to its camel-case dependency name.
 `impl/composition/module-container.js` handles the reusable Awilix loading and
 factory checks. `impl/composition/repository-container.js` defines this project's
 module paths, dependency boundaries, external services, and query and command
-contracts.
+contracts. The `src/run.js` executable creates the container and runs the CLI
+through its registered `executeCli` module.
 
 ## Supported grammar
 

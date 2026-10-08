@@ -520,7 +520,7 @@ commodity EUR
 test('aggregate CLI builds stale databases but reuses current databases', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
-  const cliPath = path.resolve(__dirname, '../../../../../src/impl/cli/run.js');
+  const cliPath = path.resolve(__dirname, '../../../../../src/run.js');
   fs.writeFileSync(journalPath, `commodity SEK
   default
 account Assets:Cash,Main
