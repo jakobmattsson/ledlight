@@ -4,11 +4,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { parseCase } = require('../../../support/case');
-const { resolveRepositoryModule } = require('../../../support/repository-container');
+const { parseCase } = require('../support/case');
+const { resolveRepositoryModule } = require('../support/repository-container');
 
 const { warningCodes } = resolveRepositoryModule('src/impl/ingestion/ingestion-warning.js');
-const directory = path.resolve(__dirname, '../../../api/queries/warnings');
+const directory = path.resolve(__dirname, '../api/queries/warnings');
 const exampleFiles = fs.readdirSync(directory).filter((name) => name.endsWith('.case'));
 
 test('every warning code has exactly one named example', () => {

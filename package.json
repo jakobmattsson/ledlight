@@ -52,6 +52,7 @@
     "test:coverage": "c8 --all --src=src --include='src/**/*.js' --reporter=text-summary --reporter=lcov --reporter=json-summary --reporter=html npm test -- rerun",
     "test:ledger": "node --test tests/integration/src/cases.test.js tests/integration/src/cli/compare-ledger-script.test.js",
     "test:package": "node --test tests/package/package.test.js",
+    "test:conventions": "node --test 'tests/conventions/*.test.js'",
     "test:unit": "node --test 'tests/unit/**/*.test.js'",
     "test:integration": "node --test 'tests/integration/**/*.test.js'"
   },

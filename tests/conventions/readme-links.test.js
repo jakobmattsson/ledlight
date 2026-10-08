@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
-const repositoryRoot = path.resolve(__dirname, '../../..');
+const repositoryRoot = path.resolve(__dirname, '../..');
 
 test('the root README links to every file in docs', () => {
   const docsDirectory = path.join(repositoryRoot, 'docs');
