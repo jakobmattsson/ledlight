@@ -1,0 +1,1 @@
+{"id":"3e4dab6d59ec55c48d72db34cbc70b68.d41d8cd98f00b204e9800998ecf8427e","fullName":"ledlight:tests/unit/src/core/decimal.test.js#retains parsed decimal state until a database sum completes","name":"retains parsed decimal state until a database sum completes","status":"passed","testResultsByEnv":{"default":"fd30bfeae414779859c2c6552db78bf3"}}

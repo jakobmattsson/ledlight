@@ -1,0 +1,1 @@
+{"id":"0e652e6f48d5fdd1ec359b7342f3bc44.d41d8cd98f00b204e9800998ecf8427e","fullName":"ledlight:tests/unit/src/ingestion/journal/traversal.test.js#rejects circular includes in full and manifest-only loading","name":"rejects circular includes in full and manifest-only loading","status":"passed","testResultsByEnv":{"default":"9c28d966fa1aa794886855d5e43ed921"}}

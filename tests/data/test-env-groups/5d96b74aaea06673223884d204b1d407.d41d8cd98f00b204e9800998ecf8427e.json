@@ -1,0 +1,1 @@
+{"id":"5d96b74aaea06673223884d204b1d407.d41d8cd98f00b204e9800998ecf8427e","fullName":"ledlight:tests/integration/src/api/public-api.test.js#exposes the supported public API without eagerly loading SQLite","name":"exposes the supported public API without eagerly loading SQLite","status":"passed","testResultsByEnv":{"default":"7159e91ccf40d7de3fe3bc4edba84402"}}
