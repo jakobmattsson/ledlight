@@ -3,8 +3,8 @@
 const {
   createRepositoryContainer,
   $$private: { assertDependencyAllowed, commandGroup, repositoryModuleName },
-} = require('../../src/impl/composition/repository-container');
-const { asValue } = require('../../src/impl/composition/awilix-subset');
+} = require('../../src/composition/repository-container');
+const { asValue } = require('../../src/composition/awilix-subset');
 
 const assert = require('node:assert/strict');
 const path = require('node:path');

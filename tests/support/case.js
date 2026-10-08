@@ -4,10 +4,9 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
-const { asValue } = require('../../src/impl/composition/awilix-subset');
+const { asValue } = require('../../src/composition/awilix-subset');
 const espree = require('espree');
-const { createRepositoryContainer } = require('../../src/impl/composition/repository-container');
-const { executeCli } = require('../../src/impl/cli/execute-cli');
+const { createRepositoryContainer } = require('../../src/composition/repository-container');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],
@@ -225,10 +224,6 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
     os: asValue({ tmpdir: () => temporaryDirectory }),
     processEnvironment: asValue({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
   });
-  const modules = {
-    reportCommand: container.resolve('reportCommand'),
-    cliFormat: container.resolve('cliFormat'),
-  };
   const actual = {};
   let remaining;
   try {
@@ -238,13 +233,11 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
         : [cliArgs[0], '--file', journalPath, ...cliArgs.slice(1)];
       let output = '';
       let stderr = '';
-      const exitCode = executeCli({
-        ...modules,
-        output: {
-          writeOutput: (value) => { output += value; },
-          writeError: (value) => { stderr += value; },
-        },
-      }, args);
+      container.register('output', asValue({
+        writeOutput: (value) => { output += value; },
+        writeError: (value) => { stderr += value; },
+      }));
+      const exitCode = container.resolve('executeCli').run(args);
       actual.cli = {
         output,
         warnings: exitCode === 0 ? stderr : '',
@@ -270,6 +263,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
       if (heredoc !== undefined) fs.writeFileSync(journalPath, heredoc);
       const resultText = { output: '', warnings: '', error: '' };
       try {
+        const cliFormat = container.resolve('cliFormat');
         const journalApi = container.resolve('project').openJournal(journalPath);
         const method = journalApi[api.method];
         if (!Object.hasOwn(journalApi, api.method) || typeof method !== 'function') {
@@ -279,8 +273,8 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
         if (apiResult === undefined) throw new Error('API statement did not return a result');
         resultText.output = typeof apiResult === 'string'
           ? apiResult
-          : modules.cliFormat.formatJson(apiResult);
-        resultText.warnings = modules.cliFormat.formatWarnings(journalApi.warnings);
+          : cliFormat.formatJson(apiResult);
+        resultText.warnings = cliFormat.formatWarnings(journalApi.warnings);
       } catch (error) {
         resultText.error = `${error.message}\n`;
       }

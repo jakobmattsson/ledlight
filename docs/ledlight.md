@@ -134,14 +134,18 @@ underlying result.
 | `total-history --file PATH` | `openJournal(journalPath).totalHistory(options)` | Report selection and calculation |
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
+| `print --file PATH` | `openJournal(journalPath).print(options)` | Format the complete stored journal |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
-| `tags --file PATH` | `openJournal(journalPath).tags()` | Used tags |
-| `commodities --file PATH` | `openJournal(journalPath).commodities()` | Used commodities |
-| `prices --file PATH` | `openJournal(journalPath).prices()` | Effective market prices |
+| `tags --file PATH` | `openJournal(journalPath).tags(options)` | Tag declarations |
+| `commodities --file PATH` | `openJournal(journalPath).commodities(options)` | Commodity declarations |
+| `prices --file PATH` | `openJournal(journalPath).prices(options)` | Effective market prices |
 | `prices --mode MODE` | `options.mode` | Select `effective` (default) or `directives` |
 | `transactions --file PATH` | `openJournal(journalPath).transactions(options)` | Transactions (unpaged in default text output) |
 | `transactions --accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
 | `transactions --id ID` | `options.id` | Select one transaction ID |
+| `transactions --order ORDER` | `options.order` | `newest` or `oldest` journal order; defaults to `oldest` |
+| `transactions --page NUMBER` | `options.page` | Positive page number; requires `--page-size` |
+| `transactions --page-size NUMBER` | `options.pageSize` | Positive transactions per page; requires `--page` |
 | `transactions --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `postings --file PATH` | `openJournal(journalPath).postings(options)` | Postings with parent transaction metadata |
 | `postings --from DATE` | `options.from` | Inclusive posting-date start |
@@ -153,8 +157,9 @@ underlying result.
 | `--to DATE` | `options.to` | Inclusive report end |
 | `unrealized-gains --to DATE` | `options.to` | Inclusive position and valuation snapshot |
 | `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
-| `--date-basis VALUE` | `options.dateBasis` | Posting- or transaction-date selection |
-| `balance --group-by DIMENSION` | `options.groupBy` | Group by `account` or `commodity` |
+| `--usage SELECTION` | `options.usage` | `all`, `used`, or `unused` declarations; CLI defaults to `used`, API to `all` |
+| `--date-basis VALUE` | `options.dateBasis` | `posting` or `transaction`; defaults to `posting` |
+| `aggregate --group-by DIMENSION` | `options.groupBy` | `account` or `commodity`; defaults to `account` |
 | `--valuation VALUE` | `options.valuation` | `cost` or `market` for aggregate and total history; defaults to `market` in both API and CLI |
 | `--denominate` | `options.denominate` | Aggregate valuation in the journal default commodity |
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
@@ -162,20 +167,22 @@ underlying result.
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
 | `--commodities NAME` | `options.commodities` | Investment instrument selection |
 | `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
+| `print --density DENSITY` | `options.density` | `compact` or `spacious`; defaults to `spacious` |
+| `print --sort-declarations` | `options.sortDeclarations` | Print declarations before transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
 | `commodities --details` | None | Include API-provided declaration metadata in the output |
 | `accounts --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `tags --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `commodities --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `prices --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
-| `balance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
+| `aggregate --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `total-history --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `unrealized-gains --include-total` | None | Append a presentation-only sum of all gain rows |
 | `investment-performance --format FORMAT` | None | Select `text`, `json`, or `csv` output; defaults to `text` |
 | `--version` | None | CLI package metadata |
 | `--help` | None | Top-level command list |
-| `<command> --help` | None | Detailed usage for one command |
+| `<command> --help` | None | Detailed parameters, enum values and defaults, and usage examples |
 
 Commands without a specialized human-readable representation emit JSON.
 `transactions` defaults to Ledger-style text; repeatable `--accounts` options
@@ -183,7 +190,7 @@ select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction.
 `--order` defaults to `oldest`; `--page` and `--page-size` must be provided
 together to request pagination. Without them, all matching transactions appear.
-The `balance`, `total-history`, `unrealized-gains`, and
+The `aggregate`, `total-history`, `unrealized-gains`, and
 `investment-performance` commands use `--format json` when the complete API
 result is needed. Investment performance CSV has one data row; its
 `commodities` and `points` cells contain compact JSON arrays. JSON is required
@@ -282,6 +289,14 @@ resolved in a unit test so violations fail the verification suite even when the
 affected feature is not otherwise exercised. Repository factories use unique
 lowercase kebab-case filenames; the subset converts each basename to its
 camel-case dependency name.
+`src/composition/awilix-subset.js` implements the container and module discovery
+APIs used here. `src/composition/module-container.js` handles reusable module
+loading and factory checks. `src/composition/repository-container.js` defines
+this project's module paths, dependency boundaries, external services, and query
+and command contracts. Every JavaScript file under `src/impl` is a factory. The
+`src/run.js` executable creates the container and invokes its
+registered `runCli` module. An injectable `processRuntime` adapter supplies the
+process ID, command-line arguments, and exit-code setter.
 
 ## Supported grammar
 

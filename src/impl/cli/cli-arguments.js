@@ -3,6 +3,7 @@
 const { Command, Help, InvalidArgumentError, Option } = require('commander');
 const HELP_GROUP = Symbol('helpGroup');
 const HELP_DETAILS = Symbol('helpDetails');
+const HELP_EXAMPLES = Symbol('helpExamples');
 
 function formatGroupedHelp(command, helper) {
   const help = Help.prototype.formatHelp.call(helper, command, helper);
@@ -59,6 +60,7 @@ module.exports = ({
       command.apiOperation = definition.operation;
       command[HELP_GROUP] = definition.group;
       command[HELP_DETAILS] = definition.helpDetails;
+      command[HELP_EXAMPLES] = definition.examples;
       definition.configure(command);
       const mandatoryOptions = command.options
         .filter((option) => option.mandatory)
@@ -75,12 +77,17 @@ module.exports = ({
     const program = createProgram();
     if (commandName === undefined) {
       return `${program.helpInformation().trimEnd()}\n\n` +
-        'Run "ledlight <command> --help" for detailed command usage.';
+        'Run "ledlight <command> --help" for detailed command usage.\n\n' +
+        'Example:\n  ledlight aggregate --file main.ledger';
     }
     const command = program.commands.find((candidate) =>
       candidate.name() === commandName || candidate.aliases().includes(commandName));
     if (!command) throw new Error(`Unknown command: ${commandName}`);
-    return [command.helpInformation().trimEnd(), command[HELP_DETAILS]]
+    return [
+      command.helpInformation().trimEnd(),
+      command[HELP_DETAILS],
+      `Examples:\n${command[HELP_EXAMPLES].map((example) => `  ${example}`).join('\n')}`,
+    ]
       .filter(Boolean)
       .join('\n\n');
   }
