@@ -275,13 +275,13 @@ The project builds journal operations and API input definitions from the query
 modules. The CLI runner invokes each command's declared API operation and passes
 its result to the command's formatting step. Commands declare how to load any
 additional data needed for text output.
-The repository container supplies each factory through a boundary-checking
-proxy. Code outside `cli` cannot resolve CLI modules, and `ingestion` cannot
-resolve modules from `queries`. The complete container is resolved in a unit
-test so violations fail the verification suite even when the affected feature
-is not otherwise exercised. Repository factories use unique lowercase
-kebab-case filenames; the container converts each basename to its camel-case
-dependency name.
+The local Awilix subset supplies each repository factory through a
+boundary-checking proxy. Code outside `cli` cannot resolve CLI modules, and
+`ingestion` cannot resolve modules from `queries`. The complete container is
+resolved in a unit test so violations fail the verification suite even when the
+affected feature is not otherwise exercised. Repository factories use unique
+lowercase kebab-case filenames; the subset converts each basename to its
+camel-case dependency name.
 
 ## Supported grammar
 

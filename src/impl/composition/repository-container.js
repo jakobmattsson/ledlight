@@ -1,10 +1,17 @@
 'use strict';
 
-const fs = require('node:fs');
 const path = require('node:path');
+const {
+  asFunction,
+  asValue,
+  createContainer,
+  InjectionMode,
+  listModules,
+  Lifetime,
+} = require('./awilix-subset');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../../..');
-const REPOSITORY_MODULE_FILES = Object.freeze([
+const REPOSITORY_MODULE_PATTERNS = Object.freeze([
   'src/impl/cli/cli-arguments.js',
   'src/impl/cli/cli-command.js',
   'src/impl/cli/cli-configuration.js',
@@ -13,68 +20,13 @@ const REPOSITORY_MODULE_FILES = Object.freeze([
   'src/impl/cli/cli-stdin-journal.js',
   'src/impl/cli/output.js',
   'src/impl/cli/report-command.js',
+  'src/impl/core/*.js',
+  'src/impl/ingestion/**/*.js',
+  'src/impl/query-support/*.js',
 ]);
+const QUERY_MODULE_PATTERN = 'src/surface/queries/*.js';
+const COMMAND_MODULE_PATTERN = 'src/surface/commands/**/*.js';
 const COMMAND_DIRECTORY = path.join(REPOSITORY_ROOT, 'src/surface/commands');
-
-function listJavaScriptFiles(relativeDirectory, recursive) {
-  const directory = path.join(REPOSITORY_ROOT, relativeDirectory);
-  const files = [];
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    const relativePath = path.join(relativeDirectory, entry.name);
-    if (entry.isDirectory() && recursive) {
-      files.push(...listJavaScriptFiles(relativePath, true));
-    } else if (entry.isFile() && entry.name.endsWith('.js')) {
-      files.push(path.join(REPOSITORY_ROOT, relativePath));
-    }
-  }
-  return files.sort();
-}
-
-function createContainer() {
-  const registrations = Object.create(null);
-  const instances = new Map();
-  const resolving = new Set();
-  const container = {
-    registrations,
-    register(values) {
-      for (const [name, value] of Object.entries(values)) {
-        registrations[name] = { value };
-        instances.delete(name);
-      }
-      return this;
-    },
-    registerFactory(name, factory) {
-      registrations[name] = { factory };
-      instances.delete(name);
-      return this;
-    },
-    hasRegistration(name) {
-      return Object.hasOwn(registrations, name);
-    },
-    resolve(name) {
-      if (instances.has(name)) return instances.get(name);
-      if (!this.hasRegistration(name)) throw new Error(`Unknown dependency: ${name}`);
-      if (resolving.has(name)) throw new Error(`Circular dependency: ${name}`);
-      const registration = registrations[name];
-      if (Object.hasOwn(registration, 'value')) return registration.value;
-      resolving.add(name);
-      try {
-        const instance = registration.factory(dependencies);
-        instances.set(name, instance);
-        return instance;
-      } finally {
-        resolving.delete(name);
-      }
-    },
-  };
-  const dependencies = new Proxy(Object.create(null), {
-    get(_target, property) {
-      if (typeof property !== 'string') return undefined;
-      return container.resolve(property);
-    },
-  });
-  return container;
-}
 
 function relativeModulePath(fileName) {
   return path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
@@ -97,12 +49,7 @@ function commandGroup(relativePath) {
 }
 
 function repositoryModules() {
-  const modules = [
-    ...REPOSITORY_MODULE_FILES.map((fileName) => path.join(REPOSITORY_ROOT, fileName)),
-    ...listJavaScriptFiles('src/impl/core', false),
-    ...listJavaScriptFiles('src/impl/ingestion', true),
-    ...listJavaScriptFiles('src/impl/query-support', false),
-  ].map((fileName) => ({ path: fileName }));
+  const modules = listModules(REPOSITORY_MODULE_PATTERNS, { cwd: REPOSITORY_ROOT });
   const locations = new Map();
   for (const module of modules) {
     const name = repositoryModuleName(module.path);
@@ -167,7 +114,7 @@ function restrictedDependencies(fileName, dependencies) {
 function moduleFactory(fileName) {
   const factory = require(fileName);
   if (typeof factory !== 'function') {
-    throw new TypeError(`${relativeModulePath(fileName)} must export a factory.`);
+    throw new TypeError(`${relativeModulePath(fileName)} must export an Awilix factory.`);
   }
   return factory;
 }
@@ -206,8 +153,8 @@ function queryFromFile(fileName, dependencies, names) {
 
 function loadQueries(dependencies) {
   const names = new Set();
-  return Object.freeze(listJavaScriptFiles('src/surface/queries', false)
-    .map((fileName) => queryFromFile(fileName, dependencies, names)));
+  return Object.freeze(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
+    .map(({ path: fileName }) => queryFromFile(fileName, dependencies, names)));
 }
 
 function commandFromFile(fileName, dependencies, names) {
@@ -220,58 +167,72 @@ function commandFromFile(fileName, dependencies, names) {
 
 function loadCommands(dependencies) {
   const names = new Set();
-  const commands = listJavaScriptFiles('src/surface/commands', true)
-    .map((fileName) => commandFromFile(fileName, dependencies, names));
+  const commands = listModules(COMMAND_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
+    .map(({ path: fileName }) => commandFromFile(fileName, dependencies, names));
   return Object.freeze(commands.sort((left, right) => left.name.localeCompare(right.name, 'en')));
 }
 
 function registerExternalModules(container) {
   container.register({
-    commander: require('commander'),
-    crypto: require('node:crypto'),
-    currentWorkingDirectory: () => process.cwd(),
-    envPaths: require('env-paths'),
-    fs,
-    os: require('node:os'),
-    packageMetadata: require('../../../package.json'),
-    path,
-    processEnvironment: process.env,
-    standardInput: {
+    commander: asValue(require('commander')),
+    crypto: asValue(require('node:crypto')),
+    currentWorkingDirectory: asValue(() => process.cwd()),
+    envPaths: asValue(require('env-paths')),
+    fs: asValue(require('node:fs')),
+    os: asValue(require('node:os')),
+    packageMetadata: asValue(require('../../../package.json')),
+    path: asValue(require('node:path')),
+    processEnvironment: asValue(process.env),
+    standardInput: asValue({
       isTTY: () => Boolean(process.stdin.isTTY),
       read: () => require('node:fs').readFileSync(0, 'utf8'),
-    },
-    systemClock: {
+    }),
+    systemClock: asValue({
       now: () => Date.now(),
       sleep(milliseconds) {
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
       },
-    },
-    sqlite: function LazyDatabase(...arguments_) {
+    }),
+    sqlite: asValue(function LazyDatabase(...arguments_) {
       const Database = require('better-sqlite3');
       return new Database(...arguments_);
-    },
-    zod: require('zod'),
+    }),
+    zod: asValue(require('zod')),
   });
 }
 
 function registerRepositoryModules(container) {
   registerExternalModules(container);
-  for (const { path: fileName } of REPOSITORY_MODULES) {
+  const factoryLocations = new Map(REPOSITORY_MODULES.map(({ path: fileName }) => {
     const factory = moduleFactory(fileName);
     const name = repositoryModuleName(fileName);
     if (container.hasRegistration(name)) {
       throw new Error(`Repository module name conflicts with an existing registration: ${name}`);
     }
-    container.registerFactory(name, (dependencies) =>
-      factory(restrictedDependencies(fileName, dependencies)));
-  }
-  container.registerFactory('queries', loadQueries);
-  container.registerFactory('commands', loadCommands);
+    return [factory, fileName];
+  }));
+  container.loadModules(REPOSITORY_MODULE_PATTERNS, {
+    cwd: REPOSITORY_ROOT,
+    formatName: 'camelCase',
+    resolverOptions: {
+      lifetime: Lifetime.SINGLETON,
+      register(factory, options) {
+        const fileName = factoryLocations.get(factory);
+        if (!fileName) throw new Error('Awilix loaded an unknown repository module factory');
+        return asFunction(
+          (dependencies) => factory(restrictedDependencies(fileName, dependencies)),
+          options,
+        );
+      },
+    },
+  });
+  container.register('queries', asFunction(loadQueries, { lifetime: Lifetime.SINGLETON }));
+  container.register('commands', asFunction(loadCommands, { lifetime: Lifetime.SINGLETON }));
   return container;
 }
 
 function createRepositoryContainer() {
-  return registerRepositoryModules(createContainer());
+  return registerRepositoryModules(createContainer({ injectionMode: InjectionMode.PROXY }));
 }
 
 module.exports = {

@@ -4,6 +4,7 @@ const {
   createRepositoryContainer,
   $$private: { assertDependencyAllowed, commandGroup, repositoryModuleName },
 } = require('../../src/impl/composition/repository-container');
+const { asValue } = require('../../src/impl/composition/awilix-subset');
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -67,7 +68,7 @@ test('all repository registrations can be resolved within the dependency boundar
 test('repository container uses controlled values and shares resolved factories', () => {
   const container = createRepositoryContainer();
   const workingDirectory = () => '/test-journal';
-  container.register({ currentWorkingDirectory: workingDirectory });
+  container.register({ currentWorkingDirectory: asValue(workingDirectory) });
 
   assert.equal(container.resolve('currentWorkingDirectory'), workingDirectory);
   assert.equal(container.resolve('project'), container.resolve('project'));
