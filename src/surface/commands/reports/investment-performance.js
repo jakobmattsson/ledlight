@@ -28,8 +28,8 @@ module.exports = ({ cliOptions: options }) => ({
     It allows periods of different lengths to be compared.`,
   configure(command) {
     options.journal(command);
-    options.date(command, '--from <date>', 'start the return period on YYYY-MM-DD; earlier holdings form opening value');
-    options.date(command, '--to <date>', 'end the return period on YYYY-MM-DD');
+    options.fromDate(command, 'start the return period on YYYY-MM-DD; earlier holdings form opening value');
+    options.toDate(command, 'end the return period on YYYY-MM-DD');
     options.accounts(command);
     options.addValue(command, '--commodities <name>', 'include an exact commodity symbol (repeatable; default: discover from holdings)', {
       repeatable: true,

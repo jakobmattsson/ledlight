@@ -60,8 +60,12 @@ module.exports = ({ commander: { InvalidArgumentError, Option } }) => {
     );
   }
 
-  function date(command, flags, description) {
-    return addValue(command, flags, description);
+  function fromDate(command, description) {
+    return addValue(command, '--from <date>', description);
+  }
+
+  function toDate(command, description) {
+    return addValue(command, '--to <date>', description);
   }
 
   function dateBasis(command) {
@@ -90,7 +94,7 @@ module.exports = ({ commander: { InvalidArgumentError, Option } }) => {
   }
 
   return {
-    accounts, addBoolean, addValue, date, dateBasis, details, format,
-    journal, usage, valuation,
+    accounts, addBoolean, addValue, dateBasis, details, format,
+    fromDate, journal, toDate, usage, valuation,
   };
 };

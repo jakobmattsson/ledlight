@@ -40,8 +40,8 @@ module.exports = ({ cliOptions: options }) => ({
   ],
   configure(command) {
     options.journal(command);
-    options.date(command, '--from <date>', 'include postings dated on or after YYYY-MM-DD');
-    options.date(command, '--to <date>', 'include postings dated on or before YYYY-MM-DD');
+    options.fromDate(command, 'include postings dated on or after YYYY-MM-DD');
+    options.toDate(command, 'include postings dated on or before YYYY-MM-DD');
     options.accounts(command);
     options.format(command);
   },

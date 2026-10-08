@@ -11,7 +11,7 @@ module.exports = ({ cliOptions: options }) => ({
   },
   configure(command) {
     options.journal(command);
-    options.date(command, '--to <date>', 'value positions and prices through YYYY-MM-DD');
+    options.toDate(command, 'value positions and prices through YYYY-MM-DD');
     options.accounts(command);
     options.dateBasis(command);
     options.format(command);
