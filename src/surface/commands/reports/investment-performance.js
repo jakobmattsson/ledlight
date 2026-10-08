@@ -11,10 +11,10 @@ module.exports = ({ cliOptions: options }) => ({
   },
   helpDetails: `Return measures:
   Time-weighted return
-    The compounded daily investment return after removing each day's net
-    external cash flow from its closing value. Cash flows are treated as
-    occurring at the end of the day, so their amount and timing do not affect
-    the measured investment performance.
+    Split the portfolio history at each external contribution or withdrawal.
+    Calculate the return in each part and multiply the parts' growth factors.
+    Ledlight uses daily closing values and treats flows as occurring at day's
+    end. Changes to the holdings still affect the result.
 
   Money-weighted return (total)
     The cumulative investor return accounting for the amount and date of the
