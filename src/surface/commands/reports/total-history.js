@@ -2,17 +2,21 @@
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'show daily closing totals',
+  examples: [
+    'ledlight total-history --file main.ledger',
+    'ledlight total-history --file main.ledger --from 2024-01-01 --accounts "^Assets:" --format csv',
+  ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
   },
   configure(command) {
     options.journal(command);
-    options.date(command, '--from <date>', 'include entries on or after YYYY-MM-DD');
-    options.date(command, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    options.date(command, '--from <date>', 'show daily totals from YYYY-MM-DD; earlier activity still counts');
+    options.date(command, '--to <date>', 'show daily totals through YYYY-MM-DD');
     options.accounts(command);
     options.dateBasis(command);
     options.valuation(command);
-    options.addBoolean(command, '--invert', 'invert the sign of report amounts');
+    options.addBoolean(command, '--invert', 'negate reported daily totals');
     options.format(command);
   },
   formatCsv(rows, _cliOptions, { csvField, formatDecimalFixed, parseDecimal }) {

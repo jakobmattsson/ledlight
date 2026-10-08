@@ -2,16 +2,20 @@
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'show unrealized investment gains',
+  examples: [
+    'ledlight unrealized-gains --file main.ledger',
+    'ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "^Assets:" --include-total',
+  ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
   },
   configure(command) {
     options.journal(command);
-    options.date(command, '--to <date>', 'include positions and prices on or before YYYY-MM-DD');
+    options.date(command, '--to <date>', 'value positions and prices through YYYY-MM-DD');
     options.accounts(command);
     options.dateBasis(command);
     options.format(command);
-    options.addBoolean(command, '--include-total', 'append the total gain', { outputInput: true });
+    options.addBoolean(command, '--include-total', 'append a total gain row to the output', { outputInput: true });
   },
   prepareOutput(rows, { includeTotal }, { appendTotal }) {
     return includeTotal ? appendTotal(rows) : rows;

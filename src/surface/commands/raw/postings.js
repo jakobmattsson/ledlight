@@ -34,10 +34,14 @@ function postingCsvRows(postings) {
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'show postings',
+  examples: [
+    'ledlight postings --file main.ledger',
+    'ledlight postings --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "^Assets:"',
+  ],
   configure(command) {
     options.journal(command);
-    options.date(command, '--from <date>', 'include postings on or after YYYY-MM-DD');
-    options.date(command, '--to <date>', 'include postings on or before YYYY-MM-DD');
+    options.date(command, '--from <date>', 'include postings dated on or after YYYY-MM-DD');
+    options.date(command, '--to <date>', 'include postings dated on or before YYYY-MM-DD');
     options.accounts(command);
     options.format(command);
   },

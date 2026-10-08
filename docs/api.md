@@ -22,7 +22,7 @@ The singular `--account` is not supported.
 
 ## Presentation
 
-### `journal.print()`
+### `journal.print(options)`
 
 Returns a plain string containing a pretty-printed, complete journal. The output
 is built from stored journal data, follows entry order by default, expands
@@ -54,6 +54,24 @@ may be supplied independently, and must satisfy `from <= to` when both are
 present. For `unrealizedGains`, `to` is an inclusive snapshot cutoff and `from`
 is not supported.
 No omitted date defaults to the current day.
+
+Enum options accept exactly the values below. Defaults apply when the option is
+omitted; the CLI help for each command shows its accepted values and default.
+
+| Option | Values | API default | CLI default |
+| --- | --- | --- | --- |
+| `usage` (`accounts`, `tags`, `commodities`) | `all`, `used`, `unused` | `all` | `used` |
+| `dateBasis` (`aggregate`, `totalHistory`, `unrealizedGains`) | `posting`, `transaction` | `posting` | `posting` |
+| `valuation` (`aggregate`, `totalHistory`) | `cost`, `market` | `market` | `market` |
+| `groupBy` (`aggregate`) | `account`, `commodity` | `account` | `account` |
+| `mode` (`prices`) | `effective`, `directives` | `effective` | `effective` |
+| `order` (`transactions`) | `newest`, `oldest` | `oldest` | `oldest` |
+| `density` (`print`) | `compact`, `spacious` | `spacious` | `spacious` |
+| CLI `format` (all commands except `print`) | `text`, `json`, `csv` | n/a | `text` |
+
+`format` changes only the CLI representation. `newest` and `oldest` select
+reverse or forward journal entry order, rather than date order. The `usage`
+default differs between API and CLI because the CLI follows Ledger listings.
 
 Selection arrays contain non-empty strings. Exact duplicate selections are
 removed, preserving their first occurrence. Empty optional arrays mean no
@@ -522,8 +540,9 @@ For reconciliation, use the resolved `amounts` rather than the nullable source
 
 Every query method on the object returned by `openJournal()` has a CLI command,
 and every CLI command maps to one such method. Run `ledlight --help` for the
-complete command list and per-command parameters. Commands require `--file
-PATH`, corresponding to the `journalPath` passed to `openJournal()`.
+complete command list and `ledlight <command> --help` for parameters and
+usage examples. Commands require `--file PATH`, corresponding to the
+`journalPath` passed to `openJournal()`.
 
 Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the

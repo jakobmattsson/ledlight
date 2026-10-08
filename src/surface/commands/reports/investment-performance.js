@@ -2,6 +2,10 @@
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'show investment performance',
+  examples: [
+    'ledlight investment-performance --file main.ledger',
+    'ledlight investment-performance --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "^Assets:Broker"',
+  ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
   },
@@ -24,13 +28,13 @@ module.exports = ({ cliOptions: options }) => ({
     It allows periods of different lengths to be compared.`,
   configure(command) {
     options.journal(command);
-    options.date(command, '--from <date>', 'include entries on or after YYYY-MM-DD');
-    options.date(command, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    options.date(command, '--from <date>', 'start the return period on YYYY-MM-DD; earlier holdings form opening value');
+    options.date(command, '--to <date>', 'end the return period on YYYY-MM-DD');
     options.accounts(command);
-    options.addValue(command, '--commodities <name>', 'include a commodity (repeatable)', {
+    options.addValue(command, '--commodities <name>', 'include an exact commodity symbol (repeatable; default: discover from holdings)', {
       repeatable: true,
     });
-    options.addValue(command, '--exclude-commodities <name>', 'exclude a commodity (repeatable)', {
+    options.addValue(command, '--exclude-commodities <name>', 'exclude an exact commodity symbol (repeatable)', {
       repeatable: true,
     });
     options.format(command);

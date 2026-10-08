@@ -2,19 +2,23 @@
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'show transactions',
+  examples: [
+    'ledlight transactions --file main.ledger',
+    'ledlight transactions --file main.ledger --accounts "^Expenses:" --order newest --page 1 --page-size 20',
+  ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
   },
   configure(command) {
     options.journal(command);
     options.accounts(command);
-    options.addValue(command, '--id <id>', 'select one transaction ID');
-    options.addValue(command, '--order <order>', 'sort transactions', {
+    options.addValue(command, '--id <id>', 'select one transaction by its positive integer ID');
+    options.addValue(command, '--order <order>', 'sort transactions by journal entry order', {
       choices: ['newest', 'oldest'],
       defaultValue: 'oldest',
     });
-    options.addValue(command, '--page <number>', 'select a page (requires --page-size)');
-    options.addValue(command, '--page-size <number>', 'set the page size (requires --page)');
+    options.addValue(command, '--page <number>', 'select a positive page number (requires --page-size)');
+    options.addValue(command, '--page-size <number>', 'set the page size to a positive number (requires --page)');
     options.format(command);
   },
   formatCsv(report, _cliOptions, { csvField }) {

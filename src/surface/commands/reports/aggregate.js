@@ -2,24 +2,28 @@
 
 module.exports = ({ cliOptions: options }) => ({
   description: 'aggregate postings',
+  examples: [
+    'ledlight aggregate --file main.ledger',
+    'ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --denominate --include-total',
+  ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
   },
   configure(command) {
     options.journal(command);
-    options.date(command, '--from <date>', 'include entries on or after YYYY-MM-DD');
-    options.date(command, '--to <date>', 'include entries on or before YYYY-MM-DD');
+    options.date(command, '--from <date>', 'include activity on or after YYYY-MM-DD');
+    options.date(command, '--to <date>', 'include activity through YYYY-MM-DD; also set the valuation cutoff');
     options.accounts(command);
     options.dateBasis(command);
     options.valuation(command);
-    options.addValue(command, '--group-by <dimension>', 'group totals by account or commodity', {
+    options.addValue(command, '--group-by <dimension>', 'group balances by account or commodity', {
       choices: ['account', 'commodity'],
       defaultValue: 'account',
     });
-    options.addBoolean(command, '--denominate', 'denominate and combine amounts in the journal default currency');
-    options.addBoolean(command, '--with-valuation-value', 'add the valuation value to commodity rows');
-    options.addBoolean(command, '--invert', 'invert the sign of report amounts');
-    options.addBoolean(command, '--include-total', 'append an exact total for each commodity');
+    options.addBoolean(command, '--denominate', 'convert and combine balances in the journal default commodity');
+    options.addBoolean(command, '--with-valuation-value', 'add default-commodity value to each commodity row (excludes --denominate)');
+    options.addBoolean(command, '--invert', 'negate reported quantities and valuation values');
+    options.addBoolean(command, '--include-total', 'append an exact total per commodity (requires account grouping)');
     options.format(command);
   },
   formatCsv(rows, { denominate, groupBy }, format) {
