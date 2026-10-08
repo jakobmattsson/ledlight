@@ -12,7 +12,6 @@ const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],
   ['========== LEDGER-CLI ==========', 'ledgerCli'],
   ['========== API ==========', 'api'],
-  ['========== API FORMAT ==========', 'apiFormat'],
   ['========== FILE ==========', 'file'],
   ['========== OUTPUT ==========', 'output'],
   ['========== WARNINGS ==========', 'warnings'],
@@ -192,18 +191,13 @@ function parseCase(fileName) {
       throw new Error(`${fileName}: ${error.message}`, { cause: error });
     }
   }
-  const apiFormat = sections.apiFormat?.trim();
-  if (apiFormat !== undefined &&
-      (apiFormat !== 'text' || api === undefined || cli !== undefined || ledgerArgs !== undefined)) {
-    throw new Error(`${fileName}: API FORMAT supports text in API-only cases`);
-  }
   return {
     cliArgs, ledgerArgs, heredoc, file: sections.file, files, api,
-    apiFormat, output: sections.output, warnings: sections.warnings, error: sections.error,
+    output: sections.output, warnings: sections.warnings, error: sections.error,
   };
 }
 
-function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api, apiFormat }, fixtureCache) {
+function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCache) {
   // FILE inputs are immutable, so identical cases can reuse the built SQLite cache.
   // Heredoc inputs keep their separate stdin path and cleanup behavior.
   const fixtureKey = fixtureCache && file !== undefined
@@ -277,21 +271,9 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api, apiFormat }, 
         }
         const apiResult = method(...api.args);
         if (apiResult === undefined) throw new Error('API statement did not return a result');
-        if (apiFormat === 'text') {
-          const command = container.resolve('commands').find((candidate) =>
-            candidate.operation === api.method);
-          if (!command?.formatText) throw new Error(`No text formatter for API method: ${api.method}`);
-          const cliOptions = { format: 'text' };
-          const output = command.prepareOutput
-            ? command.prepareOutput(apiResult, cliOptions, cliFormat)
-            : apiResult;
-          const formatData = command.loadFormatData?.(journalApi);
-          resultText.output = command.formatText(output, cliOptions, cliFormat, formatData);
-        } else {
-          resultText.output = typeof apiResult === 'string'
-            ? apiResult
-            : cliFormat.formatJson(apiResult);
-        }
+        resultText.output = typeof apiResult === 'string'
+          ? apiResult
+          : cliFormat.formatJson(apiResult);
         resultText.warnings = cliFormat.formatWarnings(journalApi.warnings);
       } catch (error) {
         resultText.error = `${error.message}\n`;

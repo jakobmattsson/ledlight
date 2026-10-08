@@ -196,6 +196,10 @@ result is needed. Investment performance CSV has one data row; its
 `commodities` and `points` cells contain compact JSON arrays. JSON is required
 to retain fields such as `valuationValue` and other API-only metadata in other
 reports.
+
+For small journals with explained calculations and text output, see the
+[investment performance CLI examples](../tests/api/queries/reports/investment-performance/examples/README.md).
+
 Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.

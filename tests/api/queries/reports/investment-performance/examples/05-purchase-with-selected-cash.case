@@ -9,13 +9,9 @@ Profit/loss is 120 - 0 - 100 = 20 USD. Time-weighted return is 20%, and the
 100 USD deposited exactly 365 days before the end gives a 20% money-weighted
 return as well.
 
-========== API ==========
+========== CLI ==========
 
-investmentPerformance({ accounts: ['^Assets:'], commodities: ['USD', 'FUND'], from: '2023-01-01', to: '2024-01-01' })
-
-========== API FORMAT ==========
-
-text
+ledlight investment-performance --accounts '^Assets:' --commodities USD --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

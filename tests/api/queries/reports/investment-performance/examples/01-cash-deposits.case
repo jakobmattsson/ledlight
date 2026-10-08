@@ -6,13 +6,9 @@ is ending value 150 - opening value 0 - contributions 150 = 0 USD.
 The value never grows apart from deposits, so both return measures are 0%.
 The ending 150 USD exactly repays the two deposits, regardless of their dates.
 
-========== API ==========
+========== CLI ==========
 
-investmentPerformance({ accounts: ['Assets:Cash'], commodities: ['USD'], from: '2023-01-01', to: '2024-01-01' })
-
-========== API FORMAT ==========
-
-text
+ledlight investment-performance --accounts Assets:Cash --commodities USD --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

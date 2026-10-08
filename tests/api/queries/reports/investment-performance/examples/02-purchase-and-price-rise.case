@@ -7,13 +7,9 @@ Profit/loss is 120 - 0 - 100 = 20 USD. The two growth factors are 110 / 100
 and 120 / 110, giving a time-weighted return of 20%. The 100 USD invested for
 exactly 365 days grows to 120 USD, so the money-weighted returns are also 20%.
 
-========== API ==========
+========== CLI ==========
 
-investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2023-01-01', to: '2024-01-01' })
-
-========== API FORMAT ==========
-
-text
+ledlight investment-performance --accounts Assets:Fund --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

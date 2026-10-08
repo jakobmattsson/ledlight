@@ -392,9 +392,6 @@ JavaScript numbers. Return fields are `null` when they cannot be calculated.
 The precision boundary for these numeric monetary fields is tracked in the
 improvement backlog.
 
-For small journals with the arithmetic explained beside a text rendering of
-each API result, see the [investment performance examples](../tests/api/queries/reports/investment-performance/examples/README.md).
-
 ## Additional journal queries
 
 ### `journal.accounts({ accounts, usage })`

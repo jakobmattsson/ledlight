@@ -12,13 +12,9 @@ and 140 USD ending value. The annual rate r solves
 -200 + 130 / (1 + r)^(181 / 365) + 140 / (1 + r) = 0, giving 49.65%.
 The total money-weighted return is also 49.65% because the period is one year.
 
-========== API ==========
+========== CLI ==========
 
-investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2023-01-01', to: '2024-01-01' })
-
-========== API FORMAT ==========
-
-text
+ledlight investment-performance --accounts Assets:Fund --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

@@ -7,13 +7,9 @@ is 120 - 100 - 0 = 20 USD. Time-weighted return is 120 / 100 - 1 = 20%.
 Treating the 100 USD opening value as invested for 365 days also gives a 20%
 money-weighted return.
 
-========== API ==========
+========== CLI ==========
 
-investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2023-01-01', to: '2024-01-01' })
-
-========== API FORMAT ==========
-
-text
+ledlight investment-performance --accounts Assets:Fund --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 
