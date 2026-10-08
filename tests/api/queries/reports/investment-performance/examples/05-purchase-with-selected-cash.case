@@ -5,11 +5,16 @@ Both cash and FUND are selected, so the -100 USD cash movement and +100 USD
 fund acquisition add to zero net contributions during the selected day.
 The unit's closing price is 120 USD. Ending value is 120, profit/loss is
 120 - 100 - 0 = 20 USD, and time-weighted return is 120 / 100 - 1 = 20%.
-The money-weighted fields are null for this one-day interval.
+The money-weighted returns cannot be calculated for this one-day interval, so
+the text formatter shows their null API values as n/a.
 
 ========== API ==========
 
 investmentPerformance({ accounts: ['^Assets:'], commodities: ['USD', 'FUND'], from: '2024-01-02', to: '2024-01-02' })
+
+========== API FORMAT ==========
+
+text
 
 ========== FILE ==========
 
@@ -34,32 +39,14 @@ P 2024-01-02 FUND 120 USD
 
 ========== OUTPUT ==========
 
-{
-  "from": "2024-01-02",
-  "to": "2024-01-02",
-  "commodities": [
-    "USD",
-    "FUND"
-  ],
-  "valuationCommodity": "USD",
-  "openingValue": 100,
-  "endingValue": 120,
-  "netContributions": 0,
-  "profitLoss": 20,
-  "timeWeightedReturn": 0.19999999999999996,
-  "moneyWeightedReturn": null,
-  "moneyWeightedReturnTotal": null,
-  "points": [
-    {
-      "date": "2024-01-02",
-      "value": 120,
-      "netContributions": 0,
-      "profitLoss": 20,
-      "timeWeightedReturn": 0.19999999999999996,
-      "moneyWeightedReturn": null,
-      "moneyWeightedReturnTotal": null
-    }
-  ]
-}
+Investment performance from 2024-01-02 to 2024-01-02
+Instruments: 2
+Opening value: 100.00 USD
+Net contributions: 0.00 USD
+Ending value: 120.00 USD
+Profit/loss: 20.00 USD
+Time-weighted return: 20.00 %
+Money-weighted return (total): n/a
+Money-weighted return (annualized): n/a
 
 ========== WARNINGS ==========

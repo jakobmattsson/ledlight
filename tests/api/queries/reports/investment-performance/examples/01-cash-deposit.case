@@ -3,12 +3,16 @@ The only selected holding is Assets:Cash in USD. The journal adds 100 USD on
 2024-01-01, so the closing value and net contributions are both 100 USD.
 Profit/loss is ending value 100 minus opening value 0 minus contributions 100 = 0.
 The daily value equals the contribution, so the time-weighted return is 0.
-The money-weighted fields are null: all investor cash flows fall on one date,
-which supplies no elapsed time for an annualized return.
+The money-weighted returns cannot be calculated: all investor cash flows fall
+on one date. The text formatter shows their null API values as n/a.
 
 ========== API ==========
 
 investmentPerformance({ accounts: ['Assets:Cash'], commodities: ['USD'], from: '2024-01-01', to: '2024-01-01' })
+
+========== API FORMAT ==========
+
+text
 
 ========== FILE ==========
 
@@ -24,31 +28,14 @@ account Equity:Opening
 
 ========== OUTPUT ==========
 
-{
-  "from": "2024-01-01",
-  "to": "2024-01-01",
-  "commodities": [
-    "USD"
-  ],
-  "valuationCommodity": "USD",
-  "openingValue": 0,
-  "endingValue": 100,
-  "netContributions": 100,
-  "profitLoss": 0,
-  "timeWeightedReturn": 0,
-  "moneyWeightedReturn": null,
-  "moneyWeightedReturnTotal": null,
-  "points": [
-    {
-      "date": "2024-01-01",
-      "value": 100,
-      "netContributions": 100,
-      "profitLoss": 0,
-      "timeWeightedReturn": 0,
-      "moneyWeightedReturn": null,
-      "moneyWeightedReturnTotal": null
-    }
-  ]
-}
+Investment performance from 2024-01-01 to 2024-01-01
+Instruments: 1
+Opening value: 0.00 USD
+Net contributions: 100.00 USD
+Ending value: 100.00 USD
+Profit/loss: 0.00 USD
+Time-weighted return: 0.00 %
+Money-weighted return (total): n/a
+Money-weighted return (annualized): n/a
 
 ========== WARNINGS ==========

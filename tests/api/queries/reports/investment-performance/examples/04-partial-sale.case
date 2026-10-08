@@ -6,11 +6,16 @@ On 2024-01-02, one unit is sold for 130 USD (@ 130 USD), leaving one unit worth
 -130 USD, while the remaining position has an ending value of 140 USD.
 Profit/loss is 140 - 200 - (-130) = 70 USD. With the withdrawal treated as an
 end-of-day flow, time-weighted return is (140 - (-130)) / 200 - 1 = 35%.
-The money-weighted fields are null for this one-day interval.
+The money-weighted returns cannot be calculated for this one-day interval, so
+the text formatter shows their null API values as n/a.
 
 ========== API ==========
 
 investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
+
+========== API FORMAT ==========
+
+text
 
 ========== FILE ==========
 
@@ -36,31 +41,14 @@ P 2024-01-02 FUND 140 USD
 
 ========== OUTPUT ==========
 
-{
-  "from": "2024-01-02",
-  "to": "2024-01-02",
-  "commodities": [
-    "FUND"
-  ],
-  "valuationCommodity": "USD",
-  "openingValue": 200,
-  "endingValue": 140,
-  "netContributions": -130,
-  "profitLoss": 70,
-  "timeWeightedReturn": 0.3500000000000001,
-  "moneyWeightedReturn": null,
-  "moneyWeightedReturnTotal": null,
-  "points": [
-    {
-      "date": "2024-01-02",
-      "value": 140,
-      "netContributions": -130,
-      "profitLoss": 70,
-      "timeWeightedReturn": 0.3500000000000001,
-      "moneyWeightedReturn": null,
-      "moneyWeightedReturnTotal": null
-    }
-  ]
-}
+Investment performance from 2024-01-02 to 2024-01-02
+Instruments: 1
+Opening value: 200.00 USD
+Net contributions: -130.00 USD
+Ending value: 140.00 USD
+Profit/loss: 70.00 USD
+Time-weighted return: 35.00 %
+Money-weighted return (total): n/a
+Money-weighted return (annualized): n/a
 
 ========== WARNINGS ==========

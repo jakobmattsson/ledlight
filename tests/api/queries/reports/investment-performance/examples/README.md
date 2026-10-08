@@ -2,12 +2,13 @@
 
 Read the numbered `.case` files in order. Each starts with the journal's
 arithmetic, then shows the public `investmentPerformance` API call, the complete
-test-owned Ledger journal, and the exact API result. The API case runner discovers
-these files recursively.
+test-owned Ledger journal, and the report's text output. The case runner calls
+the API and formats its result with the same text formatter as the CLI. It
+discovers these files recursively.
 
-The cases use one-day reporting intervals to keep the result to a single daily
-point. `timeWeightedReturn` is a decimal fraction, so `0.2` means 20%. The
-money-weighted fields are `null` because a one-day interval cannot establish an
-annualized return from cash flows on the same date. For a full-year example of
-the money-weighted fields, see
+The cases use one-day reporting intervals to keep the arithmetic short. The
+text output shows return percentages and `n/a` for returns that cannot be
+calculated. The underlying money-weighted API fields are `null` because cash
+flows on one date provide no elapsed time for an annualized return. For a
+full-year example of the money-weighted returns, see
 [`../performance-cli-returns.case`](../performance-cli-returns.case).
