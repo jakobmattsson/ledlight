@@ -14,7 +14,7 @@ module.exports = ({ cliOptions: options }) => ({
     Split the portfolio history at each external contribution or withdrawal.
     Calculate the return in each part and multiply the parts' growth factors.
     Ledlight uses daily closing values and treats flows as occurring at day's
-    end. Changes to the holdings still affect the result.
+    end.
 
   Money-weighted return (total)
     The cumulative investor return accounting for the amount and date of the
