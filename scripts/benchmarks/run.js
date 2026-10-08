@@ -42,7 +42,8 @@ function verifyFixture(journal, aggregateRows) {
     assert.equal(count('transactions'), TRANSACTION_COUNT);
     assert.equal(count('postings'), 10400);
     assert.equal(count('prices'), PRICE_COUNT);
-    assert.equal(count('comments'), 3650);
+    assert.equal(count('tags'), 3650);
+    assert.equal(count('comments'), 0);
     assert.equal(count('file_comments'), 581);
     const trades = database.prepare(`
       SELECT COUNT(DISTINCT transaction_id) AS count
