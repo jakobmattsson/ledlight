@@ -29,5 +29,8 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [UNBALANCED_TRANSACTION] Transaction does not balance: 0.4 SEK
   {{JOURNAL_PATH}}:8:1

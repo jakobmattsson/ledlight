@@ -21,6 +21,8 @@ tag Reviewed
 
   const result = validateJournal(journal);
   assert.deepEqual(result.warnings.map(({ code, line }) => ({ code, line })), [{
+    code: 'MISSING_DEFAULT_COMMODITY', line: 1,
+  }, {
     code: 'DUPLICATE_ACCOUNT_DECLARATION', line: 2,
   }, {
     code: 'DUPLICATE_COMMODITY_DECLARATION', line: 5,
@@ -35,6 +37,7 @@ tag Reviewed
 test('allows implicit postings and balance assignments', () => {
   const journal = parse(`commodity SEK
   format 1,000.00 SEK
+  default
 account Assets:Cash
 account Equity:Opening
 2024-01-01 Opening

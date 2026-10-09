@@ -34,6 +34,9 @@ tag Posting
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [UNDECLARED_TAG] Tag Header must be declared before use
   {{JOURNAL_PATH}}:1:32
 

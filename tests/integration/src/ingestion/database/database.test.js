@@ -418,7 +418,7 @@ test('skips syntax-invalid transactions before database insertion', (t) => {
 
   const result = buildDatabase(databasePath, journalPath);
   assert.equal(result.transactions, 0);
-  assert.equal(result.warnings.length, 1);
+  assert.equal(result.warnings.length, 2);
   assert.deepEqual(
     {
       code: result.warnings[0].code,
@@ -428,7 +428,29 @@ test('skips syntax-invalid transactions before database insertion', (t) => {
     },
     { code: 'SYNTAX_ERROR', source: journalPath, startLine: 1, endLine: 3 },
   );
+  assert.equal(result.warnings[1].code, 'MISSING_DEFAULT_COMMODITY');
   assert.equal(fs.existsSync(databasePath), true);
+});
+
+test('rebuilds an older cache to persist the missing default warning', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  format 1,000.00 SEK
+`);
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath);
+  try {
+    database.prepare("UPDATE database_metadata SET value = '37' WHERE key = 'schema_version'").run();
+    database.exec('DELETE FROM ingestion_warnings');
+  } finally {
+    database.close();
+  }
+
+  const result = ensureDatabaseCurrent(databasePath, journalPath);
+  assert.equal(result.rebuilt, true);
+  assert.deepEqual(result.summary.warnings.map(({ code }) => code), ['MISSING_DEFAULT_COMMODITY']);
 });
 
 test('stores non-default commodity trades and reports invalid annotations as warnings', (t) => {

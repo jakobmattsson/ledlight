@@ -1,4 +1,4 @@
-An opposite-sign commodity exchange and a costed purchase balance without warnings.
+An opposite-sign exchange and a costed purchase balance, but the journal lacks a default commodity.
 
 ========== API ==========
 
@@ -35,3 +35,6 @@ account Assets:Fund
 ]
 
 ========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1

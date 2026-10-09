@@ -23,5 +23,8 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [MULTIPLE_IMPLICIT_POSTINGS] Transaction has multiple implicit postings
   {{JOURNAL_PATH}}:8:1

@@ -364,13 +364,13 @@ when disposal proceeds differ from the lot's cost basis, matching Ledger's
 behavior.
 
 Accounting checks are non-blocking ingestion warnings. Failed balance
-assertions, unbalanced transactions, invalid trade annotations, and additional
-default commodity declarations are recorded before queries run. Data that can
-still be represented is retained; an entry with unresolved amounts is skipped
-without preventing valid entries from being queried. The public API exposes
-the warnings on the opened journal, grouped by code and message with at most ten
-locations per group. The CLI writes a human-readable version of that list to
-stderr and keeps query output on stdout.
+assertions, unbalanced transactions, invalid trade annotations, and missing or
+additional default commodity declarations are recorded before queries run.
+Data that can still be represented is retained; an entry with unresolved
+amounts is skipped without preventing valid entries from being queried. The
+public API exposes the warnings on the opened journal, grouped by code and
+message with at most ten locations per group. The CLI writes a human-readable
+version of that list to stderr and keeps query output on stdout.
 
 Every commodity declaration must include an explicit `format` property. A
 declaration without one produces a `MISSING_COMMODITY_FORMAT` warning. Requiring
@@ -625,9 +625,12 @@ commodity USD
 ```
 
 This `commodity` property is the only supported way to declare the valuation
-commodity. Marking more than one declaration as `default` is a journal
-configuration error, including repeated declarations of the same symbol. There
-is no API or command-line option for choosing another target.
+commodity. Every journal must mark exactly one commodity as `default`. A missing
+declaration produces `MISSING_DEFAULT_COMMODITY`; marking more than one produces
+`MULTIPLE_DEFAULT_COMMODITIES`, including repeated declarations of the same
+symbol. Both are ingestion warnings. Queries that require valuation still fail
+when no default is available. There is no API or command-line option for
+choosing another target.
 Price chains can pass through intermediate commodities. Missing and circular
 price chains are errors. Results remain exact decimal strings and are not
 rounded for display.

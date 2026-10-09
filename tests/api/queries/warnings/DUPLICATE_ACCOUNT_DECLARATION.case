@@ -11,5 +11,8 @@ account Assets:Cash
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [DUPLICATE_ACCOUNT_DECLARATION] Account Assets:Cash has already been declared
   {{JOURNAL_PATH}}:2:1

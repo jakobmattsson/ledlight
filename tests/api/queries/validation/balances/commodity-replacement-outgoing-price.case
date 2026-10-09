@@ -25,5 +25,6 @@ account Equity:Opening
 
 [MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
   {{JOURNAL_PATH}}:1:1
+
 [UNBALANCED_TRANSACTION] Transaction does not balance: 4.051281 NEW, -350 SEK
   {{JOURNAL_PATH}}:12:1

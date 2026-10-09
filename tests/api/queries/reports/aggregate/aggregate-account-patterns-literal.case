@@ -27,3 +27,6 @@ account Equity:Opening
 ]
 
 ========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1

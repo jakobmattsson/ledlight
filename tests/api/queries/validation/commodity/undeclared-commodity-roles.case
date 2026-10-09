@@ -32,6 +32,9 @@ P 2024-01-01 FUND 10 SEK
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [UNDECLARED_COMMODITY] Commodity FUND must be declared before use
   {{JOURNAL_PATH}}:3:1
   {{JOURNAL_PATH}}:5:3

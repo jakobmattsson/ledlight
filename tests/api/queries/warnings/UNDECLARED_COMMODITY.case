@@ -14,5 +14,8 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [UNDECLARED_COMMODITY] Commodity SEK must be declared before use
   {{JOURNAL_PATH}}:4:3

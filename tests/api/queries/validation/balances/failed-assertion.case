@@ -29,5 +29,8 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [BALANCE_ASSERTION_FAILED] Balance assertion failed: expected 11 SEK, got 10 SEK
   {{JOURNAL_PATH}}:9:3
