@@ -468,7 +468,7 @@ account Assets:Fund
 account Assets:Cash
 2024-01-01 Invalid purchase
   Assets:Fund  1 FUND @ 10 SEK
-  Assets:Cash  -10 SEK
+  Assets:Cash
 `);
 
   const result = buildDatabase(databasePath, journalPath);

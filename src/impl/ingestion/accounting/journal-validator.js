@@ -2,8 +2,8 @@
 
 module.exports = ({
   decimal: { compareDecimals, parseDecimal },
-  rational: { parse: parseRational, cmp },
-  commodityMovements: { annotatedTotal, carriedMovements },
+  rational: { zero, parse: parseRational, add, cmp },
+  commodityMovements: { annotatedTotal, carriedMovements, unpricedReplacement },
   ingestionWarning: { createWarning, warningCodes },
   journalValuationCommodity: { valuationCommodityFromJournal },
 }) => {
@@ -93,14 +93,10 @@ module.exports = ({
       return;
     }
     const sign = compareDecimals(parseDecimal(posting.amount.quantity), ZERO);
-    const isZeroValueAcquisition = posting.lotCost && posting.cost &&
-      compareDecimals(parseDecimal(posting.lotCost.amount.quantity), ZERO) === 0 &&
-      compareDecimals(parseDecimal(posting.cost.amount.quantity), ZERO) === 0;
-    if (sign > 0 && (!posting.lotCost || (posting.cost && !isZeroValueAcquisition))) {
+    if (sign > 0 && !posting.lotCost) {
       warnings.push(createWarning(
         warningCodes.INVALID_COMMODITY_TRADE,
-        `Positive ${posting.amount.commodity} posting must use a lot cost ({...} or {{...}}) ` +
-        `and no transaction price (@ or @@), except when both prices are zero; ` +
+        `Positive ${posting.amount.commodity} posting must use a lot cost ({...} or {{...}}); ` +
         `the default commodity is ${defaultCommodity}`,
         posting.location,
       ));
@@ -160,10 +156,18 @@ module.exports = ({
       resolved[index].map((amount) => ({ ...posting, amount, original: posting })));
     const carried = new Set(carriedMovements({ ...transaction, postings }, defaultCommodity)
       .flatMap(({ outgoing, incoming }) => [outgoing, incoming]));
+    const replacement = unpricedReplacement({ ...transaction, postings }, defaultCommodity);
+    if (replacement) { carried.add(replacement.outgoing); carried.add(replacement.incoming); }
     for (const posting of postings) {
       // Explicit amounts were checked before resolution. Assignments must use
       // the actual change in holdings, not the target balance's sign.
       if (posting.original.amount && !posting.original.balanceAssignment) continue;
+      if (!posting.original.amount && !posting.original.balanceAssignment &&
+          postings.some((candidate) => candidate !== posting && candidate.original.amount &&
+            candidate.amount.commodity === posting.amount.commodity &&
+            cmp(add(parseRational(candidate.amount.quantity),
+              parseRational(posting.amount.quantity)), zero) === 0 &&
+            !candidate.cost && !posting.cost)) continue;
       validateSelfCommodityCosts(posting, warnings);
       if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
     }
@@ -206,6 +210,17 @@ module.exports = ({
         validatePostingDates(entry, warnings);
         const carried = new Set(carriedMovements(entry, effectiveDefaultCommodity)
           .flatMap(({ outgoing, incoming }) => [outgoing, incoming]));
+        const replacement = unpricedReplacement(entry, effectiveDefaultCommodity);
+        if (replacement) { carried.add(replacement.outgoing); carried.add(replacement.incoming); }
+        if (entry.postings.length === 2 && entry.postings.every((posting) =>
+          posting.amount && !posting.lotCost && !posting.cost) &&
+          entry.postings[0].amount.commodity === entry.postings[1].amount.commodity &&
+          cmp(add(parseRational(entry.postings[0].amount.quantity),
+            parseRational(entry.postings[1].amount.quantity)), zero) === 0) {
+          const outgoing = entry.postings.find((posting) =>
+            parseRational(posting.amount.quantity).n < 0n);
+          if (outgoing) carried.add(outgoing);
+        }
         entry.postings.forEach((posting) => validatePosting(
           posting, effectiveDefaultCommodity, warnings, carried,
         ));

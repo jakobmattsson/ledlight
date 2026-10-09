@@ -1,12 +1,8 @@
-Ledlight matches Ledger for print formatting.
+Transaction text shows inferred cost alongside lot cost while preserving formatting.
 
 ========== CLI ==========
 
 ledlight transactions
-
-========== LEDGER-CLI ==========
-
-ledger --args-only --date-format %Y-%m-%d --no-pager print
 
 ========== FILE ==========
 
@@ -123,5 +119,5 @@ include entries/*.ledger
     Expenses:Unsorted
 
 2024-02-04 Total lot cost
-    Assets:Cash:At:A:Bank:With:A:Very:Long:Account  259.980000 FUND {153.85798908 SEK}
+    Assets:Cash:At:A:Bank:With:A:Very:Long:Account  259.980000 FUND {153.85798908 SEK} @@ 40,000.00 SEK
     Equity:Opening                      -40,000.00 SEK

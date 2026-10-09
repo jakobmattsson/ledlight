@@ -73,8 +73,5 @@ P 2024-01-02 FUND 1234.56 SEK
     '--ledger-bin', ledgerBinary,
   ]);
   assert.equal(result.stdout, 'PASS balance\nPASS balance-with-total\nPASS balance-inverted\n');
-  for (const name of ['balance', 'balance-with-total', 'balance-inverted']) {
-    assert.match(result.stderr, new RegExp(`\\[${name}: ledlight\\]\\n\\[INVALID_COMMODITY_TRADE\\]`, 'u'));
-  }
-  assert.equal((result.stderr.match(/\[INVALID_COMMODITY_TRADE\]/gu) ?? []).length, 3);
+  assert.equal(result.stderr, '');
 });

@@ -67,13 +67,10 @@ account Equity:Opening
 `, { source: 'fixture.ledger' });
 }
 
-test('warns when positive non-default commodity postings do not use only a lot cost', () => {
+test('warns when positive non-default commodity postings lack a lot cost', () => {
   for (const posting of [
     '1 FUND',
     '1 FUND @ 10 SEK',
-    '1 FUND {10 SEK} @ 10 SEK',
-    '1 FUND {0 SEK} @ 10 SEK',
-    '1 FUND {10 SEK} @ 0 SEK',
   ]) {
     const result = validateJournal(parseTrade(posting));
     assert.equal(result.warnings.length, 1);
@@ -83,6 +80,7 @@ test('warns when positive non-default commodity postings do not use only a lot c
 
   assert.deepEqual(validateJournal(parseTrade('1 FUND {10 SEK}')).warnings, []);
   assert.deepEqual(validateJournal(parseTrade('1 FUND {{10 SEK}}')).warnings, []);
+  assert.deepEqual(validateJournal(parseTrade('1 FUND {10 SEK} @ 10 SEK')).warnings, []);
 });
 
 test('allows positive non-default commodity postings with zero lot and transaction prices', () => {

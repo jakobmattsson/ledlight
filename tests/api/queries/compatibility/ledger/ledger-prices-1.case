@@ -1,4 +1,4 @@
-Prices match Ledger: inferred purchase and total sale display precision preserves source decimal places.
+Prices match Ledger when total purchase and sale prices preserve source decimal places.
 
 ========== CLI ==========
 
@@ -27,11 +27,11 @@ account Equity:Opening
 account Income:Gains
 
 2024-01-01 Purchase with integer amounts
-  Assets:Funds  3 ALPHA {{1 SEK}}
+  Assets:Funds  3 ALPHA {{1 SEK}} @@ 1 SEK
   Assets:Cash  -1 SEK
 
 2024-01-02 Purchase with explicit decimal places
-  Assets:Funds  3.0000 ALPHA {{1.00 SEK}}
+  Assets:Funds  3.0000 ALPHA {{1.00 SEK}} @@ 1.00 SEK
   Assets:Cash  -1.00 SEK
 
 2024-01-03 Sale with integer amounts
@@ -48,8 +48,8 @@ P 2024-01-05 ALPHA 0.123456789012345678901234567890123456 SEK
 
 ========== OUTPUT ==========
 
-2024-01-01 ALPHA    0.333333333333 SEK
-2024-01-02 ALPHA    0.3333333333333333333333 SEK
+2024-01-01 ALPHA    0.333333 SEK
+2024-01-02 ALPHA    0.333333333333 SEK
 2024-01-03 ALPHA    0.666667 SEK
 2024-01-04 ALPHA    0.666666666667 SEK
 2024-01-05 ALPHA    0.123456789012345678901234567890123456 SEK

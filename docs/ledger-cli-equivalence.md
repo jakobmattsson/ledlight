@@ -24,6 +24,10 @@ particular, `accounts` filters and `transactions --accounts` map to Ledger
 query arguments, while Ledlight-only output formats, pagination, declaration
 selection, and details do not have direct equivalents.
 
+Ledlight prints exact lot costs and transaction prices inferred during
+ingestion. Ledger may omit an inferred purchase price from its `print` output,
+so byte-for-byte transaction output can differ for those journals.
+
 The balance cases use SEK as Ledger's exchange commodity and therefore require
 SEK as the journal's default commodity. Valued account reports use Ledger's
 20-character amount column and an unlabeled total, with zero rendered as `0`.

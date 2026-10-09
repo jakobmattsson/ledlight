@@ -274,7 +274,7 @@ reports have no total rows. Conversion to the default commodity is optional;
 with `denominate`, there is a single total in that commodity.
 
 `valuation: 'market'` (the default) uses market prices at the valuation cutoff.
-`valuation: 'cost'` uses the signed lot costs recorded on each posting, including
+`valuation: 'cost'` uses the signed effective lot costs on each posting, including
 unit costs (`{...}`) and total costs (`{{...}}`). Sales remove the recorded cost
 of the sold units, not their sale proceeds. Transfers carry their recorded cost.
 Amounts in the default commodity retain their face value. Other commodities
@@ -323,7 +323,7 @@ warnings for non-default commodity positions with costs in another currency.
 They are available through `journal.warnings` and every CLI report. The gain
 report omits affected account/commodity positions;
 account sums and the CLI total cover only the remaining positions and may be
-incomplete. The report does not infer historical exchange rates or lot allocations.
+incomplete. The report does not infer historical exchange rates or ambiguous lot allocations.
 Missing lot costs on other open positions still cause an error. Closed positions
 are omitted before checking their lot costs.
 

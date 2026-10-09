@@ -24,7 +24,7 @@ P 2024-01-01 FUND 12 SEK ; Closing, official
 ========== OUTPUT ==========
 
 postingId,transactionId,transactionDate,description,transactionComments,transactionTags,postingDate,account,postingComments,postingTags,amountQuantity,amountCommodity,lotCostQuantity,lotCostCommodity,lotCostIsTotal,costQuantity,costCommodity,costIsTotal,balanceAssignmentQuantity,balanceAssignmentCommodity,balanceAssertionQuantity,balanceAssertionCommodity,resolvedQuantity,resolvedCommodity,resolvedBalance,filename,transactionSourceLine
-1,8,2024-01-02,Buy fund,"[""imported""]","[{""name"":""Reviewed"",""value"":""manually""}]",2024-01-02,Assets:Fund,"[""broker""]",[],1,FUND,10,SEK,false,,,,,,,,1,FUND,1,{{JOURNAL_PATH}},11
+1,8,2024-01-02,Buy fund,"[""imported""]","[{""name"":""Reviewed"",""value"":""manually""}]",2024-01-02,Assets:Fund,"[""broker""]",[],1,FUND,10,SEK,false,10,SEK,false,,,,,1,FUND,1,{{JOURNAL_PATH}},11
 2,8,2024-01-02,Buy fund,"[""imported""]","[{""name"":""Reviewed"",""value"":""manually""}]",2024-01-02,Assets:Cash,[],[],-10,SEK,,,,,,,,,,,-10,SEK,-10,{{JOURNAL_PATH}},11
 
 ========== WARNINGS ==========

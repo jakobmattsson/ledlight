@@ -42,7 +42,11 @@ LEDGER
             "commodity": "SEK",
             "isTotal": false
           },
-          "cost": null,
+          "cost": {
+            "quantity": "10",
+            "commodity": "SEK",
+            "isTotal": false
+          },
           "balanceAssignment": null,
           "balanceAssertion": null,
           "amounts": [

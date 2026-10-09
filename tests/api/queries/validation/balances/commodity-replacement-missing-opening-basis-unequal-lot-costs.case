@@ -24,7 +24,7 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
-[INVALID_COMMODITY_TRADE] Positive OLD posting must use a lot cost ({...} or {{...}}) and no transaction price (@ or @@), except when both prices are zero; the default commodity is SEK
+[INVALID_COMMODITY_TRADE] Positive OLD posting must use a lot cost ({...} or {{...}}); the default commodity is SEK
   {{JOURNAL_PATH}}:11:3
 
 [INVALID_COMMODITY_TRADE] An unpriced commodity replacement changes acquisition basis from 99 SEK to 100 SEK

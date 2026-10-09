@@ -38,7 +38,7 @@ account Assets:Cash
 account Income:Gain
 
 2024-01-01 Buy
-    Assets:Fund  2 FUND {10 SEK}
+    Assets:Fund  2 FUND {10 SEK} @ 10 SEK
     Assets:Cash  -20 SEK
 
 2024-01-02 Sell
