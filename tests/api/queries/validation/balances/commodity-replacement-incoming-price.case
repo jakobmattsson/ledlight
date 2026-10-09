@@ -15,8 +15,8 @@ commodity OLD
 account Assets:Shares
 account Equity:Opening
 2022-01-01 Opening
-  Assets:Shares  1.9619 OLD
-  Equity:Opening  -1.9619 OLD
+  Assets:Shares  1.9619 OLD {{350 SEK}}
+  Equity:Opening  -350 SEK
 2022-12-12 Replacement
   Assets:Shares  4.051281 NEW {{350 SEK}} @@ 350 SEK
   Assets:Shares  -1.9619 OLD {{350 SEK}}
@@ -25,4 +25,3 @@ account Equity:Opening
 
 [UNBALANCED_TRANSACTION] Transaction does not balance: 350 SEK, -1.9619 OLD
   {{JOURNAL_PATH}}:12:1
-
