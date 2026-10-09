@@ -6,6 +6,20 @@ license, README, and consumer documentation. Repository configuration, tests,
 fixtures, the Ohm-based reference parser, and the improvement backlog are not
 published.
 
+## Releasing
+
+Update the package version with `npm version <version> --no-git-tag-version` so
+`package.json` and `package-lock.json` agree. Merge the version change into
+`main`, then create and push a `v<version>` tag for that commit. Changing the
+version alone does not publish a release.
+
+The `package.yml` GitHub Actions workflow publishes a tagged version only after
+its full test suite and cross-platform package tests pass. The tag must match
+the version in both package files. The publish job uses npm trusted publishing
+through GitHub Actions OIDC. On npmjs.com, configure the package's trusted
+publisher for this repository and the workflow filename `package.yml`, with
+direct publishing enabled. The release job requires no npm access token.
+
 ## Module formats and exports
 
 CommonJS is the canonical module format:
