@@ -182,7 +182,7 @@ P 2024-01-01 USD 2 SEK
   assert.deepEqual(rebuilt.warnings, journal.warnings);
   fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(
     '1 STOCK {10 USD}\n  Assets:USD\n',
-    '1 STOCK {20 SEK}\n  Assets:USD  -10 USD {2 SEK} @ 2 SEK\n',
+    '1 STOCK {20 SEK}\n  Assets:Cash  -20 SEK\n',
   ));
   const correctedJournal = openJournal(journalPath);
   assert.deepEqual(correctedJournal.warnings, []);

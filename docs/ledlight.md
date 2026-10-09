@@ -338,6 +338,14 @@ journal order during the full database rebuild.
 Explicit transactions must balance exactly, allowing Ledger-style two-commodity
 exchanges without cost annotations. Unit and total costs are exact values;
 calculated unit costs have no rounding tolerance when balancing a transaction.
+Lot costs do not by themselves convert both sides of a commodity replacement
+into the lot-cost commodity. Without transaction prices, opposite-sign holdings
+in different commodities can balance as an exchange even when their lot costs
+are unequal. An explicit `@` or `@@` price converts that posting for balancing;
+pricing only one side of such a replacement leaves an unbalanced commodity.
+A lot cost does provide the balancing value when another posting uses its cost
+commodity, such as `2 FUND {{100 SEK}}` against `-100 SEK`. A `-99 SEK`
+counterposting leaves a `1 SEK` imbalance.
 For example, three units bought for 100 SEK should use `{{100 SEK}}`, not
 `{33.33 SEK}`. The latter records a cost of 99.99 SEK and warns if paired with
 a payment of 100 SEK without an explicit posting for the difference. An implicit
