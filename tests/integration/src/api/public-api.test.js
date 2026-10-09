@@ -306,6 +306,23 @@ test('print returns plain journal text and validates its options', (t) => {
   );
 });
 
+test('validate returns no result and rejects options', (t) => {
+  const { openJournal } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-validate-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, 'account Assets:Cash\n');
+  const journal = openJournal(journalPath);
+
+  assert.equal(journal.validate(), '');
+  assert.equal(journal.validate({}), '');
+  assert.throws(
+    () => journal.validate({ unknown: true }),
+    (error) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&
+      error.message === 'Unknown validate option: unknown',
+  );
+});
+
 test('returns query data while exposing ingestion warnings through the API and CLI', (t) => {
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-warnings-'));

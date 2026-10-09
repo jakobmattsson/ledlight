@@ -238,6 +238,15 @@ line. For example, an invalid posting omits its entire transaction rather than
 leaving a partial transaction in query results. Every omitted block produces
 its own warning, including blocks in included files.
 
+### `journal.validate()`
+
+Open the journal and inspect `journal.warnings` to get all ingestion and
+accounting diagnostics without requesting report data. `validate()` accepts no
+options and returns an empty string. Opening the journal still throws for
+errors that prevent it from being read or stored. The matching CLI command,
+`ledlight validate --file PATH`, writes no stdout, prints warnings on stderr,
+and exits with status 1 on an error.
+
 ## Reports
 
 Report methods are called on the object returned by `openJournal()` and accept
@@ -551,6 +560,9 @@ and every CLI command maps to one such method. Run `ledlight --help` for the
 complete command list and `ledlight <command> --help` for parameters and
 usage examples. Commands require `--file PATH`, corresponding to the
 `journalPath` passed to `openJournal()`.
+
+`validate` takes no query parameters. It checks the complete journal, returns
+an empty string, and shows any warnings through the normal CLI stderr channel.
 
 Every API input has a corresponding CLI argument. The CLI may additionally
 offer output-only arguments that select a representation without changing the
