@@ -1,0 +1,32 @@
+A partial sale with different available SEK unit costs still needs an explicit lot cost.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+
+2024-01-01 First purchase
+  Assets:Fund  2 FUND {100 SEK}
+  Assets:Cash  -200 SEK
+
+2024-01-02 Second purchase at a different unit cost
+  Assets:Fund  3 FUND {150 SEK}
+  Assets:Cash  -450 SEK
+
+2024-01-03 Ambiguous partial sale without a lot cost
+  Assets:Fund  -1 FUND @ 200 SEK
+  Assets:Cash  200 SEK
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] Negative FUND posting must use both a lot cost ({...} or {{...}}) and a transaction price (@ or @@); the default commodity is SEK
+  {{JOURNAL_PATH}}:18:3

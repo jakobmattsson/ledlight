@@ -1,0 +1,41 @@
+An omitted lot cost on a full sale removes the entire remaining SEK basis across different lots.
+
+========== API ==========
+
+aggregate({ accounts: ['Income:Gains'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+account Income:Gains
+
+2024-01-01 First purchase
+  Assets:Fund  2 FUND {100 SEK}
+  Assets:Cash  -200 SEK
+
+2024-01-02 Second purchase at a different unit cost
+  Assets:Fund  3 FUND {150 SEK}
+  Assets:Cash  -450 SEK
+
+2024-01-03 Sale of the entire remaining holding
+  Assets:Fund  -5 FUND @ 200 SEK
+  Assets:Cash  1000 SEK
+  Income:Gains  -350 SEK
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Income:Gains",
+    "commodity": "SEK",
+    "quantity": "-350"
+  }
+]
+
+========== WARNINGS ==========
