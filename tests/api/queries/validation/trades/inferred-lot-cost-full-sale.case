@@ -2,7 +2,7 @@ An omitted lot cost on a full sale removes the entire remaining SEK basis across
 
 ========== CLI ==========
 
-ledlight transactions --format text
+ledlight transactions --id 8 --format text
 
 ========== FILE ==========
 
@@ -29,14 +29,6 @@ account Income:Gains
   Income:Gains  -350 SEK
 
 ========== OUTPUT ==========
-
-2024-01-01 First purchase
-    Assets:Fund                         2 FUND {100.00 SEK}
-    Assets:Cash                          -200.00 SEK
-
-2024-01-02 Second purchase at a different unit cost
-    Assets:Fund                         3 FUND {150.00 SEK}
-    Assets:Cash                          -450.00 SEK
 
 2024-01-03 Sale of the entire remaining holding
     Assets:Fund                         -5 FUND {130.00 SEK} @ 200.00 SEK

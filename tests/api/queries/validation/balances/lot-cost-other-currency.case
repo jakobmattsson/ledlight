@@ -1,4 +1,4 @@
-A USD counterposting remains a commodity exchange despite a lot cost in SEK.
+Without a default commodity, a USD counterposting remains a raw exchange despite SEK lot cost.
 
 ========== API ==========
 
@@ -19,4 +19,3 @@ account Assets:Cash
   Assets:Cash  -100 USD
 
 ========== WARNINGS ==========
-

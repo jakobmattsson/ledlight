@@ -1,4 +1,4 @@
-A matching SEK counterposting must equal the lot cost exactly.
+Without a default commodity, a SEK counterposting must equal the lot cost exactly.
 
 ========== API ==========
 
@@ -22,4 +22,3 @@ account Assets:Cash
 
 [UNBALANCED_TRANSACTION] Transaction does not balance: 1 SEK
   {{JOURNAL_PATH}}:9:1
-

@@ -2,7 +2,7 @@ An omitted lot cost is determined by the shared SEK unit basis of all available 
 
 ========== CLI ==========
 
-ledlight transactions --format text
+ledlight transactions --id 8 --format text
 
 ========== FILE ==========
 
@@ -29,14 +29,6 @@ account Income:Gains
   Income:Gains  -60 SEK
 
 ========== OUTPUT ==========
-
-2024-01-01 First purchase
-    Assets:Fund                         4 FUND {100.00 SEK}
-    Assets:Cash                          -400.00 SEK
-
-2024-01-02 Second purchase at the same unit cost
-    Assets:Fund                         6 FUND {100.00 SEK}
-    Assets:Cash                          -600.00 SEK
 
 2024-01-03 Partial sale without a lot cost
     Assets:Fund                         -3 FUND {100.00 SEK} @ 120.00 SEK

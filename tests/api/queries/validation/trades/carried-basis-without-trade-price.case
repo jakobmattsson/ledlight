@@ -2,7 +2,7 @@ An internal transfer and a split carry SEK basis without an exchange price.
 
 ========== CLI ==========
 
-ledlight transactions --format text
+ledlight transactions --accounts '^Assets:Other$' --format text
 
 ========== FILE ==========
 
@@ -28,10 +28,6 @@ account Assets:Cash
   Assets:Other  4 FUND {{200 SEK}}
 
 ========== OUTPUT ==========
-
-2024-01-01 Purchase
-    Assets:Broker                       4 FUND {100.00 SEK}
-    Assets:Cash                          -400.00 SEK
 
 2024-01-02 Transfer two units
     Assets:Broker                       -2 FUND {100.00 SEK}

@@ -21,8 +21,7 @@ account Assets:Cash
 ========== OUTPUT ==========
 
 2024-01-01 Purchase without a lot cost
-    Assets:Fund                         4 FUND {100.00 SEK}
+    Assets:Fund                         4 FUND {100.00 SEK} @ 100.00 SEK
     Assets:Cash                          -400.00 SEK
 
 ========== WARNINGS ==========
-

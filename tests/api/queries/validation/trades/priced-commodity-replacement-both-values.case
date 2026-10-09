@@ -1,0 +1,36 @@
+A priced exchange records the old basis, both SEK trade values, and the new basis.
+
+========== CLI ==========
+
+ledlight transactions --id 8 --format text
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity OLD
+  format 1,000 OLD
+commodity NEW
+  format 1,000 NEW
+account Assets:Shares
+account Assets:Cash
+account Income:Gains
+
+2024-01-01 Purchase
+  Assets:Shares  2 OLD {{150 SEK}}
+  Assets:Cash  -150 SEK
+
+2024-02-01 Priced replacement
+  Assets:Shares  5 NEW {{200 SEK}} @@ 200 SEK
+  Assets:Shares  -2 OLD {{150 SEK}} @@ 200 SEK
+  Income:Gains  -50 SEK
+
+========== OUTPUT ==========
+
+2024-02-01 Priced replacement
+    Assets:Shares                       5 NEW {40.00 SEK} @@ 200.00 SEK
+    Assets:Shares                       -2 OLD {75.00 SEK} @@ 200.00 SEK
+    Income:Gains                          -50.00 SEK
+
+========== WARNINGS ==========

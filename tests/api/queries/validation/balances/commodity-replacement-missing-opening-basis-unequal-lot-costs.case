@@ -1,4 +1,4 @@
-Unequal replacement lot costs do not hide a missing opening lot cost.
+Unequal basis on an unpriced replacement is invalid even when opening basis is missing.
 
 ========== API ==========
 
@@ -27,10 +27,8 @@ account Equity:Opening
 [INVALID_COMMODITY_TRADE] Positive OLD posting must use a lot cost ({...} or {{...}}) and no transaction price (@ or @@), except when both prices are zero; the default commodity is SEK
   {{JOURNAL_PATH}}:11:3
 
-[INVALID_COMMODITY_TRADE] Negative OLD posting must use both a lot cost ({...} or {{...}}) and a transaction price (@ or @@); the default commodity is SEK
-  {{JOURNAL_PATH}}:12:3
-  {{JOURNAL_PATH}}:15:3
+[INVALID_COMMODITY_TRADE] An unpriced commodity replacement changes acquisition basis from 99 SEK to 100 SEK
+  {{JOURNAL_PATH}}:13:1
 
 [NEGATIVE_POSTING_DATE_HOLDING] Equity:Opening: holding is -1 OLD on 2024-01-01 using posting dates; disposals must not precede available acquisitions
   {{JOURNAL_PATH}}:12:3
-

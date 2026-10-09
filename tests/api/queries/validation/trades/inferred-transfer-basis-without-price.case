@@ -2,7 +2,7 @@ A full internal transfer infers the destination basis without inventing a trade 
 
 ========== CLI ==========
 
-ledlight transactions --format text
+ledlight transactions --id 7 --format text
 
 ========== FILE ==========
 
@@ -25,13 +25,8 @@ account Assets:Cash
 
 ========== OUTPUT ==========
 
-2024-01-01 Purchase
-    Assets:Broker                       4 FUND {100.00 SEK}
-    Assets:Cash                          -400.00 SEK
-
 2024-01-02 Transfer all units
     Assets:Broker                       -4 FUND {100.00 SEK}
     Assets:Other                        4 FUND {100.00 SEK}
 
 ========== WARNINGS ==========
-

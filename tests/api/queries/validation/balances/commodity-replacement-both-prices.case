@@ -1,4 +1,4 @@
-Matching total transaction prices balance a commodity replacement in SEK.
+Without a default commodity, matching explicit prices balance both sides in SEK.
 
 ========== API ==========
 

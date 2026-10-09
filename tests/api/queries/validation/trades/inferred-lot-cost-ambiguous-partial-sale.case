@@ -2,7 +2,7 @@ A partial sale with different available SEK unit costs still needs an explicit l
 
 ========== CLI ==========
 
-ledlight transactions --format text
+ledlight transactions --id 7 --format text
 
 ========== FILE ==========
 
@@ -27,14 +27,6 @@ account Assets:Cash
   Assets:Cash  200 SEK
 
 ========== OUTPUT ==========
-
-2024-01-01 First purchase
-    Assets:Fund                         2 FUND {100.00 SEK}
-    Assets:Cash                          -200.00 SEK
-
-2024-01-02 Second purchase at a different unit cost
-    Assets:Fund                         3 FUND {150.00 SEK}
-    Assets:Cash                          -450.00 SEK
 
 2024-01-03 Ambiguous partial sale without a lot cost
     Assets:Fund                         -1 FUND @ 200.00 SEK

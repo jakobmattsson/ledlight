@@ -1,4 +1,4 @@
-A commodity replacement without transaction prices balances even when both lots have SEK costs.
+Without a default commodity, an unpriced replacement balances by opposing commodity quantities.
 
 ========== API ==========
 

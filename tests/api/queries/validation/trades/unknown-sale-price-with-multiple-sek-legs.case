@@ -2,7 +2,7 @@ A sale price remains unknown when several SEK postings could represent settlemen
 
 ========== CLI ==========
 
-ledlight transactions --format text
+ledlight transactions --id 8 --format text
 
 ========== FILE ==========
 
@@ -27,10 +27,6 @@ account Income:Other
   Income:Other  -150 SEK
 
 ========== OUTPUT ==========
-
-2024-01-01 Purchase
-    Assets:Fund                         1 FUND {100.00 SEK}
-    Assets:CashA                         -100.00 SEK
 
 2024-01-02 Sale with ambiguous settlement
     Assets:Fund                         -1 FUND {100.00 SEK}

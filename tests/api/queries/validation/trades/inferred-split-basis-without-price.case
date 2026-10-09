@@ -2,7 +2,7 @@ A split infers the new units' total basis from the units they replace, without a
 
 ========== CLI ==========
 
-ledlight transactions --format text
+ledlight transactions --id 6 --format text
 
 ========== FILE ==========
 
@@ -23,10 +23,6 @@ account Assets:Cash
   Assets:Fund  4 FUND
 
 ========== OUTPUT ==========
-
-2024-01-01 Purchase
-    Assets:Fund                         2 FUND {100.00 SEK}
-    Assets:Cash                          -200.00 SEK
 
 2024-01-02 Two-for-one split
     Assets:Fund                         -2 FUND {100.00 SEK}

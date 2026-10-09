@@ -1,4 +1,4 @@
-A lot cost balances against a matching SEK counterposting.
+Without a default commodity, a lot cost balances against a matching SEK counterposting.
 
 ========== API ==========
 
@@ -19,4 +19,3 @@ account Assets:Cash
   Assets:Cash  -100 SEK
 
 ========== WARNINGS ==========
-

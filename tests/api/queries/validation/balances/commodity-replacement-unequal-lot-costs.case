@@ -1,4 +1,4 @@
-An unpriced commodity replacement balances even when its lot costs differ.
+Without a default commodity, raw exchange balancing ignores unequal lot costs.
 
 ========== API ==========
 

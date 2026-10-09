@@ -1,4 +1,4 @@
-A transaction price only on the outgoing holding leaves the incoming commodity unbalanced.
+Without a default commodity, pricing only the outgoing holding leaves raw commodity residuals.
 
 ========== API ==========
 

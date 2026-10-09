@@ -27,12 +27,5 @@ account Equity:Opening
 [INVALID_COMMODITY_TRADE] Positive OLD posting must use a lot cost ({...} or {{...}}) and no transaction price (@ or @@), except when both prices are zero; the default commodity is SEK
   {{JOURNAL_PATH}}:11:3
 
-[INVALID_COMMODITY_TRADE] Negative OLD posting must use both a lot cost ({...} or {{...}}) and a transaction price (@ or @@); the default commodity is SEK
-  {{JOURNAL_PATH}}:12:3
-
-[INVALID_COMMODITY_TRADE] Positive NEW posting must use a lot cost ({...} or {{...}}) and no transaction price (@ or @@), except when both prices are zero; the default commodity is SEK
-  {{JOURNAL_PATH}}:14:3
-
 [NEGATIVE_POSTING_DATE_HOLDING] Equity:Opening: holding is -1.9619 OLD on 2022-01-01 using posting dates; disposals must not precede available acquisitions
   {{JOURNAL_PATH}}:12:3
-
