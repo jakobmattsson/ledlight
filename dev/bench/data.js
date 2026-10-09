@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791482544127,
+  "lastUpdate": 1791578821223,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -740,6 +740,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 9.649918,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b351138238df500befe1592142bb0c0617859fa4",
+          "message": "Merge pull request #117 from jakobmattsson/codex/fix-journal-benchmark-symbols\n\nFix journal benchmark commodity symbols",
+          "timestamp": "2026-10-09T22:46:37+02:00",
+          "tree_id": "b20d54cfbeabf51ecb1b1b3bf148bf9ac84166ce",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/b351138238df500befe1592142bb0c0617859fa4"
+        },
+        "date": 1791578820059,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 2108.047971,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 12.295404,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 12.141497,
             "unit": "ms"
           }
         ]
