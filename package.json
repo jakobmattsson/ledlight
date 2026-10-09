@@ -1,6 +1,6 @@
 {
   "name": "@jakobm/ledlight",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A small, fast Ledger-compatible parser, SQLite store, and reporting library.",
   "license": "MIT",
   "author": "Jakob Mattsson",
