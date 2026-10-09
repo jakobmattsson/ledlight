@@ -1,0 +1,25 @@
+A matching SEK counterposting must equal the lot cost exactly.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+2024-01-01 Purchase
+  Assets:Fund  2 FUND {{100 SEK}}
+  Assets:Cash  -99 SEK
+
+========== WARNINGS ==========
+
+[UNBALANCED_TRANSACTION] Transaction does not balance: 1 SEK
+  {{JOURNAL_PATH}}:9:1
+
