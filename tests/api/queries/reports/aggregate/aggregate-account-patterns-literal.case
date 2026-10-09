@@ -8,6 +8,7 @@ aggregate({ accounts: ['Assets.*Cash', ':^Cash'] })
 
 commodity SEK
   format 1,000.00 SEK
+  default
 account Assets:Cash
 account Assets:^Cash$
 account Equity:Opening
@@ -27,6 +28,3 @@ account Equity:Opening
 ]
 
 ========== WARNINGS ==========
-
-[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
-  {{JOURNAL_PATH}}:1:1

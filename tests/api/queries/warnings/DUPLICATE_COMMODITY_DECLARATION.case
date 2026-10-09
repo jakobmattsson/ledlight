@@ -8,13 +8,11 @@ accounts({})
 
 commodity SEK
   format 1,000.00 SEK
+  default
 commodity SEK
   format 1,000.00 SEK
 
 ========== WARNINGS ==========
 
-[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
-  {{JOURNAL_PATH}}:1:1
-
 [DUPLICATE_COMMODITY_DECLARATION] Commodity SEK has already been declared
-  {{JOURNAL_PATH}}:3:1
+  {{JOURNAL_PATH}}:4:1

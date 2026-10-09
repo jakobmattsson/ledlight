@@ -414,11 +414,14 @@ test('skips syntax-invalid transactions before database insertion', (t) => {
   fs.writeFileSync(journalPath, `2024-01-01 Missing commodity
   Assets:Cash  1
   Equity:Opening
+commodity SEK
+  format 1,000.00 SEK
+  default
 `);
 
   const result = buildDatabase(databasePath, journalPath);
   assert.equal(result.transactions, 0);
-  assert.equal(result.warnings.length, 2);
+  assert.equal(result.warnings.length, 1);
   assert.deepEqual(
     {
       code: result.warnings[0].code,
@@ -428,7 +431,6 @@ test('skips syntax-invalid transactions before database insertion', (t) => {
     },
     { code: 'SYNTAX_ERROR', source: journalPath, startLine: 1, endLine: 3 },
   );
-  assert.equal(result.warnings[1].code, 'MISSING_DEFAULT_COMMODITY');
   assert.equal(fs.existsSync(databasePath), true);
 });
 

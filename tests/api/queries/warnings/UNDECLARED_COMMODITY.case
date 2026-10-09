@@ -11,11 +11,11 @@ account Equity:Opening
 2024-01-01 Opening
   Assets:Cash  1 SEK
   Equity:Opening
+commodity SEK
+  format 1,000.00 SEK
+  default
 
 ========== WARNINGS ==========
-
-[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
-  {{JOURNAL_PATH}}:1:1
 
 [UNDECLARED_COMMODITY] Commodity SEK must be declared before use
   {{JOURNAL_PATH}}:4:3
