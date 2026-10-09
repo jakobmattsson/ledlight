@@ -1,0 +1,37 @@
+A basis-preserving commodity replacement carries SEK basis without a sale price.
+
+========== CLI ==========
+
+ledlight transactions --format text
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity OLD
+  format 1,000 OLD
+commodity NEW
+  format 1,000 NEW
+account Assets:Shares
+account Assets:Cash
+
+2024-01-01 Purchase
+  Assets:Shares  2 OLD {100 SEK}
+  Assets:Cash  -200 SEK
+
+2024-02-01 Basis-preserving replacement
+  Assets:Shares  -2 OLD {{200 SEK}}
+  Assets:Shares  5 NEW {{200 SEK}}
+
+========== OUTPUT ==========
+
+2024-01-01 Purchase
+    Assets:Shares                       2 OLD {100.00 SEK}
+    Assets:Cash                          -200.00 SEK
+
+2024-02-01 Basis-preserving replacement
+    Assets:Shares                       -2 OLD {100.00 SEK}
+    Assets:Shares                       5 NEW {40.00 SEK}
+
+========== WARNINGS ==========

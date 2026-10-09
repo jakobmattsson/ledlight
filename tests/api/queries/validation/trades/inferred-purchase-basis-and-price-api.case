@@ -1,0 +1,142 @@
+A simple purchase exposes both effective SEK values without recording how they were obtained.
+
+========== API ==========
+
+transactions()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+
+2024-01-01 Purchase without annotations
+  Assets:Fund  4 FUND
+  Assets:Cash  -400 SEK
+
+2024-01-02 Purchase with recorded lot cost
+  Assets:Fund  4 FUND {100 SEK}
+  Assets:Cash  -400 SEK
+
+========== OUTPUT ==========
+
+{
+  "order": "oldest",
+  "totalTransactions": 2,
+  "transactions": [
+    {
+      "transactionId": 5,
+      "transactionDate": "2024-01-01",
+      "description": "Purchase without annotations",
+      "comments": [],
+      "postings": [
+        {
+          "postingDate": "2024-01-01",
+          "account": "Assets:Fund",
+          "comments": [],
+          "amount": {
+            "quantity": "4",
+            "commodity": "FUND"
+          },
+          "lotCost": {
+            "quantity": "100",
+            "commodity": "SEK",
+            "isTotal": false
+          },
+          "cost": {
+            "quantity": "100",
+            "commodity": "SEK",
+            "isTotal": false
+          },
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "4",
+              "commodity": "FUND"
+            }
+          ]
+        },
+        {
+          "postingDate": "2024-01-01",
+          "account": "Assets:Cash",
+          "comments": [],
+          "amount": {
+            "quantity": "-400",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "-400",
+              "commodity": "SEK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "transactionId": 6,
+      "transactionDate": "2024-01-02",
+      "description": "Purchase with recorded lot cost",
+      "comments": [],
+      "postings": [
+        {
+          "postingDate": "2024-01-02",
+          "account": "Assets:Fund",
+          "comments": [],
+          "amount": {
+            "quantity": "4",
+            "commodity": "FUND"
+          },
+          "lotCost": {
+            "quantity": "100",
+            "commodity": "SEK",
+            "isTotal": false
+          },
+          "cost": {
+            "quantity": "100",
+            "commodity": "SEK",
+            "isTotal": false
+          },
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "4",
+              "commodity": "FUND"
+            }
+          ]
+        },
+        {
+          "postingDate": "2024-01-02",
+          "account": "Assets:Cash",
+          "comments": [],
+          "amount": {
+            "quantity": "-400",
+            "commodity": "SEK"
+          },
+          "lotCost": null,
+          "cost": null,
+          "balanceAssignment": null,
+          "balanceAssertion": null,
+          "amounts": [
+            {
+              "quantity": "-400",
+              "commodity": "SEK"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+========== WARNINGS ==========

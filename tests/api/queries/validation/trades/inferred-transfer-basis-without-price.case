@@ -1,0 +1,37 @@
+A full internal transfer infers the destination basis without inventing a trade price.
+
+========== CLI ==========
+
+ledlight transactions --format text
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Broker
+account Assets:Other
+account Assets:Cash
+
+2024-01-01 Purchase
+  Assets:Broker  4 FUND {100 SEK}
+  Assets:Cash  -400 SEK
+
+2024-01-02 Transfer all units
+  Assets:Broker  -4 FUND {{400 SEK}}
+  Assets:Other  4 FUND
+
+========== OUTPUT ==========
+
+2024-01-01 Purchase
+    Assets:Broker                       4 FUND {100.00 SEK}
+    Assets:Cash                          -400.00 SEK
+
+2024-01-02 Transfer all units
+    Assets:Broker                       -4 FUND {100.00 SEK}
+    Assets:Other                        4 FUND {100.00 SEK}
+
+========== WARNINGS ==========
+
