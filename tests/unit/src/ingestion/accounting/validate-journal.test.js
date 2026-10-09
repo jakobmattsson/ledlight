@@ -14,6 +14,7 @@ test('warns about duplicate declarations and marks the later entries unstoreable
 account Assets:Cash
 commodity SEK
   format 1,000.00 SEK
+  default
 commodity SEK
 tag Reviewed
 tag Reviewed
@@ -23,9 +24,9 @@ tag Reviewed
   assert.deepEqual(result.warnings.map(({ code, line }) => ({ code, line })), [{
     code: 'DUPLICATE_ACCOUNT_DECLARATION', line: 2,
   }, {
-    code: 'DUPLICATE_COMMODITY_DECLARATION', line: 5,
+    code: 'DUPLICATE_COMMODITY_DECLARATION', line: 6,
   }, {
-    code: 'DUPLICATE_TAG_DECLARATION', line: 7,
+    code: 'DUPLICATE_TAG_DECLARATION', line: 8,
   }]);
   assert.deepEqual([...result.invalidEntries], [
     journal.entries[1], journal.entries[3], journal.entries[5],
@@ -35,6 +36,7 @@ tag Reviewed
 test('allows implicit postings and balance assignments', () => {
   const journal = parse(`commodity SEK
   format 1,000.00 SEK
+  default
 account Assets:Cash
 account Equity:Opening
 2024-01-01 Opening
@@ -65,13 +67,10 @@ account Equity:Opening
 `, { source: 'fixture.ledger' });
 }
 
-test('warns when positive non-default commodity postings do not use only a lot cost', () => {
+test('warns when positive non-default commodity postings lack a lot cost', () => {
   for (const posting of [
     '1 FUND',
     '1 FUND @ 10 SEK',
-    '1 FUND {10 SEK} @ 10 SEK',
-    '1 FUND {0 SEK} @ 10 SEK',
-    '1 FUND {10 SEK} @ 0 SEK',
   ]) {
     const result = validateJournal(parseTrade(posting));
     assert.equal(result.warnings.length, 1);
@@ -81,6 +80,7 @@ test('warns when positive non-default commodity postings do not use only a lot c
 
   assert.deepEqual(validateJournal(parseTrade('1 FUND {10 SEK}')).warnings, []);
   assert.deepEqual(validateJournal(parseTrade('1 FUND {{10 SEK}}')).warnings, []);
+  assert.deepEqual(validateJournal(parseTrade('1 FUND {10 SEK} @ 10 SEK')).warnings, []);
 });
 
 test('allows positive non-default commodity postings with zero lot and transaction prices', () => {

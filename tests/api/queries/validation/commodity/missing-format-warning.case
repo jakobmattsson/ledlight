@@ -8,6 +8,7 @@ commodities({ usage: 'all' })
 
 commodity SEK
   format 1,000.00 SEK
+  default
 commodity FUND
 
 ========== OUTPUT ==========
@@ -24,7 +25,7 @@ commodity FUND
     "commodity": "SEK",
     "comment": null,
     "format": "1,000.00 SEK",
-    "isDefault": false,
+    "isDefault": true,
     "used": false
   }
 ]
@@ -32,4 +33,4 @@ commodity FUND
 ========== WARNINGS ==========
 
 [MISSING_COMMODITY_FORMAT] Commodity FUND must declare a format property
-  {{JOURNAL_PATH}}:3:1
+  {{JOURNAL_PATH}}:4:1

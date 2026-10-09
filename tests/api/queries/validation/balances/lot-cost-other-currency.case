@@ -1,0 +1,24 @@
+A journal without a default commodity warns even when the USD counterposting remains a raw exchange.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity USD
+  format 1,000.00 USD
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+2024-01-01 Purchase
+  Assets:Fund  2 FUND {{100 SEK}}
+  Assets:Cash  -100 USD
+
+========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1

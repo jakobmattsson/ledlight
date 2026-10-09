@@ -8,6 +8,7 @@ aggregate({ accounts: ['^Assets:Cash$'] })
 
 commodity SEK
   format 1,000.00 SEK
+  default
 commodity FUND
   format 1,000 FUND
 account Assets:Cash
@@ -24,4 +25,4 @@ account Equity:Opening
 ========== WARNINGS ==========
 
 [MULTIPLE_IMPLICIT_POSTINGS] Transaction has multiple implicit postings
-  {{JOURNAL_PATH}}:8:1
+  {{JOURNAL_PATH}}:9:1

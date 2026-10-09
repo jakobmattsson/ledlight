@@ -29,3 +29,6 @@ account Equity:Opening
 1,235          JPY  Assets:Yen
 
 ========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1

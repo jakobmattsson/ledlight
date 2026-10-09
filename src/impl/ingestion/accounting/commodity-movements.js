@@ -42,5 +42,18 @@ module.exports = ({ rational: { zero, parse, mul, neg, add, cmp } }) => {
     }
     return pairs;
   }
-  return { annotatedTotal, carriedMovements };
+
+  function unpricedReplacement(transaction, valuationCommodity) {
+    const postings = transaction.postings.filter((posting) => posting.amount &&
+      posting.amount.commodity !== valuationCommodity && parse(posting.amount.quantity).n);
+    if (postings.length !== 2 || transaction.postings.length !== 2 ||
+        postings.some((posting) => posting.cost) ||
+        postings.some((posting) => posting.lotCost?.amount.commodity !== valuationCommodity) ||
+        postings[0].amount.commodity === postings[1].amount.commodity) return null;
+    const outgoing = postings.find((posting) => parse(posting.amount.quantity).n < 0n);
+    const incoming = postings.find((posting) => parse(posting.amount.quantity).n > 0n);
+    return outgoing && incoming ? { outgoing, incoming } : null;
+  }
+
+  return { annotatedTotal, carriedMovements, unpricedReplacement };
 };

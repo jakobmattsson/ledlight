@@ -1,12 +1,8 @@
-Raw transactions listing matches Ledger.
+Transaction text exposes an inferred purchase cost alongside the recorded lot cost.
 
 ========== CLI ==========
 
 ledlight transactions
-
-========== LEDGER-CLI ==========
-
-ledger --args-only --date-format %Y-%m-%d --no-pager print
 
 ========== FILE ==========
 
@@ -39,5 +35,5 @@ P 2024-01-01 FUND 10 USD
 
 2024-01-02 Buy
     ; Used: yes
-    Assets:Fund                         2.000 FUND {10.00 USD}
+    Assets:Fund                         2.000 FUND {10.00 USD} @ 10.00 USD
     Assets Fund                           -20.00 USD

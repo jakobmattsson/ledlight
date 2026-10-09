@@ -69,5 +69,5 @@ P 2024-01-01 USD 2 SEK  ; market rate
     Equity:Opening  0 SEK
 
 2024-01-03 Buy
-    Assets:Fund  1 FUND {10 SEK}
+    Assets:Fund  1 FUND {10 SEK} @ 10 SEK
     Assets:Cash  -10 SEK

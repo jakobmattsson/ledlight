@@ -1,0 +1,31 @@
+A split infers the new units' total basis from the units they replace, without a trade price.
+
+========== CLI ==========
+
+ledlight transactions --id 6 --format text
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:Cash
+
+2024-01-01 Purchase
+  Assets:Fund  2 FUND {100 SEK}
+  Assets:Cash  -200 SEK
+
+2024-01-02 Two-for-one split
+  Assets:Fund  -2 FUND {{200 SEK}}
+  Assets:Fund  4 FUND
+
+========== OUTPUT ==========
+
+2024-01-02 Two-for-one split
+    Assets:Fund                         -2 FUND {100.00 SEK}
+    Assets:Fund                         4 FUND {50.00 SEK}
+
+========== WARNINGS ==========

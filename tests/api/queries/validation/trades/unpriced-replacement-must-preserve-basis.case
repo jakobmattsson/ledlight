@@ -1,0 +1,30 @@
+An unpriced replacement cannot change the total SEK acquisition basis.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity OLD
+  format 1,000 OLD
+commodity NEW
+  format 1,000 NEW
+account Assets:Shares
+account Assets:Cash
+
+2024-01-01 Purchase
+  Assets:Shares  1 OLD {99 SEK}
+  Assets:Cash  -99 SEK
+
+2024-02-01 Unpriced replacement
+  Assets:Shares  2 NEW {{100 SEK}}
+  Assets:Shares  -1 OLD {{99 SEK}}
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] An unpriced commodity replacement changes acquisition basis from 99 SEK to 100 SEK
+  {{JOURNAL_PATH}}:15:1

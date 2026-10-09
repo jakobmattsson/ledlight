@@ -25,6 +25,13 @@ module.exports = ({
         defaultLocation = property.location;
       }
     }
+    if (!valuationCommodity) {
+      warnings.push(createWarning(
+        warningCodes.MISSING_DEFAULT_COMMODITY,
+        'Journal must declare one default commodity',
+        { source: journal.journalPath || journal.source || '<input>', line: 1, column: 1 },
+      ));
+    }
     return valuationCommodity;
   }
 

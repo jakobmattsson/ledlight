@@ -8,6 +8,7 @@ aggregate({ accounts: ['^Assets:Cash$'] })
 
 commodity SEK
   format 1,000.00 SEK
+  default
 commodity FUND
   format 1,000 FUND
 account Assets:Cash
@@ -30,4 +31,4 @@ account Equity:Opening
 ========== WARNINGS ==========
 
 [BALANCE_ASSERTION_FAILED] Balance assertion failed: expected 11 SEK, got 10 SEK
-  {{JOURNAL_PATH}}:9:3
+  {{JOURNAL_PATH}}:10:3

@@ -1,0 +1,15 @@
+A journal without a default commodity produces one warning at the root file.
+
+========== API ==========
+
+accounts({})
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+
+========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1

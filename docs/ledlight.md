@@ -338,6 +338,15 @@ journal order during the full database rebuild.
 Explicit transactions must balance exactly, allowing Ledger-style two-commodity
 exchanges without cost annotations. Unit and total costs are exact values;
 calculated unit costs have no rounding tolerance when balancing a transaction.
+Lot costs do not by themselves convert both sides of a commodity replacement
+into the lot-cost commodity. Without transaction prices, opposite-sign holdings
+in different commodities can balance as an exchange, but unequal historical
+bases produce a warning. An explicit `@` or `@@` price converts that posting for balancing;
+pricing only one side of such a replacement lets Ledlight derive the opposite
+SEK price when the amount is exact.
+A lot cost does provide the balancing value when another posting uses its cost
+commodity, such as `2 FUND {{100 SEK}}` against `-100 SEK`. A `-99 SEK`
+counterposting leaves a `1 SEK` imbalance.
 For example, three units bought for 100 SEK should use `{{100 SEK}}`, not
 `{33.33 SEK}`. The latter records a cost of 99.99 SEK and warns if paired with
 a payment of 100 SEK without an explicit posting for the difference. An implicit
@@ -356,13 +365,13 @@ when disposal proceeds differ from the lot's cost basis, matching Ledger's
 behavior.
 
 Accounting checks are non-blocking ingestion warnings. Failed balance
-assertions, unbalanced transactions, invalid trade annotations, and additional
-default commodity declarations are recorded before queries run. Data that can
-still be represented is retained; an entry with unresolved amounts is skipped
-without preventing valid entries from being queried. The public API exposes
-the warnings on the opened journal, grouped by code and message with at most ten
-locations per group. The CLI writes a human-readable version of that list to
-stderr and keeps query output on stdout.
+assertions, unbalanced transactions, invalid trade annotations, and missing or
+additional default commodity declarations are recorded before queries run.
+Data that can still be represented is retained; an entry with unresolved
+amounts is skipped without preventing valid entries from being queried. The
+public API exposes the warnings on the opened journal, grouped by code and
+message with at most ten locations per group. The CLI writes a human-readable
+version of that list to stderr and keeps query output on stdout.
 
 Every commodity declaration must include an explicit `format` property. A
 declaration without one produces a `MISSING_COMMODITY_FORMAT` warning. Requiring
@@ -385,19 +394,28 @@ the later declaration. The later declaration is not stored; the first
 declaration and its metadata remain authoritative. Unique database constraints
 on declaration names enforce the same invariant independently of validation.
 
-Non-zero postings in commodities other than the journal default must
-also describe their trade direction unambiguously. A positive quantity must
-have a lot cost (`{}` or `{{}}`) and no transaction price. A negative quantity
-must have both a lot cost and a transaction price (`@` or `@@`). The same rules
-apply after resolving implicit postings and balance assignments. Assignment
-checks use the actual change in holdings, not the target balance. Missing
-annotations produce `INVALID_COMMODITY_TRADE` even when a report can still
-calculate market value; an unchanged balance adds no trade warning. Unit and total
-annotations may be combined freely. As a Ledger-compatible special case, a
-positive quantity may have both annotations when both prices are zero. This
-represents a cost-free acquisition that still needs an explicit zero transaction
-price to balance. Zero quantities are exempt because they do not acquire or
-dispose of a commodity.
+Non-zero trades in commodities other than the journal default need a lot cost
+in the default commodity. It identifies the historical acquisition basis of
+the units acquired or disposed of. A transaction price (`@` or `@@`) records
+their value in the current exchange and may coexist with the lot cost on
+either a positive or a negative posting. The two values can differ. For a
+two-posting purchase or sale against an explicit default-commodity amount,
+Ledlight derives the missing transaction price from that amount and derives a
+purchase lot cost from it when needed. An absent disposal lot cost is derived
+only when all remaining units in that account have the same unit basis or the
+posting disposes of the entire holding. Otherwise the trade receives an
+`INVALID_COMMODITY_TRADE` warning. Opening holdings without a recorded basis
+do not gain one retroactively. Derived values are stored on the posting and
+shown by `transactions --format text` just like explicit annotations.
+
+An unpriced transfer, split, or commodity replacement carries historical basis
+without a transaction price. An unpriced replacement must preserve the total
+basis; changing it produces a warning. A priced replacement needs a current
+price on both commodity legs; Ledlight can derive one from the other when the
+known price is in the default commodity. These rules also apply after resolving
+implicit postings and balance assignments. Assignment checks use the actual
+change in holdings, not the target balance. Zero quantities are exempt because
+they do not acquire or dispose of a commodity.
 
 ### Zero-cost acquisitions
 
@@ -425,13 +443,9 @@ so `420 RIGHT {0 SEK}` leaves an unbalanced `420 RIGHT` remainder. The explicit
 `@ 0 SEK` supplies the missing zero-value conversion and makes the transaction
 balance.
 
-Ledger can derive a zero lot annotation from `420 RIGHT @ 0 SEK`, but Ledlight
-requires the lot cost to remain explicit because later gain calculations depend
-on an explicit acquisition basis. Consequently, Ledlight accepts both
-annotations on a positive posting only when both values are exactly zero. It
-continues to reject mixed cases such as `{0 SEK} @ 10 SEK` and
-`{10 SEK} @ 0 SEK`, as well as ordinary positive postings carrying both a lot
-cost and a transaction price.
+Ledlight accepts both annotations on a positive posting, including this zero
+value example. A zero transaction price alone cannot establish the acquisition
+basis without an unambiguous settlement amount or other supporting posting.
 
 This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
@@ -617,9 +631,12 @@ commodity USD
 ```
 
 This `commodity` property is the only supported way to declare the valuation
-commodity. Marking more than one declaration as `default` is a journal
-configuration error, including repeated declarations of the same symbol. There
-is no API or command-line option for choosing another target.
+commodity. Every journal must mark exactly one commodity as `default`. A missing
+declaration produces `MISSING_DEFAULT_COMMODITY`; marking more than one produces
+`MULTIPLE_DEFAULT_COMMODITIES`, including repeated declarations of the same
+symbol. Both are ingestion warnings. Queries that require valuation still fail
+when no default is available. There is no API or command-line option for
+choosing another target.
 Price chains can pass through intermediate commodities. Missing and circular
 price chains are errors. Results remain exact decimal strings and are not
 rounded for display.
@@ -653,7 +670,8 @@ and may be incomplete, as the warning explains. This includes costs on both
 acquisitions and disposals contributing to an open position. Missing lot costs on
 other open positions still cause an error. Prices alone cannot
 identify the original acquisition exchange rates for later disposals or transfers;
-record the acquisition basis in the default commodity explicitly. Closed positions
+record the acquisition basis in the default commodity or provide a transaction
+from which it can be derived exactly. Closed positions
 are omitted before checking their lot costs.
 
 ```console

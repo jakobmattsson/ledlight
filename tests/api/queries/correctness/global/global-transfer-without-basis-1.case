@@ -1,6 +1,6 @@
 Global correctness: transfer-without-basis (run 1).
-The destination receives units without recorded basis. An unchanged combined
-unit count cannot justify treating that missing basis as zero.
+A full transfer carries the known source basis when the destination omits its
+lot cost, so the destination gain is measured against that basis.
 
 ========== CLI ==========
 
@@ -25,6 +25,14 @@ P 2024-03-01 FUND 120 USD
   Assets:OtherBroker  10 FUND
 LEDGER
 
-========== ERROR ==========
+========== OUTPUT ==========
 
-Cannot calculate unrealized gain for Assets:OtherBroker: FUND has no lot cost
+[
+  {
+    "account": "Assets:OtherBroker",
+    "quantity": "200",
+    "commodity": "USD"
+  }
+]
+
+========== WARNINGS ==========

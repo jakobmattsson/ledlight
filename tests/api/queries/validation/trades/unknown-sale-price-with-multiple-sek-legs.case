@@ -1,0 +1,40 @@
+A sale price remains unknown when several SEK postings could represent settlement.
+
+========== CLI ==========
+
+ledlight transactions --id 8 --format text
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity FUND
+  format 1,000 FUND
+account Assets:Fund
+account Assets:CashA
+account Assets:CashB
+account Income:Other
+
+2024-01-01 Purchase
+  Assets:Fund  1 FUND {100 SEK}
+  Assets:CashA  -100 SEK
+
+2024-01-02 Sale with ambiguous settlement
+  Assets:Fund  -1 FUND {100 SEK}
+  Assets:CashA  120 SEK
+  Assets:CashB  130 SEK
+  Income:Other  -150 SEK
+
+========== OUTPUT ==========
+
+2024-01-02 Sale with ambiguous settlement
+    Assets:Fund                         -1 FUND {100.00 SEK}
+    Assets:CashA                          120.00 SEK
+    Assets:CashB                          130.00 SEK
+    Income:Other                         -150.00 SEK
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] Negative FUND posting must use both a lot cost ({...} or {{...}}) and a transaction price (@ or @@); the default commodity is SEK
+  {{JOURNAL_PATH}}:16:3

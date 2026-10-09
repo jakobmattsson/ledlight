@@ -8,6 +8,7 @@ module.exports = ({
   globalAccountingValidator: { validateGlobalAccounting },
   journalValidator: { validateJournal, validateResolvedCommodityTrades },
   journalValuationCommodity: { valuationCommodityFromJournal },
+  effectivePostingCosts: { inferEffectivePostingCosts },
   postingBalanceMaterializer: { materializePostingBalances },
   valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },
@@ -209,7 +210,10 @@ module.exports = ({
     const valuationCommodity = valuationCommodityFromJournal(
       journal, warnings, ignoredProperties,
     );
+    const inferredWarnings = [];
+    inferEffectivePostingCosts(journal.entries, valuationCommodity, inferredWarnings);
     const validation = validateJournal(journal, valuationCommodity, warnings);
+    validation.warnings.push(...inferredWarnings);
     const postingResolver = new PostingResolver(validation.warnings);
     const resolvedTransactions = new Map();
     for (const entry of journal.entries) {

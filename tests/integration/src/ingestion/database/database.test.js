@@ -414,6 +414,9 @@ test('skips syntax-invalid transactions before database insertion', (t) => {
   fs.writeFileSync(journalPath, `2024-01-01 Missing commodity
   Assets:Cash  1
   Equity:Opening
+commodity SEK
+  format 1,000.00 SEK
+  default
 `);
 
   const result = buildDatabase(databasePath, journalPath);
@@ -431,6 +434,27 @@ test('skips syntax-invalid transactions before database insertion', (t) => {
   assert.equal(fs.existsSync(databasePath), true);
 });
 
+test('rebuilds an older cache to persist the missing default warning', (t) => {
+  const directory = temporaryDirectory(t);
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  format 1,000.00 SEK
+`);
+  buildDatabase(databasePath, journalPath);
+  const database = new Database(databasePath);
+  try {
+    database.prepare("UPDATE database_metadata SET value = '37' WHERE key = 'schema_version'").run();
+    database.exec('DELETE FROM ingestion_warnings');
+  } finally {
+    database.close();
+  }
+
+  const result = ensureDatabaseCurrent(databasePath, journalPath);
+  assert.equal(result.rebuilt, true);
+  assert.deepEqual(result.summary.warnings.map(({ code }) => code), ['MISSING_DEFAULT_COMMODITY']);
+});
+
 test('stores non-default commodity trades and reports invalid annotations as warnings', (t) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
@@ -444,7 +468,7 @@ account Assets:Fund
 account Assets:Cash
 2024-01-01 Invalid purchase
   Assets:Fund  1 FUND @ 10 SEK
-  Assets:Cash  -10 SEK
+  Assets:Cash
 `);
 
   const result = buildDatabase(databasePath, journalPath);

@@ -1,0 +1,31 @@
+Matching transaction prices do not hide a missing opening lot cost.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+commodity NEW
+  format 1,000.000000 NEW
+commodity OLD
+  format 1,000.0000 OLD
+account Assets:Shares
+account Equity:Opening
+2022-01-01 Opening
+  Assets:Shares  1.9619 OLD
+  Equity:Opening  -1.9619 OLD
+2022-12-12 Replacement
+  Assets:Shares  4.051281 NEW {{350 SEK}} @@ 350 SEK
+  Assets:Shares  -1.9619 OLD {{350 SEK}} @@ 350 SEK
+
+========== WARNINGS ==========
+
+[INVALID_COMMODITY_TRADE] Positive OLD posting must use a lot cost ({...} or {{...}}); the default commodity is SEK
+  {{JOURNAL_PATH}}:11:3
+
+[NEGATIVE_POSTING_DATE_HOLDING] Equity:Opening: holding is -1.9619 OLD on 2022-01-01 using posting dates; disposals must not precede available acquisitions
+  {{JOURNAL_PATH}}:12:3

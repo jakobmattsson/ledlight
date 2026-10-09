@@ -45,6 +45,9 @@ account Assets:Other
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
+
 [UNBALANCED_TRANSACTION] Transaction does not balance: -0.012 SEK
   {{JOURNAL_PATH}}:10:1
 

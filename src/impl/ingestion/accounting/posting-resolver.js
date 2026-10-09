@@ -28,12 +28,23 @@ module.exports = ({
     (residuals[0][1].coefficient < 0n) !== (residuals[1][1].coefficient < 0n);
   }
 
-  function balancingCost(posting) {
-    return posting.lotCost || posting.cost;
+  function balancingCost(posting, postings) {
+    if (posting.cost) return posting.lotCost || posting.cost;
+    if (!posting.lotCost) return null;
+    const costCommodity = posting.lotCost.amount.commodity;
+    const hasImplicitPosting = postings.some((candidate) =>
+      !candidate.amount && !candidate.balanceAssignment);
+    const hasMatchingPosting = postings.some((candidate) =>
+      candidate !== posting &&
+      (candidate.amount?.commodity || candidate.balanceAssignment?.commodity) === costCommodity);
+    const samePostingCommodity = postings.length > 1 && postings.every((candidate) =>
+      (candidate.amount?.commodity || candidate.balanceAssignment?.commodity) ===
+        posting.amount?.commodity);
+    return hasImplicitPosting || hasMatchingPosting || samePostingCommodity
+      ? posting.lotCost : null;
   }
 
-  function balancingAmount(posting, amount) {
-    const annotation = balancingCost(posting);
+  function balancingAmount(annotation, amount) {
     if (!annotation) return amount;
     const cost = parseDecimal(annotation.amount.quantity);
     let quantity;
@@ -70,7 +81,7 @@ module.exports = ({
 
       transaction.postings.forEach((posting, position) => {
         if (invalidTransaction) return;
-        const annotation = balancingCost(posting);
+        const annotation = balancingCost(posting, transaction.postings);
         if (annotation) hasCost = true;
         let amount = posting.amount;
         if (posting.balanceAssignment) {
@@ -97,7 +108,7 @@ module.exports = ({
 
         resolved[position].push(amount);
         this.apply(posting.account, amount);
-        const balancing = balancingAmount(posting, amount);
+        const balancing = balancingAmount(annotation, amount);
         addToMap(transactionBalance, balancing.commodity, parseDecimal(balancing.quantity));
 
         if (posting.balanceAssertion) {
