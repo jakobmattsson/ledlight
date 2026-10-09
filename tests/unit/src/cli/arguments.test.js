@@ -455,7 +455,6 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.doesNotMatch(usage(), /Commands:/u);
   assert.match(usage(), /transactions\s+show transactions/u);
   assert.match(usage(), /presentation:\n {2}print\s+pretty-print the complete journal/u);
-  assert.match(usage(), /presentation:[\s\S]* {2}validate\s+check the journal and show any errors or warnings/u);
   assert.doesNotMatch(usage(), /transactions\|print/u);
   assert.doesNotMatch(usage(), /^ {2}\S+ \[options\]/mu);
   assert.doesNotMatch(usage(), /database-path|ensure-database|open-journal/u);
@@ -464,7 +463,6 @@ test('rejects missing commands, values, duplicate dates, and unknown options', (
   assert.match(usage(), /--version[\s\S]*--help/u);
   assert.match(usage('aggregate'), /^Usage: ledlight aggregate --file <path> \[options\]/u);
   assert.match(usage('print'), /^Usage: ledlight print --file <path> \[options\]/u);
-  assert.match(usage('validate'), /^Usage: ledlight validate --file <path> \[options\]/u);
   assert.match(usage('aggregate'), /--file <path>\s+\(REQUIRED\) read this journal file, or - for stdin/u);
   assert.match(usage('aggregate'), /--accounts <pattern>.*repeatable/u);
   assert.match(

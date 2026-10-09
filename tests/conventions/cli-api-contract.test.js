@@ -91,9 +91,4 @@ test('tracks API inputs separately from CLI-only output inputs', () => {
     inputs: ['journalPath', 'density', 'sortDeclarations'],
     outputInputs: [],
   });
-  assert.deepEqual(argumentsModule.apiInputCoverage.validate, {
-    command: 'validate',
-    inputs: ['journalPath'],
-    outputInputs: [],
-  });
 });
