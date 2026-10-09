@@ -52,7 +52,7 @@ function verifyFixture(journal, aggregateRows) {
     assert.equal(trades, TRADE_COUNT);
     const concentratedSales = database.prepare(`
       SELECT COUNT(*) AS count FROM postings
-      WHERE account = 'Assets:Holding:UNIT001'
+      WHERE account = 'Assets:Holding:UNITAA'
         AND amount_quantity = '-1'
         AND lot_cost_quantity = '105'
     `).get().count;
