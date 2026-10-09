@@ -56,6 +56,9 @@ method, option, result shape, and ordering guarantee.
 
 Use `journal.print()` or `ledlight print --file main.ledger` to pretty-print the
 complete journal as text. The CLI lists this command under `presentation`.
+Use `journal.validate()` or `ledlight validate --file main.ledger` to check a
+journal without producing report data. The CLI prints warnings on stderr, and
+errors still cause a nonzero exit status.
 
 See the [package support policy](package.md) for supported Node.js and native
 platforms, module formats, published files, and compatibility guarantees.
@@ -135,6 +138,7 @@ underlying result.
 | `unrealized-gains --file PATH` | `openJournal(journalPath).unrealizedGains(options)` | Unrealized gain or loss by account |
 | `investment-performance --file PATH` | `openJournal(journalPath).investmentPerformance(options)` | Report selection and calculation |
 | `print --file PATH` | `openJournal(journalPath).print(options)` | Format the complete stored journal |
+| `validate --file PATH` | `openJournal(journalPath).validate()` | Check the journal and expose diagnostics without report data |
 | `accounts --file PATH` | `openJournal(journalPath).accounts(options)` | Account metadata |
 | `tags --file PATH` | `openJournal(journalPath).tags(options)` | Tag declarations |
 | `commodities --file PATH` | `openJournal(journalPath).commodities(options)` | Commodity declarations |

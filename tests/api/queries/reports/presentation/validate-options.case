@@ -1,0 +1,15 @@
+Validate rejects query options.
+
+========== API ==========
+
+validate({ unknown: true })
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+  default
+
+========== ERROR ==========
+
+Unknown validate option: unknown

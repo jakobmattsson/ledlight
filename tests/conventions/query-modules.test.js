@@ -14,7 +14,8 @@ test('registers all queries as one immutable dependency', () => {
   const queries = container.resolve('queries');
 
   assert.ok(Object.isFrozen(queries));
-  assert.equal(queries.length, 11);
+  assert.equal(queries.length, fs.readdirSync(queryDirectory)
+    .filter((fileName) => fileName.endsWith('.js')).length);
   for (const registrationName of [
     'aggregateQuery',
     'totalHistoryQuery',
