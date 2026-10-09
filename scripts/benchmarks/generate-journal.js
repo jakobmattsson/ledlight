@@ -19,7 +19,8 @@ function dateAt(index, count) {
 }
 
 function instrument(index) {
-  return `UNIT${String(index + 1).padStart(3, '0')}`;
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  return `UNIT${letters[Math.floor(index / letters.length)]}${letters[index % letters.length]}`;
 }
 
 function category(index) {
