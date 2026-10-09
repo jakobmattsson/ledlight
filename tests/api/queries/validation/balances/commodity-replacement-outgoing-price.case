@@ -1,4 +1,4 @@
-Without a default commodity, pricing only the outgoing holding leaves raw commodity residuals.
+An exchange without a default commodity warns when only the outgoing holding has a price.
 
 ========== API ==========
 
@@ -23,5 +23,7 @@ account Equity:Opening
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
 [UNBALANCED_TRANSACTION] Transaction does not balance: 4.051281 NEW, -350 SEK
   {{JOURNAL_PATH}}:12:1

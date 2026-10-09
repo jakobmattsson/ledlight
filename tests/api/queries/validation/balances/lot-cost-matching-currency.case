@@ -1,4 +1,4 @@
-Without a default commodity, a lot cost balances against a matching SEK counterposting.
+A journal without a default commodity warns even when lot cost balances against SEK.
 
 ========== API ==========
 
@@ -19,3 +19,6 @@ account Assets:Cash
   Assets:Cash  -100 SEK
 
 ========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1

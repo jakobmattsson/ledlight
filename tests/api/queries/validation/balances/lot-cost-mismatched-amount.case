@@ -1,4 +1,4 @@
-Without a default commodity, a SEK counterposting must equal the lot cost exactly.
+A journal without a default commodity warns alongside a mismatched SEK counterposting.
 
 ========== API ==========
 
@@ -20,5 +20,7 @@ account Assets:Cash
 
 ========== WARNINGS ==========
 
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
 [UNBALANCED_TRANSACTION] Transaction does not balance: 1 SEK
   {{JOURNAL_PATH}}:9:1

@@ -1,4 +1,4 @@
-Without a default commodity, raw exchange balancing ignores unequal lot costs.
+An exchange without a default commodity warns even when raw balancing ignores unequal lot costs.
 
 ========== API ==========
 
@@ -22,3 +22,6 @@ account Equity:Opening
   Assets:Shares  -1 OLD {{99 SEK}}
 
 ========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1

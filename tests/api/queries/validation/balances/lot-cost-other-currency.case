@@ -1,4 +1,4 @@
-Without a default commodity, a USD counterposting remains a raw exchange despite SEK lot cost.
+A journal without a default commodity warns even when the USD counterposting remains a raw exchange.
 
 ========== API ==========
 
@@ -19,3 +19,6 @@ account Assets:Cash
   Assets:Cash  -100 USD
 
 ========== WARNINGS ==========
+
+[MISSING_DEFAULT_COMMODITY] Journal must declare one default commodity
+  {{JOURNAL_PATH}}:1:1
