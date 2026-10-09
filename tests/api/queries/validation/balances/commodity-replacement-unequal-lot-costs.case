@@ -1,0 +1,24 @@
+An unpriced commodity replacement balances even when its lot costs differ.
+
+========== API ==========
+
+aggregate()
+
+========== FILE ==========
+
+commodity SEK
+  format 1,000.00 SEK
+commodity NEW
+  format 1,000 NEW
+commodity OLD
+  format 1,000 OLD
+account Assets:Shares
+account Equity:Opening
+2024-01-01 Opening
+  Assets:Shares  1 OLD
+  Equity:Opening  -1 OLD
+2024-02-01 Replacement
+  Assets:Shares  2 NEW {{100 SEK}}
+  Assets:Shares  -1 OLD {{99 SEK}}
+
+========== WARNINGS ==========
