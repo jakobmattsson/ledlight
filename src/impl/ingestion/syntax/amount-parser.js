@@ -20,8 +20,7 @@ module.exports = ({
   function isSpace(code) { return code === 32 || code === 9; }
   function isDigit(code) { return code >= 48 && code <= 57; }
   function isCommodityCharacter(code) {
-    return !isSpace(code) && code !== 10 && code !== 13 && code !== 34 && code !== 39 &&
-      code !== 59 && code !== 61 && code !== 64 && code !== 123 && code !== 125;
+    return code === 95 || /\p{L}/u.test(String.fromCodePoint(code));
   }
 
   class AmountLexer {

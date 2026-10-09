@@ -1,0 +1,15 @@
+Rejects an unquoted posting commodity containing a digit, which Ledger requires to be quoted.
+
+========== TEXT ==========
+
+2024-01-01 Fund purchase
+  Assets:Fund  1 C_Worldwide_Emerging_Markets_1C
+  Equity:Opening
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

@@ -13,14 +13,12 @@ module.exports = ({
   const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format']);
   const CANONICAL_COMMODITY_FORMAT = /^(\d,?\d{3})(?:\.(\d+))?[ \t]+([^ \t]+)$/u;
   const isWhitespace = (code) => code === 32 || code === 9;
-  const isCommodityCharacter = (code) => !isWhitespace(code) && code !== 10 && code !== 13 &&
-    code !== 34 && code !== 39 && code !== 59 && code !== 61 && code !== 64 &&
-    code !== 123 && code !== 125;
+  const isCommoditySymbol = (value) => /^[\p{L}_]+$/u.test(value);
   const sourceLocation = (source, line, column) => ({ source, line, column });
   const optionsSchema = z.strictObject({ source: z.string().optional() });
 
   function assertCommoditySymbol(value, source, line, column) {
-    if (!value || [...value].some((character) => !isCommodityCharacter(character.codePointAt(0)))) {
+    if (!isCommoditySymbol(value)) {
       throw syntaxError(`Invalid commodity symbol ${JSON.stringify(value)}`, source, line, column);
     }
     return value;

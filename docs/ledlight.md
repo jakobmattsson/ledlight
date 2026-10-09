@@ -315,6 +315,12 @@ tags, and comments; postings with omitted or explicit amounts; unit and total lo
 costs (`{}` and `{{}}`); unit and total transaction costs (`@` and `@@`);
 balance assignments; and balance assertions.
 
+Unquoted commodity symbols in this subset contain only letters and underscores.
+Ledger requires quoting for symbols with digits, such as
+`C_Worldwide_Emerging_Markets_1C`; Ledlight currently rejects that quoted form,
+so use a symbol made of letters and underscores when a journal must work in
+both tools.
+
 Unsupported or malformed Ledger syntax produces a warning with the exact error
 location and the affected top-level line range. The parser omits that complete
 top-level block and continues with the next one, so a bad posting cannot leave
