@@ -35,7 +35,7 @@ Ledlight {
   formatQuantity = digit "," digit digit digit ("." digit+)?    -- grouped
                  | digit digit digit digit ("." digit+)?        -- ungrouped
 
-  commoditySymbol = (~forbiddenCommodityCharacter any)+
+  commoditySymbol = (letter | "_")+
 
   postingInlineComment = ";" spacing* ("[" date "]" spacing*)? metadataComment
   transactionInlineComment = spacing* ";" spacing* metadataComment
@@ -54,7 +54,6 @@ Ledlight {
   forbiddenDirectiveCharacter = ";" | newline
   forbiddenDescriptionCharacter = ";" | newline
   forbiddenAccountCharacter = postingAmountSeparator | ";" | newline
-  forbiddenCommodityCharacter = spacing | "@" | "=" | "{" | "}" | ";" | "\"" | "'" | newline
   forbiddenTagCharacter = spacing | ":" | ";" | newline
 
   postingAmountSeparator = "\t"                -- tab

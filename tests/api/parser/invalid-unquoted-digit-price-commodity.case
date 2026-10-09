@@ -1,0 +1,13 @@
+Rejects an unquoted price commodity containing a digit.
+
+========== TEXT ==========
+
+P 2024-01-01 C_Worldwide_Emerging_Markets_1C 10 SEK
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

@@ -1,0 +1,13 @@
+Rejects an unquoted commodity declaration containing a digit outside Ledlight's supported subset.
+
+========== TEXT ==========
+
+commodity C_Worldwide_Emerging_Markets_1C
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

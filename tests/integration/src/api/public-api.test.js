@@ -34,6 +34,25 @@ test('validates public parser API inputs', () => {
   );
 });
 
+test('warns when a posting uses an unquoted commodity name that Ledger cannot parse', (t) => {
+  const { openJournal } = require(ledlightPath);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity-symbol-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  fs.writeFileSync(journalPath, `commodity SEK
+  format 1,000.00 SEK
+  default
+2024-01-01 Fund purchase
+  Assets:Fund  1 C_Worldwide_Emerging_Markets_1C
+  Equity:Opening
+`);
+
+  const journal = openJournal(journalPath);
+  assert.deepEqual(journal.warnings.map(({ code }) => code), ['SYNTAX_ERROR']);
+  assert.equal(journal.warnings[0].instances[0].line, 5);
+  assert.deepEqual(journal.transactions().transactions, []);
+});
+
 test('exposes transaction and posting tags separately from comments', (t) => {
   const { openJournal, parseLedgerText } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-entry-tags-'));
