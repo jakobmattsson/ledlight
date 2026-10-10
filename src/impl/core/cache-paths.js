@@ -1,11 +1,13 @@
 'use strict';
 
-module.exports = ({ crypto, envPaths, fs, path, processEnvironment }) => {
+module.exports = ({ configuration, crypto, envPaths, fs, path, processEnvironment }) => {
 
   function cacheRoot() {
     if (processEnvironment.LEDLIGHT_CACHE_HOME) {
       return path.resolve(processEnvironment.LEDLIGHT_CACHE_HOME);
     }
+    const { cacheHome } = configuration.read();
+    if (cacheHome) return cacheHome;
     return envPaths('ledlight', { suffix: '' }).cache;
   }
 

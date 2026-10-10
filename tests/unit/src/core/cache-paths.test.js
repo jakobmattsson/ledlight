@@ -26,6 +26,7 @@ function cachePaths(settings_) {
       realpathSync,
       statSync: () => ({ isFile: () => true }),
     },
+    configuration: { read: () => ({}) },
     path: pathModule,
     processEnvironment: environment,
   });
@@ -69,6 +70,7 @@ test('rejects missing journal paths and paths that do not name files', () => {
       realpathSync,
       statSync: () => ({ isFile: () => false }),
     },
+    configuration: { read: () => ({}) },
     path: path.posix,
     processEnvironment: {},
   });

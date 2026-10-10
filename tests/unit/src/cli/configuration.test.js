@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const createConfiguration = require('../../../../src/impl/cli/cli-configuration');
+const createProjectConfiguration = require('../../../../src/impl/core/configuration');
 
 function temporaryDirectories(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-configuration-'));
@@ -18,12 +19,12 @@ function temporaryDirectories(t) {
 }
 
 function configuration(home, workingDirectory) {
-  return createConfiguration({
+  return createConfiguration({ configuration: createProjectConfiguration({
     fs,
     path,
     processEnvironment: { HOME: home },
     currentWorkingDirectory: () => workingDirectory,
-  });
+  }) });
 }
 
 test('supplies --file from the project .ledlightrc', (t) => {
@@ -35,7 +36,7 @@ test('supplies --file from the project .ledlightrc', (t) => {
 
   assert.deepEqual(
     configuration(home, workingDirectory).apply(['aggregate', '--format', 'csv']),
-    ['aggregate', '--file', 'books/main ledger.ledger', '--format', 'csv'],
+    ['aggregate', '--file', path.join(workingDirectory, 'books/main ledger.ledger'), '--format', 'csv'],
   );
 });
 
@@ -46,7 +47,7 @@ test('prefers the project .ledlightrc over the user configuration', (t) => {
 
   assert.deepEqual(
     configuration(home, workingDirectory).apply(['unrealized-gains']),
-    ['unrealized-gains', '--file', 'project.ledger'],
+    ['unrealized-gains', '--file', path.join(workingDirectory, 'project.ledger')],
   );
 });
 
@@ -58,6 +59,22 @@ test('falls back to the user .ledlightrc and expands its home directory', (t) =>
     configuration(home, workingDirectory).apply(['unrealized-gains']),
     ['unrealized-gains', '--file', path.join(home, 'books/main.ledger')],
   );
+});
+
+test('finds the nearest parent configuration and resolves paths from its directory', (t) => {
+  const { home, workingDirectory } = temporaryDirectories(t);
+  const nestedDirectory = path.join(workingDirectory, 'reports', 'annual');
+  fs.mkdirSync(nestedDirectory, { recursive: true });
+  fs.writeFileSync(path.join(home, '.ledlightrc'), '--file home.ledger\n');
+  fs.writeFileSync(path.join(workingDirectory, '.ledlightrc'),
+    '--file books/main.ledger\n--cache-home .ledlight-cache\n');
+
+  assert.deepEqual(configuration(home, nestedDirectory).apply(['aggregate']),
+    ['aggregate', '--file', path.join(workingDirectory, 'books/main.ledger')]);
+
+  fs.writeFileSync(path.join(workingDirectory, 'reports', '.ledlightrc'), '--file closer.ledger\n');
+  assert.deepEqual(configuration(home, nestedDirectory).apply(['aggregate']),
+    ['aggregate', '--file', path.join(workingDirectory, 'reports', 'closer.ledger')]);
 });
 
 test('lets an explicit --file option override configuration', (t) => {
@@ -76,7 +93,7 @@ test('rejects unsupported or repeated configuration settings', (t) => {
   const configuredArguments = configuration(home, workingDirectory);
 
   fs.writeFileSync(configurationPath, '--accounts Assets:Cash\n');
-  assert.throws(() => configuredArguments.apply(['aggregate']), /only supports the --file option/u);
+  assert.throws(() => configuredArguments.apply(['aggregate']), /only supports --file and --cache-home options/u);
 
   fs.writeFileSync(configurationPath, '--file first.ledger\n--file second.ledger\n');
   assert.throws(() => configuredArguments.apply(['aggregate']), /may only contain one --file option/u);

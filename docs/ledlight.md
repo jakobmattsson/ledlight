@@ -208,13 +208,14 @@ Tests compare the journal method inventory with the CLI command inventory,
 verify every parameter mapping, and verify that the command adapter delegates
 calculations to the API before formatting.
 
-The CLI reads the first `.ledlightrc` found at `./.ledlightrc` or
-`~/.ledlightrc`, in that order. The file may contain one `--file PATH` setting,
-using the same form as Ledger's initialization file; blank lines and lines
-beginning with `;` are ignored. An explicit command-line `--file` takes
-precedence, followed by nonempty piped input, then configuration. This is CLI-only
-configuration: `openJournal(journalPath)` always uses its argument directly and
-never reads `.ledlightrc`.
+Ledlight reads the nearest `.ledlightrc` from the current directory upward,
+falling back to `~/.ledlightrc` when none is found. The file may contain one
+`--file PATH` and one `--cache-home PATH` setting, each on its own line; blank
+lines and lines beginning with `;` are ignored. Relative paths in this file are
+resolved from the directory containing `.ledlightrc`. An explicit command-line
+`--file` takes precedence, followed by nonempty piped input, then configuration.
+The `--file` setting is CLI-only: `openJournal(journalPath)` always uses its
+argument directly. Both the CLI and API use the configured cache directory.
 
 Every CLI command can read a UTF-8 journal from stdin. Use a pipe, redirected
 file, or heredoc without `--file`, or explicitly select stdin with `--file -`:
@@ -474,8 +475,9 @@ the API or through the CLI's `--file` option, either explicitly or from
 `.ledlightrc`; Ledlight does not read `.ledgerrc`. The database lives under the
 operating system's application cache directory as
 `ledlight/journals/<sha256>/ledger.sqlite`, where the hash is
-derived from the canonical absolute journal path. `LEDLIGHT_CACHE_HOME` can
-override the Ledlight cache root. Rebuilding the database replaces its contents
+derived from the canonical absolute journal path. Set `--cache-home PATH` in
+`.ledlightrc` to choose a cache root for a project. `LEDLIGHT_CACHE_HOME` takes
+precedence over this setting. Rebuilding the database replaces its contents
 in one transaction. Because the database is a reproducible cache, an older
 supported schema version is recreated from the journal instead of preserving
 and transforming cached rows in place.

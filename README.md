@@ -64,8 +64,9 @@ Database operations take the path of the root journal directly. Ledlight stores
 its derived SQLite database in the operating system's application cache
 directory. The CLI accepts the root journal through `--file`, a `.ledlightrc`
 file, or stdin. Pipe a journal into any command, or use `--file -` explicitly.
-The JavaScript API continues to take the path directly and does not read
-configuration files or stdin.
+The JavaScript API continues to take the journal path directly and does not
+read stdin. Both the CLI and API honor the cache directory set in the nearest
+`.ledlightrc` or by `LEDLIGHT_CACHE_HOME`.
 
 Run a complete example without creating a journal file:
 
