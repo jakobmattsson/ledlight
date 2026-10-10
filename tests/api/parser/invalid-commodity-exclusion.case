@@ -1,0 +1,13 @@
+Rejects a reserved exclusion marker in a commodity symbol.
+
+========== TEXT ==========
+
+commodity USD~
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

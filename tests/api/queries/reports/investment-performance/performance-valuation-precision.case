@@ -2,7 +2,7 @@ Performance text uses the valuation commodity's declared precision for its openi
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts Assets:Cash --from 2024-01-02 --to 2024-01-02
+ledlight investment-performance --accounts '*Assets:Cash*' --from 2024-01-02 --to 2024-01-02
 
 ========== FILE ==========
 

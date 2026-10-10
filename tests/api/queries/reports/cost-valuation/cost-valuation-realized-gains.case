@@ -2,7 +2,7 @@ Inverted income postings show realized gains separately from remaining basis.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', denominate: true, accounts: ['Income:'], invert: true })
+aggregate({ valuation: 'cost', denominate: true, accounts: ['*Income:*'], invert: true })
 
 ========== FILE ==========
 

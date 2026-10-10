@@ -12,10 +12,11 @@ decimal strings unless a result field is explicitly documented as a number.
 API option objects reject unknown properties and values of the wrong type,
 including `null`. Omit the options argument or pass `{}` to use defaults.
 
-All account selections use literal substring patterns. A leading `^` anchors a
-pattern to the start of the account name and a trailing `$` anchors it to the
-end. Using both selects one exact account. No other regular-expression syntax
-is recognized; all other characters are matched literally.
+Account and commodity selections match exact names by default. `*` matches any
+text, including an empty string: `Assets:*` matches a prefix, `*Cash` a suffix,
+and `*Fund*` a substring. Prefix a pattern with `~` to exclude matches.
+Account names and commodity symbols cannot contain `*` or `~`; other characters
+are literal, including `^`, `$`, `%`, `?`, and `_`.
 
 Every CLI account filter uses the repeatable `--accounts PATTERN` option.
 The singular `--account` is not supported.
@@ -75,7 +76,7 @@ default differs between API and CLI because the CLI follows Ledger listings.
 
 Selection arrays contain non-empty strings. Exact duplicate selections are
 removed, preserving their first occurrence. Empty optional arrays mean no
-restriction. Commodity selections match exact symbols; account selections use
+restriction. Account and investment-performance commodity selections use
 the shared pattern syntax above. Boolean options accept only booleans and
 all default to `false`.
 
@@ -275,11 +276,9 @@ Options:
 | `invert` | boolean | `false` | Negate quantities and valuation values |
 | `includeTotal` | boolean | `false` | Append an exact total for each reported commodity |
 
-Account patterns in `accounts` are literal substring matches. `^` anchors the
-start and `$` anchors the end. Prefix a pattern with `~` to exclude its matches.
 Positive patterns combine with OR, and exclusions remove matches from that
 selection. With only exclusions, all other accounts are selected. For example,
-`accounts: ['^Jakob:', '~^Jakob:Tillgångar', '~baz$']` selects Jakob's accounts
+`accounts: ['Jakob:*', '~Jakob:Tillgångar*', '~*baz']` selects Jakob's accounts
 except those under `Jakob:Tillgångar` or ending in `baz`. The same rules apply
 to every API method that accepts `accounts` and to the CLI `--accounts` option.
 
@@ -361,9 +360,8 @@ in the CLI.
 ### `journal.investmentPerformance(options)`
 
 Options are `from`, `to`, `accounts`, and `commodities`. Both selections are
-arrays of non-empty strings and use the same literal pattern syntax: `^`
-anchors the start, `$` anchors the end, and `~` excludes matches. Positive
-patterns combine with OR; exclusions remove matches. With only exclusions,
+arrays of non-empty strings and use the shared `*` and `~` pattern syntax.
+Positive patterns combine with OR; exclusions remove matches. With only exclusions,
 all other held commodities are selected. Positive patterns select declared
 commodities even when the selected accounts hold none of them. Omit
 `commodities` to discover all held commodities. This option replaces

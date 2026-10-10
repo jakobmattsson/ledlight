@@ -2,7 +2,7 @@ An explicit rounding posting balances each exact cost form.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Expenses:Rounding'] })
+aggregate({ accounts: ['Expenses:Rounding*'] })
 
 ========== FILE ==========
 

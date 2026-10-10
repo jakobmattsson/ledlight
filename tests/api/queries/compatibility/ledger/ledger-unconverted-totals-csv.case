@@ -2,7 +2,7 @@ Unconverted totals in csv format.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts '^Assets:' --include-total --format csv
+ledlight aggregate --accounts 'Assets:*' --include-total --format csv
 
 ========== FILE ==========
 

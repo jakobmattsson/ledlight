@@ -2,7 +2,7 @@ Inversion also applies to the calculated total.
 
 ========== API ==========
 
-aggregate({ to: '2024-01-02', accounts: ['Assets:Fund'], denominate: true, invert: true, includeTotal: true })
+aggregate({ to: '2024-01-02', accounts: ['*Assets:Fund*'], denominate: true, invert: true, includeTotal: true })
 
 ========== FILE ==========
 

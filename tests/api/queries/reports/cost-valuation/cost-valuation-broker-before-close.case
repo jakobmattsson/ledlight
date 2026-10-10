@@ -2,7 +2,7 @@ Sales remove recorded acquisition basis, including total lot costs.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', denominate: true, accounts: ['Assets:Broker'], to: '2024-01-05' })
+aggregate({ valuation: 'cost', denominate: true, accounts: ['*Assets:Broker*'], to: '2024-01-05' })
 
 ========== FILE ==========
 

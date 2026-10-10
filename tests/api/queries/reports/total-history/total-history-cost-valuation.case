@@ -2,11 +2,11 @@ total-history cost valuation matches the public journal API.
 
 ========== CLI ==========
 
-ledlight total-history --accounts Assets:Fund --format json --valuation cost
+ledlight total-history --accounts '*Assets:Fund*' --format json --valuation cost
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:Fund'], valuation: 'cost' })
+totalHistory({ accounts: ['*Assets:Fund*'], valuation: 'cost' })
 
 ========== FILE ==========
 

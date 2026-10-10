@@ -2,7 +2,7 @@ aggregate deduplicates account selections.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:', 'Assets:'] })
+aggregate({ accounts: ['*Assets:*', '*Assets:*'] })
 
 ========== FILE ==========
 

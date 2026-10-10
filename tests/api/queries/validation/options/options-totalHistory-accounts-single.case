@@ -2,7 +2,7 @@ totalHistory selects a single account pattern.
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:'] })
+totalHistory({ accounts: ['*Assets:*'] })
 
 ========== FILE ==========
 

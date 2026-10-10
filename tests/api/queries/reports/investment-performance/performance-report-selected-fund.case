@@ -2,7 +2,7 @@ Selected fund performance includes contributions, profit, and both return measur
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['*Assets:*'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ The API returns the expected default market valuation without a CLI command.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:Fund'], denominate: true })
+aggregate({ accounts: ['*Assets:Fund*'], denominate: true })
 
 ========== FILE ==========
 

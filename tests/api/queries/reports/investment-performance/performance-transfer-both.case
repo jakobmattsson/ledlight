@@ -2,7 +2,7 @@ An internal transfer cancels inside a combined selection.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['Assets:*'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

@@ -1,8 +1,8 @@
-Transaction account selection supports literal anchors.
+Transaction account selection matches exact names without wildcards.
 
 ========== API ==========
 
-transactions({ accounts: ['^Expenses:Shop$', '^Missing:'] })
+transactions({ accounts: ['Expenses:Shop', 'Missing:*'] })
 
 ========== FILE ==========
 

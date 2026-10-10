@@ -2,7 +2,7 @@ Moving settlement cash among selected accounts or adding unrelated cash does not
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['Assets:*'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

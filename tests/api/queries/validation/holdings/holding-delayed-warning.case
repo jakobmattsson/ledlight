@@ -2,7 +2,7 @@ A disposal cannot precede its acquisition by posting date.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Fund$'], to: '2024-01-02' })
+aggregate({ accounts: ['Assets:Fund'], to: '2024-01-02' })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ A single implicit posting resolves every commodity in the transaction.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Equity:Opening$'] })
+aggregate({ accounts: ['Equity:Opening'] })
 
 ========== FILE ==========
 

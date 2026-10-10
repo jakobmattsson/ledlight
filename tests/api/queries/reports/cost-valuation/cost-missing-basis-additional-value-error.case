@@ -2,7 +2,7 @@ Additional cost values require a usable lot cost.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', withValuationValue: true, accounts: ['Assets:Fund'] })
+aggregate({ valuation: 'cost', withValuationValue: true, accounts: ['*Assets:Fund*'] })
 
 ========== FILE ==========
 

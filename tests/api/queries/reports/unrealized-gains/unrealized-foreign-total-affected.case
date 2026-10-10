@@ -2,7 +2,7 @@ An affected position is omitted from the gain report.
 
 ========== API ==========
 
-unrealizedGains({ to: '2024-02-01', accounts: ['^Assets:Broker$'] })
+unrealizedGains({ to: '2024-02-01', accounts: ['Assets:Broker'] })
 
 ========== FILE ==========
 

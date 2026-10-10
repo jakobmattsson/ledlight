@@ -2,7 +2,7 @@ The full portfolio gives the same fund result as the instrument selection.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['Assets:*'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

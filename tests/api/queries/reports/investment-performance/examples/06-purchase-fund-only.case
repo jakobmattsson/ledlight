@@ -1,5 +1,5 @@
 Example: selecting only Assets:Fund changes when the investor contributes.
-The journal and every command option except --accounts are identical to case 05.
+The journal and every command option except --accounts '*are*' identical to case 05.
 Salary enters Assets:Cash on 2023-01-01, but that account is now excluded.
 The FUND purchase on 2023-07-01 contributes 100 USD to the selected holding;
 its closing value then is 100 USD and its value on 2024-01-01 is 120 USD.
@@ -14,7 +14,7 @@ account holds no USD.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts Assets:Fund --commodities USD --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
+ledlight investment-performance --accounts '*Assets:Fund*' --commodities USD --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

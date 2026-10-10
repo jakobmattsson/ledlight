@@ -4,7 +4,7 @@ module.exports = ({ cliOptions: options }) => ({
   description: 'show accounts',
   examples: [
     'ledlight accounts --file main.ledger',
-    'ledlight accounts --file main.ledger --accounts "^Assets:" --usage unused --details',
+    'ledlight accounts --file main.ledger --accounts "Assets:*" --usage unused --details',
   ],
   configure(command) {
     options.journal(command);

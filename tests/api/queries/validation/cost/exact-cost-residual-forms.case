@@ -2,7 +2,7 @@ Each cost annotation form reports its exact sub-cent residual.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Expenses:Rounding'] })
+aggregate({ accounts: ['Expenses:Rounding*'] })
 
 ========== FILE ==========
 

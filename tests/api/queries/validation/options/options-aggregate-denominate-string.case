@@ -2,7 +2,7 @@ aggregate requires a boolean denominate option.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:'], denominate: 'false' })
+aggregate({ accounts: ['*Assets:*'], denominate: 'false' })
 
 ========== FILE ==========
 

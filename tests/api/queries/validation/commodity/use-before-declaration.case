@@ -2,7 +2,7 @@ Use before declaration warns without discarding either transaction.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Fund$'] })
+aggregate({ accounts: ['Assets:Fund'] })
 
 ========== FILE ==========
 

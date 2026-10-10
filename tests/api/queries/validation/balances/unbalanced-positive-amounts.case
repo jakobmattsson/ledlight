@@ -2,7 +2,7 @@ An unbalanced transaction with two positive amounts retains both postings.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Cash$'] })
+aggregate({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

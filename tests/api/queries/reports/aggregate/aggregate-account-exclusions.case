@@ -2,11 +2,11 @@ Positive account patterns combine before exclusions in CLI and API.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts '^Jakob:' --accounts '~^Jakob:Tillgångar' --accounts '~foobar' --accounts '~baz$'
+ledlight aggregate --accounts 'Jakob:*' --accounts '~Jakob:Tillgångar*' --accounts '~*foobar*' --accounts '~*baz'
 
 ========== API ==========
 
-aggregate({ accounts: ['^Jakob:', '~^Jakob:Tillgångar', '~foobar', '~baz$'] })
+aggregate({ accounts: ['Jakob:*', '~Jakob:Tillgångar*', '~*foobar*', '~*baz'] })
 
 ========== FILE ==========
 

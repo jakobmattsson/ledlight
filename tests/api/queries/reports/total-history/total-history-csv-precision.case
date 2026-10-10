@@ -2,7 +2,7 @@ Total history CSV rounds valued amounts without display separators.
 
 ========== CLI ==========
 
-ledlight total-history --accounts Assets:Cash --format csv
+ledlight total-history --accounts '*Assets:Cash*' --format csv
 
 ========== FILE ==========
 

@@ -4,7 +4,7 @@ module.exports = ({ cliOptions: options }) => ({
   description: 'show unrealized investment gains',
   examples: [
     'ledlight unrealized-gains --file main.ledger',
-    'ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "^Assets:" --include-total',
+    'ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "Assets:*" --include-total',
   ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });

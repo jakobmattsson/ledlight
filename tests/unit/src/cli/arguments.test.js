@@ -72,12 +72,12 @@ test('parses account output options without adding API options', () => {
     options: { usage: 'used' },
   });
   assert.deepEqual(apiArguments([
-    'accounts', '--file', '/journal', '--accounts', '^Assets:',
-    '--accounts', '^Expenses:', '--usage', 'unused', '--details', '--format', 'csv',
+    'accounts', '--file', '/journal', '--accounts', 'Assets:*',
+    '--accounts', 'Expenses:*', '--usage', 'unused', '--details', '--format', 'csv',
   ]), {
     command: 'accounts',
     journalPath: '/journal',
-    options: { accounts: ['^Assets:', '^Expenses:'], usage: 'unused' },
+    options: { accounts: ['Assets:*', 'Expenses:*'], usage: 'unused' },
   });
   assert.throws(
     () => parseArguments(['accounts', '--file', '/journal', '--format', 'yaml']),
@@ -319,8 +319,8 @@ test('parses investment performance selections and output format', () => {
   });
   assert.deepEqual(apiArguments([
     'investment-performance', '--file', '/journal',
-    '--commodities', '^FUND', '--commodities', '~B$',
-  ]).options.commodities, ['^FUND', '~B$']);
+    '--commodities', 'FUND*', '--commodities', '~*B',
+  ]).options.commodities, ['FUND*', '~*B']);
   assert.throws(() => parseArguments([
     'investment-performance', '--file', '/journal', '--include-commodities', 'FUND',
   ]), /unknown option/u);

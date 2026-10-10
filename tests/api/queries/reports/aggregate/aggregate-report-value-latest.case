@@ -2,7 +2,7 @@ Without an upper date the latest usable market quote applies.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:Fund'], denominate: true })
+aggregate({ accounts: ['*Assets:Fund*'], denominate: true })
 
 ========== FILE ==========
 

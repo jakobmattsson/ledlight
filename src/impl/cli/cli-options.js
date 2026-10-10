@@ -49,7 +49,7 @@ module.exports = ({ commander: { InvalidArgumentError, Option } }) => {
 
   function accounts(command) {
     return addValue(
-      command, '--accounts <pattern>', 'select accounts (repeatable; ^ and $ anchor, ~ excludes)',
+      command, '--accounts <pattern>', 'select accounts (repeatable; * matches any text, ~ excludes)',
       { repeatable: true },
     );
   }

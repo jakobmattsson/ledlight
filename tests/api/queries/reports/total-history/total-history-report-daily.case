@@ -2,7 +2,7 @@ Daily market valuation uses prices and positions at each date.
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:'] })
+totalHistory({ accounts: ['*Assets:*'] })
 
 ========== FILE ==========
 

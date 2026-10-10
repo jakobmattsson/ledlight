@@ -2,7 +2,7 @@ The affected closed position is omitted.
 
 ========== API ==========
 
-unrealizedGains({ accounts: ['^Assets:Broker$'] })
+unrealizedGains({ accounts: ['Assets:Broker'] })
 
 ========== FILE ==========
 

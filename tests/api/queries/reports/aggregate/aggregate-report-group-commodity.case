@@ -2,7 +2,7 @@ Selected accounts can be grouped by commodity.
 
 ========== API ==========
 
-aggregate({ to: '2024-01-02', accounts: ['Assets:'], groupBy: 'commodity' })
+aggregate({ to: '2024-01-02', accounts: ['*Assets:*'], groupBy: 'commodity' })
 
 ========== FILE ==========
 

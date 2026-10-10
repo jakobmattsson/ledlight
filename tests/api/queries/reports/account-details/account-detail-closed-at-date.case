@@ -2,7 +2,7 @@ A closed account retains zero balances at the selected date.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Closed$'], groupBy: 'commodity', to: '2023-01-02' })
+aggregate({ accounts: ['Assets:Closed'], groupBy: 'commodity', to: '2023-01-02' })
 
 ========== FILE ==========
 

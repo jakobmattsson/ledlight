@@ -4,7 +4,7 @@ module.exports = ({ cliOptions: options }) => ({
   description: 'aggregate postings',
   examples: [
     'ledlight aggregate --file main.ledger',
-    'ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --denominate --include-total',
+    'ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:*" --denominate --include-total',
   ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });

@@ -2,7 +2,7 @@ Only prices needed for the selected interval and opening balance are required.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:Portfolio'], from: '2024-01-03', to: '2024-01-03' })
+investmentPerformance({ accounts: ['*Assets:Portfolio*'], from: '2024-01-03', to: '2024-01-03' })
 
 ========== FILE ==========
 

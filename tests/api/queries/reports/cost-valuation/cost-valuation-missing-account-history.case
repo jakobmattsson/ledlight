@@ -2,7 +2,7 @@ An unselected portfolio has no cost history.
 
 ========== API ==========
 
-totalHistory({ valuation: 'cost', accounts: ['Missing'] })
+totalHistory({ valuation: 'cost', accounts: ['*Missing*'] })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ Extra units from a split are not an external contribution.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['Assets:*'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

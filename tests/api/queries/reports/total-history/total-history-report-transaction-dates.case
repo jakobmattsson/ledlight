@@ -2,7 +2,7 @@ Transaction-date selection includes a delayed posting at its transaction date.
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:Fund'], dateBasis: 'transaction', from: '2024-01-04', to: '2024-01-04' })
+totalHistory({ accounts: ['*Assets:Fund*'], dateBasis: 'transaction', from: '2024-01-04', to: '2024-01-04' })
 
 ========== FILE ==========
 

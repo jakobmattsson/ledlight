@@ -2,7 +2,7 @@ A selected internal transfer nets to zero in the daily total.
 
 ========== API ==========
 
-totalHistory({ from: '2024-01-03', to: '2024-01-03', accounts: ['Assets:', 'Liabilities:'] })
+totalHistory({ from: '2024-01-03', to: '2024-01-03', accounts: ['*Assets:*', '*Liabilities:*'] })
 
 ========== FILE ==========
 

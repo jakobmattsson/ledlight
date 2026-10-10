@@ -41,7 +41,7 @@ the output contains the temporary path of the main journal or an included file.
 The runner substitutes those paths before the exact comparison.
 
 `========== API ==========` contains one journal method call, such as
-`aggregate({ accounts: ['^Assets:'] })` or `tags({})`. Write it as a JavaScript
+`aggregate({ accounts: ['Assets:*'] })` or `tags({})`. Write it as a JavaScript
 statement with JSON-like literal arguments: strings, numbers, booleans, null,
 arrays, and objects with quoted or unquoted keys. Expressions such as
 `new Date(...)` are not supported. Date options are ISO calendar-date strings

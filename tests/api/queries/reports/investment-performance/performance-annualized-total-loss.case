@@ -6,7 +6,7 @@ no positive investor cash flow and remains unavailable.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts Assets:Fund --from 2023-01-01 --to 2023-02-01 --format text
+ledlight investment-performance --accounts '*Assets:Fund*' --from 2023-01-01 --to 2023-02-01 --format text
 
 ========== FILE ==========
 

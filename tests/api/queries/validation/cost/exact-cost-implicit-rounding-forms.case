@@ -2,7 +2,7 @@ An implicit posting receives the full exact residual for each cost form.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Expenses:Rounding'] })
+aggregate({ accounts: ['Expenses:Rounding*'] })
 
 ========== FILE ==========
 

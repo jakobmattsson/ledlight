@@ -2,7 +2,7 @@ Selecting only supported cash does not require the fund basis.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['Assets:Cash'], denominate: true })
+aggregate({ valuation: 'cost', accounts: ['*Assets:Cash*'], denominate: true })
 
 ========== FILE ==========
 

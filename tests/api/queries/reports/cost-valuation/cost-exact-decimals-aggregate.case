@@ -2,7 +2,7 @@ Cost valuation preserves exact decimal basis without market prices.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['Assets:'], denominate: true, groupBy: 'commodity' })
+aggregate({ valuation: 'cost', accounts: ['*Assets:*'], denominate: true, groupBy: 'commodity' })
 
 ========== FILE ==========
 

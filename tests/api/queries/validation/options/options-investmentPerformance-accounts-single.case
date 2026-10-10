@@ -2,7 +2,7 @@ investmentPerformance selects a single account pattern.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:'] })
+investmentPerformance({ accounts: ['*Assets:*'] })
 
 ========== FILE ==========
 

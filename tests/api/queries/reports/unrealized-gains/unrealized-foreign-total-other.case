@@ -2,7 +2,7 @@ An unaffected account still reports its gain.
 
 ========== API ==========
 
-unrealizedGains({ to: '2024-02-01', accounts: ['^Assets:Other$'] })
+unrealizedGains({ to: '2024-02-01', accounts: ['Assets:Other'] })
 
 ========== FILE ==========
 

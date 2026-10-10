@@ -1,35 +1,35 @@
-Commodity patterns combine inclusions and exclusions in CLI and API.
+An exact commodity exclusion leaves symbols that only contain the excluded text.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts 'Assets:*' --commodities 'FU*' --commodities USD --commodities '~USD'
+ledlight investment-performance --accounts 'Assets:*' --commodities '~EUR'
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:*'], commodities: ['FU*', 'USD', '~USD'] })
+investmentPerformance({ accounts: ['Assets:*'], commodities: ['~EUR'] })
 
 ========== FILE ==========
 
-commodity USD
+commodity EUR
   default
-  format 1,000.00 USD
-commodity FUND
-  format 1,000 FUND
+  format 1,000.00 EUR
+commodity EUROPA
+  format 1,000 EUROPA
 account Assets:Fund
 account Assets:Cash
-P 2024-01-01 FUND 100 USD
+P 2024-01-01 EUROPA 100 EUR
 2024-01-01 Purchase
-  Assets:Fund  1 FUND {100 USD}
-  Assets:Cash  -100 USD
+  Assets:Fund  1 EUROPA {100 EUR}
+  Assets:Cash  -100 EUR
 
 ========== OUTPUT ==========
 
 Investment performance from 2024-01-01 to 2024-01-01
 Instruments: 1
-Opening value: 0.00 USD
-Net contributions: 100.00 USD
-Ending value: 100.00 USD
-Profit/loss: 0.00 USD
+Opening value: 0.00 EUR
+Net contributions: 100.00 EUR
+Ending value: 100.00 EUR
+Profit/loss: 0.00 EUR
 Time-weighted return (total): 0.00 %
 Time-weighted return (annualized): n/a
 Money-weighted return (total): n/a
@@ -41,9 +41,9 @@ Money-weighted return (annualized): n/a
   "from": "2024-01-01",
   "to": "2024-01-01",
   "commodities": [
-    "FUND"
+    "EUROPA"
   ],
-  "valuationCommodity": "USD",
+  "valuationCommodity": "EUR",
   "openingValue": 0,
   "endingValue": 100,
   "netContributions": 100,

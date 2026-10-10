@@ -2,7 +2,7 @@ A transaction with two implicit postings warns and is omitted from reports.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Cash$'] })
+aggregate({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

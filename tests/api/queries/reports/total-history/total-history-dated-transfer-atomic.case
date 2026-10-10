@@ -2,7 +2,7 @@ A transfer remains atomic when its postings have different dates.
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:'], dateBasis: 'transaction' })
+totalHistory({ accounts: ['*Assets:*'], dateBasis: 'transaction' })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ unrealizedGains deduplicates account selections.
 
 ========== API ==========
 
-unrealizedGains({ accounts: ['Assets:', 'Assets:'] })
+unrealizedGains({ accounts: ['*Assets:*', '*Assets:*'] })
 
 ========== FILE ==========
 

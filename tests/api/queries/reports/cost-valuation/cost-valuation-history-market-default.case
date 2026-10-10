@@ -2,7 +2,7 @@ Market valuation remains the default for total history.
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:Broker'], to: '2024-01-05' })
+totalHistory({ accounts: ['*Assets:Broker*'], to: '2024-01-05' })
 
 ========== FILE ==========
 

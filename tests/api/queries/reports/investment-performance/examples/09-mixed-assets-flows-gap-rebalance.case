@@ -38,7 +38,7 @@ and dates give 38.88% total and 39.01% annualized return.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts '^Assets:Investments:' --from 2023-01-01 --to 2023-12-31 --format text
+ledlight investment-performance --accounts 'Assets:Investments:*' --from 2023-01-01 --to 2023-12-31 --format text
 
 ========== FILE ==========
 

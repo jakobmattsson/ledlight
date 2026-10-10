@@ -2,7 +2,7 @@ investmentPerformance deduplicates account selections.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:', 'Assets:'] })
+investmentPerformance({ accounts: ['*Assets:*', '*Assets:*'] })
 
 ========== FILE ==========
 

@@ -24,6 +24,13 @@ module.exports = ({
     return value;
   }
 
+  function assertAccountName(value, source, line, column) {
+    if (/[*~]/u.test(value)) {
+      throw syntaxError(`Account name ${JSON.stringify(value)} cannot contain * or ~`, source, line, column);
+    }
+    return value;
+  }
+
   function isDateAt(input, offset) {
     if (input.length - offset < DATE_LENGTH) return false;
     for (let index = 0; index < DATE_LENGTH; index++) {
@@ -130,6 +137,7 @@ module.exports = ({
     const separator = findFieldSeparator(parts.text);
     const account = (separator ? parts.text.slice(0, separator.start) : parts.text).trim();
     if (!account) throw syntaxError('Posting account cannot be empty', source, line, indent + 1);
+    assertAccountName(account, source, line, indent + 1);
     const expressionText = separator ? parts.text.slice(separator.end).trim() : '';
     const expressionColumn = separator ? indent + separator.end + 1 : raw.length + 1;
     const expression = parseAmountExpression(expressionText, sourceLocation(source, line, expressionColumn));
@@ -275,7 +283,11 @@ module.exports = ({
         include.path = include.name;
         delete include.name;
         entries.push(include);
-      } else if (trimmed.startsWith('account') && isWhitespace(trimmed.charCodeAt(7))) entries.push(parseNamedDirective(trimmed, 'account', 'account', source, lineNumber));
+      } else if (trimmed.startsWith('account') && isWhitespace(trimmed.charCodeAt(7))) {
+        const account = parseNamedDirective(trimmed, 'account', 'account', source, lineNumber);
+        assertAccountName(account.name, source, lineNumber, 9);
+        entries.push(account);
+      }
       else if (trimmed.startsWith('tag') && isWhitespace(trimmed.charCodeAt(3))) entries.push(parseNamedDirective(trimmed, 'tag', 'tag', source, lineNumber));
       else if (trimmed.startsWith('commodity') && isWhitespace(trimmed.charCodeAt(9))) {
         commodity = parseNamedDirective(trimmed, 'commodity', 'commodity', source, lineNumber);

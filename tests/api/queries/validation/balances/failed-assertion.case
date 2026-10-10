@@ -2,7 +2,7 @@ A failed balance assertion warns while the transaction remains queryable.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Cash$'] })
+aggregate({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

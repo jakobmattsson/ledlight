@@ -10,7 +10,7 @@ exactly 365 days grows to 120 USD, so the money-weighted returns are also 20%.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts Assets:Fund --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
+ledlight investment-performance --accounts '*Assets:Fund*' --commodities FUND --from 2023-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

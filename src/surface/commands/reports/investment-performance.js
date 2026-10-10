@@ -4,7 +4,7 @@ module.exports = ({ cliOptions: options }) => ({
   description: 'show investment performance',
   examples: [
     'ledlight investment-performance --file main.ledger',
-    'ledlight investment-performance --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "^Assets:Broker"',
+    'ledlight investment-performance --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "Assets:Broker*"',
   ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });
@@ -40,7 +40,7 @@ module.exports = ({ cliOptions: options }) => ({
       'end the return period on YYYY-MM-DD',
     );
     options.accounts(command);
-    options.addValue(command, '--commodities <pattern>', 'select commodity symbols (repeatable; ^ and $ anchor, ~ excludes)', {
+    options.addValue(command, '--commodities <pattern>', 'select commodity symbols (repeatable; * matches any text, ~ excludes)', {
       repeatable: true,
     });
     options.format(command);

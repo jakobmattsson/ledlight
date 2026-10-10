@@ -2,7 +2,7 @@ A supported position remains visible beside an omitted affected position.
 
 ========== API ==========
 
-unrealizedGains({ to: '2024-02-01', accounts: ['^Assets:Broker$', '^Assets:Other$'] })
+unrealizedGains({ to: '2024-02-01', accounts: ['Assets:Broker', 'Assets:Other'] })
 
 ========== FILE ==========
 

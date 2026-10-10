@@ -2,7 +2,7 @@ Performance text displays calculated return percentages over a full year.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts Assets:Fund --commodities FUND
+ledlight investment-performance --accounts '*Assets:Fund*' --commodities FUND
 
 ========== FILE ==========
 

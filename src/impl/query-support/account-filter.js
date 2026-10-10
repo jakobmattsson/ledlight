@@ -17,23 +17,15 @@ module.exports = () => {
 
   function parseAccountPattern(pattern) {
     const excluded = pattern.startsWith('~');
-    const selection = excluded ? pattern.slice(1) : pattern;
-    const anchoredAtStart = selection.startsWith('^');
-    const anchoredAtEnd = selection.endsWith('$');
-    return {
-      excluded,
-      anchoredAtStart,
-      anchoredAtEnd,
-      value: selection.slice(anchoredAtStart ? 1 : 0, anchoredAtEnd ? -1 : undefined),
-    };
+    return { excluded, value: excluded ? pattern.slice(1) : pattern };
   }
 
   function patternMatches(account, pattern) {
-    const { anchoredAtStart, anchoredAtEnd, value } = pattern;
-    if (anchoredAtStart && anchoredAtEnd) return account === value;
-    if (anchoredAtStart) return account.startsWith(value);
-    if (anchoredAtEnd) return account.endsWith(value);
-    return account.includes(value);
+    const { value } = pattern;
+    if (!value.includes('*')) return account === value;
+    const expression = value.split('*').map((part) =>
+      part.replace(/[\\^$.*+?()[\]{}|]/gu, '\\$&')).join('.*');
+    return new RegExp(`^${expression}$`, 'su').test(account);
   }
 
   function accountMatches(account, patterns) {
@@ -45,26 +37,28 @@ module.exports = () => {
   }
 
   function accountPatternFilter(column, pattern) {
-    const { anchoredAtStart, anchoredAtEnd, value } = pattern;
-    if (value.length === 0) {
-      return { sql: anchoredAtStart && anchoredAtEnd ? `${column} = ''` : '1 = 1', parameters: [] };
-    }
-    if (anchoredAtStart && anchoredAtEnd) {
-      return { sql: `${column} = ?`, parameters: [value] };
-    }
-    if (anchoredAtStart) {
-      const upperBound = prefixUpperBound(value);
+    const { value } = pattern;
+    if (!value.includes('*')) return { sql: `${column} = ?`, parameters: [value] };
+    if (/^\*+$/u.test(value)) return { sql: '1 = 1', parameters: [] };
+    if (/^[^*]+\*$/u.test(value)) {
+      const prefix = value.slice(0, -1);
+      const upperBound = prefixUpperBound(prefix);
       return upperBound === undefined
-        ? { sql: `${column} >= ?`, parameters: [value] }
-        : { sql: `(${column} >= ? AND ${column} < ?)`, parameters: [value, upperBound] };
+        ? { sql: `${column} >= ?`, parameters: [prefix] }
+        : { sql: `(${column} >= ? AND ${column} < ?)`, parameters: [prefix, upperBound] };
     }
-    if (anchoredAtEnd) {
+    if (/^\*[^*]+$/u.test(value)) {
+      const suffix = value.slice(1);
       return {
         sql: `substr(${column}, -length(?)) = ?`,
-        parameters: [value, value],
+        parameters: [suffix, suffix],
       };
     }
-    return { sql: `instr(${column}, ?) > 0`, parameters: [value] };
+    if (/^\*[^*]+\*$/u.test(value)) {
+      return { sql: `instr(${column}, ?) > 0`, parameters: [value.slice(1, -1)] };
+    }
+    const glob = value.replaceAll('[', '[[]').replaceAll('?', '[?]');
+    return { sql: `${column} GLOB ?`, parameters: [glob] };
   }
 
   function accountFilter(column, patterns) {

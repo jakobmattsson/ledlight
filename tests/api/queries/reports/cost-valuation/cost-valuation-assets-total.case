@@ -2,7 +2,7 @@ Cost valuation carries basis through transfers and totals the selected assets.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', denominate: true, accounts: ['Assets:'], includeTotal: true })
+aggregate({ valuation: 'cost', denominate: true, accounts: ['*Assets:*'], includeTotal: true })
 
 ========== FILE ==========
 

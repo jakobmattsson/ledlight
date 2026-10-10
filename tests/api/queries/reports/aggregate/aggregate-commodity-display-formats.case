@@ -2,7 +2,7 @@ Aggregate text respects each commodity's declared precision and separators.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts '^Assets:'
+ledlight aggregate --accounts 'Assets:*'
 
 ========== FILE ==========
 
