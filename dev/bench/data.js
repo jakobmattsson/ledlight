@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791662468174,
+  "lastUpdate": 1791662813321,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -857,6 +857,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 14.442244,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c1cfd177eac2311749388c786a0dec5ae04d2ff5",
+          "message": "Merge pull request #120 from jakobmattsson/codex/bump-package-version-0.4.0\n\nBump package version to 0.4.0",
+          "timestamp": "2026-10-10T22:06:26+02:00",
+          "tree_id": "abc1809d8c49f5189a36e58480a5143e3e726ae8",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/c1cfd177eac2311749388c786a0dec5ae04d2ff5"
+        },
+        "date": 1791662811412,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1682.303287,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 8.983108,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 13.402046,
             "unit": "ms"
           }
         ]
