@@ -48,7 +48,7 @@ Ledlight {
   tagName = (~forbiddenTagCharacter any)+
   commentText = (~newline any)*
   directiveValue = (~forbiddenDirectiveCharacter any)+
-  accountDirectiveValue = (~(forbiddenDirectiveCharacter | "*" | "~") any)+
+  accountDirectiveValue = (~forbiddenAccountCharacter any)+
 
   date = digit digit digit digit "-" digit digit "-" digit digit
 

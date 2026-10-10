@@ -194,7 +194,8 @@ Positive patterns combine with OR, while exclusions remove matching names.
 If every pattern starts with `~`, all other names are selected. For example,
 `--accounts 'Jakob:*' --accounts '~Jakob:Tillgångar*'` selects Jakob's accounts
 except those under `Jakob:Tillgångar`. Account names and commodity symbols
-cannot contain `*` or `~`.
+cannot contain `*` or `~`; account names also cannot contain tabs or
+consecutive spaces.
 `transactions` defaults to Ledger-style text; repeatable `--accounts` options
 select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction.

@@ -15,8 +15,9 @@ including `null`. Omit the options argument or pass `{}` to use defaults.
 Account and commodity selections match exact names by default. `*` matches any
 text, including an empty string: `Assets:*` matches a prefix, `*Cash` a suffix,
 and `*Fund*` a substring. Prefix a pattern with `~` to exclude matches.
-Account names and commodity symbols cannot contain `*` or `~`; other characters
-are literal, including `^`, `$`, `%`, `?`, and `_`.
+Account names and commodity symbols cannot contain `*` or `~`. Account names
+also cannot contain tabs or consecutive spaces. Other characters are literal,
+including `^`, `$`, `%`, `?`, and `_`.
 
 Every CLI account filter uses the repeatable `--accounts PATTERN` option.
 The singular `--account` is not supported.

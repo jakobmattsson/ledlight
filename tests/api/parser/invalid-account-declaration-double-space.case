@@ -1,0 +1,13 @@
+Rejects consecutive spaces inside an account declaration name.
+
+========== TEXT ==========
+
+account Assets:Double  Space
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

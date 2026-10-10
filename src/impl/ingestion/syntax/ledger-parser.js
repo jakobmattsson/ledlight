@@ -25,8 +25,8 @@ module.exports = ({
   }
 
   function assertAccountName(value, source, line, column) {
-    if (/[*~]/u.test(value)) {
-      throw syntaxError(`Account name ${JSON.stringify(value)} cannot contain * or ~`, source, line, column);
+    if (/[*~\t]| {2}/u.test(value)) {
+      throw syntaxError(`Account name ${JSON.stringify(value)} cannot contain *, ~, tabs, or consecutive spaces`, source, line, column);
     }
     return value;
   }
