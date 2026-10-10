@@ -2,7 +2,7 @@ A sale posted after the acquisition has no negative holding warning.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Fund$'], to: '2024-01-02' })
+aggregate({ accounts: ['Assets:Fund'], to: '2024-01-02' })
 
 ========== FILE ==========
 

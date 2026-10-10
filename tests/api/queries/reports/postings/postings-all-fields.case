@@ -2,7 +2,7 @@ Posting results preserve every field and transaction source in journal order.
 
 ========== API ==========
 
-postings({ from: '2024-01-02', to: '2024-01-03', accounts: ['^Assets:'] })
+postings({ from: '2024-01-02', to: '2024-01-03', accounts: ['Assets:*'] })
 
 ========== FILE ==========
 

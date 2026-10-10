@@ -2,7 +2,7 @@ Unconverted totals in json format.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts '^Assets:' --include-total --format json
+ledlight aggregate --accounts 'Assets:*' --include-total --format json
 
 ========== FILE ==========
 

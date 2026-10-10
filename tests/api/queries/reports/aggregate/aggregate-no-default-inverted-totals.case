@@ -2,7 +2,7 @@ Inversion negates every commodity total.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:'], includeTotal: true, invert: true })
+aggregate({ accounts: ['Assets:*'], includeTotal: true, invert: true })
 
 ========== FILE ==========
 

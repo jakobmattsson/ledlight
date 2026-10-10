@@ -574,7 +574,7 @@ account Equity:Opening
     stdout = '';
     stderr = '';
     assert.equal(executeCli.run([
-      'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:',
+      'aggregate', '--file', journalPath, '--to', '2024-01-01', '--accounts', 'Assets:*',
     ]), 0, stderr);
     assert.match(stderr, /^\[MISSING_COMMODITY_FORMAT\] Commodity SEK must declare a format property/u);
     return stdout;

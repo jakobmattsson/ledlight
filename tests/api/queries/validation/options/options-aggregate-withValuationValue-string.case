@@ -2,7 +2,7 @@ aggregate requires a boolean withValuationValue option.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:'], withValuationValue: 'false' })
+aggregate({ accounts: ['Assets:Cash'], withValuationValue: 'false' })
 
 ========== FILE ==========
 

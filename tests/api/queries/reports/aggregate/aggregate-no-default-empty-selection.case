@@ -2,7 +2,7 @@ A missing account selection produces no rows or totals.
 
 ========== API ==========
 
-aggregate({ accounts: ['Missing:'], includeTotal: true })
+aggregate({ accounts: ['Missing'], includeTotal: true })
 
 ========== FILE ==========
 

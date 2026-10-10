@@ -2,7 +2,7 @@ totalHistory requires a boolean invert option.
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:'], invert: 'false' })
+totalHistory({ accounts: ['Assets:Cash'], invert: 'false' })
 
 ========== FILE ==========
 

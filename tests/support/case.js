@@ -14,6 +14,7 @@ const HEADERS = new Map([
   ['========== API ==========', 'api'],
   ['========== FILE ==========', 'file'],
   ['========== OUTPUT ==========', 'output'],
+  ['========== API-OUTPUT ==========', 'apiOutput'],
   ['========== WARNINGS ==========', 'warnings'],
   ['========== ERROR ==========', 'error'],
 ]);
@@ -172,14 +173,16 @@ function parseCase(fileName) {
     }
   }
   if (!Object.hasOwn(sections, 'output') &&
+      !Object.hasOwn(sections, 'apiOutput') &&
       !Object.hasOwn(sections, 'warnings') &&
       !Object.hasOwn(sections, 'error') &&
       !Object.hasOwn(sections, 'api')) {
-    throw new Error(`${fileName}: expected OUTPUT, WARNINGS, ERROR, or API`);
+    throw new Error(`${fileName}: expected OUTPUT, API-OUTPUT, WARNINGS, ERROR, or API`);
   }
   if (cli === undefined && sections.ledgerCli === undefined && sections.output === undefined &&
+      sections.apiOutput === undefined &&
       sections.warnings === undefined && sections.error === undefined) {
-    throw new Error(`${fileName}: an API-only case needs OUTPUT, WARNINGS, or ERROR`);
+    throw new Error(`${fileName}: an API-only case needs OUTPUT, API-OUTPUT, WARNINGS, or ERROR`);
   }
   let api;
   if (Object.hasOwn(sections, 'api')) {
@@ -193,7 +196,8 @@ function parseCase(fileName) {
   }
   return {
     cliArgs, ledgerArgs, heredoc, file: sections.file, files, api,
-    output: sections.output, warnings: sections.warnings, error: sections.error,
+    output: sections.output, apiOutput: sections.apiOutput,
+    warnings: sections.warnings, error: sections.error,
   };
 }
 

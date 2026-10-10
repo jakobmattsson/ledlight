@@ -2,7 +2,7 @@ Transaction account selection matches suffixes.
 
 ========== API ==========
 
-transactions({ accounts: ['Shop$'] })
+transactions({ accounts: ['*Shop'] })
 
 ========== FILE ==========
 

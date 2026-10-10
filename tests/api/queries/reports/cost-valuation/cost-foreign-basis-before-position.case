@@ -2,7 +2,7 @@ A snapshot before the unsupported position can still be valued.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['Assets:'], denominate: true, to: '2024-01-01' })
+aggregate({ valuation: 'cost', accounts: ['Assets:*'], denominate: true, to: '2024-01-01' })
 
 ========== FILE ==========
 

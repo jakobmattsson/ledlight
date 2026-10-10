@@ -2,7 +2,7 @@ Commodity grouping retains zero balances and combines selected accounts.
 
 ========== API ==========
 
-aggregate({ accounts: ['Closed', '^Assets:Unused$'], groupBy: 'commodity' })
+aggregate({ accounts: ['Assets:Closed*', 'Assets:Unused'], groupBy: 'commodity' })
 
 ========== FILE ==========
 

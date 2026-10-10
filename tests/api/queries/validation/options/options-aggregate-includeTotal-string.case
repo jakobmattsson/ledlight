@@ -2,7 +2,7 @@ aggregate requires a boolean includeTotal option.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:'], includeTotal: 'false' })
+aggregate({ accounts: ['Assets:Cash'], includeTotal: 'false' })
 
 ========== FILE ==========
 

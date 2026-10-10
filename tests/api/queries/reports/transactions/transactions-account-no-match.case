@@ -1,8 +1,8 @@
-Transaction account selection rejects nonmatching anchors.
+Transaction account selection rejects names that do not match exactly.
 
 ========== API ==========
 
-transactions({ accounts: ['^Expenses$'] })
+transactions({ accounts: ['Expenses'] })
 
 ========== FILE ==========
 

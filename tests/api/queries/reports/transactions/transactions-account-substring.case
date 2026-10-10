@@ -2,7 +2,7 @@ Transaction account selection matches literal substrings.
 
 ========== API ==========
 
-transactions({ accounts: ['Expenses'] })
+transactions({ accounts: ['*Expenses*'] })
 
 ========== FILE ==========
 

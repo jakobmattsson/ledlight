@@ -2,7 +2,7 @@ A missing historical market price prevents daily valuation.
 
 ========== API ==========
 
-totalHistory({ accounts: ['Assets:'] })
+totalHistory({ accounts: ['Assets:Other'] })
 
 ========== FILE ==========
 

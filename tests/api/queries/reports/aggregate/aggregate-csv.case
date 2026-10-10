@@ -2,7 +2,7 @@ Aggregate csv formatting.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts Assets: --format csv
+ledlight aggregate --accounts 'Assets:*' --format csv
 
 ========== FILE ==========
 

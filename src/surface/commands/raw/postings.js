@@ -36,7 +36,7 @@ module.exports = ({ cliOptions: options }) => ({
   description: 'show postings',
   examples: [
     'ledlight postings --file main.ledger',
-    'ledlight postings --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "^Assets:"',
+    'ledlight postings --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "Assets:*"',
   ],
   configure(command) {
     options.journal(command);

@@ -2,7 +2,7 @@ An assignment acquisition and its implicit counterpart are both validated.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Holdings$'], denominate: true })
+aggregate({ accounts: ['Holdings'], denominate: true })
 
 ========== FILE ==========
 

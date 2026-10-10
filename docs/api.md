@@ -12,10 +12,12 @@ decimal strings unless a result field is explicitly documented as a number.
 API option objects reject unknown properties and values of the wrong type,
 including `null`. Omit the options argument or pass `{}` to use defaults.
 
-All account selections use literal substring patterns. A leading `^` anchors a
-pattern to the start of the account name and a trailing `$` anchors it to the
-end. Using both selects one exact account. No other regular-expression syntax
-is recognized; all other characters are matched literally.
+Account and commodity selections match exact names by default. `*` matches any
+text, including an empty string: `Assets:*` matches a prefix, `*Cash` a suffix,
+and `*Fund*` a substring. Prefix a pattern with `~` to exclude matches.
+Account names and commodity symbols cannot contain `*` or `~`. Account names
+also cannot contain tabs or consecutive spaces. Other characters are literal,
+including `^`, `$`, `%`, `?`, and `_`.
 
 Every CLI account filter uses the repeatable `--accounts PATTERN` option.
 The singular `--account` is not supported.
@@ -75,7 +77,7 @@ default differs between API and CLI because the CLI follows Ledger listings.
 
 Selection arrays contain non-empty strings. Exact duplicate selections are
 removed, preserving their first occurrence. Empty optional arrays mean no
-restriction. Commodity selections match exact symbols; account selections use
+restriction. Account and investment-performance commodity selections use
 the shared pattern syntax above. Boolean options accept only booleans and
 all default to `false`.
 
@@ -84,7 +86,7 @@ all default to `false`.
 | `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `groupBy`, `denominate`, `withValuationValue`, `invert`, `includeTotal` |
 | `totalHistory` | `from`, `to`: select daily closing totals, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
 | `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
-| `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `includeCommodities`, `excludeCommodities` |
+| `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
 | `transactions` | No date filter; results include transaction and posting dates. | `accounts`, `id`, `order`, `page`, `pageSize` |
 | `accounts` | No date filter. | `accounts`, `usage` |
@@ -266,7 +268,7 @@ Options:
 | --- | --- | --- | --- |
 | `from` | string | unbounded | Inclusive start date |
 | `to` | string | unbounded | Inclusive end date and valuation date |
-| `accounts` | string[] | `[]` | Account patterns combined with OR |
+| `accounts` | string[] | `[]` | Include patterns combined with OR; `~` patterns exclude matches |
 | `dateBasis` | `posting` or `transaction` | `posting` | Date used for filtering |
 | `valuation` | `cost` or `market` | `market` | Valuation method when converting or adding valuation values |
 | `groupBy` | `account` or `commodity` | `account` | Result grouping dimension |
@@ -274,6 +276,12 @@ Options:
 | `withValuationValue` | boolean | `false` | Preserve commodity rows and add `valuationValue` |
 | `invert` | boolean | `false` | Negate quantities and valuation values |
 | `includeTotal` | boolean | `false` | Append an exact total for each reported commodity |
+
+Positive patterns combine with OR, and exclusions remove matches from that
+selection. With only exclusions, all other accounts are selected. For example,
+`accounts: ['Jakob:*', '~Jakob:Tillgångar*', '~*baz']` selects Jakob's accounts
+except those under `Jakob:Tillgångar` or ending in `baz`. The same rules apply
+to every API method that accepts `accounts` and to the CLI `--accounts` option.
 
 `denominate` and `withValuationValue` are mutually exclusive.
 `includeTotal` is unavailable with commodity grouping because the grouped
@@ -352,10 +360,13 @@ in the CLI.
 
 ### `journal.investmentPerformance(options)`
 
-Options are `from`, `to`, `accounts`, `includeCommodities`, and
-`excludeCommodities`. The three selections are arrays of non-empty strings.
-Account values use the shared account-pattern syntax. Commodity inclusion and
-exclusion are mutually exclusive; omit both to discover held commodities.
+Options are `from`, `to`, `accounts`, and `commodities`. Both selections are
+arrays of non-empty strings and use the shared `*` and `~` pattern syntax.
+Positive patterns combine with OR; exclusions remove matches. With only exclusions,
+all other held commodities are selected. Positive patterns select declared
+commodities even when the selected accounts hold none of them. Omit
+`commodities` to discover all held commodities. This option replaces
+`includeCommodities` and `excludeCommodities`.
 
 The interval is inclusive and uses posting dates. Earlier positions contribute
 to the opening value, which is the closing value immediately before `from` (or

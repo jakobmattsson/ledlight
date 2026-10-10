@@ -2,7 +2,7 @@ aggregate selects a single account pattern.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:'] })
+aggregate({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

@@ -4,7 +4,7 @@ module.exports = ({ cliOptions: options }) => ({
   description: 'show transactions',
   examples: [
     'ledlight transactions --file main.ledger',
-    'ledlight transactions --file main.ledger --accounts "^Expenses:" --order newest --page 1 --page-size 20',
+    'ledlight transactions --file main.ledger --accounts "Expenses:*" --order newest --page 1 --page-size 20',
   ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });

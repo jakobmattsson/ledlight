@@ -2,7 +2,7 @@ Unconverted totals in text format.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts '^Assets:' --include-total
+ledlight aggregate --accounts 'Assets:*' --include-total
 
 ========== FILE ==========
 

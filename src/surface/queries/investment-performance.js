@@ -12,30 +12,25 @@ module.exports = ({
 
   const optionsSchema = z.strictObject({
     accounts,
-    includeCommodities: stringList.default([]),
-    excludeCommodities: stringList.default([]),
+    commodities: stringList.default([]),
     ...dateRange,
-  }).superRefine(validateDateRange).superRefine((input, context) => {
-    if (input.includeCommodities.length > 0 && input.excludeCommodities.length > 0) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Include and exclude commodity selections cannot be combined',
-      });
-    }
-  });
+  }).superRefine(validateDateRange);
 
   function selectedCommodities(database, options) {
-    if (options.includeCommodities.length > 0) return options.includeCommodities;
+    const included = options.commodities.filter((pattern) => !pattern.startsWith('~'));
+    if (included.length > 0) {
+      const available = database.prepare('SELECT symbol FROM commodity_declarations ORDER BY symbol').all()
+        .map((row) => row.symbol);
+      return [...new Set(included.flatMap((pattern) => available.filter((commodity) =>
+        accountMatches(commodity, [pattern]))))]
+        .filter((commodity) => accountMatches(commodity, options.commodities));
+    }
     const clauses = ["p.posting_date <= COALESCE(?, '9999-12-31')"];
     const parameters = [options.to ?? null];
     if (options.accounts.length > 0) {
       const filter = accountFilter('p.account', options.accounts);
       clauses.push(filter.sql);
       parameters.push(...filter.parameters);
-    }
-    if (options.excludeCommodities.length > 0) {
-      clauses.push(`r.amount_commodity NOT IN (${options.excludeCommodities.map(() => '?').join(', ')})`);
-      parameters.push(...options.excludeCommodities);
     }
     const where = clauses.length > 0 ? `WHERE ${clauses.join('\n      AND ')}` : '';
     return database.prepare(`
@@ -44,7 +39,8 @@ module.exports = ({
     JOIN postings AS p ON p.id = r.posting_id
     ${where}
     ORDER BY r.amount_commodity
-  `).all(...parameters).map((row) => row.commodity);
+  `).all(...parameters).map((row) => row.commodity)
+      .filter((commodity) => accountMatches(commodity, options.commodities));
   }
 
   function selectionFilter(options, commodities, alias) {
@@ -161,7 +157,7 @@ module.exports = ({
     };
     const postings = rows.map((row) => {
       const selectedAccount = options.accounts.length === 0 ||
-        options.accounts.some((pattern) => accountMatches(row.account, pattern));
+        accountMatches(row.account, options.accounts);
       return {
         transactionId: row.transaction_id,
         date: row.posting_date,

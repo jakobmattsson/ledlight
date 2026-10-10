@@ -1,0 +1,15 @@
+Rejects a reserved exclusion marker in a posting account.
+
+========== TEXT ==========
+
+2024-01-01 Opening
+  Assets:~Cash  1 SEK
+  Equity:Opening
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 2
+}

@@ -1,0 +1,69 @@
+An exact commodity exclusion leaves symbols that only contain the excluded text.
+
+========== CLI ==========
+
+ledlight investment-performance --accounts Assets:Fund --commodities '~EUR'
+
+========== API ==========
+
+investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['~EUR'] })
+
+========== FILE ==========
+
+commodity EUR
+  default
+  format 1,000.00 EUR
+commodity EUROPA
+  format 1,000 EUROPA
+account Assets:Fund
+account Assets:Cash
+P 2024-01-01 EUROPA 100 EUR
+2024-01-01 Purchase
+  Assets:Fund  1 EUROPA {100 EUR}
+  Assets:Cash  -100 EUR
+
+========== OUTPUT ==========
+
+Investment performance from 2024-01-01 to 2024-01-01
+Instruments: 1
+Opening value: 0.00 EUR
+Net contributions: 100.00 EUR
+Ending value: 100.00 EUR
+Profit/loss: 0.00 EUR
+Time-weighted return (total): 0.00 %
+Time-weighted return (annualized): n/a
+Money-weighted return (total): n/a
+Money-weighted return (annualized): n/a
+
+========== API-OUTPUT ==========
+
+{
+  "from": "2024-01-01",
+  "to": "2024-01-01",
+  "commodities": [
+    "EUROPA"
+  ],
+  "valuationCommodity": "EUR",
+  "openingValue": 0,
+  "endingValue": 100,
+  "netContributions": 100,
+  "profitLoss": 0,
+  "timeWeightedReturn": 0,
+  "timeWeightedReturnAnnualized": null,
+  "moneyWeightedReturn": null,
+  "moneyWeightedReturnTotal": null,
+  "points": [
+    {
+      "date": "2024-01-01",
+      "value": 100,
+      "netContributions": 100,
+      "profitLoss": 0,
+      "timeWeightedReturn": 0,
+      "timeWeightedReturnAnnualized": null,
+      "moneyWeightedReturn": null,
+      "moneyWeightedReturnTotal": null
+    }
+  ]
+}
+
+========== WARNINGS ==========

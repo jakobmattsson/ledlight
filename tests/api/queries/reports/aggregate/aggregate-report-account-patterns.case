@@ -1,8 +1,8 @@
-Account patterns combine with OR and support anchors.
+Account patterns combine with OR and support open matching.
 
 ========== API ==========
 
-aggregate({ to: '2024-01-02', accounts: ['Cash$', '^Equity:'] })
+aggregate({ to: '2024-01-02', accounts: ['*Cash', 'Equity:Opening'] })
 
 ========== FILE ==========
 

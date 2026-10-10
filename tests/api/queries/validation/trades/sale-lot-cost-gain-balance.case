@@ -2,7 +2,7 @@ Unit and total lot costs use the recorded basis when balancing sale gains.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Income:Capital Gains$'] })
+aggregate({ accounts: ['Income:Capital Gains'] })
 
 ========== FILE ==========
 

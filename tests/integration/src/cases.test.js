@@ -31,8 +31,9 @@ for (const fileName of listCases(directory).sort()) {
       ?.replaceAll('{{JOURNAL_PATH}}', journalPath)
       .replace(/\{\{FILE:([^}]+)\}\}/gu, (_match, name) => path.join(temporaryDirectory, name));
     for (const [name, result] of Object.entries(actual)) {
-      if (expected.output !== undefined) {
-        assert.equal(result.output, resolvePaths(expected.output), `${name} OUTPUT`);
+      const output = name === 'api' ? expected.apiOutput ?? expected.output : expected.output;
+      if (output !== undefined) {
+        assert.equal(result.output, resolvePaths(output), `${name} OUTPUT`);
       }
       if (expected.warnings !== undefined) {
         assert.equal(result.warnings, resolvePaths(expected.warnings), `${name} WARNINGS`);

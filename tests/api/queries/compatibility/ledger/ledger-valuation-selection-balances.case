@@ -2,7 +2,7 @@ Ledger and Ledlight produce the same valuation selection balances.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts Assets: --denominate
+ledlight aggregate --accounts 'Assets:*' --denominate
 
 ========== LEDGER-CLI ==========
 

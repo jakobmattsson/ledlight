@@ -2,7 +2,7 @@ postings selects a single account pattern.
 
 ========== API ==========
 
-postings({ accounts: ['Assets:'] })
+postings({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

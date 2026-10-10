@@ -2,7 +2,7 @@ aggregate requires a boolean invert option.
 
 ========== API ==========
 
-aggregate({ accounts: ['Assets:'], invert: 'false' })
+aggregate({ accounts: ['Assets:Cash'], invert: 'false' })
 
 ========== FILE ==========
 

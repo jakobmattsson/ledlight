@@ -4,7 +4,7 @@ module.exports = ({ cliOptions: options }) => ({
   description: 'show daily closing totals',
   examples: [
     'ledlight total-history --file main.ledger',
-    'ledlight total-history --file main.ledger --from 2024-01-01 --accounts "^Assets:" --format csv',
+    'ledlight total-history --file main.ledger --from 2024-01-01 --accounts "Assets:*" --format csv',
   ],
   loadFormatData(journal) {
     return journal.commodities({ usage: 'all' });

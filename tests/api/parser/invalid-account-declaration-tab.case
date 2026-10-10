@@ -1,0 +1,13 @@
+Rejects a tab inside an account declaration name.
+
+========== TEXT ==========
+
+account Assets:Tab	Name
+
+========== ERROR ==========
+
+{
+  "code": "LEDLIGHT_SYNTAX",
+  "source": "bad.ledger",
+  "line": 1
+}

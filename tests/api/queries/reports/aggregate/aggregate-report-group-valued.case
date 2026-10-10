@@ -2,7 +2,7 @@ Commodity grouping can convert values into the default commodity.
 
 ========== API ==========
 
-aggregate({ to: '2024-01-02', accounts: ['Assets:'], groupBy: 'commodity', denominate: true })
+aggregate({ to: '2024-01-02', accounts: ['Assets:*'], groupBy: 'commodity', denominate: true })
 
 ========== FILE ==========
 

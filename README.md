@@ -71,7 +71,7 @@ read stdin. Both the CLI and API honor the cache directory set in the nearest
 Run a complete example without creating a journal file:
 
 ```sh
-ledlight aggregate --accounts '^Assets:' --include-total <<'LEDGER'
+ledlight aggregate --accounts 'Assets:*' --include-total <<'LEDGER'
 commodity SEK
   default
   format 1,000.00 SEK

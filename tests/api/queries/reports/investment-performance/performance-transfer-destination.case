@@ -2,7 +2,7 @@ A destination-only selection values an incoming transfer at market.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:Other$'], includeCommodities: ['FUND'] })
+investmentPerformance({ accounts: ['Assets:Other'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

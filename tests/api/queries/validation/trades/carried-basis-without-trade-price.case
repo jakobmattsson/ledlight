@@ -2,7 +2,7 @@ An internal transfer and a split carry SEK basis without an exchange price.
 
 ========== CLI ==========
 
-ledlight transactions --accounts '^Assets:Other$' --format text
+ledlight transactions --accounts Assets:Other --format text
 
 ========== FILE ==========
 

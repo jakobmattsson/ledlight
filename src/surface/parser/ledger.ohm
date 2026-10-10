@@ -4,7 +4,7 @@ Ledlight {
   topLevel
     = date spacing+ description transactionInlineComment? lineEnd (indentedComment | posting)+            -- transaction
     | "commodity" spacing+ commoditySymbol inlineComment? spacing* lineEnd commodityBody*                 -- commodity
-    | "account" spacing+ directiveValue inlineComment? lineEnd                                            -- account
+    | "account" spacing+ accountDirectiveValue inlineComment? lineEnd                                     -- account
     | "tag" spacing+ directiveValue inlineComment? lineEnd                                                -- tag
     | "include" spacing+ directiveValue inlineComment? lineEnd                                            -- include
     | "P" spacing+ date spacing+ commoditySymbol spacing+ amount spacing* inlineComment? lineEnd          -- price
@@ -48,12 +48,13 @@ Ledlight {
   tagName = (~forbiddenTagCharacter any)+
   commentText = (~newline any)*
   directiveValue = (~forbiddenDirectiveCharacter any)+
+  accountDirectiveValue = (~forbiddenAccountCharacter any)+
 
   date = digit digit digit digit "-" digit digit "-" digit digit
 
   forbiddenDirectiveCharacter = ";" | newline
   forbiddenDescriptionCharacter = ";" | newline
-  forbiddenAccountCharacter = postingAmountSeparator | ";" | newline
+  forbiddenAccountCharacter = postingAmountSeparator | ";" | "*" | "~" | newline
   forbiddenTagCharacter = spacing | ":" | ";" | newline
 
   postingAmountSeparator = "\t"                -- tab

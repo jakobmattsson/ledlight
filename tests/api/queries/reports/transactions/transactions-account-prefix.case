@@ -2,7 +2,7 @@ Transaction account selection matches prefixes.
 
 ========== API ==========
 
-transactions({ accounts: ['^Assets'] })
+transactions({ accounts: ['Assets*'] })
 
 ========== FILE ==========
 

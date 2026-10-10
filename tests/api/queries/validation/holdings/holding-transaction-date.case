@@ -2,7 +2,7 @@ Transaction-date reporting remains available for a delayed acquisition.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Fund$'], to: '2024-01-02', dateBasis: 'transaction' })
+aggregate({ accounts: ['Assets:Fund'], to: '2024-01-02', dateBasis: 'transaction' })
 
 ========== FILE ==========
 

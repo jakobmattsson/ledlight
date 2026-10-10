@@ -2,7 +2,7 @@ A sale-day interval uses the opening position and net sale proceeds.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'], includeCommodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
+investmentPerformance({ accounts: ['Assets:*'], commodities: ['FUND'], from: '2024-01-02', to: '2024-01-02' })
 
 ========== FILE ==========
 

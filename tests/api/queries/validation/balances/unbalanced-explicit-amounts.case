@@ -2,7 +2,7 @@ An explicitly unbalanced transaction warns but retains its postings.
 
 ========== API ==========
 
-aggregate({ accounts: ['^Assets:Cash$'] })
+aggregate({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

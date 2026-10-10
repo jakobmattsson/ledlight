@@ -2,7 +2,7 @@ Posting filters accept an open upper date bound.
 
 ========== API ==========
 
-postings({ from: '2024-01-04', accounts: ['Cash$'] })
+postings({ from: '2024-01-04', accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

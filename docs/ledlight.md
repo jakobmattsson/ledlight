@@ -160,7 +160,7 @@ underlying result.
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
 | `unrealized-gains --to DATE` | `options.to` | Inclusive position and valuation snapshot |
-| `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
+| `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection; prefix with `~` to exclude |
 | `--usage SELECTION` | `options.usage` | `all`, `used`, or `unused` declarations; CLI defaults to `used`, API to `all` |
 | `--date-basis VALUE` | `options.dateBasis` | `posting` or `transaction`; defaults to `posting` |
 | `aggregate --group-by DIMENSION` | `options.groupBy` | `account` or `commodity`; defaults to `account` |
@@ -169,8 +169,7 @@ underlying result.
 | `--with-valuation-value` | `options.withValuationValue` | Add valuation values without combining commodity rows |
 | `--invert` | `options.invert` | Exact sign inversion by the report API |
 | `--include-total` | `options.includeTotal` | Total row calculated by the report API |
-| `--include-commodities NAME` | `options.includeCommodities` | Investment instrument selection |
-| `--exclude-commodities NAME` | `options.excludeCommodities` | Investment instrument exclusion |
+| `--commodities PATTERN` | `options.commodities` | Investment instruments selected by the same pattern rules as `--accounts` |
 | `print --density DENSITY` | `options.density` | `compact` or `spacious`; defaults to `spacious` |
 | `print --sort-declarations` | `options.sortDeclarations` | Print declarations before transactions |
 | `accounts --details` | None | Include API-provided comments and transaction counts in the output |
@@ -189,6 +188,14 @@ underlying result.
 | `<command> --help` | None | Detailed parameters, enum values and defaults, and usage examples |
 
 Commands without a specialized human-readable representation emit JSON.
+Account and commodity patterns match exact names by default. `*` matches any
+text, including an empty string. Prefix a pattern with `~` to exclude it.
+Positive patterns combine with OR, while exclusions remove matching names.
+If every pattern starts with `~`, all other names are selected. For example,
+`--accounts 'Jakob:*' --accounts '~Jakob:Tillgångar*'` selects Jakob's accounts
+except those under `Jakob:Tillgångar`. Account names and commodity symbols
+cannot contain `*` or `~`; account names also cannot contain tabs or
+consecutive spaces.
 `transactions` defaults to Ledger-style text; repeatable `--accounts` options
 select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction.
@@ -530,11 +537,10 @@ query time.
 `aggregate` returns every non-zero account total in an optional inclusive
 date interval. Omit `from` to include all earlier postings, omit `to` to include
 all later postings, and omit both to aggregate the complete journal. Repeated
-account patterns are combined with OR. Patterns match literal substrings by
-default; a leading `^` anchors the start and a trailing `$` anchors the end.
-Both anchors request an exact account. These are not regular expressions, so
-every other character is literal. By default there is one row per account and
-commodity:
+account patterns are combined with OR. Patterns match exact names by default;
+`*` matches any text, including an empty string. These are not regular
+expressions, so every other character is literal. By default there is one row
+per account and commodity:
 
 ```js
 const { openJournal } = require('@jakobm/ledlight');
@@ -542,13 +548,13 @@ const journal = openJournal('/path/to/books/main.ledger');
 
 const balanceSheet = journal.aggregate({
   to: '2024-12-31',
-  accounts: ['^Assets:', '^Liabilities:'],
+  accounts: ['Assets:*', 'Liabilities:*'],
   dateBasis: 'transaction',
 });
 const valuedIncomeStatement = journal.aggregate({
   from: '2024-01-01',
   to: '2024-12-31',
-  accounts: ['^Income:', '^Expenses:'],
+  accounts: ['Income:*', 'Expenses:*'],
   denominate: true,
 });
 ```
@@ -563,9 +569,9 @@ The command-line equivalent is:
 ledlight aggregate --file main.ledger --to 2024-12-31
 ledlight aggregate --file main.ledger --to 2024-12-31 --date-basis transaction
 ledlight aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 \
-  --accounts "^Income:" --accounts "^Expenses:" --denominate --invert
-ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "^Assets:" --format csv
-ledlight aggregate --file main.ledger --accounts "^Assets:" \
+  --accounts "Income:*" --accounts "Expenses:*" --denominate --invert
+ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:*" --format csv
+ledlight aggregate --file main.ledger --accounts "Assets:*" \
   --group-by commodity --format json
 ```
 
@@ -591,7 +597,7 @@ are not needed in cost mode. The journal still supplies realized gain postings.
 Selecting a valuation method alone does not convert commodity quantities.
 
 ```console
-ledlight aggregate --file main.ledger --accounts "^Assets:" --denominate --valuation cost
+ledlight aggregate --file main.ledger --accounts "Assets:*" --denominate --valuation cost
 ```
 
 The same behavior is available directly through `journal.aggregate`: set
@@ -682,7 +688,7 @@ are omitted before checking their lot costs.
 
 ```console
 ledlight unrealized-gains --file main.ledger
-ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "^Assets:Broker"
+ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "Assets:Broker*"
 ledlight unrealized-gains --file main.ledger --format csv
 ledlight unrealized-gains --file main.ledger --include-total
 ```
@@ -781,7 +787,7 @@ const { openJournal } = require('@jakobm/ledlight');
 const journal = openJournal('/path/to/books/main.ledger');
 
 const history = journal.totalHistory({
-  accounts: ['^Assets:', '^Liabilities:'],
+  accounts: ['Assets:*', 'Liabilities:*'],
 });
 ```
 
@@ -791,10 +797,10 @@ select accounts, while `--format` selects `text`, `json`, or `csv` output:
 
 ```console
 ledlight total-history --file main.ledger \
-  --accounts "^Assets:" --accounts "^Liabilities:"
+  --accounts "Assets:*" --accounts "Liabilities:*"
 ledlight total-history --file main.ledger --date-basis transaction \
-  --accounts "^Assets:" --accounts "^Liabilities:"
-ledlight total-history --file main.ledger --accounts "^Assets:" --format csv
+  --accounts "Assets:*" --accounts "Liabilities:*"
+ledlight total-history --file main.ledger --accounts "Assets:*" --format csv
 ```
 
 Human-readable amounts use the default commodity's declared format. CSV

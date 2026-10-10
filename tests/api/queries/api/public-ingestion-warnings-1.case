@@ -2,7 +2,7 @@ The aggregate report exposes ingestion warnings.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts Assets: --format json <<'LEDGER'
+ledlight aggregate --accounts 'Assets:*' --format json <<'LEDGER'
 commodity SEK
   format 1,000.00 SEK
   default

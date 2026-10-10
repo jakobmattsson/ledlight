@@ -2,7 +2,7 @@ A purchase funded by selected portfolio cash is not a new contribution.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:'] })
+investmentPerformance({ accounts: ['Assets:*'] })
 
 ========== FILE ==========
 
