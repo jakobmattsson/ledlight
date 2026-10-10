@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791614568682,
+  "lastUpdate": 1791662468174,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -818,6 +818,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 13.997646,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "111a7355042610f764727a953b8854a929d02403",
+          "message": "Merge pull request #119 from jakobmattsson/codex/account-exclusions\n\nUnify account and commodity selector patterns",
+          "timestamp": "2026-10-10T22:00:44+02:00",
+          "tree_id": "f1bac662d5a8b7df108db2304fe47fbcd7ba3e7d",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/111a7355042610f764727a953b8854a929d02403"
+        },
+        "date": 1791662466947,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1807.845511,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 10.342317,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 14.442244,
             "unit": "ms"
           }
         ]
