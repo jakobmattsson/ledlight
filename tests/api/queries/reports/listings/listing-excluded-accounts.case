@@ -1,12 +1,8 @@
-An exclusion without an inclusion selects every other account.
+An exclusion without an inclusion selects every other account in CLI text output.
 
 ========== CLI ==========
 
-ledlight accounts --accounts '~foobar' --details --format json
-
-========== API ==========
-
-accounts({ accounts: ['~foobar'] })
+ledlight accounts --accounts '~foobar'
 
 ========== FILE ==========
 
@@ -24,19 +20,7 @@ account Equity:Opening
 
 ========== OUTPUT ==========
 
-[
-  {
-    "account": "Assets:Cash",
-    "comment": null,
-    "used": true,
-    "transactionCount": 1
-  },
-  {
-    "account": "Equity:Opening",
-    "comment": null,
-    "used": true,
-    "transactionCount": 1
-  }
-]
+Assets:Cash
+Equity:Opening
 
 ========== WARNINGS ==========
