@@ -195,6 +195,12 @@ blocks and validating the resulting journal before publishing it.
 point directly to an existing file. Ledlight resolves symbolic links and never
 searches parent directories or reads `.ledgerrc`.
 
+The API always opens the journal supplied by `journalPath`; it does not use the
+`--file` setting in `.ledlightrc`. It does use `--cache-home PATH` from the nearest
+`.ledlightrc` found from the current working directory upward, with
+`~/.ledlightrc` as a fallback. Relative cache paths are resolved from the
+configuration file's directory. `LEDLIGHT_CACHE_HOME` takes precedence.
+
 Opening a journal ensures database freshness once and returns a journal object.
 Use the same object for several operations against one database snapshot. Its
 query methods are documented below. Reopen the journal to observe source
