@@ -1,8 +1,12 @@
-Positive account patterns combine before exclusions in CLI text output.
+Positive account patterns combine before exclusions in CLI and API.
 
 ========== CLI ==========
 
 ledlight aggregate --accounts '^Jakob:' --accounts '~^Jakob:Tillgångar' --accounts '~foobar' --accounts '~baz$'
+
+========== API ==========
+
+aggregate({ accounts: ['^Jakob:', '~^Jakob:Tillgångar', '~foobar', '~baz$'] })
 
 ========== FILE ==========
 
@@ -27,5 +31,15 @@ account Equity:Opening
 ========== OUTPUT ==========
 
 1.00 SEK  Jakob:Cash
+
+========== API-OUTPUT ==========
+
+[
+  {
+    "account": "Jakob:Cash",
+    "commodity": "SEK",
+    "quantity": "1"
+  }
+]
 
 ========== WARNINGS ==========
