@@ -2,7 +2,7 @@ Ledger and Ledlight produce the same valued balances.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts '*Assets:Investments*' --denominate
+ledlight aggregate --accounts 'Assets:Investments' --denominate
 
 ========== LEDGER-CLI ==========
 

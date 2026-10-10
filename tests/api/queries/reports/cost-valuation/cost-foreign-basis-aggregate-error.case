@@ -2,7 +2,7 @@ Cost valuation requires a lot cost in the default currency for an open position.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['*Assets:*'], denominate: true })
+aggregate({ valuation: 'cost', accounts: ['Assets:*'], denominate: true })
 
 ========== FILE ==========
 

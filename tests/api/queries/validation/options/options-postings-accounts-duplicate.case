@@ -2,7 +2,7 @@ postings deduplicates account selections.
 
 ========== API ==========
 
-postings({ accounts: ['*Assets:*', '*Assets:*'] })
+postings({ accounts: ['Assets:Cash', 'Assets:Cash'] })
 
 ========== FILE ==========
 

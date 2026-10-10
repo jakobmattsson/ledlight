@@ -2,7 +2,7 @@ Commodity grouping can report converted acquisition cost.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['*Assets:Broker*'], to: '2024-01-05', groupBy: 'commodity', denominate: true })
+aggregate({ valuation: 'cost', accounts: ['Assets:Broker'], to: '2024-01-05', groupBy: 'commodity', denominate: true })
 
 ========== FILE ==========
 

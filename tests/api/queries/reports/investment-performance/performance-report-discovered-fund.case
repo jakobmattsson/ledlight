@@ -2,7 +2,7 @@ Owned commodities are discovered and exclusions remove unrelated holdings.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['*Assets:*'], commodities: ['~SEK', '~HOME'] })
+investmentPerformance({ accounts: ['Assets:*'], commodities: ['~SEK', '~HOME'] })
 
 ========== FILE ==========
 

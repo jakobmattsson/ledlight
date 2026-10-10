@@ -2,7 +2,7 @@ Each commodity is totaled exactly without a default commodity.
 
 ========== API ==========
 
-aggregate({ accounts: ['*Assets:*'], includeTotal: true })
+aggregate({ accounts: ['Assets:*'], includeTotal: true })
 
 ========== FILE ==========
 

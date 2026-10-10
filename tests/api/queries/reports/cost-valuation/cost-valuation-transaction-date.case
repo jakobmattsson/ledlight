@@ -2,7 +2,7 @@ Transaction-date selection includes the sale before its delayed posting date.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', denominate: true, accounts: ['*Assets:Broker*'], from: '2024-01-04', to: '2024-01-04', dateBasis: 'transaction' })
+aggregate({ valuation: 'cost', denominate: true, accounts: ['Assets:Broker'], from: '2024-01-04', to: '2024-01-04', dateBasis: 'transaction' })
 
 ========== FILE ==========
 

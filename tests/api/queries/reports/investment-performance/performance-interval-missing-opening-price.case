@@ -2,7 +2,7 @@ An unpriced opening balance prevents performance calculation.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['*Assets:Portfolio*'], from: '2024-01-02', to: '2024-01-03' })
+investmentPerformance({ accounts: ['Assets:Portfolio'], from: '2024-01-02', to: '2024-01-03' })
 
 ========== FILE ==========
 

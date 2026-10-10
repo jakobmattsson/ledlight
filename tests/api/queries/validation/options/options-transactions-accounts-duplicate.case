@@ -2,7 +2,7 @@ transactions deduplicates account selections.
 
 ========== API ==========
 
-transactions({ accounts: ['*Assets:*', '*Assets:*'] })
+transactions({ accounts: ['Assets:Cash', 'Assets:Cash'] })
 
 ========== FILE ==========
 

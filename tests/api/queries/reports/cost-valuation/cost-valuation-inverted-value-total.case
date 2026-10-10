@@ -2,7 +2,7 @@ Inversion applies to both units and cost values in totals.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['*Assets:Broker*'], to: '2024-01-05', withValuationValue: true, invert: true, includeTotal: true })
+aggregate({ valuation: 'cost', accounts: ['Assets:Broker'], to: '2024-01-05', withValuationValue: true, invert: true, includeTotal: true })
 
 ========== FILE ==========
 

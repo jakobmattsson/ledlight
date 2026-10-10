@@ -2,7 +2,7 @@ Unconverted cost-mode aggregation still reports the original units.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['*Assets:Broker*'], to: '2024-01-05' })
+aggregate({ valuation: 'cost', accounts: ['Assets:Broker'], to: '2024-01-05' })
 
 ========== FILE ==========
 

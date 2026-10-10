@@ -2,7 +2,7 @@ Total history text uses the valuation commodity's declared precision.
 
 ========== CLI ==========
 
-ledlight total-history --accounts '*Assets:Cash*'
+ledlight total-history --accounts 'Assets:Cash'
 
 ========== FILE ==========
 

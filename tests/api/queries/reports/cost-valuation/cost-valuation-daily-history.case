@@ -2,7 +2,7 @@ Daily cost history ignores market price movements while carrying opening basis.
 
 ========== API ==========
 
-totalHistory({ valuation: 'cost', accounts: ['*Assets:Broker*', '*Assets:Other*'], from: '2024-01-02' })
+totalHistory({ valuation: 'cost', accounts: ['Assets:Broker', 'Assets:Other'], from: '2024-01-02' })
 
 ========== FILE ==========
 

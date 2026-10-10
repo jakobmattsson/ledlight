@@ -2,7 +2,7 @@ Posting dates determine when an acquisition enters the performance series.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['*Assets:Portfolio*'], commodities: ['FUND'] })
+investmentPerformance({ accounts: ['Assets:Portfolio'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ A percent sign in an account pattern is literal.
 
 ========== API ==========
 
-aggregate({ accounts: ['*Assets:%*'] })
+aggregate({ accounts: ['Assets:%'] })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ Explicit market valuation matches the default.
 
 ========== API ==========
 
-aggregate({ accounts: ['*Assets:Broker*'], to: '2024-01-05', denominate: true, valuation: 'market' })
+aggregate({ accounts: ['Assets:Broker'], to: '2024-01-05', denominate: true, valuation: 'market' })
 
 ========== FILE ==========
 

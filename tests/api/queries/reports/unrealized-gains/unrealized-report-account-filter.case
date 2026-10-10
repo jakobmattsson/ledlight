@@ -2,7 +2,7 @@ Account selection filters the reported gains.
 
 ========== API ==========
 
-unrealizedGains({ accounts: ['*Assets:Bonds*'] })
+unrealizedGains({ accounts: ['Assets:Bonds'] })
 
 ========== FILE ==========
 

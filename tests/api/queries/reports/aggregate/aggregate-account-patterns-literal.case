@@ -2,7 +2,7 @@ Account filters treat punctuation inside patterns literally instead of as regula
 
 ========== API ==========
 
-aggregate({ accounts: ['*Assets.*Cash*', '*:^Cash*'] })
+aggregate({ accounts: ['Assets.Cash', 'Assets:^Cash$'] })
 
 ========== FILE ==========
 

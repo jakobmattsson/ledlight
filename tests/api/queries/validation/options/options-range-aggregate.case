@@ -2,7 +2,7 @@ A single-day range includes both endpoints and retains opening balances where re
 
 ========== API ==========
 
-aggregate({ accounts: ['*Assets:*'], from: '2024-02-29', to: '2024-02-29' })
+aggregate({ accounts: ['Assets:Cash'], from: '2024-02-29', to: '2024-02-29' })
 
 ========== FILE ==========
 

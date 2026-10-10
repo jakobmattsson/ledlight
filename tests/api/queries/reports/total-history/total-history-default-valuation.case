@@ -2,11 +2,11 @@ total-history default valuation matches the public journal API.
 
 ========== CLI ==========
 
-ledlight total-history --accounts '*Assets:Fund*' --format json
+ledlight total-history --accounts 'Assets:Fund' --format json
 
 ========== API ==========
 
-totalHistory({ accounts: ['*Assets:Fund*'] })
+totalHistory({ accounts: ['Assets:Fund'] })
 
 ========== FILE ==========
 

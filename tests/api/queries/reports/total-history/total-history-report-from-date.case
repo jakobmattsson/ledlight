@@ -2,7 +2,7 @@ A filtered history retains its opening holding and later market values.
 
 ========== API ==========
 
-totalHistory({ from: '2024-01-02', accounts: ['*Assets:Fund*'] })
+totalHistory({ from: '2024-01-02', accounts: ['Assets:Fund'] })
 
 ========== FILE ==========
 

@@ -2,11 +2,11 @@ An exact commodity exclusion leaves symbols that only contain the excluded text.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts 'Assets:*' --commodities '~EUR'
+ledlight investment-performance --accounts 'Assets:Fund' --commodities '~EUR'
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:*'], commodities: ['~EUR'] })
+investmentPerformance({ accounts: ['Assets:Fund'], commodities: ['~EUR'] })
 
 ========== FILE ==========
 

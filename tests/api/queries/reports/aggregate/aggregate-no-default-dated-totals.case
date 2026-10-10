@@ -2,7 +2,7 @@ A date limit changes each commodity total.
 
 ========== API ==========
 
-aggregate({ accounts: ['*Assets:*'], includeTotal: true, to: '2024-01-01' })
+aggregate({ accounts: ['Assets:*'], includeTotal: true, to: '2024-01-01' })
 
 ========== FILE ==========
 

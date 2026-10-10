@@ -2,7 +2,7 @@ unrealizedGains selects a single account pattern.
 
 ========== API ==========
 
-unrealizedGains({ accounts: ['*Assets:*'] })
+unrealizedGains({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ totalHistory deduplicates account selections.
 
 ========== API ==========
 
-totalHistory({ accounts: ['*Assets:*', '*Assets:*'] })
+totalHistory({ accounts: ['Assets:Cash', 'Assets:Cash'] })
 
 ========== FILE ==========
 

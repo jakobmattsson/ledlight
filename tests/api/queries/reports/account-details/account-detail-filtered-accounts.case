@@ -2,7 +2,7 @@ Account filters select matching declarations in Ledger order.
 
 ========== API ==========
 
-accounts({ accounts: ['*Closed', 'Equity:*'] })
+accounts({ accounts: ['Assets:Closed', 'Equity:Opening'] })
 
 ========== FILE ==========
 

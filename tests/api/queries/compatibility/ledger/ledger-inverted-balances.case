@@ -2,7 +2,7 @@ Ledger and Ledlight produce the same inverted balances.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts '*Expenses:*' --invert
+ledlight aggregate --accounts 'Expenses:Food' --invert
 
 ========== LEDGER-CLI ==========
 

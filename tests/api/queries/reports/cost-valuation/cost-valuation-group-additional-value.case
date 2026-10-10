@@ -2,7 +2,7 @@ Commodity grouping can retain units alongside exact cost value.
 
 ========== API ==========
 
-aggregate({ valuation: 'cost', accounts: ['*Assets:Broker*'], to: '2024-01-05', groupBy: 'commodity', withValuationValue: true })
+aggregate({ valuation: 'cost', accounts: ['Assets:Broker'], to: '2024-01-05', groupBy: 'commodity', withValuationValue: true })
 
 ========== FILE ==========
 

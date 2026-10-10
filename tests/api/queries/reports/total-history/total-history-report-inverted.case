@@ -2,7 +2,7 @@ Inversion negates a daily total.
 
 ========== API ==========
 
-totalHistory({ from: '2024-01-01', to: '2024-01-01', accounts: ['*Assets:*'], invert: true })
+totalHistory({ from: '2024-01-01', to: '2024-01-01', accounts: ['Assets:*'], invert: true })
 
 ========== FILE ==========
 

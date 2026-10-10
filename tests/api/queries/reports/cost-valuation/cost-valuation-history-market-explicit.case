@@ -2,7 +2,7 @@ Explicit market history matches the default.
 
 ========== API ==========
 
-totalHistory({ accounts: ['*Assets:Broker*'], to: '2024-01-05', valuation: 'market' })
+totalHistory({ accounts: ['Assets:Broker'], to: '2024-01-05', valuation: 'market' })
 
 ========== FILE ==========
 

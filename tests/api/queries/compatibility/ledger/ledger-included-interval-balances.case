@@ -2,7 +2,7 @@ Ledger and Ledlight produce the same included interval balances.
 
 ========== CLI ==========
 
-ledlight aggregate --from 2024-01-01 --to 2024-01-31 --accounts '*Assets:*' --accounts '*Expenses:*'
+ledlight aggregate --from 2024-01-01 --to 2024-01-31 --accounts 'Assets:Bank' --accounts 'Expenses:*'
 
 ========== LEDGER-CLI ==========
 

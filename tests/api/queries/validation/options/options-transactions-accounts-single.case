@@ -2,7 +2,7 @@ transactions selects a single account pattern.
 
 ========== API ==========
 
-transactions({ accounts: ['*Assets:*'] })
+transactions({ accounts: ['Assets:Cash'] })
 
 ========== FILE ==========
 

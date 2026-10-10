@@ -72,12 +72,12 @@ test('parses account output options without adding API options', () => {
     options: { usage: 'used' },
   });
   assert.deepEqual(apiArguments([
-    'accounts', '--file', '/journal', '--accounts', 'Assets:*',
-    '--accounts', 'Expenses:*', '--usage', 'unused', '--details', '--format', 'csv',
+    'accounts', '--file', '/journal', '--accounts', 'Assets:Cash',
+    '--accounts', 'Expenses:Food', '--usage', 'unused', '--details', '--format', 'csv',
   ]), {
     command: 'accounts',
     journalPath: '/journal',
-    options: { accounts: ['Assets:*', 'Expenses:*'], usage: 'unused' },
+    options: { accounts: ['Assets:Cash', 'Expenses:Food'], usage: 'unused' },
   });
   assert.throws(
     () => parseArguments(['accounts', '--file', '/journal', '--format', 'yaml']),
