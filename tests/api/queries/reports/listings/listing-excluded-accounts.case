@@ -1,0 +1,42 @@
+An exclusion without an inclusion selects every other account.
+
+========== CLI ==========
+
+ledlight accounts --accounts '~foobar' --details --format json
+
+========== API ==========
+
+accounts({ accounts: ['~foobar'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Assets:foobar
+account Equity:Opening
+
+2024-01-01 Opening
+  Assets:Cash  1 SEK
+  Assets:foobar  2 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Assets:Cash",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  },
+  {
+    "account": "Equity:Opening",
+    "comment": null,
+    "used": true,
+    "transactionCount": 1
+  }
+]
+
+========== WARNINGS ==========

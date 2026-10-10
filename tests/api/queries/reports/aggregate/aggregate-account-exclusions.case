@@ -1,0 +1,41 @@
+Positive account patterns combine before exclusions in both CLI and API.
+
+========== CLI ==========
+
+ledlight aggregate --accounts '^Jakob:' --accounts '~^Jakob:Tillgångar' --accounts '~foobar' --accounts '~baz$' --format json
+
+========== API ==========
+
+aggregate({ accounts: ['^Jakob:', '~^Jakob:Tillgångar', '~foobar', '~baz$'] })
+
+========== FILE ==========
+
+commodity SEK
+  default
+  format 1,000.00 SEK
+account Jakob:Cash
+account Jakob:Tillgångar:Cash
+account Jakob:foobar
+account Jakob:baz
+account Other:Cash
+account Equity:Opening
+
+2024-01-01 Opening
+  Jakob:Cash  1 SEK
+  Jakob:Tillgångar:Cash  2 SEK
+  Jakob:foobar  3 SEK
+  Jakob:baz  4 SEK
+  Other:Cash  5 SEK
+  Equity:Opening
+
+========== OUTPUT ==========
+
+[
+  {
+    "account": "Jakob:Cash",
+    "commodity": "SEK",
+    "quantity": "1"
+  }
+]
+
+========== WARNINGS ==========

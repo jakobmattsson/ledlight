@@ -266,7 +266,7 @@ Options:
 | --- | --- | --- | --- |
 | `from` | string | unbounded | Inclusive start date |
 | `to` | string | unbounded | Inclusive end date and valuation date |
-| `accounts` | string[] | `[]` | Account patterns combined with OR |
+| `accounts` | string[] | `[]` | Include patterns combined with OR; `~` patterns exclude matches |
 | `dateBasis` | `posting` or `transaction` | `posting` | Date used for filtering |
 | `valuation` | `cost` or `market` | `market` | Valuation method when converting or adding valuation values |
 | `groupBy` | `account` or `commodity` | `account` | Result grouping dimension |
@@ -274,6 +274,14 @@ Options:
 | `withValuationValue` | boolean | `false` | Preserve commodity rows and add `valuationValue` |
 | `invert` | boolean | `false` | Negate quantities and valuation values |
 | `includeTotal` | boolean | `false` | Append an exact total for each reported commodity |
+
+Account patterns in `accounts` are literal substring matches. `^` anchors the
+start and `$` anchors the end. Prefix a pattern with `~` to exclude its matches.
+Positive patterns combine with OR, and exclusions remove matches from that
+selection. With only exclusions, all other accounts are selected. For example,
+`accounts: ['^Jakob:', '~^Jakob:Tillgångar', '~baz$']` selects Jakob's accounts
+except those under `Jakob:Tillgångar` or ending in `baz`. The same rules apply
+to every API method that accepts `accounts` and to the CLI `--accounts` option.
 
 `denominate` and `withValuationValue` are mutually exclusive.
 `includeTotal` is unavailable with commodity grouping because the grouped

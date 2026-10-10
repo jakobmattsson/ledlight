@@ -16,25 +16,36 @@ module.exports = () => {
   }
 
   function parseAccountPattern(pattern) {
-    const anchoredAtStart = pattern.startsWith('^');
-    const anchoredAtEnd = pattern.endsWith('$');
+    const excluded = pattern.startsWith('~');
+    const selection = excluded ? pattern.slice(1) : pattern;
+    const anchoredAtStart = selection.startsWith('^');
+    const anchoredAtEnd = selection.endsWith('$');
     return {
+      excluded,
       anchoredAtStart,
       anchoredAtEnd,
-      value: pattern.slice(anchoredAtStart ? 1 : 0, anchoredAtEnd ? -1 : undefined),
+      value: selection.slice(anchoredAtStart ? 1 : 0, anchoredAtEnd ? -1 : undefined),
     };
   }
 
-  function accountMatches(account, pattern) {
-    const { anchoredAtStart, anchoredAtEnd, value } = parseAccountPattern(pattern);
+  function patternMatches(account, pattern) {
+    const { anchoredAtStart, anchoredAtEnd, value } = pattern;
     if (anchoredAtStart && anchoredAtEnd) return account === value;
     if (anchoredAtStart) return account.startsWith(value);
     if (anchoredAtEnd) return account.endsWith(value);
     return account.includes(value);
   }
 
+  function accountMatches(account, patterns) {
+    const parsed = patterns.map(parseAccountPattern);
+    return (parsed.filter((pattern) => !pattern.excluded).some((pattern) =>
+      patternMatches(account, pattern)) || parsed.every((pattern) => pattern.excluded)) &&
+      parsed.filter((pattern) => pattern.excluded).every((pattern) =>
+        !patternMatches(account, pattern));
+  }
+
   function accountPatternFilter(column, pattern) {
-    const { anchoredAtStart, anchoredAtEnd, value } = parseAccountPattern(pattern);
+    const { anchoredAtStart, anchoredAtEnd, value } = pattern;
     if (value.length === 0) {
       return { sql: anchoredAtStart && anchoredAtEnd ? `${column} = ''` : '1 = 1', parameters: [] };
     }
@@ -57,10 +68,20 @@ module.exports = () => {
   }
 
   function accountFilter(column, patterns) {
-    const filters = patterns.map((pattern) => accountPatternFilter(column, pattern));
+    const parsed = patterns.map(parseAccountPattern);
+    const included = parsed.filter((pattern) => !pattern.excluded)
+      .map((pattern) => accountPatternFilter(column, pattern));
+    const excluded = parsed.filter((pattern) => pattern.excluded)
+      .map((pattern) => accountPatternFilter(column, pattern));
+    const clauses = [];
+    if (included.length > 0) {
+      clauses.push(`(${included.map((filter) => filter.sql).join(' OR ')})`);
+    }
+    clauses.push(...excluded.map((filter) => `NOT (${filter.sql})`));
     return {
-      sql: `(${filters.map((filter) => filter.sql).join(' OR ')})`,
-      parameters: filters.flatMap((filter) => filter.parameters),
+      sql: clauses.length === 1 && included.length > 0
+        ? clauses[0] : `(${clauses.join(' AND ')})`,
+      parameters: [...included, ...excluded].flatMap((filter) => filter.parameters),
     };
   }
 

@@ -160,7 +160,7 @@ underlying result.
 | `--from DATE` | `options.from` | Inclusive report start |
 | `--to DATE` | `options.to` | Inclusive report end |
 | `unrealized-gains --to DATE` | `options.to` | Inclusive position and valuation snapshot |
-| `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection |
+| `--accounts PATTERN` | `options.accounts` | Repeated account-pattern selection; prefix with `~` to exclude |
 | `--usage SELECTION` | `options.usage` | `all`, `used`, or `unused` declarations; CLI defaults to `used`, API to `all` |
 | `--date-basis VALUE` | `options.dateBasis` | `posting` or `transaction`; defaults to `posting` |
 | `aggregate --group-by DIMENSION` | `options.groupBy` | `account` or `commodity`; defaults to `account` |
@@ -189,6 +189,12 @@ underlying result.
 | `<command> --help` | None | Detailed parameters, enum values and defaults, and usage examples |
 
 Commands without a specialized human-readable representation emit JSON.
+Account patterns match literal substrings; `^` and `$` anchor the start and
+end of a name. Prefix a pattern with `~` to exclude it. Positive patterns
+combine with OR, while exclusions remove matching accounts. If every pattern
+starts with `~`, all other accounts are selected. For example,
+`--accounts '^Jakob:' --accounts '~^Jakob:Tillgångar'` selects Jakob's accounts
+except those under `Jakob:Tillgångar`.
 `transactions` defaults to Ledger-style text; repeatable `--accounts` options
 select transactions containing matching accounts while retaining every posting
 in each selected transaction. `--id` optionally selects one transaction.

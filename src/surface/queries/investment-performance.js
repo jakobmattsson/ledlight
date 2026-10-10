@@ -161,7 +161,7 @@ module.exports = ({
     };
     const postings = rows.map((row) => {
       const selectedAccount = options.accounts.length === 0 ||
-        options.accounts.some((pattern) => accountMatches(row.account, pattern));
+        accountMatches(row.account, options.accounts);
       return {
         transactionId: row.transaction_id,
         date: row.posting_date,
