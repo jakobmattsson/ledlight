@@ -2,7 +2,7 @@ Annotated trade values work even when settlement cash is outside the selection.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['^Assets:Broker$'], includeCommodities: ['FUND'] })
+investmentPerformance({ accounts: ['^Assets:Broker$'], commodities: ['FUND'] })
 
 ========== FILE ==========
 

@@ -40,11 +40,8 @@ module.exports = ({ cliOptions: options }) => ({
       'end the return period on YYYY-MM-DD',
     );
     options.accounts(command);
-    options.addValue(command, '--include-commodities <name>', 'include an exact commodity symbol (repeatable; default: discover from holdings)', {
-      repeatable: true, conflicts: 'excludeCommodities',
-    });
-    options.addValue(command, '--exclude-commodities <name>', 'exclude an exact commodity symbol (repeatable)', {
-      repeatable: true, conflicts: 'includeCommodities',
+    options.addValue(command, '--commodities <pattern>', 'select commodity symbols (repeatable; ^ and $ anchor, ~ excludes)', {
+      repeatable: true,
     });
     options.format(command);
   },

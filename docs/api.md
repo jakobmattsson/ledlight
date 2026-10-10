@@ -84,7 +84,7 @@ all default to `false`.
 | `aggregate` | `from`, `to`: filter activity; `to` also sets valuation cutoff. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `groupBy`, `denominate`, `withValuationValue`, `invert`, `includeTotal` |
 | `totalHistory` | `from`, `to`: select daily closing totals, retaining earlier activity. `dateBasis` defaults to `posting`. | `accounts`, `valuation`, `invert` |
 | `unrealizedGains` | `to`: position and valuation cutoff. `dateBasis` defaults to `posting`. | `accounts` |
-| `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `includeCommodities`, `excludeCommodities` |
+| `investmentPerformance` | `from`, `to`: performance period, using posting dates and retaining the opening balance. | `accounts`, `commodities` |
 | `postings` | `from`, `to`: filter posting dates. | `accounts` |
 | `transactions` | No date filter; results include transaction and posting dates. | `accounts`, `id`, `order`, `page`, `pageSize` |
 | `accounts` | No date filter. | `accounts`, `usage` |
@@ -360,10 +360,14 @@ in the CLI.
 
 ### `journal.investmentPerformance(options)`
 
-Options are `from`, `to`, `accounts`, `includeCommodities`, and
-`excludeCommodities`. The three selections are arrays of non-empty strings.
-Account values use the shared account-pattern syntax. Commodity inclusion and
-exclusion are mutually exclusive; omit both to discover held commodities.
+Options are `from`, `to`, `accounts`, and `commodities`. Both selections are
+arrays of non-empty strings and use the same literal pattern syntax: `^`
+anchors the start, `$` anchors the end, and `~` excludes matches. Positive
+patterns combine with OR; exclusions remove matches. With only exclusions,
+all other held commodities are selected. Positive patterns select declared
+commodities even when the selected accounts hold none of them. Omit
+`commodities` to discover all held commodities. This option replaces
+`includeCommodities` and `excludeCommodities`.
 
 The interval is inclusive and uses posting dates. Earlier positions contribute
 to the opening value, which is the closing value immediately before `from` (or

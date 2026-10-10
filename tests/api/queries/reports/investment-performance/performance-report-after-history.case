@@ -2,7 +2,7 @@ An interval beyond available history retains the latest opening balance.
 
 ========== API ==========
 
-investmentPerformance({ accounts: ['Assets:Portfolio'], includeCommodities: ['FUND'], from: '2024-01-10' })
+investmentPerformance({ accounts: ['Assets:Portfolio'], commodities: ['FUND'], from: '2024-01-10' })
 
 ========== FILE ==========
 
