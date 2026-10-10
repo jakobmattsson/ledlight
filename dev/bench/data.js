@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791578821223,
+  "lastUpdate": 1791614568682,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -779,6 +779,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 12.141497,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "65e7bf70370d53f2d716aaceda1949a911e03393",
+          "message": "Merge pull request #118 from jakobmattsson/codex/project-cache-configuration\n\nSupport project cache configuration in .ledlightrc",
+          "timestamp": "2026-10-10T08:42:21+02:00",
+          "tree_id": "7eaed99ec2c7915d3106c9d07fc3aac0c7dbd082",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/65e7bf70370d53f2d716aaceda1949a911e03393"
+        },
+        "date": 1791614566804,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1674.835532,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.625635,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 13.997646,
             "unit": "ms"
           }
         ]
