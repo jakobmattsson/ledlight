@@ -5,7 +5,7 @@ unchanged.
 
 ========== CLI ==========
 
-ledlight unrealized-gains --to 2024-03-31 --format json --accounts 'Assets:OtherBroker' <<'LEDGER'
+ledlight unrealized-gains --to 2024-03-31 --format json --accounts Assets:OtherBroker <<'LEDGER'
 commodity USD
   format 1,000.00 USD
   default

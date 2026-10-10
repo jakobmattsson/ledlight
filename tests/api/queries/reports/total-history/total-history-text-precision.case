@@ -2,7 +2,7 @@ Total history text uses the declared precision and grouping separators.
 
 ========== CLI ==========
 
-ledlight total-history --accounts 'Assets:Cash'
+ledlight total-history --accounts Assets:Cash
 
 ========== FILE ==========
 

@@ -2,7 +2,7 @@ aggregate cost valuation matches the public journal API.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts 'Assets:Fund' --format json --denominate --valuation cost
+ledlight aggregate --accounts Assets:Fund --format json --denominate --valuation cost
 
 ========== API ==========
 

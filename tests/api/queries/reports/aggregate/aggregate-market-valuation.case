@@ -2,7 +2,7 @@ aggregate market valuation matches the public journal API.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts 'Assets:Fund' --format json --denominate --valuation market
+ledlight aggregate --accounts Assets:Fund --format json --denominate --valuation market
 
 ========== API ==========
 

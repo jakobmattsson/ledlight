@@ -21,7 +21,7 @@ Compounding that rate over the 364-day interval gives 103.05% total.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts 'Assets:Fund' --commodities FUND --from 2023-01-01 --to 2023-12-31 --format text
+ledlight investment-performance --accounts Assets:Fund --commodities FUND --from 2023-01-01 --to 2023-12-31 --format text
 
 ========== FILE ==========
 

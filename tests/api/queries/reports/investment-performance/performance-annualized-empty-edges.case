@@ -7,7 +7,7 @@ the total return is 10% over 31 days and the annualized return is
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts 'Assets:Fund' --from 2022-01-01 --to 2024-01-01 --format text
+ledlight investment-performance --accounts Assets:Fund --from 2022-01-01 --to 2024-01-01 --format text
 
 ========== FILE ==========
 

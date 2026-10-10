@@ -2,7 +2,7 @@ A heredoc and the public API produce the same filtered total.
 
 ========== CLI ==========
 
-ledlight aggregate --accounts 'Assets:Cash' --include-total --format json <<'LEDGER'
+ledlight aggregate --accounts Assets:Cash --include-total --format json <<'LEDGER'
 commodity SEK
   default
   format 1,000.00 SEK

@@ -2,7 +2,7 @@ Commodity patterns combine inclusions and exclusions in CLI and API.
 
 ========== CLI ==========
 
-ledlight investment-performance --accounts 'Assets:Fund' --commodities FUND --commodities USD --commodities '~USD'
+ledlight investment-performance --accounts Assets:Fund --commodities FUND --commodities USD --commodities '~USD'
 
 ========== API ==========
 

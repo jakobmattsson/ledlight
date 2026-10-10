@@ -2,7 +2,7 @@ total-history market valuation matches the public journal API.
 
 ========== CLI ==========
 
-ledlight total-history --accounts 'Assets:Fund' --format json --valuation market
+ledlight total-history --accounts Assets:Fund --format json --valuation market
 
 ========== API ==========
 

@@ -2,7 +2,7 @@ Ledlight matches Ledger for filtered accounts.
 
 ========== CLI ==========
 
-ledlight accounts --accounts 'Assets:Cash' --accounts 'Expenses:Food'
+ledlight accounts --accounts Assets:Cash --accounts Expenses:Food
 
 ========== LEDGER-CLI ==========
 
