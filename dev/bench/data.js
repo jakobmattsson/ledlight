@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791699810197,
+  "lastUpdate": 1791700245991,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -974,6 +974,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 13.183465,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "distinct": true,
+          "id": "2dfd2538ed027354add411ac2c90250ef68f57ba",
+          "message": "Publish-script tweaks",
+          "timestamp": "2026-10-11T08:30:08+02:00",
+          "tree_id": "5c90e947841cc33d21fdd45c692e458f72b947f2",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/2dfd2538ed027354add411ac2c90250ef68f57ba"
+        },
+        "date": 1791700244095,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1661.97598,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 9.034676,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 13.320537,
             "unit": "ms"
           }
         ]
