@@ -8,10 +8,23 @@ published.
 
 ## Releasing
 
-Update the package version with `npm version <version> --no-git-tag-version` so
-`package.json` and `package-lock.json` agree. Merge the version change into
-`main`, then create and push a `v<version>` tag for that commit. Changing the
-version alone does not publish a release.
+Run `npm run release -- patch`, `npm run release -- minor`, or
+`npm run release -- major` from this repository. The command requires a clean
+working tree, a root package version, and the expected GitHub Actions publish
+job. It checks out the default branch if necessary and requires its local commit
+to match `origin` exactly. It then increments the chosen version component by
+one, updates `package.json` and any npm lockfile present, commits with the new
+version as the entire commit message, and pushes that commit. Only after the
+commit push succeeds does it create and push the matching `v<version>` tag.
+The preflight lockfile check compares it with the current package version;
+`npm version` updates it to the new version automatically.
+
+The command waits for the publish job to succeed and then for the version to
+become visible on the public npm registry. It reports the elapsed time from job
+completion to registry visibility. A failed guard, push, job, or registry wait
+stops the command and reports the last completed stage. Inspect the repository
+and remote state before retrying an interrupted release. The command requires
+Git and an authenticated GitHub CLI (`gh`) with repository and Actions access.
 
 The `package.yml` GitHub Actions workflow publishes a tagged version only after
 its full test suite and cross-platform package tests pass. The tag must match
