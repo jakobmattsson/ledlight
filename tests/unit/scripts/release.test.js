@@ -89,11 +89,13 @@ function fakeServices(testFixture, settings) {
         ] };
       } else if (endpoint.endsWith('/runs/42/jobs')) {
         response = { jobs: [
-          { name: 'Publish to npm', html_url: 'https://github.com/owner/repo/actions/runs/42/job/99',
-            status: 'completed',
+          { name: 'Publish to npm', status: 'completed',
             conclusion: settings.failJob ? 'failure' : 'success',
             started_at: new Date(completed - 23_000).toISOString(), completed_at: new Date(completed).toISOString() },
         ] };
+      } else if (endpoint.endsWith('/runs/42')) {
+        response = { status: 'completed', conclusion: 'success',
+          run_started_at: new Date(completed - 90_000).toISOString(), updated_at: new Date(completed).toISOString() };
       } else {
         throw new Error(`Unexpected GitHub endpoint: ${endpoint}`);
       }
@@ -267,41 +269,61 @@ test('usage follows a differently named npm script when it invokes the release C
   assert.match(result.stderr, /Usage: npm run publish:version -- <major\|minor\|patch>/u);
 });
 
-test('publish job monitoring uses the pushed tag and commit, then reports job completion', async () => {
+test('publish workflow monitoring uses the pushed tag and commit, then measures the whole run', async () => {
   const workflow = { path: '.github/workflows/package.yml', name: 'Publish to npm' };
   const details = { host: 'github.com', slug: 'owner/repo', tag: 'v1.3.6', workflow };
   const endpoints = [];
+  let jobChecks = 0;
+  let runChecks = 0;
+  let currentTime = Date.parse('2026-10-11T12:00:00Z');
   const exec = (_command, args) => {
     const endpoint = args[5];
     endpoints.push(endpoint);
     if (endpoint.endsWith('/runs')) {
       return { status: 0, stdout: JSON.stringify({ workflow_runs: [
         { id: 11, head_sha: 'other', head_branch: 'v1.3.6', path: workflow.path },
-        { id: 12, head_sha: 'abc', head_branch: 'v1.3.6', path: `${workflow.path}@refs/tags/v1.3.6` },
+        { id: 12, head_sha: 'abc', head_branch: 'v1.3.6', path: `${workflow.path}@refs/tags/v1.3.6`,
+          html_url: 'https://github.com/owner/repo/actions/runs/12' },
       ] }) };
     }
     if (endpoint.endsWith('/runs/12/jobs')) {
+      jobChecks += 1;
+      if (jobChecks === 1) return { status: 0, stdout: JSON.stringify({ jobs: [] }) };
       return { status: 0, stdout: JSON.stringify({ jobs: [
-        { name: 'Publish to npm', html_url: 'https://github.com/owner/repo/actions/runs/12/job/34',
-          status: 'completed', conclusion: 'success',
+        { name: 'Publish to npm', status: 'completed', conclusion: 'success',
           started_at: '2026-10-11T11:59:37Z', completed_at: '2026-10-11T12:00:00Z' },
       ] }) };
+    }
+    if (endpoint.endsWith('/runs/12')) {
+      runChecks += 1;
+      return { status: 0, stdout: JSON.stringify(runChecks < 3
+        ? { status: 'in_progress' }
+        : { status: 'completed', conclusion: 'success',
+          run_started_at: '2026-10-11T11:58:30Z', updated_at: '2026-10-11T12:00:00Z' }) };
     }
     throw new Error(`Unexpected endpoint: ${endpoint}`);
   };
   const messages = [];
-  const job = await release.waitForJob(exec, '/tmp', details, 'abc',
-    () => Date.parse('2026-10-11T12:00:00Z'),
-    () => { throw new Error('No wait expected'); }, (message) => messages.push(message));
-  assert.deepEqual(job, { completedAt: Date.parse('2026-10-11T12:00:00Z'), durationMs: 23_000 });
+  const workflowRun = await release.waitForWorkflow(exec, '/tmp', details, 'abc',
+    () => currentTime,
+    async (ms) => {
+      assert.deepEqual(messages, [
+        'Waiting for GitHub to start the workflow run for v1.3.6.',
+        'Tag workflow run found: https://github.com/owner/repo/actions/runs/12',
+      ]);
+      currentTime += ms;
+    }, (message) => messages.push(message));
+  assert.deepEqual(workflowRun, { completedAt: Date.parse('2026-10-11T12:00:00Z'), durationMs: 90_000 });
+  assert.equal(jobChecks, 3);
+  assert.equal(runChecks, 3);
   assert.ok(endpoints.some((endpoint) => endpoint.endsWith('/runs/12/jobs')));
   assert.deepEqual(messages, [
-    'Waiting for GitHub to create the publish job for v1.3.6.',
-    'Publish job found: https://github.com/owner/repo/actions/runs/12/job/34',
+    'Waiting for GitHub to start the workflow run for v1.3.6.',
+    'Tag workflow run found: https://github.com/owner/repo/actions/runs/12',
   ]);
 });
 
-test('registry wait measures from the publish job completion without real time delays', async () => {
+test('registry wait measures from the workflow completion without real time delays', async () => {
   const completed = Date.parse('2026-10-11T12:00:00Z');
   let now = completed + 3_000;
   let checks = 0;
@@ -312,13 +334,13 @@ test('registry wait measures from the publish job completion without real time d
   };
   const messages = [];
   const elapsed = await release.waitForRegistry(exec, '/tmp', {
-    name: '@example/package', version: '1.3.6',
-  }, { completedAt: completed, durationMs: 23_000 }, () => now,
+    name: '@example/package', version: '1.3.6', tag: 'v1.3.6',
+  }, { completedAt: completed, durationMs: 90_000 }, () => now,
   async (ms) => { now += ms; }, (message) => messages.push(message));
   assert.equal(elapsed, 8_000);
   assert.equal(checks, 2);
   assert.deepEqual(messages, [
-    'Publish job succeeded in 23.0 seconds; waiting for @example/package@1.3.6 on npm.',
+    'Workflow run for v1.3.6 completed in 90.0 seconds; waiting for @example/package@1.3.6 on npm.',
   ]);
 });
 
@@ -409,7 +431,7 @@ test('CLI accepts a mocked spawnSync and pushes the version before waiting for n
       call[3] === 'refs/tags/v1.3.6');
     assert.ok(branchPush >= 0 && branchPush < tag && tag < tagPush);
     assert.equal(services.registryChecks(), 2);
-    assert.match(messages.at(-1), /visible on npm 8\.0 seconds after the publish job completed/u);
+    assert.match(messages.at(-1), /visible on npm 8\.0 seconds after the workflow run completed/u);
   });
 });
 

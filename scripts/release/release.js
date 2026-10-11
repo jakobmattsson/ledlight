@@ -264,11 +264,10 @@ function makeVersionCommit(exec, cwd, bump, version) {
   return checked(exec, 'git', ['rev-parse', 'HEAD'], cwd);
 }
 
-async function waitForJob(exec, cwd, details, sha, now, sleep, log) {
+async function waitForWorkflow(exec, cwd, details, sha, now, sleep, log) {
   const deadline = now() + workflowTimeoutMs;
   let runId;
-  let loggedJobUrl;
-  log(`Waiting for GitHub to create the publish job for ${details.tag}.`);
+  log(`Waiting for GitHub to start the workflow run for ${details.tag}.`);
   while (now() < deadline) {
     if (!runId) {
       const filename = encodeURIComponent(path.basename(details.workflow.path));
@@ -277,7 +276,11 @@ async function waitForJob(exec, cwd, details, sha, now, sleep, log) {
       });
       const matches = (listing.workflow_runs || []).filter((run) => run.head_sha === sha &&
         run.head_branch === details.tag && run.path?.split('@')[0] === details.workflow.path);
-      if (matches.length) runId = matches.reduce((latest, run) => Math.max(latest, run.id), 0);
+      if (matches.length) {
+        const run = matches.reduce((latest, candidate) => candidate.id > latest.id ? candidate : latest);
+        runId = run.id;
+        log(`Tag workflow run found: ${run.html_url || `https://${details.host}/${details.slug}/actions/runs/${runId}`}`);
+      }
     }
     if (runId) {
       const jobs = github(exec, cwd, details.host, `repos/${details.slug}/actions/runs/${runId}/jobs`, {
@@ -285,38 +288,30 @@ async function waitForJob(exec, cwd, details, sha, now, sleep, log) {
       }).jobs || [];
       const matching = jobs.filter((job) => job.name === details.workflow.name);
       if (matching.length > 1) throw new ReleaseError(`Multiple publish jobs found in GitHub run ${runId}.`);
-      if (matching.length === 1 && !loggedJobUrl) {
-        if (typeof matching[0].html_url !== 'string' || !matching[0].html_url) {
-          throw new ReleaseError(`Publish job in GitHub run ${runId} has no URL.`);
-        }
-        log(`Publish job found: ${matching[0].html_url}`);
-        loggedJobUrl = matching[0].html_url;
-      }
-      if (matching.length === 1 && matching[0].status === 'completed') {
-        if (matching[0].conclusion !== 'success') {
-          throw new ReleaseError(`Publish job in GitHub run ${runId} ended as ${matching[0].conclusion}.`);
-        }
-        const completedAt = Date.parse(matching[0].completed_at);
-        if (!Number.isFinite(completedAt)) throw new ReleaseError(`Publish job in run ${runId} has no completion time.`);
-        const startedAt = Date.parse(matching[0].started_at);
-        if (!Number.isFinite(startedAt) || startedAt > completedAt) {
-          throw new ReleaseError(`Publish job in run ${runId} has no valid start time.`);
-        }
-        return { completedAt, durationMs: completedAt - startedAt };
+      if (matching.length === 1 && matching[0].status === 'completed' && matching[0].conclusion !== 'success') {
+        throw new ReleaseError(`Publish job in GitHub run ${runId} ended as ${matching[0].conclusion}.`);
       }
       const runStatus = github(exec, cwd, details.host, `repos/${details.slug}/actions/runs/${runId}`, {});
       if (runStatus.status === 'completed') {
-        throw new ReleaseError(`Workflow run ${runId} completed without a successful publish job.`);
+        if (matching.length !== 1 || matching[0].status !== 'completed' || matching[0].conclusion !== 'success') {
+          throw new ReleaseError(`Workflow run ${runId} completed without a successful publish job.`);
+        }
+        const startedAt = Date.parse(runStatus.run_started_at);
+        const completedAt = Date.parse(runStatus.updated_at);
+        if (!Number.isFinite(startedAt) || !Number.isFinite(completedAt) || startedAt > completedAt) {
+          throw new ReleaseError(`Workflow run ${runId} has invalid start or completion time.`);
+        }
+        return { completedAt, durationMs: completedAt - startedAt };
       }
     }
     await sleep(pollIntervalMs);
   }
-  throw new ReleaseError(`Timed out waiting for the publish job for ${details.tag}.`);
+  throw new ReleaseError(`Timed out waiting for the workflow run for ${details.tag}.`);
 }
 
-async function waitForRegistry(exec, cwd, details, job, now, sleep, log) {
+async function waitForRegistry(exec, cwd, details, workflow, now, sleep, log) {
   const deadline = now() + registryTimeoutMs;
-  log(`Publish job succeeded in ${(job.durationMs / 1000).toFixed(1)} seconds; waiting for ${details.name}@${details.version} on npm.`);
+  log(`Workflow run for ${details.tag} completed in ${(workflow.durationMs / 1000).toFixed(1)} seconds; waiting for ${details.name}@${details.version} on npm.`);
   while (now() < deadline) {
     const result = exec('npm', [
       'view', `${details.name}@${details.version}`, 'version', '--json',
@@ -325,7 +320,7 @@ async function waitForRegistry(exec, cwd, details, job, now, sleep, log) {
     if (result.status === 0) {
       let observed;
       try { observed = JSON.parse(result.stdout); } catch { observed = null; }
-      if (observed === details.version) return Math.max(0, now() - job.completedAt);
+      if (observed === details.version) return Math.max(0, now() - workflow.completedAt);
     }
     await sleep(pollIntervalMs);
   }
@@ -344,9 +339,9 @@ async function release(bump, dependencies) {
   log(`Created local tag ${details.tag}.`);
   checked(exec, 'git', ['push', 'origin', `refs/tags/${details.tag}`], cwd);
   log(`Pushed tag ${details.tag}.`);
-  const job = await waitForJob(exec, cwd, details, sha, now, sleep, log);
-  const elapsedMs = await waitForRegistry(exec, cwd, details, job, now, sleep, log);
-  log(`Published ${details.name}@${details.version}; visible on npm ${(elapsedMs / 1000).toFixed(1)} seconds after the publish job completed.`);
+  const workflow = await waitForWorkflow(exec, cwd, details, sha, now, sleep, log);
+  const elapsedMs = await waitForRegistry(exec, cwd, details, workflow, now, sleep, log);
+  log(`Published ${details.name}@${details.version}; visible on npm ${(elapsedMs / 1000).toFixed(1)} seconds after the workflow run completed.`);
 }
 
 function usageCommand({ argv, environment, invocationDirectory, repositoryDirectory }) {
@@ -371,5 +366,5 @@ async function runCli(options) {
 
 module.exports = {
   ReleaseError, acceptsTag, ensureLockfilesMatch, inspectWorkflow, makeVersionCommit, nextVersion,
-  originRepository, prepare, readPackage, release, runCli, waitForJob, waitForRegistry,
+  originRepository, prepare, readPackage, release, runCli, waitForWorkflow, waitForRegistry,
 };
