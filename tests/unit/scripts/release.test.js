@@ -89,8 +89,10 @@ function fakeServices(testFixture, settings) {
         ] };
       } else if (endpoint.endsWith('/runs/42/jobs')) {
         response = { jobs: [
-          { name: 'Publish to npm', status: 'completed',
-            conclusion: settings.failJob ? 'failure' : 'success', completed_at: new Date(completed).toISOString() },
+          { name: 'Publish to npm', html_url: 'https://github.com/owner/repo/actions/runs/42/job/99',
+            status: 'completed',
+            conclusion: settings.failJob ? 'failure' : 'success',
+            started_at: new Date(completed - 23_000).toISOString(), completed_at: new Date(completed).toISOString() },
         ] };
       } else {
         throw new Error(`Unexpected GitHub endpoint: ${endpoint}`);
@@ -280,16 +282,23 @@ test('publish job monitoring uses the pushed tag and commit, then reports job co
     }
     if (endpoint.endsWith('/runs/12/jobs')) {
       return { status: 0, stdout: JSON.stringify({ jobs: [
-        { name: 'Publish to npm', status: 'completed', conclusion: 'success', completed_at: '2026-10-11T12:00:00Z' },
+        { name: 'Publish to npm', html_url: 'https://github.com/owner/repo/actions/runs/12/job/34',
+          status: 'completed', conclusion: 'success',
+          started_at: '2026-10-11T11:59:37Z', completed_at: '2026-10-11T12:00:00Z' },
       ] }) };
     }
     throw new Error(`Unexpected endpoint: ${endpoint}`);
   };
-  const completed = await release.waitForJob(exec, '/tmp', details, 'abc',
+  const messages = [];
+  const job = await release.waitForJob(exec, '/tmp', details, 'abc',
     () => Date.parse('2026-10-11T12:00:00Z'),
-    () => { throw new Error('No wait expected'); }, () => {});
-  assert.equal(completed, Date.parse('2026-10-11T12:00:00Z'));
+    () => { throw new Error('No wait expected'); }, (message) => messages.push(message));
+  assert.deepEqual(job, { completedAt: Date.parse('2026-10-11T12:00:00Z'), durationMs: 23_000 });
   assert.ok(endpoints.some((endpoint) => endpoint.endsWith('/runs/12/jobs')));
+  assert.deepEqual(messages, [
+    'Waiting for GitHub to create the publish job for v1.3.6.',
+    'Publish job found: https://github.com/owner/repo/actions/runs/12/job/34',
+  ]);
 });
 
 test('registry wait measures from the publish job completion without real time delays', async () => {
@@ -301,11 +310,16 @@ test('registry wait measures from the publish job completion without real time d
     return checks === 1 ? { status: 1, stdout: '', stderr: 'not found' }
       : { status: 0, stdout: '"1.3.6"', stderr: '' };
   };
+  const messages = [];
   const elapsed = await release.waitForRegistry(exec, '/tmp', {
     name: '@example/package', version: '1.3.6',
-  }, completed, () => now, async (ms) => { now += ms; }, () => {});
+  }, { completedAt: completed, durationMs: 23_000 }, () => now,
+  async (ms) => { now += ms; }, (message) => messages.push(message));
   assert.equal(elapsed, 8_000);
   assert.equal(checks, 2);
+  assert.deepEqual(messages, [
+    'Publish job succeeded in 23.0 seconds; waiting for @example/package@1.3.6 on npm.',
+  ]);
 });
 
 test('release stops before versioning when the worktree is dirty or default branch diverges', () => {

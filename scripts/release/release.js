@@ -267,7 +267,8 @@ function makeVersionCommit(exec, cwd, bump, version) {
 async function waitForJob(exec, cwd, details, sha, now, sleep, log) {
   const deadline = now() + workflowTimeoutMs;
   let runId;
-  log(`Waiting for publish job on ${details.tag}.`);
+  let loggedJobUrl;
+  log(`Waiting for GitHub to create the publish job for ${details.tag}.`);
   while (now() < deadline) {
     if (!runId) {
       const filename = encodeURIComponent(path.basename(details.workflow.path));
@@ -284,13 +285,24 @@ async function waitForJob(exec, cwd, details, sha, now, sleep, log) {
       }).jobs || [];
       const matching = jobs.filter((job) => job.name === details.workflow.name);
       if (matching.length > 1) throw new ReleaseError(`Multiple publish jobs found in GitHub run ${runId}.`);
+      if (matching.length === 1 && !loggedJobUrl) {
+        if (typeof matching[0].html_url !== 'string' || !matching[0].html_url) {
+          throw new ReleaseError(`Publish job in GitHub run ${runId} has no URL.`);
+        }
+        log(`Publish job found: ${matching[0].html_url}`);
+        loggedJobUrl = matching[0].html_url;
+      }
       if (matching.length === 1 && matching[0].status === 'completed') {
         if (matching[0].conclusion !== 'success') {
           throw new ReleaseError(`Publish job in GitHub run ${runId} ended as ${matching[0].conclusion}.`);
         }
-        const completed = Date.parse(matching[0].completed_at);
-        if (!Number.isFinite(completed)) throw new ReleaseError(`Publish job in run ${runId} has no completion time.`);
-        return completed;
+        const completedAt = Date.parse(matching[0].completed_at);
+        if (!Number.isFinite(completedAt)) throw new ReleaseError(`Publish job in run ${runId} has no completion time.`);
+        const startedAt = Date.parse(matching[0].started_at);
+        if (!Number.isFinite(startedAt) || startedAt > completedAt) {
+          throw new ReleaseError(`Publish job in run ${runId} has no valid start time.`);
+        }
+        return { completedAt, durationMs: completedAt - startedAt };
       }
       const runStatus = github(exec, cwd, details.host, `repos/${details.slug}/actions/runs/${runId}`, {});
       if (runStatus.status === 'completed') {
@@ -302,9 +314,9 @@ async function waitForJob(exec, cwd, details, sha, now, sleep, log) {
   throw new ReleaseError(`Timed out waiting for the publish job for ${details.tag}.`);
 }
 
-async function waitForRegistry(exec, cwd, details, completed, now, sleep, log) {
+async function waitForRegistry(exec, cwd, details, job, now, sleep, log) {
   const deadline = now() + registryTimeoutMs;
-  log(`Publish job succeeded; waiting for ${details.name}@${details.version} on npm.`);
+  log(`Publish job succeeded in ${(job.durationMs / 1000).toFixed(1)} seconds; waiting for ${details.name}@${details.version} on npm.`);
   while (now() < deadline) {
     const result = exec('npm', [
       'view', `${details.name}@${details.version}`, 'version', '--json',
@@ -313,7 +325,7 @@ async function waitForRegistry(exec, cwd, details, completed, now, sleep, log) {
     if (result.status === 0) {
       let observed;
       try { observed = JSON.parse(result.stdout); } catch { observed = null; }
-      if (observed === details.version) return Math.max(0, now() - completed);
+      if (observed === details.version) return Math.max(0, now() - job.completedAt);
     }
     await sleep(pollIntervalMs);
   }
@@ -332,8 +344,8 @@ async function release(bump, dependencies) {
   log(`Created local tag ${details.tag}.`);
   checked(exec, 'git', ['push', 'origin', `refs/tags/${details.tag}`], cwd);
   log(`Pushed tag ${details.tag}.`);
-  const completed = await waitForJob(exec, cwd, details, sha, now, sleep, log);
-  const elapsedMs = await waitForRegistry(exec, cwd, details, completed, now, sleep, log);
+  const job = await waitForJob(exec, cwd, details, sha, now, sleep, log);
+  const elapsedMs = await waitForRegistry(exec, cwd, details, job, now, sleep, log);
   log(`Published ${details.name}@${details.version}; visible on npm ${(elapsedMs / 1000).toFixed(1)} seconds after the publish job completed.`);
 }
 
