@@ -9,7 +9,16 @@ module.exports = ({
     path,
     processEnvironment
   },
-}: any) => {
+}: {
+  configuration: { read(): { cacheHome?: string } };
+  external: {
+    crypto: Pick<typeof import('node:crypto'), 'createHash'>;
+    envPaths: (name: string, options: { suffix: string }) => { cache: string };
+    fs: { realpathSync: { native(path: string): string }; statSync(path: string): { isFile(): boolean } };
+    path: Pick<typeof import('node:path'), 'resolve' | 'join'>;
+    processEnvironment: NodeJS.ProcessEnv;
+  };
+}) => {
 
   function cacheRoot() {
     if (processEnvironment.LEDLIGHT_CACHE_HOME) {
@@ -20,7 +29,7 @@ module.exports = ({
     return envPaths('ledlight', { suffix: '' }).cache;
   }
 
-  function canonicalJournalPath(journalPath: any) {
+  function canonicalJournalPath(journalPath: string): string {
     if (typeof journalPath !== 'string' || journalPath.length === 0) {
       throw new TypeError('journalPath must be a non-empty string');
     }
@@ -31,7 +40,7 @@ module.exports = ({
     return resolvedPath;
   }
 
-  function pathsForJournal(journalPath: any) {
+  function pathsForJournal(journalPath: string) {
     const canonicalPath = canonicalJournalPath(journalPath);
     const identity = crypto.createHash('sha256').update(canonicalPath, 'utf8').digest('hex');
     return {

@@ -1,15 +1,29 @@
 'use strict';
 
-module.exports = ({ rational: { zero, one, neg, sub, mul, div, cmp } }: any) => {
+type Fraction = { n: bigint; d: bigint };
+type IndexedFraction = ReadonlyArray<readonly [number, Fraction]>;
+type Constraint = { coefficients: IndexedFraction; bound: Fraction };
+
+module.exports = ({ rational: { zero, one, neg, sub, mul, div, cmp } }: {
+  rational: {
+    zero: Fraction;
+    one: Fraction;
+    neg(value: Fraction): Fraction;
+    sub(left: Fraction, right: Fraction): Fraction;
+    mul(left: Fraction, right: Fraction): Fraction;
+    div(left: Fraction, right: Fraction): Fraction;
+    cmp(left: Fraction, right: Fraction): number;
+  };
+}) => {
   // Two-phase simplex over exact rational numbers. Variables are nonnegative;
   // each constraint is coefficients * x <= bound. Bland's rule prevents cycling.
-  function maximize(variableCount: any, constraints: any, objective: any) {
+  function maximize(variableCount: number, constraints: ReadonlyArray<Constraint>, objective: IndexedFraction) {
     const m = constraints.length;
     const n = variableCount;
-    const basic = Array.from({ length: m }, (_: any, i: any) => n + i);
-    const nonbasic = Array.from({ length: n + 1 }, (_: any, i: any) => i === n ? -1 : i);
-    const table = Array.from({ length: m + 2 }, () => Array(n + 2).fill(zero));
-    constraints.forEach(({ coefficients, bound }: any, i: any) => {
+    const basic = Array.from({ length: m }, (_, i) => n + i);
+    const nonbasic = Array.from({ length: n + 1 }, (_, i) => i === n ? -1 : i);
+    const table: Fraction[][] = Array.from({ length: m + 2 }, () => Array(n + 2).fill(zero));
+    constraints.forEach(({ coefficients, bound }, i) => {
       for (const [j, value] of coefficients) table[i][j] = value;
       table[i][n] = neg(one);
       table[i][n + 1] = bound;
@@ -17,7 +31,7 @@ module.exports = ({ rational: { zero, one, neg, sub, mul, div, cmp } }: any) => 
     for (const [j, value] of objective) table[m][j] = neg(value);
     table[m + 1][n] = one;
 
-    function pivot(row: any, column: any) {
+    function pivot(row: number, column: number) {
       const inverse = div(one, table[row][column]);
       for (let i = 0; i < m + 2; i++) {
         if (i === row || !table[i][column].n) continue;
@@ -38,7 +52,7 @@ module.exports = ({ rational: { zero, one, neg, sub, mul, div, cmp } }: any) => 
       [basic[row], nonbasic[column]] = [nonbasic[column], basic[row]];
     }
 
-    function simplex(phase: any) {
+    function simplex(phase: 1 | 2): boolean {
       const objectiveRow = phase === 1 ? m + 1 : m;
       for (;;) {
         let column = -1;

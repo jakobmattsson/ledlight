@@ -7,9 +7,16 @@ module.exports = ({
     processEnvironment,
     currentWorkingDirectory
   },
-}: any) => {
+}: {
+  external: {
+    fs: Pick<typeof import('node:fs'), 'existsSync' | 'readFileSync'>;
+    path: Pick<typeof import('node:path'), 'resolve' | 'join' | 'dirname'>;
+    processEnvironment: NodeJS.ProcessEnv;
+    currentWorkingDirectory: () => string;
+  };
+}) => {
   function configurationPaths() {
-    const candidates: any = [];
+    const candidates: string[] = [];
     let directory = path.resolve(currentWorkingDirectory());
     while (true) {
       candidates.push(path.join(directory, '.ledlightrc'));
@@ -23,7 +30,7 @@ module.exports = ({
     return [...new Set(candidates)];
   }
 
-  function resolveSetting(value: any, configurationPath: any, option: any) {
+  function resolveSetting(value: string, configurationPath: string, option: string): string {
     let setting = value.trim();
     if ((setting.startsWith('"') && setting.endsWith('"')) ||
         (setting.startsWith("'") && setting.endsWith("'"))) {
@@ -40,20 +47,21 @@ module.exports = ({
   }
 
   function read() {
-    const configurationPath = configurationPaths().find((candidate: any) => fs.existsSync(candidate));
+    const configurationPath = configurationPaths().find((candidate) => fs.existsSync(candidate));
     if (!configurationPath) return {};
 
-    const settings: any = {};
+    const settings: Partial<Record<'file' | 'cache-home', string>> = {};
     const lines = fs.readFileSync(configurationPath, 'utf8')
       .split(/\r?\n/u)
-      .map((line: any) => line.trim())
-      .filter((line: any) => line.length > 0 && !line.startsWith(';'));
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith(';'));
     for (const line of lines) {
       const match = /^--(file|cache-home)(?:\s+|=)(.*)$/u.exec(line);
       if (!match) {
         throw new Error(`${configurationPath} only supports --file and --cache-home options`);
       }
-      const [, option, value] = match;
+      const option = match[1] as 'file' | 'cache-home';
+      const value = match[2];
       if (Object.hasOwn(settings, option)) {
         throw new Error(`${configurationPath} may only contain one --${option} option`);
       }

@@ -1,9 +1,11 @@
 'use strict';
 
+type TopLevelBlock = { sourceText: string; startLine: number; endLine: number };
+
 module.exports = () => {
 
-  function splitTopLevelBlocks(sourceText: any) {
-    const blocks: any = [];
+  function splitTopLevelBlocks(sourceText: string): TopLevelBlock[] {
+    const blocks: TopLevelBlock[] = [];
     const lines = sourceText.split('\n');
     let active: { startLine: number; endLine: number; lines: string[] } | null = null;
 
@@ -17,7 +19,7 @@ module.exports = () => {
       active = null;
     }
 
-    lines.forEach((raw: any, index: any) => {
+    lines.forEach((raw, index) => {
       const line = index + 1;
       const text = raw.endsWith('\r') ? raw.slice(0, -1) : raw;
       const blank = text.trim().length === 0;

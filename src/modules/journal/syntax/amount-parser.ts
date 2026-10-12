@@ -1,8 +1,20 @@
 'use strict';
 
+type SourceLocation = { source: string; line: number; column: number };
+type Token = { type: number; value: string; start: number };
+type Amount = { quantity: string; commodity: string };
+type PricedAmount = { total: boolean; amount: Amount };
+type AmountExpression = {
+  amount: Amount | null;
+  lotCost: PricedAmount | null;
+  cost: PricedAmount | null;
+  balanceAssignment: Amount | null;
+  balanceAssertion: Amount | null;
+};
+
 module.exports = ({
   syntaxErrors: { syntaxError },
-}: any) => {
+}: { syntaxErrors: { syntaxError(message: string, source: string, line: number, column: number): Error } }) => {
 
   const TOKEN = Object.freeze({
     NUMBER: 1,
@@ -17,19 +29,19 @@ module.exports = ({
     EOF: 10,
   });
 
-  function isSpace(code: any) { return code === 32 || code === 9; }
-  function isDigit(code: any) { return code >= 48 && code <= 57; }
-  function isCommodityCharacter(code: any) {
+  function isSpace(code: number) { return code === 32 || code === 9; }
+  function isDigit(code: number) { return code >= 48 && code <= 57; }
+  function isCommodityCharacter(code: number) {
     return code === 95 || /\p{L}/u.test(String.fromCodePoint(code));
   }
 
   class AmountLexer {
-    baseColumn: any;
-    input: any;
-    line: any;
-    offset: any;
-    source: any;
-    constructor(input: any, source: any, line: any, baseColumn: any) {
+    baseColumn: number;
+    input: string;
+    line: number;
+    offset: number;
+    source: string;
+    constructor(input: string, source: string, line: number, baseColumn: number) {
       this.input = input;
       this.source = source;
       this.line = line;
@@ -37,7 +49,7 @@ module.exports = ({
       this.offset = 0;
     }
 
-    next() {
+    next(): Token {
       const { input } = this;
       const length = input.length;
       while (this.offset < length && isSpace(input.charCodeAt(this.offset))) this.offset++;
@@ -92,29 +104,30 @@ module.exports = ({
       return { type: TOKEN.SYMBOL, value: input.slice(start, cursor), start };
     }
 
-    error(message: any, offset: any) {
+    error(message: string, offset: number): never {
       throw syntaxError(message, this.source, this.line, this.baseColumn + offset);
     }
   }
 
   class AmountParser {
-    current: any;
-    lexer: any;
-    constructor(input: any, source: any, line: any, baseColumn: any) {
+    current: Token;
+    lexer: AmountLexer;
+    constructor(input: string, source: string, line: number, baseColumn: number) {
       this.lexer = new AmountLexer(input, source, line, baseColumn);
       this.current = this.lexer.next();
     }
     advance() { const token = this.current; this.current = this.lexer.next(); return token; }
-    parseAmount(label: any) {
+    currentType(): number { return this.current.type; }
+    parseAmount(label: string): Amount {
       if (this.current.type !== TOKEN.NUMBER) this.lexer.error(`Expected a number for ${label}`, this.current.start);
       const quantity = this.advance().value;
-      if (this.current.type !== TOKEN.SYMBOL) {
+      if (this.currentType() !== TOKEN.SYMBOL) {
         this.lexer.error(`Expected a commodity symbol for ${label}`, this.current.start);
       }
       const commodity = this.advance().value;
       return { quantity, commodity };
     }
-    parse() {
+    parse(): AmountExpression | null {
       if (this.current.type === TOKEN.EOF) return null;
       if (this.current.type === TOKEN.EQUALS) {
         this.advance();
@@ -130,7 +143,7 @@ module.exports = ({
         const total = this.advance().type === TOKEN.TOTAL_LEFT_BRACE;
         lotCost = { total, amount: this.parseAmount('lot cost') };
         const closing = total ? TOKEN.TOTAL_RIGHT_BRACE : TOKEN.RIGHT_BRACE;
-        if (this.current.type !== closing) {
+        if (this.currentType() !== closing) {
           this.lexer.error(`Expected ${JSON.stringify(total ? '}}' : '}')} after lot cost`, this.current.start);
         }
         this.advance();
@@ -146,12 +159,12 @@ module.exports = ({
       this.expectEnd();
       return { amount, lotCost, cost, balanceAssignment: null, balanceAssertion };
     }
-    expectEnd() {
+    expectEnd(): void {
       if (this.current.type !== TOKEN.EOF) this.lexer.error(`Unexpected token ${JSON.stringify(this.current.value)}`, this.current.start);
     }
   }
 
-  function parseAmountExpression(input: any, location: any) {
+  function parseAmountExpression(input: string, location: SourceLocation): AmountExpression | null {
     return new AmountParser(input, location.source, location.line, location.column).parse();
   }
 

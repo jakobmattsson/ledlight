@@ -1,17 +1,28 @@
 'use strict';
 
+type Decimal = { coefficient: bigint; scale: number };
+type SqlDecimal = string | null;
+type DecimalDatabase = {
+  aggregate(name: string, options: {
+    start: () => Decimal;
+    step: (total: Decimal, value: SqlDecimal) => Decimal;
+    result: (total: Decimal) => string;
+  }): void;
+  function(name: string, options: { deterministic: boolean }, callback: (left: SqlDecimal, right: SqlDecimal) => string | number | null): void;
+};
+
 module.exports = () => {
 
   const POWERS_OF_TEN = [1n];
 
-  function powerOfTen(exponent: any) {
+  function powerOfTen(exponent: number) {
     while (POWERS_OF_TEN.length <= exponent) {
-      POWERS_OF_TEN.push((POWERS_OF_TEN.at as any)(-1) * 10n);
+      POWERS_OF_TEN.push(POWERS_OF_TEN[POWERS_OF_TEN.length - 1] * 10n);
     }
     return POWERS_OF_TEN[exponent];
   }
 
-  function parseDecimal(value: any) {
+  function parseDecimal(value: string): Decimal {
     if (typeof value !== 'string') throw new TypeError('Decimal value must be a string');
     const match = /^([+-]?)(\d+)(?:\.(\d+))?$/u.exec(value);
     if (!match) throw new Error(`Invalid decimal value: ${JSON.stringify(value)}`);
@@ -21,7 +32,7 @@ module.exports = () => {
     return normalizeDecimal({ coefficient: sign * BigInt(integer + fraction), scale: fraction.length });
   }
 
-  function normalizeDecimal(decimal: any) {
+  function normalizeDecimal(decimal: Decimal): Decimal {
     let { coefficient, scale } = decimal;
     if (coefficient === 0n) return { coefficient: 0n, scale: 0 };
     while (scale > 0 && coefficient % 10n === 0n) {
@@ -31,7 +42,7 @@ module.exports = () => {
     return { coefficient, scale };
   }
 
-  function alignDecimals(left: any, right: any) {
+  function alignDecimals(left: Decimal, right: Decimal) {
     const scale = Math.max(left.scale, right.scale);
     return {
       left: left.coefficient * powerOfTen(scale - left.scale),
@@ -40,23 +51,23 @@ module.exports = () => {
     };
   }
 
-  function addDecimals(left: any, right: any) {
+  function addDecimals(left: Decimal, right: Decimal): Decimal {
     const aligned = alignDecimals(left, right);
     return normalizeDecimal({ coefficient: aligned.left + aligned.right, scale: aligned.scale });
   }
 
-  function subtractDecimals(left: any, right: any) {
+  function subtractDecimals(left: Decimal, right: Decimal): Decimal {
     return addDecimals(left, { coefficient: -right.coefficient, scale: right.scale });
   }
 
-  function multiplyDecimals(left: any, right: any) {
+  function multiplyDecimals(left: Decimal, right: Decimal): Decimal {
     return normalizeDecimal({
       coefficient: left.coefficient * right.coefficient,
       scale: left.scale + right.scale,
     });
   }
 
-  function divideRoundedDecimals(left: any, right: any, scale: any, tiesToEven: any) {
+  function divideRoundedDecimals(left: Decimal, right: Decimal, scale: number, tiesToEven: boolean): Decimal {
     if (right.coefficient === 0n) throw new RangeError('Cannot divide by zero');
     if (!Number.isInteger(scale) || scale < 0) {
       throw new RangeError('Decimal scale must be a non-negative integer');
@@ -76,14 +87,14 @@ module.exports = () => {
     return normalizeDecimal({ coefficient: negative ? -coefficient : coefficient, scale });
   }
 
-  const divideDecimals = (left: any, right: any, scale: any) => divideRoundedDecimals(left, right, scale, false);
-  const divideDecimalsHalfEven = (left: any, right: any, scale: any) => divideRoundedDecimals(left, right, scale, true);
+  const divideDecimals = (left: Decimal, right: Decimal, scale: number) => divideRoundedDecimals(left, right, scale, false);
+  const divideDecimalsHalfEven = (left: Decimal, right: Decimal, scale: number) => divideRoundedDecimals(left, right, scale, true);
 
-  function negateDecimal(decimal: any) {
+  function negateDecimal(decimal: Decimal): Decimal {
     return { coefficient: -decimal.coefficient, scale: decimal.scale };
   }
 
-  function formatDecimal(decimal: any) {
+  function formatDecimal(decimal: Decimal): string {
     const normalized = normalizeDecimal(decimal);
     const negative = normalized.coefficient < 0n;
     let digits = (negative ? -normalized.coefficient : normalized.coefficient).toString();
@@ -94,7 +105,7 @@ module.exports = () => {
     return negative ? `-${digits}` : digits;
   }
 
-  function formatDecimalFixed(decimal: any, scale: any) {
+  function formatDecimalFixed(decimal: Decimal, scale: number): string {
     if (!Number.isInteger(scale) || scale < 0) throw new RangeError('Decimal scale must be a non-negative integer');
     let coefficient = decimal.coefficient;
     if (decimal.scale < scale) {
@@ -117,28 +128,28 @@ module.exports = () => {
     return negative && coefficient !== 0n ? `-${digits}` : digits;
   }
 
-  function compareDecimals(left: any, right: any) {
+  function compareDecimals(left: Decimal, right: Decimal): number {
     const aligned = alignDecimals(left, right);
     return aligned.left < aligned.right ? -1 : Number(aligned.left > aligned.right);
   }
 
-  function registerDecimalFunctions(database: any) {
+  function registerDecimalFunctions(database: DecimalDatabase) {
     database.aggregate('decimal_sum', {
       start: () => ({ coefficient: 0n, scale: 0 }),
-      step: (total: any, value: any) => value === null
+      step: (total: Decimal, value: SqlDecimal) => value === null
         ? total
         : addDecimals(total, parseDecimal(value)),
       result: formatDecimal,
     });
-    database.function('decimal_mul', { deterministic: true }, (left: any, right: any) => {
+    database.function('decimal_mul', { deterministic: true }, (left: SqlDecimal, right: SqlDecimal) => {
       if (left === null || right === null) return null;
       return formatDecimal(multiplyDecimals(parseDecimal(left), parseDecimal(right)));
     });
-    database.function('decimal_add', { deterministic: true }, (left: any, right: any) => {
+    database.function('decimal_add', { deterministic: true }, (left: SqlDecimal, right: SqlDecimal) => {
       if (left === null || right === null) return null;
       return formatDecimal(addDecimals(parseDecimal(left), parseDecimal(right)));
     });
-    database.function('decimal_cmp', { deterministic: true }, (left: any, right: any) => {
+    database.function('decimal_cmp', { deterministic: true }, (left: SqlDecimal, right: SqlDecimal) => {
       if (left === null || right === null) return null;
       return compareDecimals(parseDecimal(left), parseDecimal(right));
     });
