@@ -286,11 +286,12 @@ The eight modules and their dependency direction are:
 `src/composition/repository-container.js` is the source of truth for these edges
 and for the external services permitted to each module. It discovers the module
 directories, checks that they match both policies, rejects cycles, and builds
-module-local factory containers. Each module's `index.js` is registered as a
-factory and receives its local dependencies through injection. Composition
-freezes the returned facade before providing it to other modules. A factory
-can use its own private registrations directly. Dependencies from permitted
-modules must be requested under the provider's name, such as
+module-local factory containers. Runtime adapters are created in
+`src/composition/external-services/index.js`. Each module's `index.js` is
+registered as a factory and receives its local dependencies through injection.
+Composition freezes the returned facade before providing it to other modules.
+A factory can use its own private registrations directly. Dependencies from
+permitted modules must be requested under the provider's name, such as
 `core: { rational, linearProgram }`. Other module internals are
 unavailable. Each module root contains only its `index.js` facade;
 implementation files live in subdirectories. Factories have unique kebab-case
