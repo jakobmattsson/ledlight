@@ -11,7 +11,7 @@ const { createRepositoryContainer } = require('../../src/composition/repository-
 const root = path.resolve(__dirname, '../..');
 
 test('the query read model matches the schema and every referenced table', () => {
-  const contract = createRepositoryContainer().resolve('database').readModelContract;
+  const contract = createRepositoryContainer(path.resolve(__dirname, '../../src/modules')).resolve('database').readModelContract;
   const database = new Database(':memory:');
   try {
     database.exec(fs.readFileSync(path.join(root, 'src/modules/database/internal/schema.sql'), 'utf8'));

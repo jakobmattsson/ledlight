@@ -5,15 +5,17 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const YAML = require('yaml');
 const { asValue } = require('../../lib/awilix');
-const {
-  allowedExternal, allowedModules, createRepositoryContainer,
-} = require('../../src/composition/repository-container');
+const { createRepositoryContainer } = require('../../src/composition/repository-container');
 const {
   createLocalContainer, dependencyOrder, discoverModules, moduleName, scopedDependencies,
 } = require('../../src/composition/module-container');
 
 const root = path.resolve(__dirname, '../../src/modules');
+const { allowedExternal, allowedModules } = YAML.parse(
+  fs.readFileSync(path.join(root, 'dependencies.yaml'), 'utf8'),
+);
 
 test('discovers exactly the modules declared in the dependency policy', () => {
   const directories = fs.readdirSync(root, { withFileTypes: true })
@@ -44,7 +46,7 @@ test('rejects missing, unknown, and cyclic module edges', () => {
 });
 
 test('resolves index factories as facades and hides internal factories', () => {
-  const container = createRepositoryContainer();
+  const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
   for (const name of discoverModules(root)) {
     assert.equal(container.resolve(name), container.$$private.resolveInternal(name, 'index'));
     assert.ok(Object.isFrozen(container.resolve(name)), `${name} facade must be frozen`);
@@ -56,10 +58,36 @@ test('resolves index factories as facades and hides internal factories', () => {
 });
 
 test('external overrides remain scoped to their permitted modules', () => {
-  const container = createRepositoryContainer();
+  const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
   container.register({ currentWorkingDirectory: asValue(() => '/test-journal') });
   assert.equal(container.resolve('core').configuration !== undefined, true);
   assert.equal(container.resolve('project'), container.resolve('project'));
+});
+
+test('composes an independent module tree from the supplied path', (context) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'module-composition-'));
+  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(directory, 'source'));
+  fs.mkdirSync(path.join(directory, 'consumer'));
+  fs.writeFileSync(path.join(directory, 'dependencies.yaml'), `allowedModules:
+  source: []
+  consumer: [source]
+allowedExternal:
+  source: [greeting]
+  consumer: []
+`);
+  fs.writeFileSync(path.join(directory, 'external.js'),
+    "module.exports = () => ({ greeting: 'hello' });\n");
+  fs.writeFileSync(path.join(directory, 'source', 'index.js'),
+    'module.exports = ({ external: { greeting } }) => ({ greeting });\n');
+  fs.writeFileSync(path.join(directory, 'consumer', 'index.js'),
+    'module.exports = ({ source: { greeting } }) => ({ message: `${greeting}, world` });\n');
+
+  const container = createRepositoryContainer(directory);
+  assert.equal(container.resolve('consumer').message, 'hello, world');
+  assert.deepEqual(container.$$private.order, ['source', 'consumer']);
+  container.register({ greeting: asValue('goodbye') });
+  assert.equal(container.resolve('consumer').message, 'goodbye, world');
 });
 
 test('registration names derive from kebab-case filenames', () => {

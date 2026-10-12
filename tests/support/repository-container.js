@@ -8,7 +8,7 @@ const {
 const { moduleName } = require('../../src/composition/module-container');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
-const container = createRepositoryContainer();
+const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
 
 function resolveRepositoryModule(fileName) {
   const repositoryFileName = path.isAbsolute(fileName)

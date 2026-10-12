@@ -3,29 +3,26 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const externalServices = require('../modules/external');
 const {
   assertPolicyKeys, createLocalContainer, dependencyOrder, discoverModules,
   scopedDependencies,
 } = require('./module-container');
 
-const MODULES_ROOT = path.resolve(__dirname, '../modules');
-
-const policy = YAML.parse(fs.readFileSync(path.join(MODULES_ROOT, 'dependencies.yaml'), 'utf8'));
-const allowedModules = Object.freeze(policy.allowedModules);
-const allowedExternal = Object.freeze(policy.allowedExternal);
-
-function createRepositoryContainer() {
-  const modules = discoverModules(MODULES_ROOT);
+function createRepositoryContainer(modulesPath) {
+  const modulesRoot = path.resolve(modulesPath);
+  const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
+  const allowedModules = Object.freeze(policy.allowedModules);
+  const allowedExternal = Object.freeze(policy.allowedExternal);
+  const modules = discoverModules(modulesRoot);
   const order = dependencyOrder(modules, allowedModules);
   assertPolicyKeys(modules, allowedExternal, 'External');
-  const services = externalServices();
+  const services = require(path.join(modulesRoot, 'external.js'))();
   const built = new Map();
   const internalOverrides = new Map();
 
   function build(moduleName) {
     if (built.has(moduleName)) return built.get(moduleName);
-    const directory = path.join(MODULES_ROOT, moduleName);
+    const directory = path.join(modulesRoot, moduleName);
     const externals = Object.freeze(Object.fromEntries(allowedExternal[moduleName].map((name) => {
       if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
       return [name, services[name]];
@@ -76,4 +73,4 @@ function createRepositoryContainer() {
   };
 }
 
-module.exports = { allowedExternal, allowedModules, createRepositoryContainer };
+module.exports = { createRepositoryContainer };

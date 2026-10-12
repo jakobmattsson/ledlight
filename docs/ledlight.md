@@ -290,6 +290,11 @@ policies, rejects cycles, and builds module-local factory containers. Runtime
 adapters are created by `src/modules/external.js`, a file outside the domain
 module graph. Each domain module's `index.js` is registered as a factory and
 receives its local dependencies through injection.
+`createRepositoryContainer(modulesPath)` reads `dependencies.yaml` and
+`external.js` from the supplied module directory. The composition code has no
+Ledlight module names or paths; another module tree can use the same API with
+its own policy and external services. The CLI entry point passes the local
+`src/modules` path before resolving `cli`.
 Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as

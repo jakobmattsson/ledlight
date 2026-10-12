@@ -10,7 +10,7 @@ const { createRepositoryContainer } = require('../../src/composition/repository-
 const queryDirectory = path.resolve(__dirname, '../../src/modules/queries/list-definitions');
 
 test('registers all queries as one immutable dependency', () => {
-  const container = createRepositoryContainer();
+  const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
   const queries = container.resolve('queries');
 
   assert.ok(Object.isFrozen(queries));

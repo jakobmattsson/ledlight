@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
+const path = require('node:path');
+
 // Examples:
 // node src/run.js aggregate --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "Income:*" --accounts "Expenses:*" --denominate --invert
 // node src/run.js aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:*" --accounts "Liabilities:*" --denominate
@@ -10,4 +12,4 @@
 
 const { createRepositoryContainer } = require('./composition/repository-container');
 
-createRepositoryContainer().resolve('cli').runCli.run();
+createRepositoryContainer(path.resolve(__dirname, 'modules')).resolve('cli').runCli.run();
