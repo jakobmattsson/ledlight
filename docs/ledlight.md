@@ -286,15 +286,20 @@ The eight modules and their dependency direction are:
 `src/composition/repository-container.js` is the source of truth for these edges
 and for the external services permitted to each module. It discovers the module
 directories, checks that they match both policies, rejects cycles, and builds
-module-local factory containers. A factory can use its own private registrations
-and the deliberately selected values from permitted modules' `index.js` files.
-Each module root contains only its `index.js` facade; implementation files live
-in subdirectories. Other module internals are unavailable. Factories have unique kebab-case file
-names within their module. The local Awilix subset lives in `lib/awilix.js`.
+module-local factory containers. Each module's `index.js` is registered as a
+factory and receives its local dependencies through injection. It returns a
+frozen facade. A factory can use its own private registrations directly, while
+dependencies from permitted modules must be requested under the provider's
+name, such as `core: { rational, linearProgram }`. Other module internals are
+unavailable. Each module root contains only its `index.js` facade;
+implementation files live in subdirectories. Factories have unique kebab-case
+file names within their module. The local Awilix subset lives in
+`lib/awilix.js`.
 
-The project builds journal operations and API input definitions from the frozen
-query definitions. The CLI uses the frozen command definitions and invokes the
-corresponding public journal operation. The project's `withJournalText` capability
+The `queries` and `commands` facades each expose a frozen `definitions` array.
+The project builds journal operations and API input definitions from the query
+definitions. The CLI uses the command definitions and invokes the corresponding
+public journal operation. The project's `withJournalText` capability
 builds and removes a temporary database for CLI stdin input.
 
 Queries receive a read-only database handle through the project and may run SQL

@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = ({
-  decimal: { registerDecimalFunctions },
+  core: {
+    decimal: { registerDecimalFunctions },
+  },
   external: {
     path,
     sqlite: Database

@@ -3,7 +3,9 @@
 module.exports = ({
   journalLoaderFactory: { createJournalLoader },
   ledgerParser: { parse },
-  publicErrors: { errorCodes, withCode },
+  core: {
+    publicErrors: { errorCodes, withCode },
+  },
 }) => {
 
   /**

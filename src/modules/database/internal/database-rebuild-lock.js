@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = ({
-  publicErrors: { createError, errorCodes },
+  core: {
+    publicErrors: { createError, errorCodes },
+  },
   external: {
     fs,
     processRuntime,

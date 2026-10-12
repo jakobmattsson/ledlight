@@ -1,6 +1,10 @@
 'use strict';
 
-module.exports = ({ publicErrors: { createError, errorCodes } }) => {
+module.exports = ({
+  core: {
+    publicErrors: { createError, errorCodes },
+  },
+}) => {
 
   function valuationCommodityFromDatabase(database) {
     const valuationCommodity = database.prepare(

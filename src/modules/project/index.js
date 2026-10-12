@@ -1,6 +1,5 @@
 'use strict';
 
-module.exports = ({ resolve }) => {
-  const { apiDefinitions, openJournal, withJournalText } = resolve('project');
+module.exports = ({ project: { apiDefinitions, openJournal, withJournalText } }) => {
   return Object.freeze({ apiDefinitions, openJournal, withJournalText });
 };

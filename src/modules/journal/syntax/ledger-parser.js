@@ -5,7 +5,9 @@ module.exports = ({
   ingestionWarning: { createWarning, warningCodes },
   syntaxErrors: { syntaxError },
   topLevelBlocks: { splitTopLevelBlocks },
-  publicErrors: { createError, errorCodes },
+  core: {
+    publicErrors: { createError, errorCodes },
+  },
   external: {
     zod: { z }
   },

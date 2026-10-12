@@ -42,9 +42,11 @@ test('rejects missing, unknown, and cyclic module edges', () => {
   assert.throws(() => dependencyOrder(['a', 'b'], { a: ['b'], b: ['a'] }), /cycle/u);
 });
 
-test('resolves all public module facades and hides internal factories', () => {
+test('resolves index factories as facades and hides internal factories', () => {
   const container = createRepositoryContainer();
-  for (const name of discoverModules(root)) assert.doesNotThrow(() => container.resolve(name));
+  for (const name of discoverModules(root)) {
+    assert.equal(container.resolve(name), container.$$private.resolveInternal(name, 'index'));
+  }
   assert.throws(() => container.resolve('decimal'), /Unknown module/u);
   assert.equal(Object.hasOwn(container.resolve('queries'), 'accountFilter'), false);
   assert.equal(Object.hasOwn(container.resolve('commands'), 'cliOptions'), false);
@@ -63,14 +65,14 @@ test('registration names derive from kebab-case filenames', () => {
   assert.throws(() => moduleName('/example/database_reader.js'), /kebab-case/u);
 });
 
-test('module scope exposes local factories and allowed facades only', () => {
+test('module scope exposes local factories and allowed facades by module name only', () => {
   const local = { hasRegistration: (name) => name === 'privateHelper',
     resolve: () => 'local value' };
   const facade = Object.freeze({ publicValue: 'visible' });
   const dependencies = scopedDependencies('consumer', () => local, ['provider'],
     () => facade, Object.freeze({ clock: 'clock value' }));
   assert.equal(dependencies.privateHelper, 'local value');
-  assert.equal(dependencies.publicValue, 'visible');
+  assert.throws(() => dependencies.publicValue, /forbidden dependency/u);
   assert.equal(dependencies.external.clock, 'clock value');
   assert.equal(dependencies.provider, facade);
   assert.throws(() => dependencies.privateProviderValue, /forbidden dependency/u);

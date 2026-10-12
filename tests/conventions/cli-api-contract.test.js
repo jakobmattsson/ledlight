@@ -14,7 +14,7 @@ const commands = resolveCommands();
 const project = resolveRepositoryModule('src/modules/project/internal/project.js');
 const argumentsModule = createArguments({
   commander,
-  commands,
+  commands: { definitions: commands },
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
 });
@@ -52,7 +52,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
   assert.throws(
     () => createArguments({
       commander,
-      commands,
+      commands: { definitions: commands },
       cliConfiguration: { apply: (arguments_) => arguments_ },
       project: { apiDefinitions },
     }),

@@ -23,13 +23,13 @@ function resolveRepositoryModule(fileName) {
 }
 
 function resolveQuery(name) {
-  const query = container.resolve('queries').find((candidate) => candidate.name === name);
+  const query = container.resolve('queries').definitions.find((candidate) => candidate.name === name);
   if (!query) throw new Error(`Unknown query: ${name}`);
   return query;
 }
 
 function resolveCommands() {
-  return container.resolve('commands');
+  return container.resolve('commands').definitions;
 }
 
 function resolveReferenceParser() {

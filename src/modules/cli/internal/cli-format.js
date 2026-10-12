@@ -1,15 +1,17 @@
 'use strict';
 
 module.exports = ({
-  reportTotals: { appendTotal },
-  decimal: {
-    addDecimals,
-    formatDecimal,
-    formatDecimalFixed,
-    parseDecimal,
-    compareDecimals,
-    divideDecimals,
-    divideDecimalsHalfEven,
+  core: {
+    reportTotals: { appendTotal },
+    decimal: {
+      addDecimals,
+      formatDecimal,
+      formatDecimalFixed,
+      parseDecimal,
+      compareDecimals,
+      divideDecimals,
+      divideDecimalsHalfEven,
+    },
   },
 }) => {
 

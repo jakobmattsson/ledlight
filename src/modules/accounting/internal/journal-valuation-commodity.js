@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = ({
-  ingestionWarning: { createWarning, warningCodes },
+  journal: {
+    ingestionWarning: { createWarning, warningCodes },
+  },
 }) => {
 
   function valuationCommodityFromJournal(journal, suppliedWarnings, ignoredProperties) {

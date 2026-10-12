@@ -1,15 +1,17 @@
 'use strict';
 
 module.exports = ({
-  decimal: {
-    formatDecimal,
-    multiplyDecimals,
-    negateDecimal,
-    parseDecimal,
+  core: {
+    decimal: {
+      formatDecimal,
+      multiplyDecimals,
+      negateDecimal,
+      parseDecimal,
+    },
+    reportTotals: { appendTotal },
+    apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
   },
   accountFilter: { accountFilter },
-  reportTotals: { appendTotal },
-  apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
   costValuation: { validateCostValuation, costValueSql },
   valuationRates: { queryValuationRates },
   databaseValuationCommodity: { valuationCommodityFromDatabase },

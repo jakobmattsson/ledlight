@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = ({
-  decimal: { addDecimals, formatDecimal, parseDecimal },
+  core: {
+    decimal: { addDecimals, formatDecimal, parseDecimal },
+  },
 }) => {
 
   function materializePostingBalances(database) {

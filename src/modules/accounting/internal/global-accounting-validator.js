@@ -1,11 +1,15 @@
 'use strict';
 
 module.exports = ({
-  rational: { zero, parse, add, neg, format },
+  core: {
+    rational: { zero, parse, add, neg, format },
+  },
   commodityMovements: { annotatedTotal, carriedMovements },
   allocationHistory: { AllocationHistory },
   saleProceedsValidator: { validateSaleProceeds },
-  ingestionWarning: { createWarning, warningCodes },
+  journal: {
+    ingestionWarning: { createWarning, warningCodes },
+  },
 }) => {
   function validatePostingDateHoldings(resolvedTransactions, valuationCommodity, warnings) {
     const positions = new Map();

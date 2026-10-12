@@ -1,8 +1,10 @@
 'use strict';
 
 module.exports = ({
-  rational: { zero, one, add, sub, mul, div, neg, cmp },
-  linearProgram: { maximize },
+  core: {
+    rational: { zero, one, add, sub, mul, div, neg, cmp },
+    linearProgram: { maximize },
+  },
 }) => {
   const expression = (constant, coefficients) => ({ constant, coefficients: coefficients || new Map() });
   function scale(value, factor) {

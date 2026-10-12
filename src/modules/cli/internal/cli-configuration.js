@@ -1,6 +1,10 @@
 'use strict';
 
-module.exports = ({ configuration }) => {
+module.exports = ({
+  core: {
+    configuration,
+  },
+}) => {
   function apply(arguments_) {
     if (arguments_.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
       return arguments_;

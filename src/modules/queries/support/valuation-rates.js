@@ -1,14 +1,16 @@
 'use strict';
 
 module.exports = ({
-  decimal: {
-    formatDecimal,
-    multiplyDecimals,
-    parseDecimal,
-  },
-  publicErrors: { createError, errorCodes },
-  valuationRateResolver: {
-    createLedgerValuationRateResolver,
+  core: {
+    decimal: {
+      formatDecimal,
+      multiplyDecimals,
+      parseDecimal,
+    },
+    publicErrors: { createError, errorCodes },
+    valuationRateResolver: {
+      createLedgerValuationRateResolver,
+    },
   },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
 }) => {

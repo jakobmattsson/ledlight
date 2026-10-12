@@ -12,7 +12,7 @@ const commands = resolveCommands();
 const project = resolveRepositoryModule('src/modules/project/internal/project.js');
 const argumentsModule = createArguments({
   commander,
-  commands,
+  commands: { definitions: commands },
   cliConfiguration: { apply: (arguments_) => arguments_ },
   project,
 });
@@ -199,7 +199,7 @@ test('parses valuation choices and explicitly passes the market default', () => 
 test('uses the CLI configuration file argument when --file is omitted', () => {
   const configuredArguments = createArguments({
     commander,
-    commands,
+    commands: { definitions: commands },
     cliConfiguration: {
       apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],
     },

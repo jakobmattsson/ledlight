@@ -1,6 +1,10 @@
 'use strict';
 
-module.exports = ({ decimal: { formatDecimal, parseDecimal } }) => {
+module.exports = ({
+  core: {
+    decimal: { formatDecimal, parseDecimal },
+  },
+}) => {
   const quantityText = (quantity) => formatDecimal(parseDecimal(quantity));
   const amountText = (quantity, commodity) => `${quantityText(quantity)} ${commodity}`;
   const withComment = (text, comment) => comment === null ? text : `${text}  ; ${comment}`;

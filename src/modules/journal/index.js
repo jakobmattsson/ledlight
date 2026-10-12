@@ -1,5 +1,4 @@
 'use strict';
 
-module.exports = ({ resolve }) => Object.freeze(Object.fromEntries([
-  'ingestionWarning', 'journal', 'journalManifest', 'ledgerParser',
-].map((name) => [name, resolve(name)])));
+module.exports = ({ ingestionWarning, journal, journalManifest, ledgerParser }) =>
+  Object.freeze({ ingestionWarning, journal, journalManifest, ledgerParser });

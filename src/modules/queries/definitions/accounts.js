@@ -2,7 +2,9 @@
 
 module.exports = ({
   accountFilter: { accountFilter },
-  apiOptions: { accounts, usage, parseOptions },
+  core: {
+    apiOptions: { accounts, usage, parseOptions },
+  },
   external: {
     zod: { z }
   },

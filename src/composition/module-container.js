@@ -63,7 +63,6 @@ function createLocalContainer(directory, dependencies) {
   const container = createContainer({ injectionMode: InjectionMode.PROXY });
   const locations = new Map();
   for (const { path: fileName } of listModules('**/*.js', { cwd: directory })) {
-    if (path.relative(directory, fileName) === 'index.js') continue;
     const name = moduleName(fileName);
     if (locations.has(name)) {
       throw new Error(`Duplicate module registration ${name}: ${locations.get(name)} and ${fileName}`);
@@ -84,9 +83,7 @@ function scopedDependencies(moduleName, localContainer, providers, getFacade, ex
       const local = localContainer();
       if (local?.hasRegistration(name)) return local.resolve(name);
       for (const provider of providers) {
-        const facade = getFacade(provider);
-        if (Object.hasOwn(facade, name)) return facade[name];
-        if (provider === name) return facade;
+        if (provider === name) return getFacade(provider);
       }
       throw new Error(`${moduleName} cannot access unknown or forbidden dependency ${name}`);
     },

@@ -1,10 +1,14 @@
 'use strict';
 
 module.exports = ({
-  decimal: { compareDecimals, parseDecimal },
-  rational: { zero, parse: parseRational, add, cmp },
+  core: {
+    decimal: { compareDecimals, parseDecimal },
+    rational: { zero, parse: parseRational, add, cmp },
+  },
   commodityMovements: { annotatedTotal, carriedMovements, unpricedReplacement },
-  ingestionWarning: { createWarning, warningCodes },
+  journal: {
+    ingestionWarning: { createWarning, warningCodes },
+  },
   journalValuationCommodity: { valuationCommodityFromJournal },
 }) => {
 

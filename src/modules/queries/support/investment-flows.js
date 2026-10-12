@@ -1,9 +1,13 @@
 'use strict';
 
 module.exports = ({
-  rational: { zero, parse, add, mul, neg, format },
-  commodityMovements: { annotatedTotal, carriedMovements },
-  publicErrors: { createError, errorCodes },
+  core: {
+    rational: { zero, parse, add, mul, neg, format },
+    publicErrors: { createError, errorCodes },
+  },
+  accounting: {
+    commodityMovements: { annotatedTotal, carriedMovements },
+  },
 }) => {
   function calculateFlows(postings, options, valuationCommodity) {
     const transactions = new Map();

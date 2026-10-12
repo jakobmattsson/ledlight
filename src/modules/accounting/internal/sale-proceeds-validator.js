@@ -1,9 +1,13 @@
 'use strict';
 
 module.exports = ({
-  rational: { zero, parse, add, sub, neg, cmp, div, format },
+  core: {
+    rational: { zero, parse, add, sub, neg, cmp, div, format },
+  },
   commodityMovements: { annotatedTotal },
-  ingestionWarning: { createWarning, warningCodes },
+  journal: {
+    ingestionWarning: { createWarning, warningCodes },
+  },
 }) => {
   // Account names do not identify settlement, fees, or realized results. Check
   // whether any partition of the monetary postings can explain the trade value.

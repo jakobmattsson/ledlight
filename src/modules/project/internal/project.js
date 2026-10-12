@@ -1,14 +1,20 @@
 'use strict';
 
 module.exports = ({
-  cachePaths: { pathsForJournal },
-  queries,
-  journal: { loadJournal },
-  journalWriter: { writeJournalDatabase },
-  database: { ensureDatabaseCurrent },
-  databaseReader: { readDatabase },
-  ingestionWarning: { groupWarnings },
-  publicErrors: { createError, databaseError, errorCodes },
+  core: {
+    cachePaths: { pathsForJournal },
+    publicErrors: { createError, databaseError, errorCodes },
+  },
+  queries: { definitions: queries },
+  journal: {
+    journal: { loadJournal },
+    ingestionWarning: { groupWarnings },
+  },
+  database: {
+    journalWriter: { writeJournalDatabase },
+    database: { ensureDatabaseCurrent },
+    databaseReader: { readDatabase },
+  },
   external: {
     fs,
     os,

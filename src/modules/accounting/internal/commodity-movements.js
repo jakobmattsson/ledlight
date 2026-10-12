@@ -1,6 +1,10 @@
 'use strict';
 
-module.exports = ({ rational: { zero, parse, mul, neg, add, cmp } }) => {
+module.exports = ({
+  core: {
+    rational: { zero, parse, mul, neg, add, cmp },
+  },
+}) => {
   function annotatedTotal(annotation, quantity) {
     if (!annotation) return null;
     const cost = parse(annotation.amount.quantity);

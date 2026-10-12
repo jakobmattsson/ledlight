@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = ({
-  commands,
+  commands: { definitions: commands },
   project,
   cliStdinJournal,
   cliArguments: { parseArguments, usage },

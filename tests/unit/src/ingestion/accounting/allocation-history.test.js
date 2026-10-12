@@ -11,11 +11,13 @@ function measuredHistory(roundingUnit) {
   let optimizations = 0;
   const { AllocationHistory: MeasuredHistory } =
     require('../../../../../src/modules/accounting/internal/allocation-history.js')({
-      rational: resolveRepositoryModule('src/modules/core/internal/rational.js'),
-      linearProgram: {
-        maximize(...args) {
-          optimizations += 1;
-          return maximize(...args);
+      core: {
+        rational: resolveRepositoryModule('src/modules/core/internal/rational.js'),
+        linearProgram: {
+          maximize(...args) {
+            optimizations += 1;
+            return maximize(...args);
+          },
         },
       },
     });

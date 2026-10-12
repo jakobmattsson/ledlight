@@ -1,6 +1,10 @@
 'use strict';
 
-module.exports = ({ publicErrors: { errorCodes, withCode } }) => {
+module.exports = ({
+  core: {
+    publicErrors: { errorCodes, withCode },
+  },
+}) => {
 
   function syntaxError(message, source, line, column) {
     const error = withCode(

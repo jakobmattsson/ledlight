@@ -1,11 +1,15 @@
 'use strict';
 
 module.exports = ({
-  journal: { loadJournal },
+  journal: {
+    journal: { loadJournal },
+  },
   databaseFreshness: { checkDatabaseSync, databaseJournalPath },
   databaseRebuildLock: { withRebuildLock },
   journalWriter: { writeJournalDatabase },
-  publicErrors: { databaseError },
+  core: {
+    publicErrors: { databaseError },
+  },
   external: {
     path
   },

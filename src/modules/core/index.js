@@ -1,6 +1,9 @@
 'use strict';
 
-module.exports = ({ resolve }) => Object.freeze(Object.fromEntries([
-  'apiOptions', 'cachePaths', 'configuration', 'decimal', 'linearProgram',
-  'publicErrors', 'rational', 'reportTotals', 'valuationRateResolver',
-].map((name) => [name, resolve(name)])));
+module.exports = ({
+  apiOptions, cachePaths, configuration, decimal, linearProgram,
+  publicErrors, rational, reportTotals, valuationRateResolver,
+}) => Object.freeze({
+  apiOptions, cachePaths, configuration, decimal, linearProgram,
+  publicErrors, rational, reportTotals, valuationRateResolver,
+});

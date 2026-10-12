@@ -1,10 +1,14 @@
 'use strict';
 
 module.exports = ({
-  rational: { zero, parse, neg, div, mul, cmp, format },
+  core: {
+    rational: { zero, parse, neg, div, mul, cmp, format },
+  },
   commodityMovements: { annotatedTotal, carriedMovements, unpricedReplacement },
   allocationHistory: { AllocationHistory },
-  ingestionWarning: { createWarning, warningCodes },
+  journal: {
+    ingestionWarning: { createWarning, warningCodes },
+  },
 }) => {
   const absolute = (value) => value.n < 0n ? neg(value) : value;
   const quantityOf = (posting) => parse(posting.amount.quantity);

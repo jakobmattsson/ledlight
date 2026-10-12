@@ -1,8 +1,10 @@
 'use strict';
 
 module.exports = ({
-  apiOptions: { parseOptions },
-  decimal: { divideDecimals, formatDecimal, parseDecimal },
+  core: {
+    apiOptions: { parseOptions },
+    decimal: { divideDecimals, formatDecimal, parseDecimal },
+  },
   external: {
     zod: { z }
   },

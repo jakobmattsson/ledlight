@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = ({
-  apiOptions: { usage, parseOptions },
+  core: {
+    apiOptions: { usage, parseOptions },
+  },
   external: {
     zod: { z }
   },

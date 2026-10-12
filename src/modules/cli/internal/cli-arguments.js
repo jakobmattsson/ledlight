@@ -37,7 +37,7 @@ function formatGroupedHelp(Help, command, helper) {
 }
 
 module.exports = ({
-  commands,
+  commands: { definitions: commands },
   cliConfiguration,
   project: { apiDefinitions: projectDefinitions },
   external: {

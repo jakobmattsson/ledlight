@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = ({
-  journalManifest: { loadJournalManifest },
+  journal: {
+    journalManifest: { loadJournalManifest },
+  },
   databaseMigration: { SCHEMA_VERSION },
   external: {
     fs,

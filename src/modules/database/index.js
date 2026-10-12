@@ -1,5 +1,4 @@
 'use strict';
 
-module.exports = ({ resolve }) => Object.freeze(Object.fromEntries([
-  'database', 'databaseReader', 'journalWriter', 'readModelContract',
-].map((name) => [name, resolve(name)])));
+module.exports = ({ database, databaseReader, journalWriter, readModelContract }) =>
+  Object.freeze({ database, databaseReader, journalWriter, readModelContract });

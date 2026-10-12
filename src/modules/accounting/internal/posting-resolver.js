@@ -1,16 +1,20 @@
 'use strict';
 
 module.exports = ({
-  decimal: {
-    addDecimals,
-    compareDecimals,
-    formatDecimal,
-    multiplyDecimals,
-    negateDecimal,
-    parseDecimal,
-    subtractDecimals,
+  core: {
+    decimal: {
+      addDecimals,
+      compareDecimals,
+      formatDecimal,
+      multiplyDecimals,
+      negateDecimal,
+      parseDecimal,
+      subtractDecimals,
+    },
   },
-  ingestionWarning: { createWarning, warningCodes },
+  journal: {
+    ingestionWarning: { createWarning, warningCodes },
+  },
 }) => {
 
   const ZERO = parseDecimal('0');

@@ -2,8 +2,10 @@
 
 module.exports = ({
   accountFilter: { accountFilter, accountMatches },
-  publicErrors: { createError, errorCodes },
-  apiOptions: { accounts, dateRange, stringList, validateDateRange, parseOptions },
+  core: {
+    publicErrors: { createError, errorCodes },
+    apiOptions: { accounts, dateRange, stringList, validateDateRange, parseOptions },
+  },
   investmentReturns: { calculatePerformance },
   investmentFlows: { calculateFlows },
   databaseValuationCommodity: { valuationCommodityFromDatabase },

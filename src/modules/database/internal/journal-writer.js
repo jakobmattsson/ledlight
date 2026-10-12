@@ -1,12 +1,16 @@
 'use strict';
 
 module.exports = ({
-  decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
-  postingResolver: { PostingResolver },
-  globalAccountingValidator: { validateGlobalAccounting },
-  journalValidator: { validateJournal, validateResolvedCommodityTrades },
-  journalValuationCommodity: { valuationCommodityFromJournal },
-  effectivePostingCosts: { inferEffectivePostingCosts },
+  core: {
+    decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
+  },
+  accounting: {
+    postingResolver: { PostingResolver },
+    globalAccountingValidator: { validateGlobalAccounting },
+    journalValidator: { validateJournal, validateResolvedCommodityTrades },
+    journalValuationCommodity: { valuationCommodityFromJournal },
+    effectivePostingCosts: { inferEffectivePostingCosts },
+  },
   postingBalanceMaterializer: { materializePostingBalances },
   valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },

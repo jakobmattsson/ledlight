@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = ({ resolve }) => Object.freeze({ runCli: resolve('runCli') });
+module.exports = ({ runCli }) => Object.freeze({ runCli });

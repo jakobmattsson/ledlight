@@ -11,16 +11,22 @@ const publicErrors = resolveRepositoryModule('src/modules/core/internal/public-e
 
 test('reports an unexpected cache directory failure as a database error', () => {
   const project = createProject({
-    cachePaths: { pathsForJournal: () => ({ databasePath: '/fixture/cache.sqlite' }) },
+    core: {
+      cachePaths: { pathsForJournal: () => ({ databasePath: '/fixture/cache.sqlite' }) },
+      publicErrors,
+    },
     fs: { mkdirSync: () => { throw new Error('cache directory is unavailable'); } },
     path,
-    queries: [],
-    journal: { loadJournal: () => assert.fail('must not load a journal') },
-    journalWriter: { writeJournalDatabase: () => assert.fail('must not write a journal') },
-    database: { ensureDatabaseCurrent: () => { throw new Error('must not rebuild'); } },
-    databaseReader: { readDatabase: () => { throw new Error('must not read'); } },
-    ingestionWarning: { groupWarnings: () => [] },
-    publicErrors,
+    queries: { definitions: [] },
+    journal: {
+      journal: { loadJournal: () => assert.fail('must not load a journal') },
+      ingestionWarning: { groupWarnings: () => [] },
+    },
+    database: {
+      journalWriter: { writeJournalDatabase: () => assert.fail('must not write a journal') },
+      database: { ensureDatabaseCurrent: () => { throw new Error('must not rebuild'); } },
+      databaseReader: { readDatabase: () => { throw new Error('must not read'); } },
+    },
   });
 
   assert.throws(() => project.openJournal('/fixture/journal.ledger'), {

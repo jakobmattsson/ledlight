@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('node:path');
-const { listModules } = require('../../lib/awilix');
+const { asValue, listModules } = require('../../lib/awilix');
 const {
   assertPolicyKeys, createLocalContainer, dependencyOrder, discoverModules, moduleName,
   scopedDependencies,
@@ -82,10 +82,6 @@ function createRepositoryContainer() {
   function build(moduleName) {
     if (built.has(moduleName)) return built.get(moduleName);
     const directory = path.join(MODULES_ROOT, moduleName);
-    const facadeFactory = require(path.join(directory, 'index.js'));
-    if (typeof facadeFactory !== 'function') {
-      throw new TypeError(`${moduleName}/index.js must export a facade factory`);
-    }
     const externals = Object.freeze(Object.fromEntries(allowedExternal[moduleName].map((name) => {
       if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
       return [name, services[name]];
@@ -97,15 +93,18 @@ function createRepositoryContainer() {
     for (const [name, registration] of internalOverrides.get(moduleName) ?? []) {
       local.container.register(name, registration);
     }
-    const definitions = ['queries', 'commands'].includes(moduleName)
-      ? listModules('definitions/**/*.js', { cwd: directory }).map(({ path: fileName }) => ({
-        name: moduleNameFromFile(fileName),
-        commandName: path.basename(fileName, '.js'),
-        group: commandGroup(moduleName, directory, fileName),
-        fileName,
-      }))
-      : [];
-    const facade = facadeFactory({ resolve: (name) => local.container.resolve(name), definitions });
+    if (['queries', 'commands'].includes(moduleName)) {
+      const definitions = listModules('definitions/**/*.js', { cwd: directory })
+        .map(({ path: fileName }) => ({
+          name: moduleNameFromFile(fileName),
+          commandName: path.basename(fileName, '.js'),
+          group: commandGroup(moduleName, directory, fileName),
+          fileName,
+          value: local.container.resolve(moduleNameFromFile(fileName)),
+        }));
+      local.container.register('definitions', asValue(Object.freeze(definitions)));
+    }
+    const facade = local.container.resolve('index');
     if (!facade || typeof facade !== 'object') {
       throw new TypeError(`${moduleName}/index.js must return a facade`);
     }

@@ -1,16 +1,18 @@
 'use strict';
 
 module.exports = ({
-  decimal: {
-    addDecimals,
-    compareDecimals,
-    formatDecimal,
-    multiplyDecimals,
-    parseDecimal,
-    subtractDecimals,
+  core: {
+    decimal: {
+      addDecimals,
+      compareDecimals,
+      formatDecimal,
+      multiplyDecimals,
+      parseDecimal,
+      subtractDecimals,
+    },
+    apiOptions: { accounts, dateBasis, dateOption, parseOptions },
   },
   accountFilter: { accountFilter },
-  apiOptions: { accounts, dateBasis, dateOption, parseOptions },
   valuationRates: { queryValuationRates },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
   external: {
