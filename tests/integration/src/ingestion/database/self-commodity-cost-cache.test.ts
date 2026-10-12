@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -10,7 +12,7 @@ const { resolveRepositoryModule } = require('../../../../support/repository-cont
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
   resolveRepositoryModule('src/modules/database/internal/database.js');
 
-test('rebuilds cached diagnostics for a non-nominal reporting-currency cost', (t: any) => {
+test('rebuilds cached diagnostics for a non-nominal reporting-currency cost', (t: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-self-commodity-cost-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');

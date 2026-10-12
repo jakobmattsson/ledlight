@@ -1,5 +1,9 @@
 'use strict';
 
+type RootSource = { content: string; baseDirectory: string };
+type JournalFile = { path: string; sha256: string; size: number };
+type TraversedFile = { content: string; path: string; include(path: string, line?: number): void };
+
 module.exports = ({
   includePattern: { expandIncludePattern },
   external: {
@@ -10,12 +14,12 @@ module.exports = ({
   },
 }: any) => {
 
-  function traverseJournal(journalPath: any, processFile: any, rootSource: any) {
+  function traverseJournal(journalPath: string, processFile: (file: TraversedFile) => void, rootSource?: RootSource) {
     const resolvedJournalPath = rootSource ? journalPath : path.resolve(journalPath);
-    const filesByPath = new Map();
-    const active = new Set();
+    const filesByPath = new Map<string, JournalFile>();
+    const active = new Set<string>();
 
-    function load(filePath: any, source?: any) {
+    function load(filePath: string, source?: RootSource): void {
       const absolutePath = source ? filePath : path.resolve(filePath);
       if (active.has(absolutePath)) throw new Error(`Circular include detected at ${absolutePath}`);
       if (filesByPath.has(absolutePath)) return;
@@ -35,7 +39,7 @@ module.exports = ({
         processFile({
           content,
           path: absolutePath,
-          include(includePath: any, line: any) {
+          include(includePath: string, line?: number) {
             const includePattern = path.resolve(
               source?.baseDirectory ?? path.dirname(absolutePath), includePath,
             );

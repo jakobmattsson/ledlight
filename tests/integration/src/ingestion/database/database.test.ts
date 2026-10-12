@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const { resolveRepositoryModule } = require("../../../../support/repository-container");
 
 const assert = require('node:assert/strict');
@@ -22,13 +24,13 @@ const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-database-
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
 
-function temporaryDirectory(t: any) {
+function temporaryDirectory(t: TestContext) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   return directory;
 }
 
-test('requires a source journal and preserves filesystem errors from rebuilds', (t: any) => {
+test('requires a source journal and preserves filesystem errors from rebuilds', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const databasePath = path.join(directory, 'journal.sqlite');
   const journalPath = path.join(directory, 'missing.ledger');
@@ -42,7 +44,7 @@ test('requires a source journal and preserves filesystem errors from rebuilds', 
   });
 });
 
-test('stores a journal as normalized, queryable SQLite data', (t: any) => {
+test('stores a journal as normalized, queryable SQLite data', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'all.ledger');
   const transactionsPath = path.join(directory, 'transactions.ledger');
@@ -180,7 +182,7 @@ P 2024-01-01 FUND 123.45 SEK
   assert.equal(database.pragma('integrity_check', { simple: true }), 'ok');
 });
 
-test('stores assignments and assertions in the same balance columns', (t: any) => {
+test('stores assignments and assertions in the same balance columns', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -224,7 +226,7 @@ test('stores assignments and assertions in the same balance columns', (t: any) =
   ]);
 });
 
-test('stores posting dates separately from comment text', (t: any) => {
+test('stores posting dates separately from comment text', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -249,7 +251,7 @@ test('stores posting dates separately from comment text', (t: any) => {
   ]);
 });
 
-test('stores lot costs separately from transaction costs', (t: any) => {
+test('stores lot costs separately from transaction costs', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -282,7 +284,7 @@ test('stores lot costs separately from transaction costs', (t: any) => {
   );
 });
 
-test('materializes exact account and commodity balances in posting-date order', (t: any) => {
+test('materializes exact account and commodity balances in posting-date order', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -322,7 +324,7 @@ test('materializes exact account and commodity balances in posting-date order', 
   ]);
 });
 
-test('materializes Ledger-compatible resolvable price choices', (t: any) => {
+test('materializes Ledger-compatible resolvable price choices', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -355,7 +357,7 @@ P 2024-02-01 FUND 2 NOK
   );
 });
 
-test('detects when source files and database contents differ', (t: any) => {
+test('detects when source files and database contents differ', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'all.ledger');
   const transactionsPath = path.join(directory, 'transactions.ledger');
@@ -382,7 +384,7 @@ test('detects when source files and database contents differ', (t: any) => {
   assert.deepEqual(status.changed, [transactionsPath]);
 });
 
-test('detects source files added to and removed from an include glob', (t: any) => {
+test('detects source files added to and removed from an include glob', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const entriesDirectory = path.join(directory, 'entries');
   fs.mkdirSync(entriesDirectory);
@@ -407,7 +409,7 @@ test('detects source files added to and removed from an include glob', (t: any) 
   assert.deepEqual(status.removed, [firstPath]);
 });
 
-test('skips syntax-invalid transactions before database insertion', (t: any) => {
+test('skips syntax-invalid transactions before database insertion', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -434,7 +436,7 @@ commodity SEK
   assert.equal(fs.existsSync(databasePath), true);
 });
 
-test('rebuilds an older cache to persist the missing default warning', (t: any) => {
+test('rebuilds an older cache to persist the missing default warning', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -455,7 +457,7 @@ test('rebuilds an older cache to persist the missing default warning', (t: any) 
   assert.deepEqual(result.summary.warnings.map(({ code }: any) => code), ['MISSING_DEFAULT_COMMODITY']);
 });
 
-test('stores non-default commodity trades and reports invalid annotations as warnings', (t: any) => {
+test('stores non-default commodity trades and reports invalid annotations as warnings', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -479,7 +481,7 @@ account Assets:Cash
   assert.equal(fs.existsSync(databasePath), true);
 });
 
-test('stores a zero-value non-default commodity acquisition', (t: any) => {
+test('stores a zero-value non-default commodity acquisition', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -511,7 +513,7 @@ test('stores a zero-value non-default commodity acquisition', (t: any) => {
   );
 });
 
-test('uses the first default commodity and warns about every later declaration', (t: any) => {
+test('uses the first default commodity and warns about every later declaration', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -542,7 +544,7 @@ commodity EUR
   assert.equal(fs.existsSync(databasePath), true);
 });
 
-test('aggregate command builds stale databases but reuses current databases', (t: any) => {
+test('aggregate command builds stale databases but reuses current databases', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(journalPath, `commodity SEK

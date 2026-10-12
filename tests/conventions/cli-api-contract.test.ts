@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const withExternal = require('../support/external-dependencies.js');
 const fs = require('node:fs');
@@ -19,7 +21,7 @@ const argumentsModule = createArguments({
   project,
 });
 
-test('defines exactly one CLI command for every public journal operation', (t: any) => {
+test('defines exactly one CLI command for every public journal operation', (t: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-api-contract-'));
   const previousCacheHome = process.env.LEDLIGHT_CACHE_HOME;
   process.env.LEDLIGHT_CACHE_HOME = path.join(directory, 'cache');

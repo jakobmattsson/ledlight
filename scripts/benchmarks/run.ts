@@ -15,30 +15,35 @@ const cacheDirectory = path.join(directory, 'cache');
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 const { openJournal } = require('../..');
 
-function elapsedMilliseconds(operation: any) {
+function elapsedMilliseconds<T>(operation: () => T): { value: T; milliseconds: number } {
   const start = process.hrtime.bigint();
   const value = operation();
   const milliseconds = Number(process.hrtime.bigint() - start) / 1000000;
   return { value, milliseconds };
 }
 
-function median(values: any) {
-  const sorted = [...values].sort((left: any, right: any) => left - right);
+function median(values: number[]): number {
+  const sorted = [...values].sort((left, right) => left - right);
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-function verifyFixture(journal: any, aggregateRows: any) {
+function verifyFixture(journal: {
+  warnings: unknown[];
+  accounts(options: { usage: string }): Array<{ used: boolean }>;
+  tags(options: { usage: string }): unknown[];
+  databasePath: string;
+}, aggregateRows: Array<{ account: string }>): void {
   assert.deepEqual(journal.warnings, []);
   const accounts = journal.accounts({ usage: 'all' });
   assert.equal(accounts.length, ACCOUNT_COUNT);
-  assert.ok(accounts.every(({ used }: any) => used));
-  const nonzeroAccounts = new Set(aggregateRows.map(({ account }: any) => account));
+  assert.ok(accounts.every(({ used }) => used));
+  const nonzeroAccounts = new Set(aggregateRows.map(({ account }) => account));
   assert.equal(ACCOUNT_COUNT - nonzeroAccounts.size, 55);
   assert.equal(journal.tags({ usage: 'used' }).length, 7);
 
   const database = new Database(journal.databasePath, { readonly: true });
   try {
-    const count = (table: any) => database.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count;
+    const count = (table: string) => database.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count;
     assert.equal(count('transactions'), TRANSACTION_COUNT);
     assert.equal(count('postings'), 10400);
     assert.equal(count('prices'), PRICE_COUNT);
@@ -64,7 +69,7 @@ function verifyFixture(journal: any, aggregateRows: any) {
 
 try {
   generateJournal(journalPath);
-  const samples: any = { cold: [], warm: [], aggregate: [] };
+  const samples: { cold: number[]; warm: number[]; aggregate: number[] } = { cold: [], warm: [], aggregate: [] };
   for (let iteration = 0; iteration < 3; iteration += 1) {
     fs.rmSync(cacheDirectory, { recursive: true, force: true });
     const cold = elapsedMilliseconds(() => openJournal(journalPath));

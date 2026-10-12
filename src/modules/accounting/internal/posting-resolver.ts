@@ -1,5 +1,10 @@
 'use strict';
 
+import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../../../public-api';
+
+type Decimal = { coefficient: bigint; scale: number };
+type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+
 module.exports = ({
   core: {
     decimal: {
@@ -19,36 +24,36 @@ module.exports = ({
 
   const ZERO = parseDecimal('0');
 
-  function balanceKey(account: any, commodity: any) {
+  function balanceKey(account: string, commodity: string): string {
     return `${account}\u0000${commodity}`;
   }
 
-  function addToMap(map: any, key: any, value: any) {
+  function addToMap(map: Map<string, Decimal>, key: string, value: Decimal): void {
     map.set(key, addDecimals(map.get(key) || ZERO, value));
   }
 
-  function isCommodityExchange(residuals: any) {
+  function isCommodityExchange(residuals: Array<[string, Decimal]>): boolean {
     return residuals.length === 2 &&
     (residuals[0][1].coefficient < 0n) !== (residuals[1][1].coefficient < 0n);
   }
 
-  function balancingCost(posting: any, postings: any) {
+  function balancingCost(posting: LedgerPosting, postings: LedgerPosting[]): LedgerCost | null {
     if (posting.cost) return posting.lotCost || posting.cost;
     if (!posting.lotCost) return null;
     const costCommodity = posting.lotCost.amount.commodity;
-    const hasImplicitPosting = postings.some((candidate: any) =>
+    const hasImplicitPosting = postings.some((candidate) =>
       !candidate.amount && !candidate.balanceAssignment);
-    const hasMatchingPosting = postings.some((candidate: any) =>
+    const hasMatchingPosting = postings.some((candidate) =>
       candidate !== posting &&
       (candidate.amount?.commodity || candidate.balanceAssignment?.commodity) === costCommodity);
-    const samePostingCommodity = postings.length > 1 && postings.every((candidate: any) =>
+    const samePostingCommodity = postings.length > 1 && postings.every((candidate) =>
       (candidate.amount?.commodity || candidate.balanceAssignment?.commodity) ===
         posting.amount?.commodity);
     return hasImplicitPosting || hasMatchingPosting || samePostingCommodity
       ? posting.lotCost : null;
   }
 
-  function balancingAmount(annotation: any, amount: any) {
+  function balancingAmount(annotation: LedgerCost | null, amount: LedgerAmount): LedgerAmount {
     if (!annotation) return amount;
     const cost = parseDecimal(annotation.amount.quantity);
     let quantity;
@@ -62,30 +67,30 @@ module.exports = ({
   }
 
   class PostingResolver {
-    balances: any;
-    warnings: any;
-    constructor(warnings: any) {
-      this.balances = new Map();
+    balances: Map<string, Decimal>;
+    warnings: unknown[];
+    constructor(warnings: unknown[]) {
+      this.balances = new Map<string, Decimal>();
       this.warnings = warnings || [];
     }
 
-    accountBalance(account: any, commodity: any) {
+    accountBalance(account: string, commodity: string): Decimal {
       return this.balances.get(balanceKey(account, commodity)) || ZERO;
     }
 
-    apply(account: any, amount: any) {
+    apply(account: string, amount: LedgerAmount): void {
       addToMap(this.balances, balanceKey(account, amount.commodity), parseDecimal(amount.quantity));
     }
 
-    resolve(transaction: any) {
+    resolve(transaction: Transaction): LedgerAmount[][] | null {
       const balancesBeforeTransaction = new Map(this.balances);
-      const resolved = transaction.postings.map(() => []);
-      const transactionBalance = new Map();
+      const resolved: LedgerAmount[][] = transaction.postings.map(() => []);
+      const transactionBalance = new Map<string, Decimal>();
       let implicitPosition: number | null = null;
       let hasCost = false;
       let invalidTransaction = false;
 
-      transaction.postings.forEach((posting: any, position: any) => {
+      transaction.postings.forEach((posting, position) => {
         if (invalidTransaction) return;
         const annotation = balancingCost(posting, transaction.postings);
         if (annotation) hasCost = true;
@@ -137,18 +142,18 @@ module.exports = ({
         return null;
       }
 
-      const residuals = [...transactionBalance].filter(([, residual]: any) =>
+      const residuals = [...transactionBalance].filter(([, residual]) =>
         compareDecimals(residual, ZERO) !== 0);
       if (implicitPosition !== null) {
         const posting = transaction.postings[implicitPosition];
         for (const [commodity, residual] of residuals) {
-          const amount: any = { quantity: formatDecimal(negateDecimal(residual)), commodity };
+          const amount: LedgerAmount = { quantity: formatDecimal(negateDecimal(residual)), commodity };
           resolved[implicitPosition].push(amount);
           this.apply(posting.account, amount);
         }
       } else if (residuals.length > 0 && (hasCost || !isCommodityExchange(residuals))) {
         const imbalance = residuals
-          .map(([commodity, residual]: any) => `${formatDecimal(residual)} ${commodity}`)
+          .map(([commodity, residual]) => `${formatDecimal(residual)} ${commodity}`)
           .join(', ');
         this.warnings.push(createWarning(
           warningCodes.UNBALANCED_TRANSACTION,

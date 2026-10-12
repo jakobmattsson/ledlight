@@ -1,5 +1,8 @@
 'use strict';
 
+type ManifestFile = { path: string; sha256: string; size: number };
+type JournalManifest = { journalPath: string; files: ManifestFile[] };
+
 module.exports = ({
   journal: {
     journalManifest: { loadJournalManifest },
@@ -12,7 +15,7 @@ module.exports = ({
   },
 }: any) => {
 
-  function databaseWithoutSchema(databasePath: any, journalPath: any, reason: any) {
+  function databaseWithoutSchema(databasePath: string, journalPath: string, reason: string) {
     return {
       databasePath: path.resolve(databasePath),
       journalPath: path.resolve(journalPath),
@@ -24,7 +27,7 @@ module.exports = ({
     };
   }
 
-  function checkDatabaseSync(databasePath: any, journalPath: any) {
+  function checkDatabaseSync(databasePath: string, journalPath: string) {
     const resolvedDatabasePath = path.resolve(databasePath);
     if (!fs.existsSync(resolvedDatabasePath)) {
       return databaseWithoutSchema(databasePath, journalPath, 'database_missing');
@@ -53,20 +56,20 @@ module.exports = ({
         return databaseWithoutSchema(databasePath, journalPath, 'schema_version_mismatch');
       }
 
-      const journal = loadJournalManifest(journalPath);
+      const journal: JournalManifest = loadJournalManifest(journalPath);
       const storedFiles = database.prepare(
         'SELECT path, sha256, size FROM source_files ORDER BY id',
-      ).all();
-      const storedByPath = new Map(storedFiles.map((file: any) => [file.path, file]));
-      const currentByPath = new Map(journal.files.map((file: any) => [file.path, file]));
-      const added = journal.files.filter((file: any) => !storedByPath.has(file.path)).map((file: any) => file.path);
-      const removed = storedFiles.filter((file: any) => !currentByPath.has(file.path)).map((file: any) => file.path);
+      ).all() as ManifestFile[];
+      const storedByPath = new Map(storedFiles.map((file) => [file.path, file]));
+      const currentByPath = new Map(journal.files.map((file) => [file.path, file]));
+      const added = journal.files.filter((file) => !storedByPath.has(file.path)).map((file) => file.path);
+      const removed = storedFiles.filter((file) => !currentByPath.has(file.path)).map((file) => file.path);
       const changed = journal.files
-        .filter((file: any) => {
+        .filter((file) => {
           const stored = storedByPath.get(file.path);
-          return stored && ((stored as any).sha256 !== file.sha256 || (stored as any).size !== file.size);
+          return stored && (stored.sha256 !== file.sha256 || stored.size !== file.size);
         })
-        .map((file: any) => file.path);
+        .map((file) => file.path);
       const rootMatches = metadata.get('root_path') === journal.journalPath;
       const inSync = rootMatches && added.length === 0 && removed.length === 0 && changed.length === 0;
 
@@ -84,7 +87,7 @@ module.exports = ({
     }
   }
 
-  function databaseJournalPath(databasePath: any) {
+  function databaseJournalPath(databasePath: string): string | null {
     const resolvedDatabasePath = path.resolve(databasePath);
     if (!fs.existsSync(resolvedDatabasePath)) return null;
     const database = new Database(resolvedDatabasePath, { readonly: true, fileMustExist: true });

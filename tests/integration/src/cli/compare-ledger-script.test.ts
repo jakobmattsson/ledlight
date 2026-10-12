@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -13,7 +15,7 @@ const script = path.join(root, 'scripts/ledger-compatibility/compare-ledger.js')
 const fixture = path.join(root, 'tests/api/queries/compatibility/ledger/ledger-basic-accounts.case');
 const ledgerBinary = process.env.LEDGER_BIN ?? 'ledger';
 
-function withJournal(t: any, source: any) {
+function withJournal(t: TestContext, source: any) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-compare-script-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journal = path.join(directory, 'journal.ledger');
@@ -39,7 +41,7 @@ test('comparison command help explains its parameters and shows examples', () =>
   assert.match(result.stdout, /Examples:\n {2}ledlight-cmp --list\n {2}ledlight-cmp --file main\.ledger/u);
 });
 
-test('comparison matrix applies ISO dates to every Ledger command', (t: any) => {
+test('comparison matrix applies ISO dates to every Ledger command', (t: TestContext) => {
   const { directory, journal } = withJournal(t, parseCase(fixture).file);
   const matrix = runComparison(directory, ['--list']);
   assert.equal(matrix.stderr, '');
@@ -52,7 +54,7 @@ test('comparison matrix applies ISO dates to every Ledger command', (t: any) => 
   assert.equal(result.stderr, '');
 });
 
-test('comparison script checks balances with market gains and a nonzero total', (t: any) => {
+test('comparison script checks balances with market gains and a nonzero total', (t: TestContext) => {
   const { directory, journal } = withJournal(t, `commodity SEK
   default
   format 1,000.00 SEK

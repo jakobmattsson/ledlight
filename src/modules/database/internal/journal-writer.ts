@@ -1,5 +1,18 @@
 'use strict';
 
+import type { LedgerAmount, LedgerComment, LedgerEntry } from '../../../public-api';
+
+type Statement = { run(...values: unknown[]): unknown };
+type Statements = Record<string, Statement>;
+type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+type CommodityProperty = Extract<LedgerEntry, { type: 'commodity' }>['properties'][number];
+type LocatedTag = { name: string; value: string | null; location: { line: number } };
+type Counters = { posting: number; resolvedAmount: number; postingBalance?: number; valuationPrice?: number };
+type Usage = { accounts: Set<string>; commodities: Set<string>; tags: Set<string> };
+type Warning = { code: string; message: string; source: string; line: number; column: number; startLine: number; endLine: number };
+type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: string; size: number }>;
+  entries: LedgerEntry[]; warnings?: Warning[] };
+
 module.exports = ({
   core: {
     decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
@@ -20,14 +33,14 @@ module.exports = ({
   },
 }: any) => {
 
-  function amountFields(amount: any) {
+  function amountFields(amount: LedgerAmount | null | undefined) {
     return {
       quantity: amount ? amount.quantity : null,
       commodity: amount ? amount.commodity : null,
     };
   }
 
-  function prepareStatements(database: any) {
+  function prepareStatements(database: { prepare(sql: string): Statement }): Statements {
     return {
       databaseMetadata: database.prepare('INSERT INTO database_metadata (key, value) VALUES (?, ?)'),
       sourceFile: database.prepare(`
@@ -86,14 +99,14 @@ module.exports = ({
     };
   }
 
-  function insertComments(statement: any, comments: any, ownerLine: any, transactionId: any, postingId: any) {
+  function insertComments(statement: Statement, comments: LedgerComment[], ownerLine: number, transactionId: number | null, postingId: number | null): void {
     for (const comment of comments) {
       const position = comment.location.line - ownerLine;
       statement.run(transactionId, postingId, position, comment.text);
     }
   }
 
-  function insertTags(statement: any, tags: any, ownerLine: any, transactionId: any, postingId: any) {
+  function insertTags(statement: Statement, tags: LocatedTag[], ownerLine: number, transactionId: number | null, postingId: number | null): void {
     let previousPosition = -1;
     let ordinal = 0;
     for (const tag of tags) {
@@ -104,15 +117,15 @@ module.exports = ({
     }
   }
 
-  function insertTransaction(statements: any, entryId: any, entry: any, counters: any, resolvedPostings: any) {
+  function insertTransaction(statements: Statements, entryId: number, entry: Transaction, counters: Counters, resolvedPostings: LedgerAmount[][]): void {
     statements.transaction.run(
       entryId, entry.date, entry.description,
     );
 
     insertComments(statements.comment, entry.comments, entry.location.line, entryId, null);
-    insertTags(statements.entryTag, entry.tags || [], entry.location.line, entryId, null);
+    insertTags(statements.entryTag, (entry.tags || []) as LocatedTag[], entry.location.line, entryId, null);
 
-    entry.postings.forEach((posting: any, position: any) => {
+    entry.postings.forEach((posting, position) => {
       const amount = amountFields(posting.amount);
       const lotCost = amountFields(posting.lotCost && posting.lotCost.amount);
       const cost = amountFields(posting.cost && posting.cost.amount);
@@ -126,8 +139,8 @@ module.exports = ({
         balance.quantity, balance.commodity,
       );
       insertComments(statements.comment, posting.comments, posting.location.line, null, postingId);
-      insertTags(statements.entryTag, posting.tags || [], posting.location.line, null, postingId);
-      resolvedPostings[position].forEach((resolvedAmount: any, amountPosition: any) => {
+      insertTags(statements.entryTag, (posting.tags || []) as LocatedTag[], posting.location.line, null, postingId);
+      resolvedPostings[position].forEach((resolvedAmount, amountPosition) => {
         statements.resolvedPostingAmount.run(
           ++counters.resolvedAmount, postingId, amountPosition,
           resolvedAmount.quantity, resolvedAmount.commodity,
@@ -138,14 +151,15 @@ module.exports = ({
   }
 
   function insertEntry(
-    statements: any, entryId: any, entry: any, counters: any, resolvedTransactions: any, ignoredProperties: any, usage: any,
-  ) {
+    statements: Statements, entryId: number, entry: LedgerEntry, counters: Counters,
+    resolvedTransactions: Map<Transaction, LedgerAmount[][]>, ignoredProperties: Set<CommodityProperty>, usage: Usage,
+  ): void {
     switch (entry.type) {
       case 'comment':
         statements.fileComment.run(entryId, entry.text);
         break;
       case 'transaction':
-        insertTransaction(statements, entryId, entry, counters, resolvedTransactions.get(entry));
+        insertTransaction(statements, entryId, entry, counters, resolvedTransactions.get(entry)!);
         break;
       case 'price':
         statements.price.run(
@@ -160,33 +174,33 @@ module.exports = ({
         statements.tag.run(entryId, entry.name, entry.comment, Number(usage.tags.has(entry.name)));
         break;
       case 'commodity': {
-        const properties = entry.properties.filter((property: any) => !ignoredProperties.has(property));
+        const properties = entry.properties.filter((property) => !ignoredProperties.has(property));
         statements.commodity.run(
           entryId, entry.symbol, entry.comment,
-          properties.findLast((property: any) => property.name === 'format')?.value ?? null,
-          Number(properties.some((property: any) => property.name === 'default')),
+          properties.slice().reverse().find((property) => property.name === 'format')?.value ?? null,
+          Number(properties.some((property) => property.name === 'default')),
           Number(usage.commodities.has(entry.symbol)),
         );
         break;
       }
       default:
-        throw new Error(`Cannot store unsupported journal entry type: ${entry.type}`);
+        throw new Error(`Cannot store unsupported journal entry type: ${(entry as LedgerEntry).type}`);
     }
   }
 
-  function declarationUsage(entries: any, resolvedTransactions: any) {
-    const usage: any = {
-      accounts: new Set(),
-      commodities: new Set(),
-      tags: new Set(),
+  function declarationUsage(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>): Usage {
+    const usage: Usage = {
+      accounts: new Set<string>(),
+      commodities: new Set<string>(),
+      tags: new Set<string>(),
     };
     for (const entry of entries) {
       if (entry.type !== 'transaction') continue;
       const resolvedPostings = resolvedTransactions.get(entry);
       if (!resolvedPostings) continue;
       let transactionUsed = false;
-      entry.postings.forEach((posting: any, position: any) => {
-        const postingUsed = resolvedPostings[position].some(({ quantity }: any) =>
+      entry.postings.forEach((posting, position) => {
+        const postingUsed = resolvedPostings[position].some(({ quantity }) =>
           compareDecimals(parseDecimal(quantity), parseDecimal('0')) !== 0);
         if (!postingUsed) return;
         transactionUsed = true;
@@ -210,18 +224,18 @@ module.exports = ({
     return usage;
   }
 
-  function writeJournalDatabase(databasePath: any, journal: any) {
+  function writeJournalDatabase(databasePath: string, journal: JournalInput) {
     const warnings = [...(journal.warnings || [])];
-    const ignoredProperties = new Set();
+    const ignoredProperties = new Set<CommodityProperty>();
     const valuationCommodity = valuationCommodityFromJournal(
       journal, warnings, ignoredProperties,
     );
-    const inferredWarnings: any = [];
+    const inferredWarnings: Warning[] = [];
     inferEffectivePostingCosts(journal.entries, valuationCommodity, inferredWarnings);
     const validation = validateJournal(journal, valuationCommodity, warnings);
     validation.warnings.push(...inferredWarnings);
     const postingResolver = new PostingResolver(validation.warnings);
-    const resolvedTransactions = new Map();
+    const resolvedTransactions = new Map<Transaction, LedgerAmount[][]>();
     for (const entry of journal.entries) {
       if (validation.invalidEntries.has(entry) || entry.type !== 'transaction') continue;
       const resolved = postingResolver.resolve(entry);
@@ -230,7 +244,7 @@ module.exports = ({
         resolvedTransactions.set(entry, resolved);
       }
     }
-    const storableEntries = journal.entries.filter((entry: any) =>
+    const storableEntries = journal.entries.filter((entry) =>
       !validation.invalidEntries.has(entry) &&
       (entry.type !== 'transaction' || resolvedTransactions.has(entry)));
     validateGlobalAccounting(
@@ -267,17 +281,17 @@ module.exports = ({
         }
 
         const sourceIds = new Map();
-        journal.files.forEach((file: any, index: any) => {
+        journal.files.forEach((file, index) => {
           const fileId = index + 1;
           statements.sourceFile.run(fileId, file.path, file.sha256, file.size);
           sourceIds.set(file.path, fileId);
         });
 
-        const counters: any = {
+        const counters: Counters = {
           posting: 0,
           resolvedAmount: 0,
         };
-        storableEntries.forEach((entry: any, index: any) => {
+        storableEntries.forEach((entry, index) => {
           const sourceFileId = sourceIds.get(entry.location.source);
           if (sourceFileId === undefined) {
             throw new Error(`Journal entry refers to an unregistered source file: ${entry.location.source}`);
@@ -291,7 +305,7 @@ module.exports = ({
           );
         });
 
-        validation.warnings.forEach((warning: any, position: any) => {
+        validation.warnings.forEach((warning: Warning, position: number) => {
           insertWarning.run(
             position, warning.code, warning.message, warning.source, warning.line, warning.column,
             warning.startLine, warning.endLine,
@@ -310,11 +324,11 @@ module.exports = ({
         journalPath: journal.journalPath,
         files: journal.files.length,
         entries: storableEntries.length,
-        transactions: storableEntries.filter((entry: any) => entry.type === 'transaction').length,
+        transactions: storableEntries.filter((entry) => entry.type === 'transaction').length,
         postings: counters.posting,
         postingAmounts: counters.resolvedAmount,
         postingBalances: counters.postingBalance,
-        prices: storableEntries.filter((entry: any) => entry.type === 'price').length,
+        prices: storableEntries.filter((entry) => entry.type === 'price').length,
         valuationCommodity,
         valuationPrices: counters.valuationPrice,
         warnings: validation.warnings,

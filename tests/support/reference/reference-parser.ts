@@ -29,10 +29,10 @@ module.exports = ({
   }
 
   function values(node: Node, source: string) {
-    return node.children.map((child: any) => child.ast(source));
+    return node.children.map((child: Node) => child.ast(source));
   }
 
-  function comment(text: any, where: any) {
+  function comment(text: string, where: { source: string; line: number; column: number }) {
     return {
       text,
       key: null,
@@ -41,12 +41,12 @@ module.exports = ({
     };
   }
 
-  function parsedComment(text: any, tags: any, where: any) {
+  function parsedComment(text: string, tags: Array<{ name: string; value: string | null }>, where: { source: string; line: number; column: number }) {
     const binary = tags.length > 0 && tags[0].value === null;
     const remainingText = binary
       ? text.replace(/^:[^\s:;]+(?::[^\s:;]+)*:(?:[ \t]+)?/u, '').trim()
       : tags.length > 0 ? '' : text;
-    const locatedTags = tags.map((tag: any) => {
+    const locatedTags = tags.map((tag) => {
       Object.defineProperty(tag, 'location', { value: where });
       return tag;
     });
@@ -245,7 +245,7 @@ module.exports = ({
     },
     metadataComment_text(_text: Node) { return []; },
     binaryTags(_open: Node, _first: Node, _separators: Node, _names: Node, _close: Node) {
-      return this.sourceString.slice(1, -1).split(':').map((name: any) => ({ name, value: null }));
+      return this.sourceString.slice(1, -1).split(':').map((name: string) => ({ name, value: null }));
     },
     topLevel_blank(_space: Node, _newline: Node) { return null; },
 
@@ -253,7 +253,7 @@ module.exports = ({
       return parseDate(this.sourceString, this, this.args.source);
     },
 
-    _iter(...children: Node[]) { return children.map((child: any) => child.ast(this.args.source)); },
+    _iter(...children: Node[]) { return children.map((child: Node) => child.ast(this.args.source)); },
     _terminal() { return this.sourceString; },
   });
 

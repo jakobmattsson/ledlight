@@ -1,5 +1,10 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
+type Column = { name: string; notnull: number };
+type ForeignKey = { table: string; from: string; to: string };
+
 const { resolveRepositoryModule } = require("../../../../support/repository-container");
 
 const assert = require('node:assert/strict');
@@ -10,7 +15,7 @@ const test = require('node:test');
 const Database = require('better-sqlite3');
 const { migrateDatabase } = resolveRepositoryModule("src/modules/database/internal/database-migration.js");
 
-function temporaryDatabase(t: any) {
+function temporaryDatabase(t: TestContext) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-migrate-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const database = new Database(path.join(directory, 'journal.sqlite'));
@@ -18,7 +23,7 @@ function temporaryDatabase(t: any) {
   return database;
 }
 
-test('creates the current schema in an empty database', (t: any) => {
+test('creates the current schema in an empty database', (t: TestContext) => {
   const database = temporaryDatabase(t);
   migrateDatabase(database);
 
@@ -30,7 +35,7 @@ test('creates the current schema in an empty database', (t: any) => {
   assert.ok(!tables.includes('metadata'));
   assert.ok(tables.includes('journal_entries'));
   assert.ok(!database.pragma('table_info(journal_entries)')
-    .some((column: any) => column.name === 'printed_text'));
+    .some((column: Column) => column.name === 'printed_text'));
   assert.ok(!tables.includes('transaction_tags'));
   assert.ok(!tables.includes('posting_tags'));
   assert.ok(tables.includes('tags'));
@@ -45,14 +50,14 @@ test('creates the current schema in an empty database', (t: any) => {
     'account_declarations', 'tag_declarations', 'commodity_declarations',
   ]) {
     const used = database.pragma(`table_info(${table})`)
-      .find((column: any) => column.name === 'used');
+      .find((column: Column) => column.name === 'used');
     assert.equal(used.notnull, 1);
     assert.equal(used.dflt_value, '0');
   }
   const reportDate = database.pragma('table_info(postings)')
-    .find((column: any) => column.name === 'posting_date');
+    .find((column: Column) => column.name === 'posting_date');
   assert.equal(reportDate.notnull, 1);
-  const postingColumns = database.pragma('table_info(postings)').map((column: any) => column.name);
+  const postingColumns = database.pragma('table_info(postings)').map((column: Column) => column.name);
   assert.ok(postingColumns.includes('lot_cost_quantity'));
   assert.ok(postingColumns.includes('lot_cost_commodity'));
   assert.ok(postingColumns.includes('lot_cost_is_total'));
@@ -60,45 +65,45 @@ test('creates the current schema in an empty database', (t: any) => {
   assert.ok(!postingColumns.includes('line'));
   assert.ok(postingColumns.includes('balance_quantity'));
   assert.ok(postingColumns.includes('balance_commodity'));
-  assert.ok(!postingColumns.some((column: any) => column.startsWith('balance_assignment_')));
-  assert.ok(!postingColumns.some((column: any) => column.startsWith('balance_assertion_')));
-  assert.ok(!database.pragma('table_info(comments)').some((column: any) => column.name === 'line'));
+  assert.ok(!postingColumns.some((column: string) => column.startsWith('balance_assignment_')));
+  assert.ok(!postingColumns.some((column: string) => column.startsWith('balance_assertion_')));
+  assert.ok(!database.pragma('table_info(comments)').some((column: Column) => column.name === 'line'));
   assert.deepEqual(
-    database.pragma('table_info(tags)').map((column: any) => column.name),
+    database.pragma('table_info(tags)').map((column: Column) => column.name),
     ['id', 'transaction_id', 'posting_id', 'position', 'ordinal', 'name', 'value'],
   );
   assert.deepEqual(
-    database.pragma('table_info(file_comments)').map((column: any) => column.name),
+    database.pragma('table_info(file_comments)').map((column: Column) => column.name),
     ['entry_id', 'text'],
   );
   assert.deepEqual(
     database.pragma('foreign_key_list(file_comments)')
-      .map(({ table, from, to }: any) => ({ table, from, to })),
+      .map(({ table, from, to }: ForeignKey) => ({ table, from, to })),
     [{ table: 'journal_entries', from: 'entry_id', to: 'id' }],
   );
   const resolvedColumns = database.pragma('table_info(resolved_posting_amounts)');
   assert.deepEqual(
-    resolvedColumns.map((column: any) => column.name),
+    resolvedColumns.map((column: Column) => column.name),
     ['id', 'posting_id', 'position', 'amount_quantity', 'amount_commodity', 'balance_quantity'],
   );
-  const balanceQuantity = resolvedColumns.find((column: any) => column.name === 'balance_quantity');
+  const balanceQuantity = resolvedColumns.find((column: Column) => column.name === 'balance_quantity');
   assert.equal(balanceQuantity.notnull, 1);
   assert.equal(balanceQuantity.dflt_value, "'0'");
   assert.deepEqual(
     database.pragma('index_info(postings_account_posting_date)')
-      .map((column: any) => column.name),
+      .map((column: Column) => column.name),
     ['account', 'posting_date'],
   );
   assert.deepEqual(
     database.pragma('index_info(postings_posting_date)')
-      .map((column: any) => column.name),
+      .map((column: Column) => column.name),
     ['posting_date'],
   );
   const commodityColumns = database.pragma('table_info(commodity_declarations)')
-    .map((column: any) => column.name);
+    .map((column: Column) => column.name);
   assert.ok(commodityColumns.includes('format'));
   assert.ok(commodityColumns.includes('is_default'));
-  const transactionColumns = database.pragma('table_info(transactions)').map((column: any) => column.name);
+  const transactionColumns = database.pragma('table_info(transactions)').map((column: Column) => column.name);
   assert.ok(!transactionColumns.includes('status'));
   assert.ok(!transactionColumns.includes('code'));
   assert.ok(!transactionColumns.includes('payee'));
@@ -106,10 +111,10 @@ test('creates the current schema in an empty database', (t: any) => {
   assert.ok(!transactionColumns.includes('comment'));
   const priceColumns = database.pragma('table_info(prices)');
   assert.deepEqual(
-    priceColumns.filter((column: any) => [
+    priceColumns.filter((column: Column) => [
       'base_commodity', 'quote_quantity', 'quote_commodity',
     ].includes(column.name))
-      .map(({ name, notnull }: any) => ({ name, notnull })),
+      .map(({ name, notnull }: Column) => ({ name, notnull })),
     [
       { name: 'base_commodity', notnull: 1 },
       { name: 'quote_quantity', notnull: 1 },
@@ -133,7 +138,7 @@ test('creates the current schema in an empty database', (t: any) => {
   );
 });
 
-test('enforces unique account, commodity, and tag declaration names', (t: any) => {
+test('enforces unique account, commodity, and tag declaration names', (t: TestContext) => {
   const database = temporaryDatabase(t);
   migrateDatabase(database);
   database.exec(`
@@ -167,7 +172,7 @@ test('enforces unique account, commodity, and tag declaration names', (t: any) =
   );
 });
 
-test('recreates a supported legacy cache with the current schema', (t: any) => {
+test('recreates a supported legacy cache with the current schema', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -185,7 +190,7 @@ test('recreates a supported legacy cache with the current schema', (t: any) => {
 
   migrateDatabase(database);
 
-  const columns = database.pragma('table_info(transactions)').map((column: any) => column.name);
+  const columns = database.pragma('table_info(transactions)').map((column: Column) => column.name);
   assert.ok(!columns.includes('status'));
   assert.ok(!columns.includes('code'));
   assert.equal(database.prepare('SELECT COUNT(*) FROM transactions').pluck().get(), 0);
@@ -196,7 +201,7 @@ test('recreates a supported legacy cache with the current schema', (t: any) => {
   assert.ok(!tables.includes('metadata'));
 });
 
-test('replaces version 28 comments and transaction notes with current comment tables', (t: any) => {
+test('replaces version 28 comments and transaction notes with current comment tables', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -212,10 +217,10 @@ test('replaces version 28 comments and transaction notes with current comment ta
   assert.ok(tables.includes('comments'));
   assert.ok(tables.includes('file_comments'));
   assert.ok(!tables.includes('transaction_notes'));
-  assert.ok(!database.pragma('table_info(transactions)').some((column: any) => column.name === 'comment'));
+  assert.ok(!database.pragma('table_info(transactions)').some((column: Column) => column.name === 'comment'));
 });
 
-test('replaces version 29 notes with current comment tables', (t: any) => {
+test('replaces version 29 notes with current comment tables', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -232,7 +237,7 @@ test('replaces version 29 notes with current comment tables', (t: any) => {
   assert.ok(!tables.includes('notes'));
 });
 
-test('replaces version 30 file comments with entry-owned comments', (t: any) => {
+test('replaces version 30 file comments with entry-owned comments', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -243,12 +248,12 @@ test('replaces version 30 file comments with entry-owned comments', (t: any) => 
   migrateDatabase(database);
 
   assert.deepEqual(
-    database.pragma('table_info(file_comments)').map((column: any) => column.name),
+    database.pragma('table_info(file_comments)').map((column: Column) => column.name),
     ['entry_id', 'text'],
   );
 });
 
-test('replaces version 31 posting balances with shared balance columns', (t: any) => {
+test('replaces version 31 posting balances with shared balance columns', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -258,13 +263,13 @@ test('replaces version 31 posting balances with shared balance columns', (t: any
 
   migrateDatabase(database);
 
-  const columns = database.pragma('table_info(postings)').map((column: any) => column.name);
+  const columns = database.pragma('table_info(postings)').map((column: Column) => column.name);
   assert.ok(columns.includes('balance_quantity'));
   assert.ok(columns.includes('balance_commodity'));
   assert.ok(!columns.includes('balance_assignment_quantity'));
 });
 
-test('replaces version 32 caches with normalized posting comments', (t: any) => {
+test('replaces version 32 caches with normalized posting comments', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -278,7 +283,7 @@ test('replaces version 32 caches with normalized posting comments', (t: any) => 
   assert.equal(database.prepare('SELECT COUNT(*) FROM comments').pluck().get(), 0);
 });
 
-test('replaces version 33 resolved amounts with consistently named columns', (t: any) => {
+test('replaces version 33 resolved amounts with consistently named columns', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -292,12 +297,12 @@ test('replaces version 33 resolved amounts with consistently named columns', (t:
   migrateDatabase(database);
 
   assert.deepEqual(
-    database.pragma('table_info(resolved_posting_amounts)').map((column: any) => column.name),
+    database.pragma('table_info(resolved_posting_amounts)').map((column: Column) => column.name),
     ['id', 'posting_id', 'position', 'amount_quantity', 'amount_commodity', 'balance_quantity'],
   );
 });
 
-test('replaces version 34 caches with separate transaction and posting tags', (t: any) => {
+test('replaces version 34 caches with separate transaction and posting tags', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -309,10 +314,10 @@ test('replaces version 34 caches with separate transaction and posting tags', (t
   migrateDatabase(database);
 
   assert.equal(database.prepare('SELECT COUNT(*) FROM comments').pluck().get(), 0);
-  assert.ok(database.pragma('table_info(tags)').some((column: any) => column.name === 'name'));
+  assert.ok(database.pragma('table_info(tags)').some((column: Column) => column.name === 'name'));
 });
 
-test('replaces version 35 caches with tag positions shared with comments', (t: any) => {
+test('replaces version 35 caches with tag positions shared with comments', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -322,10 +327,10 @@ test('replaces version 35 caches with tag positions shared with comments', (t: a
 
   migrateDatabase(database);
 
-  assert.ok(database.pragma('table_info(tags)').some((column: any) => column.name === 'ordinal'));
+  assert.ok(database.pragma('table_info(tags)').some((column: Column) => column.name === 'ordinal'));
 });
 
-test('removes stored print text when rebuilding a version 29 cache', (t: any) => {
+test('removes stored print text when rebuilding a version 29 cache', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE database_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -337,13 +342,13 @@ test('removes stored print text when rebuilding a version 29 cache', (t: any) =>
   migrateDatabase(database);
 
   assert.deepEqual(
-    database.pragma('table_info(journal_entries)').map((column: any) => column.name),
+    database.pragma('table_info(journal_entries)').map((column: Column) => column.name),
     ['id', 'source_file_id', 'line'],
   );
   assert.equal(database.prepare('SELECT COUNT(*) FROM journal_entries').pluck().get(), 0);
 });
 
-test('rejects unsupported schema versions', (t: any) => {
+test('rejects unsupported schema versions', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;

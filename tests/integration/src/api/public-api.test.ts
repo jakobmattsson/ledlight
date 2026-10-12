@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -34,7 +36,7 @@ test('validates public parser API inputs', () => {
   );
 });
 
-test('warns when a posting uses an unquoted commodity name that Ledger cannot parse', (t: any) => {
+test('warns when a posting uses an unquoted commodity name that Ledger cannot parse', (t: TestContext) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-commodity-symbol-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -53,7 +55,7 @@ test('warns when a posting uses an unquoted commodity name that Ledger cannot pa
   assert.deepEqual(journal.transactions().transactions, []);
 });
 
-test('exposes transaction and posting tags separately from comments', (t: any) => {
+test('exposes transaction and posting tags separately from comments', (t: TestContext) => {
   const { openJournal, parseLedgerText } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-entry-tags-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -103,7 +105,7 @@ tag Receipt
   assert.deepEqual(posting.postingComments, ['card payment']);
 });
 
-test('exposes stable error code strings instead of public error classes', (t: any) => {
+test('exposes stable error code strings instead of public error classes', (t: TestContext) => {
   const ledlight = require(ledlightPath);
 
   assert.throws(
@@ -131,7 +133,7 @@ test('exposes stable error code strings instead of public error classes', (t: an
   );
 });
 
-test('persists foreign lot cost warnings for every report and rebuilds older caches', (t: any) => {
+test('persists foreign lot cost warnings for every report and rebuilds older caches', (t: TestContext) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-foreign-basis-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -214,7 +216,7 @@ test('renders CLI help and the public package version without opening a project'
   assert.equal(run(['--version']), `${packageMetadata.version}\n`);
 });
 
-test('loads SQLite only when a journal is opened', (t: any) => {
+test('loads SQLite only when a journal is opened', (t: TestContext) => {
   delete require.cache[sqliteModulePath];
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-public-api-'));
@@ -235,7 +237,7 @@ test('loads SQLite only when a journal is opened', (t: any) => {
   assert.equal(Object.hasOwn(journal, 'reconciliationEntries'), false);
 });
 
-test('returns all transactions without pagination and paginates only when requested', (t: any) => {
+test('returns all transactions without pagination and paginates only when requested', (t: TestContext) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-transactions-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -270,7 +272,7 @@ ${entries}`);
   assert.equal(paginated.transactions[0].description, 'Entry 501');
 });
 
-test('print returns plain journal text and validates its options', (t: any) => {
+test('print returns plain journal text and validates its options', (t: TestContext) => {
   const { openJournal } = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-print-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -304,7 +306,7 @@ test('print returns plain journal text and validates its options', (t: any) => {
   );
 });
 
-test('returns query data while exposing ingestion warnings through the API and CLI', (t: any) => {
+test('returns query data while exposing ingestion warnings through the API and CLI', (t: TestContext) => {
   const ledlight = require(ledlightPath);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-warnings-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -348,7 +350,7 @@ account Equity:Opening
 
 });
 
-test('exposes full-history accounting diagnostics on open and across cached report commands', (t: any) => {
+test('exposes full-history accounting diagnostics on open and across cached report commands', (t: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-global-warnings-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');

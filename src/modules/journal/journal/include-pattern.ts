@@ -5,13 +5,18 @@ module.exports = ({
     fs,
     path
   },
-}: any) => {
+}: {
+  external: {
+    fs: Pick<typeof import('node:fs'), 'readdirSync'>;
+    path: Pick<typeof import('node:path'), 'resolve' | 'dirname' | 'basename' | 'join'>;
+  };
+}) => {
 
-  function hasMagic(value: any) {
+  function hasMagic(value: string): boolean {
     return value.includes('*') || value.includes('?');
   }
 
-  function expandIncludePattern(pattern: any) {
+  function expandIncludePattern(pattern: string): string[] {
     const absolute = path.resolve(pattern);
     if (!hasMagic(absolute)) return [absolute];
 
@@ -27,14 +32,14 @@ module.exports = ({
     let directoryEntries;
     try {
       directoryEntries = fs.readdirSync(directory, { withFileTypes: true });
-    } catch (error: any) {
-      if (error.code === 'ENOENT') return [];
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return [];
       throw error;
     }
     return directoryEntries
-      .filter((entry: any) => entry.isFile() && matcher.test(entry.name))
-      .map((entry: any) => path.join(directory, entry.name))
-      .sort((left: any, right: any) => left.localeCompare(right, 'en'));
+      .filter((entry) => entry.isFile() && matcher.test(entry.name))
+      .map((entry) => path.join(directory, entry.name))
+      .sort((left, right) => left.localeCompare(right, 'en'));
   }
 
   return { expandIncludePattern };

@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -10,7 +12,7 @@ const { resolveRepositoryModule } = require('../../../../support/repository-cont
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
   resolveRepositoryModule('src/modules/database/internal/database.js');
 
-function fixture(t: any, transactions: any) {
+function fixture(t: TestContext, transactions: any) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-resolved-trades-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
@@ -32,7 +34,7 @@ function tradeWarnings(warnings: any) {
   return warnings.filter(({ code }: any) => code === 'INVALID_COMMODITY_TRADE');
 }
 
-test('rebuilds cached diagnostics from before resolved trade validation', (t: any) => {
+test('rebuilds cached diagnostics from before resolved trade validation', (t: TestContext) => {
   const { journalPath, databasePath } = fixture(t, `2024-01-01 Opening balance
   Holdings  = 2 FUND
   Opening

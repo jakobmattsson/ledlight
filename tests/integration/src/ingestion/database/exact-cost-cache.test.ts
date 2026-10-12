@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -10,7 +12,7 @@ const { resolveRepositoryModule } = require('../../../../support/repository-cont
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
   resolveRepositoryModule('src/modules/database/internal/database.js');
 
-function fixture(t: any, options: any) {
+function fixture(t: TestContext, options: any) {
   const { secondDate, totalCosts }: any = { secondDate: '2024-01-02', totalCosts: false, ...options };
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-exact-cost-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
@@ -35,7 +37,7 @@ ${secondDate} Second purchase
   return { journalPath, databasePath, warnings: buildDatabase(databasePath, journalPath).warnings };
 }
 
-test('rebuilds cached diagnostics that previously tolerated cancelling cost residuals', (t: any) => {
+test('rebuilds cached diagnostics that previously tolerated cancelling cost residuals', (t: TestContext) => {
   const { journalPath, databasePath, warnings } = fixture(t, {});
   const database = new Database(databasePath);
   try {

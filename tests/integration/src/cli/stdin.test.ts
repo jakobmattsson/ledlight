@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -24,7 +26,7 @@ P 2024-01-01 STOCK 12 SEK
   Assets:Cash  -100 SEK
 `;
 
-function fixture(t: any) {
+function fixture(t: TestContext) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-cli-input-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const temporaryDirectory = path.join(directory, 'tmp');
@@ -74,7 +76,7 @@ function fixture(t: any) {
   return { directory, journalPath, cacheDirectory, run, runProcess };
 }
 
-test('the CLI entrypoint reads piped stdin', (t: any) => {
+test('the CLI entrypoint reads piped stdin', (t: TestContext) => {
   const { runProcess } = fixture(t);
   const result = runProcess(['aggregate', '--denominate', '--include-total', '--format', 'json'], source);
   assert.equal(result.status, 0, result.stderr);
@@ -82,7 +84,7 @@ test('the CLI entrypoint reads piped stdin', (t: any) => {
   assert.equal(JSON.parse(result.stdout).at(-1).quantity, '20');
 });
 
-test('path-bearing reports identify stdin instead of the file path', (t: any) => {
+test('path-bearing reports identify stdin instead of the file path', (t: TestContext) => {
   const { run, journalPath } = fixture(t);
   for (const command of ['transactions', 'postings']) {
     const arguments_ = [command, '--format', 'json'];
@@ -96,7 +98,7 @@ test('path-bearing reports identify stdin instead of the file path', (t: any) =>
   }
 });
 
-test('stdin overrides configuration, explicit paths override stdin, and empty input falls back to configuration', (t: any) => {
+test('stdin overrides configuration, explicit paths override stdin, and empty input falls back to configuration', (t: TestContext) => {
   const { run, directory, journalPath, cacheDirectory } = fixture(t);
   const configurationPath = path.join(directory, '.ledlightrc');
   fs.writeFileSync(configurationPath, '--unknown invalid\n');

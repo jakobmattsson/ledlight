@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const withExternal = require('../../../../support/external-dependencies.js');
 const fs = require('node:fs');
@@ -10,7 +12,7 @@ const createPublicErrors = require('../../../../../src/modules/core/internal/pub
 const createDatabase = withExternal(require('../../../../../src/modules/database/internal/database'), ['path']);
 const createRebuildLock = withExternal(require('../../../../../src/modules/database/internal/database-rebuild-lock'), ['fs', 'processRuntime', 'systemClock']);
 
-function temporaryDatabasePath(t: any) {
+function temporaryDatabasePath(t: TestContext) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-rebuild-lock-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   return path.join(directory, 'journal.sqlite');
@@ -29,7 +31,7 @@ function rebuildLock(systemClock: any) {
   };
 }
 
-test('waits for another rebuild and releases its own lock', (t: any) => {
+test('waits for another rebuild and releases its own lock', (t: TestContext) => {
   const databasePath = temporaryDatabasePath(t);
   const lockPath = `${databasePath}.lock`;
   fs.writeFileSync(lockPath, 'another process\n');
@@ -52,7 +54,7 @@ test('waits for another rebuild and releases its own lock', (t: any) => {
   assert.equal(fs.existsSync(lockPath), false);
 });
 
-test('fails with a database code when the rebuild lock times out', (t: any) => {
+test('fails with a database code when the rebuild lock times out', (t: TestContext) => {
   const databasePath = temporaryDatabasePath(t);
   fs.writeFileSync(`${databasePath}.lock`, 'another process\n');
   let now = 0;

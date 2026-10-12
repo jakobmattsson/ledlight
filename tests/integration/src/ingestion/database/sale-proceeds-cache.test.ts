@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -10,7 +12,7 @@ const { resolveRepositoryModule } = require('../../../../support/repository-cont
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
   resolveRepositoryModule('src/modules/database/internal/database.js');
 
-function fixture(t: any, sale: any, extra?: any) {
+function fixture(t: TestContext, sale: any, extra?: any) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-proceeds-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
@@ -35,7 +37,7 @@ ${extra || ''}`);
   return { journalPath, databasePath, warnings: buildDatabase(databasePath, journalPath).warnings };
 }
 
-test('rebuilds cached diagnostics from before sale proceeds validation', (t: any) => {
+test('rebuilds cached diagnostics from before sale proceeds validation', (t: TestContext) => {
   const { journalPath, databasePath } = fixture(t, `  Holdings  -1 FUND {100 USD} @ 999 USD
   Bank  120 USD
   Result  -20 USD`);

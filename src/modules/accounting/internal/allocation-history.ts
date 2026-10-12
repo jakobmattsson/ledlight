@@ -1,23 +1,44 @@
 'use strict';
 
+type Fraction = { n: bigint; d: bigint };
+type Coefficients = Map<number, Fraction>;
+type LinearExpression = { constant: Fraction; coefficients: Coefficients };
+type Constraint = { coefficients: Coefficients; bound: Fraction; strict?: boolean };
+type HoldingGroup = { price: Fraction; remaining: LinearExpression };
+type AccountTotal = { quantity: Fraction; cost: Fraction };
+type Optimization = { status: 'optimal'; value: Fraction; solution: Fraction[] } | { status: 'infeasible' | 'unbounded' };
+
 module.exports = ({
   core: {
     rational: { zero, one, add, sub, mul, div, neg, cmp },
     linearProgram: { maximize },
   },
-}: any) => {
-  const expression = (constant: any, coefficients?: any) => ({ constant, coefficients: coefficients || new Map() });
-  function scale(value: any, factor: any) {
+}: {
+  core: {
+    rational: {
+      zero: Fraction; one: Fraction;
+      add(left: Fraction, right: Fraction): Fraction;
+      sub(left: Fraction, right: Fraction): Fraction;
+      mul(left: Fraction, right: Fraction): Fraction;
+      div(left: Fraction, right: Fraction): Fraction;
+      neg(value: Fraction): Fraction;
+      cmp(left: Fraction, right: Fraction): number;
+    };
+    linearProgram: { maximize(count: number, constraints: Constraint[], objective: Coefficients): Optimization };
+  };
+}) => {
+  const expression = (constant: Fraction, coefficients?: Coefficients): LinearExpression => ({ constant, coefficients: coefficients || new Map() });
+  function scale(value: LinearExpression, factor: Fraction): LinearExpression {
     return expression(mul(value.constant, factor), new Map(
-      [...value.coefficients].map(([key, coefficient]: any) => [key, mul(coefficient, factor)]),
+      [...value.coefficients].map(([key, coefficient]) => [key, mul(coefficient, factor)]),
     ));
   }
-  function subtractVariable(value: any, variable: any) {
+  function subtractVariable(value: LinearExpression, variable: number): LinearExpression {
     const coefficients = new Map(value.coefficients);
     coefficients.set(variable, sub(coefficients.get(variable) || zero, one));
     return expression(value.constant, coefficients);
   }
-  function evaluate(value: any, witness: any) {
+  function evaluate(value: LinearExpression, witness: Fraction[]): Fraction {
     let result = value.constant;
     for (const [variable, coefficient] of value.coefficients) {
       result = add(result, mul(coefficient, witness[variable]));
@@ -26,32 +47,32 @@ module.exports = ({
   }
 
   class AllocationHistory {
-    constraints: any;
-    groups: any;
-    invalid: any;
-    roundingUnit: any;
-    totals: any;
-    variables: any;
-    witness: any;
-    constructor(roundingUnit: any) {
+    constraints: Constraint[];
+    groups: Map<string, HoldingGroup[]>;
+    invalid: boolean;
+    roundingUnit: Fraction;
+    totals: Map<string, AccountTotal>;
+    variables: number;
+    witness: Fraction[];
+    constructor(roundingUnit: Fraction) {
       this.roundingUnit = roundingUnit;
-      this.groups = new Map();
+      this.groups = new Map<string, HoldingGroup[]>();
       this.constraints = [];
       this.variables = 0;
       this.witness = [];
-      this.totals = new Map();
+      this.totals = new Map<string, AccountTotal>();
       this.invalid = false;
     }
-    merge(other: any) {
+    merge(other: AllocationHistory): void {
       if (other === this) return;
       const offset = this.variables;
-      const remap = (coefficients: any) => new Map([...coefficients]
-        .map(([key, value]: any) => [key + offset, value]));
-      this.constraints.push(...other.constraints.map(({ coefficients, bound, strict }: any) => ({
+      const remap = (coefficients: Coefficients): Coefficients => new Map([...coefficients]
+        .map(([key, value]) => [key + offset, value]));
+      this.constraints.push(...other.constraints.map(({ coefficients, bound, strict }) => ({
         coefficients: remap(coefficients), bound, strict,
       })));
       for (const [account, groups] of other.groups) {
-        this.holdings(account).push(...groups.map(({ price, remaining }: any) => ({
+        this.holdings(account).push(...groups.map(({ price, remaining }) => ({
           price, remaining: expression(remaining.constant, remap(remaining.coefficients)),
         })));
       }
@@ -60,36 +81,40 @@ module.exports = ({
       this.witness.push(...other.witness);
       this.invalid ||= other.invalid;
     }
-    holdings(account: any) {
-      if (!this.groups.has(account)) this.groups.set(account, []);
-      return this.groups.get(account);
+    holdings(account: string): HoldingGroup[] {
+      let groups = this.groups.get(account);
+      if (!groups) {
+        groups = [];
+        this.groups.set(account, groups);
+      }
+      return groups;
     }
-    total(account: any) {
+    total(account: string): AccountTotal {
       return this.totals.get(account) || { quantity: zero, cost: zero };
     }
-    changeTotal(account: any, quantity: any, cost: any) {
+    changeTotal(account: string, quantity: Fraction, cost: Fraction): void {
       const previous = this.total(account);
       this.totals.set(account, {
         quantity: add(previous.quantity, quantity), cost: add(previous.cost, cost),
       });
     }
-    acquire(account: any, quantity: any, cost: any) {
+    acquire(account: string, quantity: Fraction, cost: Fraction): void {
       this.changeTotal(account, quantity, cost);
       const price = div(cost, quantity);
-      const group = this.holdings(account).find((candidate: any) =>
+      const group = this.holdings(account).find((candidate) =>
         !candidate.remaining.coefficients.size && cmp(candidate.price, price) === 0);
       if (group) group.remaining.constant = add(group.remaining.constant, quantity);
       else this.holdings(account).push({ price, remaining: expression(quantity) });
     }
-    equality(coefficients: any, bound: any) {
+    equality(coefficients: Coefficients, bound: Fraction): void {
       this.constraints.push({ coefficients, bound });
       this.constraints.push({
-        coefficients: new Map([...coefficients].map(([key, value]: any) => [key, neg(value)])),
+        coefficients: new Map([...coefficients].map(([key, value]) => [key, neg(value)])),
         bound: neg(bound),
       });
     }
-    findWitness(constraints: any) {
-      if (!constraints.some(({ strict }: any) => strict)) {
+    findWitness(constraints: Constraint[]): Fraction[] | null {
+      if (!constraints.some(({ strict }) => strict)) {
         const result = maximize(this.variables, constraints, new Map());
         return result.status === 'optimal' ? result.solution : null;
       }
@@ -97,7 +122,7 @@ module.exports = ({
       // witness must not satisfy an open rounding interval. One shared positive
       // slack proves that all strict inequalities can hold simultaneously.
       const slack = this.variables;
-      const closed = constraints.map(({ coefficients, bound, strict }: any) => ({
+      const closed = constraints.map(({ coefficients, bound, strict }) => ({
         coefficients: strict ? new Map([...coefficients, [slack, one]]) : coefficients,
         bound,
       }));
@@ -106,7 +131,7 @@ module.exports = ({
       return result.status === 'optimal' && result.value.n > 0n
         ? result.solution.slice(0, this.variables) : null;
     }
-    dispose(account: any, quantity: any, cost: any, destination: any, destinationQuantity: any) {
+    dispose(account: string, quantity: Fraction, cost: Fraction, destination: string | null | undefined, destinationQuantity: Fraction | undefined) {
       if (this.invalid) return null;
       const groups = this.holdings(account);
       const total = this.total(account);
@@ -121,13 +146,13 @@ module.exports = ({
       // A complete transfer or split carries both the booked remainder and
       // the original exact groups, including any accumulated rounding gap.
       if (destination && cmp(quantity, total.quantity) === 0) {
-        const ratio = div(destinationQuantity, quantity);
+        const ratio = div(destinationQuantity!, quantity);
         this.groups.set(account, []);
-        this.holdings(destination).push(...groups.map((group: any) => ({
+        this.holdings(destination).push(...groups.map((group) => ({
           price: div(group.price, ratio), remaining: scale(group.remaining, ratio),
         })));
         this.changeTotal(account, neg(quantity), neg(cost));
-        this.changeTotal(destination, destinationQuantity, cost);
+        this.changeTotal(destination, destinationQuantity!, cost);
         return null;
       }
       // Only multiples of the declared monetary step are rounded values.
@@ -135,17 +160,17 @@ module.exports = ({
       const rounded = this.roundingUnit.n > 0n && div(cost, this.roundingUnit).d === 1n;
       const lowerCost = rounded ? sub(cost, this.roundingUnit) : cost;
       const upperCost = rounded ? add(cost, this.roundingUnit) : cost;
-      const outside = (minimum: any, maximum: any) => rounded
+      const outside = (minimum: Fraction, maximum: Fraction) => rounded
         ? cmp(upperCost, minimum) <= 0 || cmp(lowerCost, maximum) >= 0
         : cmp(cost, minimum) < 0 || cmp(cost, maximum) > 0;
       // Greedy bounds avoid the solver while remaining quantities are fixed.
       // With rounding, even a booked endpoint can admit other allocations.
-      if (groups.every((group: any) => group.remaining.coefficients.size === 0)) {
-        const consume = (descending: any) => {
+      if (groups.every((group) => group.remaining.coefficients.size === 0)) {
+        const consume = (descending: number) => {
           let needed = quantity;
           let value = zero;
-          const taken = new Map();
-          const ordered = [...groups].sort((a: any, b: any) => cmp(a.price, b.price) * descending);
+          const taken = new Map<HoldingGroup, Fraction>();
+          const ordered = [...groups].sort((a, b) => cmp(a.price, b.price) * descending);
           for (const group of ordered) {
             const amount = cmp(needed, group.remaining.constant) < 0 ? needed : group.remaining.constant;
             taken.set(group, amount);
@@ -165,28 +190,28 @@ module.exports = ({
           ? (cmp(cost, lower.value) === 0 ? lower : (cmp(cost, upper.value) === 0 ? upper : null))
           : null);
         if (endpoint) {
-          const moved: any = [];
+          const moved: HoldingGroup[] = [];
           for (const [group, amount] of endpoint.taken) {
             group.remaining.constant = sub(group.remaining.constant, amount);
             if (destination && amount.n) {
-              const ratio = div(destinationQuantity, quantity);
+              const ratio = div(destinationQuantity!, quantity);
               moved.push({ price: div(group.price, ratio), remaining: expression(mul(amount, ratio)) });
             }
           }
-          this.groups.set(account, groups.filter((group: any) => group.remaining.constant.n));
+          this.groups.set(account, groups.filter((group) => group.remaining.constant.n));
           if (destination) this.holdings(destination).push(...moved);
           this.changeTotal(account, neg(quantity), neg(cost));
-          if (destination) this.changeTotal(destination, destinationQuantity, cost);
+          if (destination) this.changeTotal(destination, destinationQuantity!, cost);
           return null;
         }
       }
-      const amountCoefficients = new Map();
-      const costCoefficients = new Map();
-      const allocated: any = [];
+      const amountCoefficients = new Map<number, Fraction>();
+      const costCoefficients = new Map<number, Fraction>();
+      const allocated: Array<{ group: HoldingGroup; variable: number }> = [];
       for (const group of groups) {
         const variable = this.variables++;
         const coefficients = new Map([...group.remaining.coefficients]
-          .map(([key, value]: any) => [key, neg(value)]));
+          .map(([key, value]) => [key, neg(value)]));
         coefficients.set(variable, one);
         this.constraints.push({ coefficients, bound: group.remaining.constant });
         amountCoefficients.set(variable, one);
@@ -198,23 +223,23 @@ module.exports = ({
       // feasible allocation. Retain the full constraints so later sales may
       // still choose a different history.
       const ratio = div(quantity, total.quantity);
-      const average = allocated.map(({ group }: any) => mul(evaluate(group.remaining, this.witness), ratio));
+      const average = allocated.map(({ group }) => mul(evaluate(group.remaining, this.witness), ratio));
       const averageQuantity = average.reduce(add, zero);
-      const averageCost = average.reduce((sum: any, amount: any, index: any) =>
+      const averageCost = average.reduce((sum, amount, index) =>
         add(sum, mul(amount, allocated[index].group.price)), zero);
       const averageFits = cmp(averageQuantity, quantity) === 0 &&
         !outside(averageCost, averageCost);
-      const costConstraints: any = [];
+      const costConstraints: Constraint[] = [];
       if (rounded) {
         costConstraints.push({ coefficients: costCoefficients, bound: upperCost, strict: true });
         costConstraints.push({
-          coefficients: new Map([...costCoefficients].map(([key, value]: any) => [key, neg(value)])),
+          coefficients: new Map([...costCoefficients].map(([key, value]) => [key, neg(value)])),
           bound: neg(lowerCost), strict: true,
         });
       } else {
         costConstraints.push({ coefficients: costCoefficients, bound: cost });
         costConstraints.push({
-          coefficients: new Map([...costCoefficients].map(([key, value]: any) => [key, neg(value)])),
+          coefficients: new Map([...costCoefficients].map(([key, value]) => [key, neg(value)])),
           bound: neg(cost),
         });
       }
@@ -224,18 +249,18 @@ module.exports = ({
       if (!witness) {
         const upper = maximize(this.variables, this.constraints, costCoefficients);
         const lower = maximize(this.variables, this.constraints,
-          new Map([...costCoefficients].map(([key, value]: any) => [key, neg(value)])));
+          new Map([...costCoefficients].map(([key, value]) => [key, neg(value)])));
         this.invalid = true;
         if (upper.status !== 'optimal' || lower.status !== 'optimal') return { insufficient: true };
         return { minimum: neg(lower.value), maximum: upper.value };
       }
       this.witness = witness;
       this.constraints.push(...costConstraints);
-      const transferred: any = [];
+      const transferred: HoldingGroup[] = [];
       for (const { group, variable } of allocated) {
         group.remaining = subtractVariable(group.remaining, variable);
         if (destination) {
-          const ratio = div(destinationQuantity, quantity);
+          const ratio = div(destinationQuantity!, quantity);
           transferred.push({
             price: div(group.price, ratio),
             remaining: scale(expression(zero, new Map([[variable, one]])), ratio),
@@ -245,7 +270,7 @@ module.exports = ({
       if (cmp(quantity, total.quantity) === 0) this.groups.set(account, []);
       if (destination) this.holdings(destination).push(...transferred);
       this.changeTotal(account, neg(quantity), neg(cost));
-      if (destination) this.changeTotal(destination, destinationQuantity, cost);
+      if (destination) this.changeTotal(destination, destinationQuantity!, cost);
       return null;
     }
   }

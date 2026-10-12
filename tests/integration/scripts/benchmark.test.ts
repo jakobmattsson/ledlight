@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -7,7 +9,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-test('benchmark command loads its synthetic journal and writes action results', (t: any) => {
+test('benchmark command loads its synthetic journal and writes action results', (t: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-benchmark-test-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const outputPath = path.join(directory, 'results.json');

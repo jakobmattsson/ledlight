@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -12,7 +14,7 @@ const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-rounding-cache-'))
 process.env.LEDLIGHT_CACHE_HOME = cache;
 test.after(() => fs.rmSync(cache, { recursive: true, force: true }));
 
-function fixture(t: any, options: any) {
+function fixture(t: TestContext, options: any) {
   const { format, cost, bought, sold, basis, gain }: any = {
     format: '1,000.00', cost: '{{0.34 USD}}', bought: '3', sold: '1', basis: '1', gain: '', ...options,
   };
@@ -40,7 +42,7 @@ P 2024-01-01 FUND 1 USD
   return openJournal(journalPath);
 }
 
-test('rebuilds cached diagnostics from before commodity rounding was supported', (t: any) => {
+test('rebuilds cached diagnostics from before commodity rounding was supported', (t: TestContext) => {
   const journal = fixture(t, {});
   const database = new Database(journal.databasePath);
   try {

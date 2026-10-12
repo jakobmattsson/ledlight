@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const { resolveRepositoryModule } = require("../../../../support/repository-container");
 
 const assert = require('node:assert/strict');
@@ -13,7 +15,7 @@ const {
   selectMaterializedValuationRates,
 } = valuationRates.$$private;
 
-test('selects the latest price through a date using journal order as a tiebreaker', (t: any) => {
+test('selects the latest price through a date using journal order as a tiebreaker', (t: TestContext) => {
   const database = new Database(':memory:');
   t.after(() => database.close());
   database.exec(`
@@ -73,7 +75,7 @@ test('rejects invalid valuation-rate lookup arguments', () => {
   });
 });
 
-test('selects materialized rates from one common latest date', (t: any) => {
+test('selects materialized rates from one common latest date', (t: TestContext) => {
   const database = new Database(':memory:');
   t.after(() => database.close());
   database.exec(`

@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -84,7 +86,7 @@ test('ubiquitous modules point to their dependencies, including other ubiquitous
   assert.doesNotMatch(dot, /"external:fs" \[label=/u);
 });
 
-test('ubiquitous metadata is optional and rejects unknown names', (t: any) => {
+test('ubiquitous metadata is optional and rejects unknown names', (t: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-graph-policy-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const policyPath = path.join(directory, 'dependencies.yaml');

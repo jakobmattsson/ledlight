@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const withExternal = require('../../../support/external-dependencies.js');
 const fs = require('node:fs');
@@ -9,7 +11,7 @@ const test = require('node:test');
 const createConfiguration = require('../../../../src/modules/cli/internal/cli-configuration');
 const createProjectConfiguration = withExternal(require('../../../../src/modules/core/internal/configuration'), ['fs', 'path', 'processEnvironment', 'currentWorkingDirectory']);
 
-function temporaryDirectories(t: any) {
+function temporaryDirectories(t: TestContext) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-configuration-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const home = path.join(root, 'home');
@@ -28,7 +30,7 @@ function configuration(home: any, workingDirectory: any) {
   }) } });
 }
 
-test('supplies --file from the project .ledlightrc', (t: any) => {
+test('supplies --file from the project .ledlightrc', (t: TestContext) => {
   const { home, workingDirectory } = temporaryDirectories(t);
   fs.writeFileSync(
     path.join(workingDirectory, '.ledlightrc'),
@@ -41,7 +43,7 @@ test('supplies --file from the project .ledlightrc', (t: any) => {
   );
 });
 
-test('prefers the project .ledlightrc over the user configuration', (t: any) => {
+test('prefers the project .ledlightrc over the user configuration', (t: TestContext) => {
   const { home, workingDirectory } = temporaryDirectories(t);
   fs.writeFileSync(path.join(home, '.ledlightrc'), '--file ~/books/main.ledger\n');
   fs.writeFileSync(path.join(workingDirectory, '.ledlightrc'), '--file project.ledger\n');
@@ -52,7 +54,7 @@ test('prefers the project .ledlightrc over the user configuration', (t: any) => 
   );
 });
 
-test('falls back to the user .ledlightrc and expands its home directory', (t: any) => {
+test('falls back to the user .ledlightrc and expands its home directory', (t: TestContext) => {
   const { home, workingDirectory } = temporaryDirectories(t);
   fs.writeFileSync(path.join(home, '.ledlightrc'), '--file ~/books/main.ledger\n');
 
@@ -62,7 +64,7 @@ test('falls back to the user .ledlightrc and expands its home directory', (t: an
   );
 });
 
-test('finds the nearest parent configuration and resolves paths from its directory', (t: any) => {
+test('finds the nearest parent configuration and resolves paths from its directory', (t: TestContext) => {
   const { home, workingDirectory } = temporaryDirectories(t);
   const nestedDirectory = path.join(workingDirectory, 'reports', 'annual');
   fs.mkdirSync(nestedDirectory, { recursive: true });
@@ -78,7 +80,7 @@ test('finds the nearest parent configuration and resolves paths from its directo
     ['aggregate', '--file', path.join(workingDirectory, 'reports', 'closer.ledger')]);
 });
 
-test('lets an explicit --file option override configuration', (t: any) => {
+test('lets an explicit --file option override configuration', (t: TestContext) => {
   const { home, workingDirectory } = temporaryDirectories(t);
   fs.writeFileSync(path.join(home, '.ledlightrc'), '--unknown value\n');
 
@@ -88,7 +90,7 @@ test('lets an explicit --file option override configuration', (t: any) => {
   );
 });
 
-test('rejects unsupported or repeated configuration settings', (t: any) => {
+test('rejects unsupported or repeated configuration settings', (t: TestContext) => {
   const { home, workingDirectory } = temporaryDirectories(t);
   const configurationPath = path.join(workingDirectory, '.ledlightrc');
   const configuredArguments = configuration(home, workingDirectory);

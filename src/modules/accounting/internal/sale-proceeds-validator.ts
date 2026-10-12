@@ -1,5 +1,10 @@
 'use strict';
 
+import type { LedgerAmount, LedgerEntry, LedgerPosting } from '../../../public-api';
+
+type Fraction = { n: bigint; d: bigint };
+type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+
 module.exports = ({
   core: {
     rational: { zero, parse, add, sub, neg, cmp, div, format },
@@ -12,10 +17,10 @@ module.exports = ({
   // Account names do not identify settlement, fees, or realized results. Check
   // whether any partition of the monetary postings can explain the trade value.
   // A bounded search may be inconclusive; it must never manufacture a warning.
-  function canExplainSettlement(amounts: any, target: any, tolerance: any) {
-    const absolute = (value: any) => value.n < 0n ? neg(value) : value;
-    const ordered = amounts.filter((value: any) => value.n)
-      .sort((left: any, right: any) => cmp(absolute(right), absolute(left)));
+  function canExplainSettlement(amounts: Fraction[], target: Fraction, tolerance: Fraction): boolean | null {
+    const absolute = (value: Fraction): Fraction => value.n < 0n ? neg(value) : value;
+    const ordered = amounts.filter((value) => value.n)
+      .sort((left, right) => cmp(absolute(right), absolute(left)));
     const lower = [zero];
     const upper = [zero];
     for (let index = ordered.length - 1; index >= 0; index -= 1) {
@@ -23,7 +28,7 @@ module.exports = ({
       upper.unshift(add(upper[0], ordered[index].n > 0n ? ordered[index] : zero));
     }
     const pending = [{ index: 0, remaining: target }];
-    const visited = new Set();
+    const visited = new Set<string>();
     while (pending.length) {
       const { index, remaining } = pending.pop()!;
       if (cmp(absolute(remaining), tolerance) <= 0) return true;
@@ -39,10 +44,11 @@ module.exports = ({
     return false;
   }
 
-  function validateSaleProceeds(transaction: any, resolved: any, valuationCommodity: any, carried: any, roundingUnit: any, warnings: any) {
+  function validateSaleProceeds(transaction: Transaction, resolved: LedgerAmount[][], valuationCommodity: string,
+    carried: Set<LedgerPosting>, roundingUnit: Fraction, warnings: unknown[]): void {
     let tradeValue = zero;
     let hasSale = false;
-    const monetaryAmounts: any = [];
+    const monetaryAmounts: Fraction[] = [];
     for (const [index, posting] of transaction.postings.entries()) {
       if (carried.has(posting)) continue;
       for (const amount of resolved[index]) {

@@ -50,9 +50,15 @@ test('rounds exact division ties to even for Ledger price presentation', () => {
 });
 
 test('retains parsed decimal state until a database sum completes', () => {
-  let aggregate: any;
-  const database: any = {
-    aggregate(name: any, options: any) {
+  type Decimal = { coefficient: bigint; scale: number };
+  type Aggregate = {
+    start(): Decimal;
+    step(total: Decimal, value: string | null): Decimal;
+    result(total: Decimal): string;
+  };
+  let aggregate: Aggregate | undefined;
+  const database = {
+    aggregate(name: string, options: Aggregate) {
       if (name === 'decimal_sum') aggregate = options;
     },
     function() {},
@@ -60,12 +66,13 @@ test('retains parsed decimal state until a database sum completes', () => {
   registerDecimalFunctions(database);
 
   assert.ok(aggregate);
-  let total = (aggregate.start as any)();
-  total = (aggregate.step as any)(total, '1.25');
-  total = (aggregate.step as any)(total, null);
-  total = (aggregate.step as any)(total, '2.5');
+  const configured = aggregate as Aggregate;
+  let total = configured.start();
+  total = configured.step(total, '1.25');
+  total = configured.step(total, null);
+  total = configured.step(total, '2.5');
 
   assert.deepEqual(total, { coefficient: 375n, scale: 2 });
-  assert.equal((aggregate.result as any)(total), '3.75');
-  assert.equal((aggregate.result as any)((aggregate.start as any)()), '0');
+  assert.equal(configured.result(total), '3.75');
+  assert.equal(configured.result(configured.start()), '0');
 });

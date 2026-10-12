@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -8,7 +10,7 @@ const test = require('node:test');
 const { asValue } = require('../../../../lib/awilix');
 const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
 
-test('CLI and API use the project cache while API uses its explicit journal', (t: any) => {
+test('CLI and API use the project cache while API uses its explicit journal', (t: TestContext) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-project-configuration-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const projectDirectory = path.join(root, 'project');

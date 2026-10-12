@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -11,7 +13,7 @@ const { buildDatabase } = resolveRepositoryModule('src/modules/database/internal
 const { readDatabase } = resolveRepositoryModule('src/modules/database/internal/database-reader.js');
 const { execute } = resolveQuery('aggregate');
 
-test('aggregate uses materialized valuation rates without filling the raw price cache', (t: any) => {
+test('aggregate uses materialized valuation rates without filling the raw price cache', (t: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-valuation-cache-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');

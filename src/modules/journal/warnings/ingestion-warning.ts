@@ -1,5 +1,9 @@
 'use strict';
 
+type WarningLocation = { source: string; line: number; column: number; startLine?: number; endLine?: number };
+type Warning = { code: string; message: string; source: string; line: number; column: number; startLine: number; endLine: number };
+type WarningGroup = { code: string; message: string; instances: ReadonlyArray<WarningLocation> };
+
 module.exports = () => {
 
   const maximumWarningInstances = 10;
@@ -27,7 +31,7 @@ module.exports = () => {
     UNDECLARED_TAG: 'UNDECLARED_TAG',
   });
 
-  function createWarning(code: any, message: any, location: any) {
+  function createWarning(code: string, message: string, location: WarningLocation): Warning {
     return Object.freeze({
       code,
       message,
@@ -39,8 +43,8 @@ module.exports = () => {
     });
   }
 
-  function groupWarnings(warnings: any) {
-    const groups = new Map();
+  function groupWarnings(warnings: Warning[]): ReadonlyArray<WarningGroup> {
+    const groups = new Map<string, { code: string; message: string; instances: WarningLocation[] }>();
     for (const warning of warnings) {
       const key = JSON.stringify([warning.code, warning.message]);
       let group = groups.get(key);
@@ -58,7 +62,7 @@ module.exports = () => {
         }));
       }
     }
-    return Object.freeze([...groups.values()].map((group: any) => Object.freeze({
+    return Object.freeze([...groups.values()].map((group) => Object.freeze({
       ...group,
       instances: Object.freeze(group.instances),
     })));

@@ -10,13 +10,20 @@ const YAML = require('yaml');
 
 const MAX_OUTPUT_BYTES = 256 * 1024 * 1024;
 
+type MatrixCase = [id: string, ledlightCommand: string, ledgerCommand: string];
+type Options = { cases: string[]; help?: boolean; list?: boolean; file?: string; ledgerBin?: string };
+type RunOptions = { journal: string; ledgerBin: string; environment: NodeJS.ProcessEnv };
+
 const repositoryRoot = path.resolve(__dirname, '../..');
 const ledlightCli = path.join(repositoryRoot, 'src/run.js');
 const matrixPath = path.join(__dirname, 'ledger-compatibility-matrix.yaml');
 
-function loadMatrix() {
-  const { baseline, commands } = YAML.parse(fs.readFileSync(matrixPath, 'utf8'));
-  return Object.entries(commands).map(([id, command]: any) => [
+function loadMatrix(): MatrixCase[] {
+  const { baseline, commands }: {
+    baseline: { ledlight: string; ledger: string };
+    commands: Record<string, { ledlight: string; ledger: string }>;
+  } = YAML.parse(fs.readFileSync(matrixPath, 'utf8'));
+  return Object.entries(commands).map(([id, command]) => [
     id,
     `ledlight ${command.ledlight} ${baseline.ledlight}`,
     `ledger ${baseline.ledger} ${command.ledger}`,
@@ -43,7 +50,7 @@ Examples:
 `;
 }
 
-function readValue(arguments_: any, index: any, option: any) {
+function readValue(arguments_: string[], index: number, option: string): string {
   const value = arguments_[index + 1];
   if (value === undefined || value.startsWith('--')) {
     throw new Error(`${option} expects a value`);
@@ -51,8 +58,8 @@ function readValue(arguments_: any, index: any, option: any) {
   return value;
 }
 
-function parseArguments(arguments_: any) {
-  const options: any = { cases: [] };
+function parseArguments(arguments_: string[]): Options {
+  const options: Options = { cases: [] };
   for (let index = 0; index < arguments_.length; index += 1) {
     const argument = arguments_[index];
     if (argument === '--help') options.help = true;
@@ -71,7 +78,7 @@ function parseArguments(arguments_: any) {
   return options;
 }
 
-function markdownCell(value: any) {
+function markdownCell(value: string | null): string {
   return value === null ? '—' : `\`${value.replaceAll('|', '\\|')}\``;
 }
 
@@ -86,12 +93,12 @@ function printMatrix() {
   }
 }
 
-function run(command: any, options: any) {
+function run(command: string, options: RunOptions) {
   const [commandName, ...commandArguments] = command.split(' ');
   const executable = commandName === 'ledlight' ? process.execPath : options.ledgerBin;
   const prefixArguments = commandName === 'ledlight' ? [ledlightCli] : [];
   const arguments_ = [...prefixArguments, ...commandArguments]
-    .map((argument: any) => argument === '<journal>' ? options.journal : argument);
+    .map((argument) => argument === '<journal>' ? options.journal : argument);
   const result = spawnSync(executable, arguments_, {
     cwd: path.dirname(options.journal),
     encoding: 'utf8',
@@ -106,17 +113,17 @@ function run(command: any, options: any) {
   return { stdout: result.stdout, stderr: result.stderr };
 }
 
-function selectedCases(names: any) {
+function selectedCases(names: string[]): MatrixCase[] {
   const matrix = loadMatrix();
   if (names.length === 0) return matrix;
-  return names.map((name: any) => {
-    const entry = matrix.find(([id]: any) => id === name);
+  return names.map((name) => {
+    const entry = matrix.find(([id]) => id === name);
     if (!entry) throw new Error(`Unknown case ${JSON.stringify(name)}; use --list to see the matrix`);
     return entry;
   });
 }
 
-function showMismatch(id: any, ledlightOutput: any, ledgerOutput: any) {
+function showMismatch(id: string, ledlightOutput: string, ledgerOutput: string): void {
   process.stdout.write(`FAIL ${id}\n`);
   process.stdout.write(createPatch(
     id,
@@ -128,7 +135,7 @@ function showMismatch(id: any, ledlightOutput: any, ledgerOutput: any) {
   ));
 }
 
-function main(arguments_: any) {
+function main(arguments_: string[]): void {
   const options = parseArguments(arguments_);
   if (options.help) {
     process.stdout.write(usage());
@@ -143,13 +150,13 @@ function main(arguments_: any) {
   if (!fs.statSync(journal).isFile()) throw new Error(`Journal is not a file: ${journal}`);
 
   const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-compare-'));
-  const environment: any = { ...process.env, LEDLIGHT_CACHE_HOME: cacheDirectory };
+  const environment: NodeJS.ProcessEnv = { ...process.env, LEDLIGHT_CACHE_HOME: cacheDirectory };
   const ledgerBin = options.ledgerBin ?? process.env.LEDGER_BIN ?? 'ledger';
   let failures = 0;
   try {
     for (const [id, ledlightCommand, ledgerCommand] of selectedCases(options.cases)) {
       try {
-        const commandOptions: any = { journal, environment, ledgerBin };
+        const commandOptions: RunOptions = { journal, environment, ledgerBin };
         const ledlight = run(ledlightCommand, commandOptions);
         const ledger = run(ledgerCommand, commandOptions);
         if (ledlight.stdout === ledger.stdout) {
@@ -160,9 +167,9 @@ function main(arguments_: any) {
         }
         if (ledlight.stderr) process.stderr.write(`[${id}: ledlight]\n${ledlight.stderr}`);
         if (ledger.stderr) process.stderr.write(`[${id}: ledger]\n${ledger.stderr}`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         failures += 1;
-        process.stdout.write(`ERROR ${id}: ${error.message}\n`);
+        process.stdout.write(`ERROR ${id}: ${error instanceof Error ? error.message : String(error)}\n`);
       }
     }
   } finally {
@@ -173,7 +180,7 @@ function main(arguments_: any) {
 
 try {
   main(process.argv.slice(2));
-} catch (error: any) {
-  process.stderr.write(`${error.message}\n\n${usage()}`);
+} catch (error: unknown) {
+  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n\n${usage()}`);
   process.exitCode = 1;
 }

@@ -1,22 +1,27 @@
 'use strict';
 
+type CashFlow = { date: string; amount: number };
+type ValuePoint = { date: string; value: number };
+type FlowPoint = { date: string; flow: number };
+type PerformancePoint = { date: string; value: number; netContributions: number; profitLoss: number; timeWeightedReturn: number | null; timeWeightedReturnAnnualized: number | null; moneyWeightedReturn: number | null; moneyWeightedReturnTotal: number | null };
+
 module.exports = () => {
 
   const DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
 
-  function daysBetween(first: any, second: any) {
+  function daysBetween(first: string, second: string): number {
     return (Date.parse(`${second}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY_MILLISECONDS;
   }
 
-  function xirr(cashFlows: any) {
-    const combined = new Map();
+  function xirr(cashFlows: CashFlow[]): number | null {
+    const combined = new Map<string, number>();
     for (const { date, amount } of cashFlows) combined.set(date, (combined.get(date) ?? 0) + amount);
-    const flows = [...combined].map(([date, amount]: any) => ({ date, amount }))
-      .filter(({ amount }: any) => Math.abs(amount) > 1e-9)
-      .sort((left: any, right: any) => left.date.localeCompare(right.date));
-    if (!flows.some(({ amount }: any) => amount < 0) || !flows.some(({ amount }: any) => amount > 0)) return null;
+    const flows = [...combined].map(([date, amount]) => ({ date, amount }))
+      .filter(({ amount }) => Math.abs(amount) > 1e-9)
+      .sort((left, right) => left.date.localeCompare(right.date));
+    if (!flows.some(({ amount }) => amount < 0) || !flows.some(({ amount }) => amount > 0)) return null;
     const start = flows[0].date;
-    const npv = (logRate: any) => flows.reduce((total: any, flow: any) =>
+    const npv = (logRate: number) => flows.reduce((total, flow) =>
       total + flow.amount * Math.exp(-logRate * daysBetween(start, flow.date) / 365), 0);
     let low = -20;
     let high = Math.log(2);
@@ -41,16 +46,16 @@ module.exports = () => {
     return Math.expm1((low + high) / 2);
   }
 
-  function cashFlowSpanYears(cashFlows: any) {
+  function cashFlowSpanYears(cashFlows: CashFlow[]): number | null {
     const dates = cashFlows
-      .filter(({ amount }: any) => Math.abs(amount) > 1e-9)
-      .map(({ date }: any) => date)
+      .filter(({ amount }) => Math.abs(amount) > 1e-9)
+      .map(({ date }) => date)
       .sort();
     if (dates.length < 2 || dates[0] === dates.at(-1)) return null;
-    return daysBetween(dates[0], dates.at(-1)) / 365;
+    return daysBetween(dates[0], dates[dates.length - 1]) / 365;
   }
 
-  function annualizedTimeWeightedReturn(totalReturn: any, from: any, to: any) {
+  function annualizedTimeWeightedReturn(totalReturn: number | null, from: string | null, to: string | null): number | null {
     if (totalReturn === null) return null;
     if (from === null || to === null) return null;
     const years = daysBetween(from, to) / 365;
@@ -59,14 +64,14 @@ module.exports = () => {
     return Number.isFinite(annualizedReturn) ? annualizedReturn : null;
   }
 
-  function totalReturnFromXirr(annualizedReturn: any, cashFlows: any) {
+  function totalReturnFromXirr(annualizedReturn: number | null, cashFlows: CashFlow[]): number | null {
     if (annualizedReturn === null) return null;
     const years = cashFlowSpanYears(cashFlows);
     if (years === null) return null;
     return Math.expm1(Math.log1p(annualizedReturn) * years);
   }
 
-  function calculatePerformance(values: any, flows: any, options: any, commodities: any, valuationCommodity: any) {
+  function calculatePerformance(values: ValuePoint[], flows: FlowPoint[], options: { from?: string; to?: string }, commodities: string[], valuationCommodity: string | null) {
     if (values.length === 0) {
       return {
         from: options.from ?? null,
@@ -85,13 +90,13 @@ module.exports = () => {
       };
     }
     const effectiveFrom = options.from ?? values[0].date;
-    const effectiveTo = options.to ?? [effectiveFrom, values.at(-1).date].sort().at(-1);
-    const previous = [...values].reverse().find((row: any) => row.date < effectiveFrom);
-    const periodValues = values.filter((row: any) => row.date >= effectiveFrom && row.date <= effectiveTo);
+    const effectiveTo = options.to ?? [effectiveFrom, values[values.length - 1].date].sort()[1];
+    const previous = [...values].reverse().find((row) => row.date < effectiveFrom);
+    const periodValues = values.filter((row) => row.date >= effectiveFrom && row.date <= effectiveTo);
     const openingValue = previous?.value ?? 0;
     const endingValue = periodValues.at(-1)?.value ?? openingValue;
-    const periodFlows = flows.filter((row: any) => row.date >= effectiveFrom && row.date <= effectiveTo);
-    const flowsByDate = new Map<string, number>(periodFlows.map((row: any) => [row.date, row.flow]));
+    const periodFlows = flows.filter((row) => row.date >= effectiveFrom && row.date <= effectiveTo);
+    const flowsByDate = new Map<string, number>(periodFlows.map((row) => [row.date, row.flow]));
     let priorValue = openingValue;
     let growthFactor = 1;
     let hasReturn = false;
@@ -101,9 +106,9 @@ module.exports = () => {
     let returnStartDate = Math.abs(openingValue) > 1e-9 ? effectiveFrom : null;
     let lastReturnDate = null;
     let netContributions = 0;
-    const investorCashFlows: any = [];
+    const investorCashFlows: CashFlow[] = [];
     if (Math.abs(openingValue) > 1e-9) investorCashFlows.push({ date: effectiveFrom, amount: -openingValue });
-    const points: any = [];
+    const points: PerformancePoint[] = [];
     for (const row of periodValues) {
       const flow = flowsByDate.get(row.date) ?? 0;
       netContributions += flow;

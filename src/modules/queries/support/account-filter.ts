@@ -1,13 +1,16 @@
 'use strict';
 
+type AccountPattern = { excluded: boolean; value: string };
+type SqlFilter = { sql: string; parameters: string[] };
+
 module.exports = () => {
 
   const MAX_UNICODE_CODE_POINT = 0x10FFFF;
 
-  function prefixUpperBound(prefix: any) {
+  function prefixUpperBound(prefix: string): string | undefined {
     const codePoints = [...prefix];
     for (let index = codePoints.length - 1; index >= 0; index -= 1) {
-      const value = codePoints[index].codePointAt(0);
+      const value = codePoints[index].codePointAt(0)!;
       if (value === MAX_UNICODE_CODE_POINT) continue;
       const nextValue = value === 0xD7FF ? 0xE000 : value + 1;
       return `${codePoints.slice(0, index).join('')}${String.fromCodePoint(nextValue)}`;
@@ -15,28 +18,28 @@ module.exports = () => {
     return undefined;
   }
 
-  function parseAccountPattern(pattern: any) {
+  function parseAccountPattern(pattern: string): AccountPattern {
     const excluded = pattern.startsWith('~');
     return { excluded, value: excluded ? pattern.slice(1) : pattern };
   }
 
-  function patternMatches(account: any, pattern: any) {
+  function patternMatches(account: string, pattern: AccountPattern): boolean {
     const { value } = pattern;
     if (!value.includes('*')) return account === value;
-    const expression = value.split('*').map((part: any) =>
+    const expression = value.split('*').map((part) =>
       part.replace(/[\\^$.*+?()[\]{}|]/gu, '\\$&')).join('.*');
     return new RegExp(`^${expression}$`, 'su').test(account);
   }
 
-  function accountMatches(account: any, patterns: any) {
+  function accountMatches(account: string, patterns: string[]): boolean {
     const parsed = patterns.map(parseAccountPattern);
-    return (parsed.filter((pattern: any) => !pattern.excluded).some((pattern: any) =>
-      patternMatches(account, pattern)) || parsed.every((pattern: any) => pattern.excluded)) &&
-      parsed.filter((pattern: any) => pattern.excluded).every((pattern: any) =>
+    return (parsed.filter((pattern) => !pattern.excluded).some((pattern) =>
+      patternMatches(account, pattern)) || parsed.every((pattern) => pattern.excluded)) &&
+      parsed.filter((pattern) => pattern.excluded).every((pattern) =>
         !patternMatches(account, pattern));
   }
 
-  function accountPatternFilter(column: any, pattern: any) {
+  function accountPatternFilter(column: string, pattern: AccountPattern): SqlFilter {
     const { value } = pattern;
     if (!value.includes('*')) return { sql: `${column} = ?`, parameters: [value] };
     if (/^\*+$/u.test(value)) return { sql: '1 = 1', parameters: [] };
@@ -61,21 +64,21 @@ module.exports = () => {
     return { sql: `${column} GLOB ?`, parameters: [glob] };
   }
 
-  function accountFilter(column: any, patterns: any) {
+  function accountFilter(column: string, patterns: string[]): SqlFilter {
     const parsed = patterns.map(parseAccountPattern);
-    const included = parsed.filter((pattern: any) => !pattern.excluded)
-      .map((pattern: any) => accountPatternFilter(column, pattern));
-    const excluded = parsed.filter((pattern: any) => pattern.excluded)
-      .map((pattern: any) => accountPatternFilter(column, pattern));
-    const clauses: any = [];
+    const included = parsed.filter((pattern) => !pattern.excluded)
+      .map((pattern) => accountPatternFilter(column, pattern));
+    const excluded = parsed.filter((pattern) => pattern.excluded)
+      .map((pattern) => accountPatternFilter(column, pattern));
+    const clauses: string[] = [];
     if (included.length > 0) {
-      clauses.push(`(${included.map((filter: any) => filter.sql).join(' OR ')})`);
+      clauses.push(`(${included.map((filter) => filter.sql).join(' OR ')})`);
     }
-    clauses.push(...excluded.map((filter: any) => `NOT (${filter.sql})`));
+    clauses.push(...excluded.map((filter) => `NOT (${filter.sql})`));
     return {
       sql: clauses.length === 1 && included.length > 0
         ? clauses[0] : `(${clauses.join(' AND ')})`,
-      parameters: [...included, ...excluded].flatMap((filter: any) => filter.parameters),
+      parameters: [...included, ...excluded].flatMap((filter) => filter.parameters),
     };
   }
 
