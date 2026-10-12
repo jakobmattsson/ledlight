@@ -6,8 +6,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createConfiguration = require('../../../../src/modules/cli/cli-configuration');
-const createProjectConfiguration = withExternal(require('../../../../src/modules/core/configuration'), ['fs', 'path', 'processEnvironment', 'currentWorkingDirectory']);
+const createConfiguration = require('../../../../src/modules/cli/internal/cli-configuration');
+const createProjectConfiguration = withExternal(require('../../../../src/modules/core/internal/configuration'), ['fs', 'path', 'processEnvironment', 'currentWorkingDirectory']);
 
 function temporaryDirectories(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-configuration-'));

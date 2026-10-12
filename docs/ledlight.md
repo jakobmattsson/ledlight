@@ -288,7 +288,8 @@ and for the external services permitted to each module. It discovers the module
 directories, checks that they match both policies, rejects cycles, and builds
 module-local factory containers. A factory can use its own private registrations
 and the deliberately selected values from permitted modules' `index.js` files.
-Other module internals are unavailable. Factories have unique kebab-case file
+Each module root contains only its `index.js` facade; implementation files live
+in subdirectories. Other module internals are unavailable. Factories have unique kebab-case file
 names within their module. The local Awilix subset lives in `lib/awilix.js`.
 
 The project builds journal operations and API input definitions from the frozen
@@ -297,9 +298,9 @@ corresponding public journal operation. The project's `withJournalText` capabili
 builds and removes a temporary database for CLI stdin input.
 
 Queries receive a read-only database handle through the project and may run SQL
-against the tables and columns in `database/read-model-contract.js`. That file
+against the tables and columns in `database/internal/read-model-contract.js`. That file
 is the explicit read-model contract; a convention test checks its complete column
-lists against `database/schema.sql` and checks that it covers every schema table
+lists against `database/internal/schema.sql` and checks that it covers every schema table
 referenced by query SQL. Changing these columns requires a coordinated query
 update. Moving all query SQL behind database functions is outside this module
 reorganization.
@@ -453,7 +454,7 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/modules/journal/ledger.ohm` is the normative description of the
+`src/modules/journal/syntax/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
 semantics in `tests/support/reference/reference-parser.js`. The fixtures in
 `tests/api/parser` define expected syntax trees, a shared error contract for

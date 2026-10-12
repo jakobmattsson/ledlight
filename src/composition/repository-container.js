@@ -52,7 +52,7 @@ function externalServices() {
       standardOutput: process.stdout,
       standardError: process.stderr,
     },
-    schemaPath: path.join(MODULES_ROOT, 'database/schema.sql'),
+    schemaPath: path.join(MODULES_ROOT, 'database/internal/schema.sql'),
     standardInput: {
       isTTY: () => Boolean(process.stdin.isTTY),
       read: () => require('node:fs').readFileSync(0, 'utf8'),

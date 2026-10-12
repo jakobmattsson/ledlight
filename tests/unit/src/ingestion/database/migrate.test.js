@@ -8,7 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const Database = require('better-sqlite3');
-const { migrateDatabase } = resolveRepositoryModule("src/modules/database/database-migration.js");
+const { migrateDatabase } = resolveRepositoryModule("src/modules/database/internal/database-migration.js");
 
 function temporaryDatabase(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-migrate-'));

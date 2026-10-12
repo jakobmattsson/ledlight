@@ -10,14 +10,14 @@ const test = require('node:test');
 const { asValue } = require('../../../../../lib/awilix');
 const Database = require('better-sqlite3');
 const { createRepositoryContainer } = require('../../../../../src/composition/repository-container');
-const { pathsForJournal } = resolveRepositoryModule("src/modules/core/cache-paths.js");
+const { pathsForJournal } = resolveRepositoryModule("src/modules/core/internal/cache-paths.js");
 const {
   ensureDatabaseCurrent,
-} = resolveRepositoryModule("src/modules/database/database.js");
+} = resolveRepositoryModule("src/modules/database/internal/database.js");
 const {
   buildDatabase,
   checkDatabaseSync,
-} = resolveRepositoryModule("src/modules/database/database.js").$$private;
+} = resolveRepositoryModule("src/modules/database/internal/database.js").$$private;
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-database-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));

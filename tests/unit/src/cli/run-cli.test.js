@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const withExternal = require('../../../support/external-dependencies.js');
 const test = require('node:test');
-const createRunCli = withExternal(require('../../../../src/modules/cli/run-cli'), ['processRuntime']);
+const createRunCli = withExternal(require('../../../../src/modules/cli/internal/run-cli'), ['processRuntime']);
 
 function runWithExitCode(exitCode) {
   const calls = [];

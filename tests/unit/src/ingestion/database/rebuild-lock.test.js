@@ -6,9 +6,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createPublicErrors = require('../../../../../src/modules/core/public-errors');
-const createDatabase = withExternal(require('../../../../../src/modules/database/database'), ['path']);
-const createRebuildLock = withExternal(require('../../../../../src/modules/database/database-rebuild-lock'), ['fs', 'processRuntime', 'systemClock']);
+const createPublicErrors = require('../../../../../src/modules/core/internal/public-errors');
+const createDatabase = withExternal(require('../../../../../src/modules/database/internal/database'), ['path']);
+const createRebuildLock = withExternal(require('../../../../../src/modules/database/internal/database-rebuild-lock'), ['fs', 'processRuntime', 'systemClock']);
 
 function temporaryDatabasePath(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-rebuild-lock-'));

@@ -8,10 +8,10 @@ const path = require('node:path');
 const test = require('node:test');
 const commander = require('commander');
 const { resolveCommands, resolveRepositoryModule } = require('../support/repository-container');
-const createArguments = withExternal(require('../../src/modules/cli/cli-arguments'), ['commander']);
+const createArguments = withExternal(require('../../src/modules/cli/internal/cli-arguments'), ['commander']);
 
 const commands = resolveCommands();
-const project = resolveRepositoryModule('src/modules/project/project.js');
+const project = resolveRepositoryModule('src/modules/project/internal/project.js');
 const argumentsModule = createArguments({
   commander,
   commands,

@@ -21,7 +21,11 @@ test('discovers exactly the modules declared in the dependency policy', () => {
   assert.deepEqual(discoverModules(root), directories);
   assert.deepEqual(Object.keys(allowedModules).sort(), directories);
   assert.deepEqual(Object.keys(allowedExternal).sort(), directories);
-  for (const name of directories) assert.ok(fs.existsSync(path.join(root, name, 'index.js')));
+  for (const name of directories) {
+    const rootFiles = fs.readdirSync(path.join(root, name), { withFileTypes: true })
+      .filter((entry) => entry.isFile()).map((entry) => entry.name).sort();
+    assert.deepEqual(rootFiles, ['index.js'], `${name} must expose only index.js at its root`);
+  }
 });
 
 test('rejects a discovered module without an index facade', (context) => {

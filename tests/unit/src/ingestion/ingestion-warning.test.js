@@ -4,7 +4,7 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { groupWarnings } = resolveRepositoryModule('src/modules/journal/ingestion-warning.js');
+const { groupWarnings } = resolveRepositoryModule('src/modules/journal/warnings/ingestion-warning.js');
 
 function warning(code, message, line) {
   return {
