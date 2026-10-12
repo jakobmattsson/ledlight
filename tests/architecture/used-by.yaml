@@ -43,6 +43,7 @@ external:
     - core
     - journal
     - queries
+
 modules:
   accounting:
     - database

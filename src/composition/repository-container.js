@@ -141,7 +141,7 @@ function generateUsedByYaml(...modulesPathParts) {
   }
   for (const users of Object.values(moduleUsers)) users.sort();
   for (const users of Object.values(externalUsers)) users.sort();
-  return YAML.stringify({ external: externalUsers, modules: moduleUsers });
+  return `${YAML.stringify({ external: externalUsers }).trimEnd()}\n\n${YAML.stringify({ modules: moduleUsers })}`;
 }
 
 function createRepositoryContainer(...modulesPathParts) {
