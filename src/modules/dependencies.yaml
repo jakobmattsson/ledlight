@@ -1,7 +1,10 @@
-ubiquitous-modules:
+ubiquitous:
   - core
+  - fs
+  - path
+  - zod
 
-allowedModules:
+allowed-modules:
   core: []
   journal: [core]
   accounting: [core, journal]
@@ -11,7 +14,7 @@ allowedModules:
   project: [core, journal, database, queries]
   cli: [core, commands, project]
 
-allowedExternal:
+allowed-external:
   core:
     - crypto
     - currentWorkingDirectory

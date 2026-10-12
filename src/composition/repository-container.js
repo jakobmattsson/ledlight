@@ -113,8 +113,8 @@ function scopedDependencies(moduleName, localContainer, providers, getFacade, ex
 function loadDependencyPolicy(...modulesPathParts) {
   const modulesRoot = path.resolve(...modulesPathParts);
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
-  const allowedModules = Object.freeze(policy.allowedModules);
-  const allowedExternal = Object.freeze(policy.allowedExternal);
+  const allowedModules = Object.freeze(policy['allowed-modules']);
+  const allowedExternal = Object.freeze(policy['allowed-external']);
   const modules = discoverModules(modulesRoot);
   const order = dependencyOrder(modules, allowedModules);
   assertPolicyKeys(modules, allowedExternal, 'External');

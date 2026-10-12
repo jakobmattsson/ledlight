@@ -10,7 +10,7 @@ const YAML = require('yaml');
 const {
   validateDependsOnYaml, validateUsedByYaml,
 } = require('../../src/composition/repository-container');
-const { generateGraphDot, loadUbiquitousModules } = require('../../scripts/architecture/graph');
+const { generateGraphDot, loadGraphOptions } = require('../../scripts/architecture/graph');
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
 const architectureRoot = path.resolve(__dirname, '../architecture');
@@ -27,38 +27,51 @@ for (const [fileName, validate] of [
 
 test('architecture diagrams match the generated dependency views', async () => {
   const viz = await instance();
-  const ubiquitousModules = loadUbiquitousModules(modulesRoot);
+  const graphOptions = loadGraphOptions(modulesRoot);
   for (const name of ['depends-on', 'used-by']) {
     const yaml = fs.readFileSync(path.join(architectureRoot, `${name}.yaml`), 'utf8');
     const actual = fs.readFileSync(path.join(architectureRoot, `${name}.svg`), 'utf8');
-    const expected = viz.renderString(generateGraphDot(name, YAML.parse(yaml), ubiquitousModules),
+    const expected = viz.renderString(generateGraphDot(name, YAML.parse(yaml), graphOptions),
       { format: 'svg', engine: 'dot' });
     assert.equal(actual, expected, `${name}.svg is out of date; run npm run architecture:generate`);
   }
 });
 
-test('ubiquitous modules remain in YAML but appear inside consuming graph nodes', () => {
-  const ubiquitousModules = loadUbiquitousModules(modulesRoot);
-  assert.deepEqual(ubiquitousModules, ['core']);
+test('ubiquitous dependencies appear in cards while other external services remain nodes', () => {
+  const graphOptions = loadGraphOptions(modulesRoot);
+  assert.deepEqual(graphOptions.ubiquitousModules, ['core']);
+  assert.deepEqual(graphOptions.ubiquitousExternal, ['fs', 'path', 'zod']);
   for (const name of ['depends-on', 'used-by']) {
     const yaml = fs.readFileSync(path.join(architectureRoot, `${name}.yaml`), 'utf8');
     const document = YAML.parse(yaml);
-    const dot = generateGraphDot(name, document, ubiquitousModules);
-    assert.doesNotMatch(dot, / {2}"core" \[label=/u);
-    assert.doesNotMatch(dot, /"core" ->|-> "core"/u);
+    const dot = generateGraphDot(name, document, graphOptions);
+    assert.doesNotMatch(dot, /"module:core" \[label=/u);
+    assert.doesNotMatch(dot, /"module:core" ->|-> "module:core"/u);
+    const external = name === 'depends-on'
+      ? new Set(Object.values(document).flatMap((entry) => entry.external))
+      : new Set(Object.keys(document.external));
+    for (const service of external) {
+      const node = `"external:${service}" [label=${JSON.stringify(service)}, shape=ellipse`;
+      assert.equal(dot.includes(node), !graphOptions.ubiquitousExternal.includes(service), service);
+    }
     assert.doesNotMatch(dot, /UBIQUITOUS MODULES|EXTERNAL SERVICES/u);
     assert.match(dot, /<FONT COLOR="#245B4F" POINT-SIZE="11">core<\/FONT>/u);
+    assert.match(dot, /<FONT COLOR="#603E75" POINT-SIZE="11">fs/u);
   }
 });
 
-test('ubiquitous module metadata is optional and rejects unknown names', (t) => {
+test('ubiquitous metadata is optional and rejects unknown names', (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-graph-policy-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const policyPath = path.join(directory, 'dependencies.yaml');
-  fs.writeFileSync(policyPath, 'allowedModules:\n  example: []\n');
-  assert.deepEqual(loadUbiquitousModules(directory), []);
-  fs.writeFileSync(policyPath, 'allowedModules:\n  example: []\nubiquitous-modules: [missing]\n');
-  assert.throws(() => loadUbiquitousModules(directory), /Unknown ubiquitous module: missing/u);
+  fs.writeFileSync(policyPath, 'allowed-modules:\n  example: []\nallowed-external:\n  example: [clock]\n');
+  assert.deepEqual(loadGraphOptions(directory), { ubiquitousModules: [], ubiquitousExternal: [] });
+  fs.writeFileSync(policyPath, 'allowed-modules:\n  example: []\nallowed-external:\n  example: [clock]\nubiquitous: [example, clock]\n');
+  assert.deepEqual(loadGraphOptions(directory), {
+    ubiquitousModules: ['example'], ubiquitousExternal: ['clock'],
+  });
+  fs.writeFileSync(policyPath, 'allowed-modules:\n  example: []\nallowed-external:\n  example: [clock]\nubiquitous: [missing]\n');
+  assert.throws(() => loadGraphOptions(directory), /Unknown ubiquitous dependency: missing/u);
 });
 
 test('dependency validators identify changed values, malformed YAML, and stale formatting', () => {

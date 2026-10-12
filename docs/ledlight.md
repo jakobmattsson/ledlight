@@ -284,23 +284,26 @@ The eight modules and their dependency direction are:
 | `cli` | Argument parsing, execution, and output formatting | `core`, `commands`, `project` |
 
 `src/modules/dependencies.yaml` is the source of truth for these edges
-and for the external services permitted to each module. The repository
+and for the external services permitted to each module. The `allowed-modules`
+and `allowed-external` mappings define the composition policy. The repository
 container discovers the module directories, checks that they match both
 policies, rejects cycles, and builds module-local factory containers. Runtime
 adapters are created by `src/modules/external.js`, a file outside the domain
 module graph. Each domain module's `index.js` is registered as a factory and
 receives its local dependencies through injection.
 
-The optional `ubiquitous-modules` list in `dependencies.yaml` affects only
-diagram rendering. Its modules remain ordinary dependencies in composition
-and in the generated YAML views. In SVG diagrams, they appear inside each
-consumer's card rather than as separate nodes. Ledlight marks `core` this way.
+The optional `ubiquitous` list in `dependencies.yaml` affects only diagram
+rendering. Entries may name modules or external services; they remain ordinary
+dependencies in composition and in the generated YAML views. In SVG diagrams,
+they appear inside each consumer's card rather than as separate nodes.
+Ledlight marks `core`, `fs`, `path`, and `zod` this way.
 
 The sorted dependency views in `tests/architecture/depends-on.yaml` and
 `tests/architecture/used-by.yaml` are generated from that policy. The same
 command renders `depends-on.svg` and `used-by.svg` beside them. In each diagram,
-arrows show the remaining module dependencies. Each card shows ubiquitous
-modules in green and external services in purple. Run `npm run architecture:generate`
+arrows show the remaining dependencies. Module cards are blue, external service
+nodes are purple, and ubiquitous dependencies appear as green or purple rows
+inside consuming cards. Run `npm run architecture:generate`
 after changing module dependencies; the architecture tests check that the YAML
 and SVG views stay current.
 

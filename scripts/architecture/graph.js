@@ -13,59 +13,85 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
 
-function loadUbiquitousModules(modulesRoot) {
+function loadGraphOptions(modulesRoot) {
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
-  const names = policy['ubiquitous-modules'] ?? [];
-  if (!Array.isArray(names)) throw new TypeError('ubiquitous-modules must be a list');
-  const known = new Set(Object.keys(policy.allowedModules));
+  const knownModules = new Set(Object.keys(policy['allowed-modules']));
+  const knownExternal = new Set(Object.values(policy['allowed-external']).flat());
+  const names = policy.ubiquitous ?? [];
+  if (!Array.isArray(names)) throw new TypeError('ubiquitous must be a list');
   const seen = new Set();
   for (const name of names) {
-    if (!known.has(name)) throw new Error(`Unknown ubiquitous module: ${name}`);
-    if (seen.has(name)) throw new Error(`Duplicate ubiquitous module: ${name}`);
+    if (!knownModules.has(name) && !knownExternal.has(name)) {
+      throw new Error(`Unknown ubiquitous dependency: ${name}`);
+    }
+    if (seen.has(name)) throw new Error(`Duplicate ubiquitous dependency: ${name}`);
     seen.add(name);
   }
-  return names;
+  return {
+    ubiquitousModules: names.filter((name) => knownModules.has(name)),
+    ubiquitousExternal: names.filter((name) => knownExternal.has(name)),
+  };
 }
 
-function graphData(view, document, ubiquitousModules) {
-  const ubiquitous = new Set(ubiquitousModules);
+function nodeId(kind, name) {
+  return quoted(`${kind}:${name}`);
+}
+
+function graphData(view, document, { ubiquitousModules, ubiquitousExternal }) {
+  const hiddenModules = new Set(ubiquitousModules);
+  const hiddenExternal = new Set(ubiquitousExternal);
   const allModules = view === 'depends-on' ? Object.keys(document) : Object.keys(document.modules);
-  const modules = allModules.filter((name) => !ubiquitous.has(name));
+  const modules = allModules.filter((name) => !hiddenModules.has(name));
+  const allExternal = view === 'depends-on'
+    ? [...new Set(Object.values(document).flatMap((entry) => entry.external))]
+    : Object.keys(document.external);
+  const external = allExternal.filter((name) => !hiddenExternal.has(name)).sort();
   const externalByModule = Object.fromEntries(modules.map((name) => [name, []]));
   const ubiquitousByModule = Object.fromEntries(modules.map((name) => [name, []]));
   const edges = [];
 
   if (view === 'depends-on') {
     for (const [consumer, dependencies] of Object.entries(document)) {
-      if (ubiquitous.has(consumer)) continue;
-      externalByModule[consumer].push(...dependencies.external);
-      for (const dependency of dependencies.modules) {
-        if (ubiquitous.has(dependency)) ubiquitousByModule[consumer].push(dependency);
+      if (hiddenModules.has(consumer)) continue;
+      for (const dependency of dependencies.external) {
+        if (hiddenExternal.has(dependency)) externalByModule[consumer].push(dependency);
         else {
-          edges.push({ from: consumer, to: dependency,
-            tooltip: `${consumer} depends on ${dependency}` });
+          edges.push({ from: nodeId('module', consumer), to: nodeId('external', dependency),
+            kind: 'external', tooltip: `${consumer} uses ${dependency}` });
+        }
+      }
+      for (const dependency of dependencies.modules) {
+        if (hiddenModules.has(dependency)) ubiquitousByModule[consumer].push(dependency);
+        else {
+          edges.push({ from: nodeId('module', consumer), to: nodeId('module', dependency),
+            kind: 'module', tooltip: `${consumer} depends on ${dependency}` });
         }
       }
     }
   } else {
     for (const [dependency, consumers] of Object.entries(document.modules)) {
       for (const consumer of consumers) {
-        if (ubiquitous.has(consumer)) continue;
-        if (ubiquitous.has(dependency)) ubiquitousByModule[consumer].push(dependency);
+        if (hiddenModules.has(consumer)) continue;
+        if (hiddenModules.has(dependency)) ubiquitousByModule[consumer].push(dependency);
         else {
-          edges.push({ from: dependency, to: consumer,
-            tooltip: `${consumer} depends on ${dependency}` });
+          edges.push({ from: nodeId('module', dependency), to: nodeId('module', consumer),
+            kind: 'module', tooltip: `${consumer} depends on ${dependency}` });
         }
       }
     }
     for (const [dependency, consumers] of Object.entries(document.external)) {
       for (const consumer of consumers) {
-        if (!ubiquitous.has(consumer)) externalByModule[consumer].push(dependency);
+        if (hiddenModules.has(consumer)) continue;
+        if (hiddenExternal.has(dependency)) externalByModule[consumer].push(dependency);
+        else {
+          edges.push({ from: nodeId('external', dependency), to: nodeId('module', consumer),
+            kind: 'external', tooltip: `${consumer} uses ${dependency}` });
+        }
       }
     }
   }
 
-  return { modules: modules.sort(), externalByModule, ubiquitousByModule, edges };
+  return { modules: modules.sort(), external, externalByModule, ubiquitousByModule, edges };
 }
 
 function moduleLabel(name, external, ubiquitous) {
@@ -86,10 +112,10 @@ function moduleLabel(name, external, ubiquitous) {
     + '</TABLE>';
 }
 
-function generateGraphDot(view, document, ubiquitousModules) {
+function generateGraphDot(view, document, options) {
   if (view !== 'depends-on' && view !== 'used-by') throw new Error(`Unknown graph view: ${view}`);
-  const { modules, externalByModule, ubiquitousByModule, edges } =
-    graphData(view, document, ubiquitousModules);
+  const { modules, external, externalByModule, ubiquitousByModule, edges } =
+    graphData(view, document, options);
   const title = view === 'depends-on' ? 'DEPENDS ON' : 'USED BY';
   const subtitle = view === 'depends-on'
     ? 'Arrows point to required modules'
@@ -107,12 +133,17 @@ function generateGraphDot(view, document, ubiquitousModules) {
       + '</TD></TR></TABLE>>];',
     '  node [shape=plain, fontname="Helvetica"];',
     '  edge [arrowsize=0.8, penwidth=1.7, color="#6994C6"];',
-    ...modules.map((name) => `  ${quoted(name)} [label=<${moduleLabel(name,
+    ...modules.map((name) => `  ${nodeId('module', name)} [label=<${moduleLabel(name,
       externalByModule[name], ubiquitousByModule[name])}>, tooltip="Module: ${name}"];`),
-    ...edges.map(({ from, to, tooltip }) => `  ${quoted(from)} -> ${quoted(to)} [tooltip=${quoted(tooltip)}];`),
+    ...external.map((name) => `  ${nodeId('external', name)} [label=${quoted(name)}, `
+      + 'shape=ellipse, style=filled, color="#AA86BF", fillcolor="#F5EFFA", '
+      + 'fontcolor="#603E75", fontsize=12, margin="0.17,0.10", tooltip="External service"];'),
+    ...edges.map(({ from, to, kind, tooltip }) => `  ${from} -> ${to} [`
+      + `color="${kind === 'module' ? '#6994C6' : '#AC8DBD'}", `
+      + `style=${kind === 'module' ? 'solid' : 'dashed'}, tooltip=${quoted(tooltip)}];`),
     '}',
   ];
   return `${lines.join('\n')}\n`;
 }
 
-module.exports = { generateGraphDot, loadUbiquitousModules };
+module.exports = { generateGraphDot, loadGraphOptions };

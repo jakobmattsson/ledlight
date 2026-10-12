@@ -13,9 +13,9 @@ const {
 } = require('../../src/composition/repository-container');
 
 const root = path.resolve(__dirname, '../../src/modules');
-const { allowedExternal, allowedModules } = YAML.parse(
-  fs.readFileSync(path.join(root, 'dependencies.yaml'), 'utf8'),
-);
+const policy = YAML.parse(fs.readFileSync(path.join(root, 'dependencies.yaml'), 'utf8'));
+const allowedModules = policy['allowed-modules'];
+const allowedExternal = policy['allowed-external'];
 
 test('discovers exactly the modules declared in the dependency policy', () => {
   const directories = fs.readdirSync(root, { withFileTypes: true })
@@ -71,10 +71,10 @@ test('composes an independent module tree from the supplied path', (context) => 
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.mkdirSync(path.join(directory, 'source'));
   fs.mkdirSync(path.join(directory, 'consumer'));
-  fs.writeFileSync(path.join(directory, 'dependencies.yaml'), `allowedModules:
+  fs.writeFileSync(path.join(directory, 'dependencies.yaml'), `allowed-modules:
   source: []
   consumer: [source]
-allowedExternal:
+allowed-external:
   source: [greeting]
   consumer: []
 `);
