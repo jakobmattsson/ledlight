@@ -1,0 +1,1 @@
+{"id":"fba77633a6d3ff939fece71a3fde1a5d.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/conventions/module-boundaries.test.js#rejects a discovered module without an index facade","name":"rejects a discovered module without an index facade","status":"passed","testResultsByEnv":{"default":"48ebc6911e77b453d8cba7bb7bdc0782"}}
