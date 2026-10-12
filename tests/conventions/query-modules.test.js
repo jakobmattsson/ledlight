@@ -7,7 +7,7 @@ const test = require('node:test');
 const { resolveQuery } = require('../support/repository-container');
 const { createRepositoryContainer } = require('../../src/composition/repository-container');
 
-const queryDirectory = path.resolve(__dirname, '../../src/modules/queries/definitions');
+const queryDirectory = path.resolve(__dirname, '../../src/modules/queries/list-definitions');
 
 test('registers all queries as one immutable dependency', () => {
   const container = createRepositoryContainer();

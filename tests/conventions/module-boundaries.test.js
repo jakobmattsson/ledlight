@@ -10,7 +10,7 @@ const {
   allowedExternal, allowedModules, createRepositoryContainer,
 } = require('../../src/composition/repository-container');
 const {
-  dependencyOrder, discoverModules, moduleName, scopedDependencies,
+  createLocalContainer, dependencyOrder, discoverModules, moduleName, scopedDependencies,
 } = require('../../src/composition/module-container');
 
 const root = path.resolve(__dirname, '../../src/modules');
@@ -64,6 +64,44 @@ test('external overrides remain scoped to their permitted modules', () => {
 test('registration names derive from kebab-case filenames', () => {
   assert.equal(moduleName('/example/database-reader.js'), 'databaseReader');
   assert.throws(() => moduleName('/example/database_reader.js'), /kebab-case/u);
+});
+
+test('list directories inject resolved files recursively with names and relative paths', (context) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-list-module-'));
+  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(directory, 'list-items', 'nested'), { recursive: true });
+  fs.mkdirSync(path.join(directory, 'internal'));
+  fs.writeFileSync(path.join(directory, 'index.js'),
+    'module.exports = ({ items }) => ({ items });\n');
+  fs.writeFileSync(path.join(directory, 'internal', 'helper.js'),
+    "module.exports = () => ({ value: 'helper' });\n");
+  fs.writeFileSync(path.join(directory, 'list-items', 'first.js'),
+    "module.exports = () => ({ value: 'first' });\n");
+  fs.writeFileSync(path.join(directory, 'list-items', 'nested', 'second.js'),
+    "module.exports = ({ helper }) => ({ value: helper.value });\n");
+
+  let local;
+  const dependencies = new Proxy(Object.create(null), {
+    get: (_target, name) => local.container.resolve(name),
+  });
+  local = createLocalContainer(directory, dependencies);
+  const { items } = local.container.resolve('index');
+  assert.deepEqual(items, [
+    { name: 'first', relativePath: 'first.js', value: { value: 'first' } },
+    { name: 'second', relativePath: 'nested/second.js', value: { value: 'helper' } },
+  ]);
+  assert.equal(items, local.container.resolve('items'));
+  assert.ok(Object.isFrozen(items));
+});
+
+test('list dependency names cannot collide with a file registration', (context) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-list-collision-'));
+  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(directory, 'list-items'));
+  fs.mkdirSync(path.join(directory, 'internal'));
+  fs.writeFileSync(path.join(directory, 'internal', 'items.js'),
+    'module.exports = () => ({});\n');
+  assert.throws(() => createLocalContainer(directory, {}), /Duplicate module registration items/u);
 });
 
 test('module scope exposes local factories and allowed facades by module name only', () => {

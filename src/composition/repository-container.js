@@ -1,9 +1,8 @@
 'use strict';
 
 const path = require('node:path');
-const { asValue, listModules } = require('../../lib/awilix');
 const {
-  assertPolicyKeys, createLocalContainer, dependencyOrder, discoverModules, moduleName,
+  assertPolicyKeys, createLocalContainer, dependencyOrder, discoverModules,
   scopedDependencies,
 } = require('./module-container');
 
@@ -93,17 +92,6 @@ function createRepositoryContainer() {
     for (const [name, registration] of internalOverrides.get(moduleName) ?? []) {
       local.container.register(name, registration);
     }
-    if (['queries', 'commands'].includes(moduleName)) {
-      const definitions = listModules('definitions/**/*.js', { cwd: directory })
-        .map(({ path: fileName }) => ({
-          name: moduleNameFromFile(fileName),
-          commandName: path.basename(fileName, '.js'),
-          group: commandGroup(moduleName, directory, fileName),
-          fileName,
-          value: local.container.resolve(moduleNameFromFile(fileName)),
-        }));
-      local.container.register('definitions', asValue(Object.freeze(definitions)));
-    }
     const facade = local.container.resolve('index');
     if (!facade || typeof facade !== 'object') {
       throw new TypeError(`${moduleName}/index.js must return a facade`);
@@ -141,23 +129,6 @@ function createRepositoryContainer() {
       },
     },
   };
-}
-
-function moduleNameFromFile(fileName) {
-  return moduleName(fileName);
-}
-
-function commandGroup(owner, directory, fileName) {
-  const relative = path.relative(path.join(directory, 'definitions'), fileName);
-  const segments = relative.split(path.sep);
-  if (owner === 'commands' && (segments.length !== 2 ||
-      !/^[a-z]+(?:-[a-z]+)*$/u.test(segments[0]))) {
-    throw new TypeError(`Command module must be directly inside one group directory: ${fileName}`);
-  }
-  if (owner === 'queries' && segments.length !== 1) {
-    throw new TypeError(`Query module must be directly inside definitions: ${fileName}`);
-  }
-  return segments.length === 2 ? segments[0] : 'queries';
 }
 
 module.exports = { allowedExternal, allowedModules, createRepositoryContainer };

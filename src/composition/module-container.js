@@ -72,6 +72,25 @@ function createLocalContainer(directory, dependencies) {
     if (typeof factory !== 'function') throw new TypeError(`${fileName} must export a factory`);
     container.register(name, asFunction(() => factory(dependencies), { lifetime: Lifetime.SINGLETON }));
   }
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !entry.name.startsWith('list-')) continue;
+    if (!/^list-[a-z]+(?:-[a-z]+)*$/u.test(entry.name)) {
+      throw new Error(`List directory must use list-<kebab-case>: ${entry.name}`);
+    }
+    const name = moduleName(`${entry.name.slice('list-'.length)}.js`);
+    const listDirectory = path.join(directory, entry.name);
+    if (locations.has(name)) {
+      throw new Error(`Duplicate module registration ${name}: ${locations.get(name)} and ${listDirectory}`);
+    }
+    locations.set(name, listDirectory);
+    const files = listModules('**/*.js', { cwd: listDirectory });
+    container.register(name, asFunction(() => Object.freeze(files.map(({ path: fileName }) => {
+      const registrationName = moduleName(fileName);
+      const relativePath = path.relative(listDirectory, fileName).split(path.sep).join('/');
+      return Object.freeze({ name: registrationName, relativePath,
+        value: container.resolve(registrationName) });
+    })), { lifetime: Lifetime.SINGLETON }));
+  }
   return { container, locations };
 }
 

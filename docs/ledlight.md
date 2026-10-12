@@ -297,6 +297,14 @@ implementation files live in subdirectories. Factories have unique kebab-case
 file names within their module. The local Awilix subset lives in
 `lib/awilix.js`.
 
+A directory named `list-<name>` directly under a module root registers an
+array dependency called `<name>`. Composition resolves every JavaScript factory
+in that directory and its subdirectories, sorted by relative path, and injects
+entries with `name`, `relativePath`, and `value`. The module's `index.js` can
+interpret those entries without embedding module-specific list rules in
+composition. `queries` and `commands` use `list-definitions`; their index
+factories validate and shape query and command metadata, respectively.
+
 The `queries` and `commands` facades each expose a frozen `definitions` array.
 The project builds journal operations and API input definitions from the query
 definitions. The CLI uses the command definitions and invokes the corresponding
