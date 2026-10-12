@@ -300,12 +300,12 @@ Ledlight marks `core`, `fs`, `path`, and `zod` this way.
 
 The sorted dependency views in `tests/architecture/depends-on.yaml` and
 `tests/architecture/used-by.yaml` are generated from that policy. The same
-command renders `depends-on.svg` and `used-by.svg` beside them. In each diagram,
-arrows show the remaining dependencies. Module cards are blue, external service
-nodes are purple, and ubiquitous dependencies appear as green or purple rows
-inside consuming cards. Run `npm run architecture:generate`
-after changing module dependencies; the architecture tests check that the YAML
-and SVG views stay current.
+command renders the repository root's `architecture.svg` from `depends-on.yaml`.
+Its arrows point to required dependencies. Module cards are blue, external
+service nodes are purple, and ubiquitous dependencies appear as green or purple
+rows inside consuming cards. Run `npm run architecture:generate` after changing
+module dependencies; the architecture tests check that the YAML and SVG views
+stay current.
 
 `createRepositoryContainer(...modulesPathParts)` resolves its string arguments
 as path segments and reads `dependencies.yaml` and `external.js` from that

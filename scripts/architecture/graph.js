@@ -37,56 +37,30 @@ function nodeId(kind, name) {
   return quoted(`${kind}:${name}`);
 }
 
-function graphData(view, document, { ubiquitousModules, ubiquitousExternal }) {
+function graphData(document, { ubiquitousModules, ubiquitousExternal }) {
   const hiddenModules = new Set(ubiquitousModules);
   const hiddenExternal = new Set(ubiquitousExternal);
-  const allModules = view === 'depends-on' ? Object.keys(document) : Object.keys(document.modules);
-  const modules = allModules.filter((name) => !hiddenModules.has(name));
-  const allExternal = view === 'depends-on'
-    ? [...new Set(Object.values(document).flatMap((entry) => entry.external))]
-    : Object.keys(document.external);
+  const modules = Object.keys(document).filter((name) => !hiddenModules.has(name));
+  const allExternal = [...new Set(Object.values(document).flatMap((entry) => entry.external))];
   const external = allExternal.filter((name) => !hiddenExternal.has(name)).sort();
   const externalByModule = Object.fromEntries(modules.map((name) => [name, []]));
   const ubiquitousByModule = Object.fromEntries(modules.map((name) => [name, []]));
   const edges = [];
 
-  if (view === 'depends-on') {
-    for (const [consumer, dependencies] of Object.entries(document)) {
-      if (hiddenModules.has(consumer)) continue;
-      for (const dependency of dependencies.external) {
-        if (hiddenExternal.has(dependency)) externalByModule[consumer].push(dependency);
-        else {
-          edges.push({ from: nodeId('module', consumer), to: nodeId('external', dependency),
-            kind: 'external', tooltip: `${consumer} uses ${dependency}` });
-        }
-      }
-      for (const dependency of dependencies.modules) {
-        if (hiddenModules.has(dependency)) ubiquitousByModule[consumer].push(dependency);
-        else {
-          edges.push({ from: nodeId('module', consumer), to: nodeId('module', dependency),
-            kind: 'module', tooltip: `${consumer} depends on ${dependency}` });
-        }
+  for (const [consumer, dependencies] of Object.entries(document)) {
+    if (hiddenModules.has(consumer)) continue;
+    for (const dependency of dependencies.external) {
+      if (hiddenExternal.has(dependency)) externalByModule[consumer].push(dependency);
+      else {
+        edges.push({ from: nodeId('module', consumer), to: nodeId('external', dependency),
+          kind: 'external', tooltip: `${consumer} uses ${dependency}` });
       }
     }
-  } else {
-    for (const [dependency, consumers] of Object.entries(document.modules)) {
-      for (const consumer of consumers) {
-        if (hiddenModules.has(consumer)) continue;
-        if (hiddenModules.has(dependency)) ubiquitousByModule[consumer].push(dependency);
-        else {
-          edges.push({ from: nodeId('module', dependency), to: nodeId('module', consumer),
-            kind: 'module', tooltip: `${consumer} depends on ${dependency}` });
-        }
-      }
-    }
-    for (const [dependency, consumers] of Object.entries(document.external)) {
-      for (const consumer of consumers) {
-        if (hiddenModules.has(consumer)) continue;
-        if (hiddenExternal.has(dependency)) externalByModule[consumer].push(dependency);
-        else {
-          edges.push({ from: nodeId('external', dependency), to: nodeId('module', consumer),
-            kind: 'external', tooltip: `${consumer} uses ${dependency}` });
-        }
+    for (const dependency of dependencies.modules) {
+      if (hiddenModules.has(dependency)) ubiquitousByModule[consumer].push(dependency);
+      else {
+        edges.push({ from: nodeId('module', consumer), to: nodeId('module', dependency),
+          kind: 'module', tooltip: `${consumer} depends on ${dependency}` });
       }
     }
   }
@@ -112,21 +86,16 @@ function moduleLabel(name, external, ubiquitous) {
     + '</TABLE>';
 }
 
-function generateGraphDot(view, document, options) {
-  if (view !== 'depends-on' && view !== 'used-by') throw new Error(`Unknown graph view: ${view}`);
+function generateGraphDot(document, options) {
   const { modules, external, externalByModule, ubiquitousByModule, edges } =
-    graphData(view, document, options);
-  const title = view === 'depends-on' ? 'DEPENDS ON' : 'USED BY';
-  const subtitle = view === 'depends-on'
-    ? 'Arrows point to required modules'
-    : 'Arrows point to modules that use a dependency';
+    graphData(document, options);
   const lines = [
     'digraph architecture {',
     `  graph [rankdir=LR, bgcolor="#FFFFFF", pad="0.50", nodesep="0.62", ranksep="1.0", `
       + `splines=true, outputorder=edgesfirst, fontname="Helvetica", labelloc=t, `
       + 'label=<<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="6" BGCOLOR="#FFFFFF"><TR><TD>'
-      + `<FONT POINT-SIZE="24" COLOR="#213047"><B>${title}</B></FONT><BR/>`
-      + `<FONT POINT-SIZE="12" COLOR="#60738A">${subtitle}</FONT><BR/>`
+      + '<FONT POINT-SIZE="24" COLOR="#213047"><B>ARCHITECTURE</B></FONT><BR/>'
+      + '<FONT POINT-SIZE="12" COLOR="#60738A">Arrows point to required dependencies</FONT><BR/>'
       + '<FONT POINT-SIZE="10" COLOR="#245B4F">Green: ubiquitous modules</FONT>'
       + '<FONT POINT-SIZE="10" COLOR="#60738A"> &#183; </FONT>'
       + '<FONT POINT-SIZE="10" COLOR="#603E75">Purple: external services</FONT>'

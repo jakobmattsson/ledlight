@@ -10,8 +10,8 @@
 <title>architecture</title>
 <polygon fill="#ffffff" stroke="none" points="-36,36 -36,-786.73 1399.87,-786.73 1399.87,36 -36,36"/>
 <polygon fill="#ffffff" stroke="none" points="553.87,-684.73 553.87,-746.73 810,-746.73 810,-684.73 553.87,-684.73"/>
-<text xml:space="preserve" text-anchor="start" x="602.59" y="-718.13" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="24.00" fill="#213047">DEPENDS ON</text>
-<text xml:space="preserve" text-anchor="start" x="593.89" y="-704.93" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#60738a">Arrows point to required modules</text>
+<text xml:space="preserve" text-anchor="start" x="587.27" y="-718.13" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="24.00" fill="#213047">ARCHITECTURE</text>
+<text xml:space="preserve" text-anchor="start" x="579.21" y="-704.93" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#60738a">Arrows point to required dependencies</text>
 <text xml:space="preserve" text-anchor="start" x="561.87" y="-694.73" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#245b4f">Green: ubiquitous modules</text>
 <text xml:space="preserve" text-anchor="start" x="681.39" y="-694.73" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#60738a"> · </text>
 <text xml:space="preserve" text-anchor="start" x="692.5" y="-694.73" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#603e75">Purple: external services</text>

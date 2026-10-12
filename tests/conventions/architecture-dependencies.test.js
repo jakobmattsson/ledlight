@@ -14,6 +14,7 @@ const { generateGraphDot, loadGraphOptions } = require('../../scripts/architectu
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
 const architectureRoot = path.resolve(__dirname, '../architecture');
+const diagramPath = path.resolve(__dirname, '../../architecture.svg');
 
 for (const [fileName, validate] of [
   ['depends-on.yaml', validateDependsOnYaml],
@@ -25,39 +26,33 @@ for (const [fileName, validate] of [
   });
 }
 
-test('architecture diagrams match the generated dependency views', async () => {
+test('architecture.svg matches the generated dependency view', async () => {
   const viz = await instance();
   const graphOptions = loadGraphOptions(modulesRoot);
-  for (const name of ['depends-on', 'used-by']) {
-    const yaml = fs.readFileSync(path.join(architectureRoot, `${name}.yaml`), 'utf8');
-    const actual = fs.readFileSync(path.join(architectureRoot, `${name}.svg`), 'utf8');
-    const expected = viz.renderString(generateGraphDot(name, YAML.parse(yaml), graphOptions),
-      { format: 'svg', engine: 'dot' });
-    assert.equal(actual, expected, `${name}.svg is out of date; run npm run architecture:generate`);
-  }
+  const yaml = fs.readFileSync(path.join(architectureRoot, 'depends-on.yaml'), 'utf8');
+  const actual = fs.readFileSync(diagramPath, 'utf8');
+  const expected = viz.renderString(generateGraphDot(YAML.parse(yaml), graphOptions),
+    { format: 'svg', engine: 'dot' });
+  assert.equal(actual, expected, 'architecture.svg is out of date; run npm run architecture:generate');
 });
 
 test('ubiquitous dependencies appear in cards while other external services remain nodes', () => {
   const graphOptions = loadGraphOptions(modulesRoot);
   assert.deepEqual(graphOptions.ubiquitousModules, ['core']);
   assert.deepEqual(graphOptions.ubiquitousExternal, ['fs', 'path', 'zod']);
-  for (const name of ['depends-on', 'used-by']) {
-    const yaml = fs.readFileSync(path.join(architectureRoot, `${name}.yaml`), 'utf8');
-    const document = YAML.parse(yaml);
-    const dot = generateGraphDot(name, document, graphOptions);
-    assert.doesNotMatch(dot, /"module:core" \[label=/u);
-    assert.doesNotMatch(dot, /"module:core" ->|-> "module:core"/u);
-    const external = name === 'depends-on'
-      ? new Set(Object.values(document).flatMap((entry) => entry.external))
-      : new Set(Object.keys(document.external));
-    for (const service of external) {
-      const node = `"external:${service}" [label=${JSON.stringify(service)}, shape=ellipse`;
-      assert.equal(dot.includes(node), !graphOptions.ubiquitousExternal.includes(service), service);
-    }
-    assert.doesNotMatch(dot, /UBIQUITOUS MODULES|EXTERNAL SERVICES/u);
-    assert.match(dot, /<FONT COLOR="#245B4F" POINT-SIZE="11">core<\/FONT>/u);
-    assert.match(dot, /<FONT COLOR="#603E75" POINT-SIZE="11">fs/u);
+  const yaml = fs.readFileSync(path.join(architectureRoot, 'depends-on.yaml'), 'utf8');
+  const document = YAML.parse(yaml);
+  const dot = generateGraphDot(document, graphOptions);
+  assert.doesNotMatch(dot, /"module:core" \[label=/u);
+  assert.doesNotMatch(dot, /"module:core" ->|-> "module:core"/u);
+  const external = new Set(Object.values(document).flatMap((entry) => entry.external));
+  for (const service of external) {
+    const node = `"external:${service}" [label=${JSON.stringify(service)}, shape=ellipse`;
+    assert.equal(dot.includes(node), !graphOptions.ubiquitousExternal.includes(service), service);
   }
+  assert.doesNotMatch(dot, /UBIQUITOUS MODULES|EXTERNAL SERVICES/u);
+  assert.match(dot, /<FONT COLOR="#245B4F" POINT-SIZE="11">core<\/FONT>/u);
+  assert.match(dot, /<FONT COLOR="#603E75" POINT-SIZE="11">fs/u);
 });
 
 test('ubiquitous metadata is optional and rejects unknown names', (t) => {

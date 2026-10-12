@@ -18,18 +18,13 @@ async function generate() {
   const usedByYaml = generateUsedByYaml(modulesRoot);
   const graphOptions = loadGraphOptions(modulesRoot);
   const viz = await instance();
-  const views = [
-    ['depends-on', dependsOnYaml],
-    ['used-by', usedByYaml],
-  ];
+  const dot = generateGraphDot(YAML.parse(dependsOnYaml), graphOptions);
+  const svg = viz.renderString(dot, { format: 'svg', engine: 'dot' });
 
   fs.mkdirSync(outputRoot, { recursive: true });
-  for (const [name, yaml] of views) {
-    const dot = generateGraphDot(name, YAML.parse(yaml), graphOptions);
-    const svg = viz.renderString(dot, { format: 'svg', engine: 'dot' });
-    fs.writeFileSync(path.join(outputRoot, `${name}.yaml`), yaml);
-    fs.writeFileSync(path.join(outputRoot, `${name}.svg`), svg);
-  }
+  fs.writeFileSync(path.join(outputRoot, 'depends-on.yaml'), dependsOnYaml);
+  fs.writeFileSync(path.join(outputRoot, 'used-by.yaml'), usedByYaml);
+  fs.writeFileSync(path.join(repositoryRoot, 'architecture.svg'), svg);
 }
 
 generate().catch((error) => {
