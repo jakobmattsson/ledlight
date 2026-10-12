@@ -294,9 +294,12 @@ receives its local dependencies through injection.
 
 The optional `ubiquitous` list in `dependencies.yaml` affects only diagram
 rendering. Entries may name modules or external services; they remain ordinary
-dependencies in composition and in the generated YAML views. In SVG diagrams,
-they appear inside each consumer's card rather than as separate nodes.
-Ledlight marks `core`, `fs`, `path`, and `zod` this way.
+dependencies in composition and in the generated YAML views. In the SVG,
+ubiquitous modules have their own cards with arrows to their dependencies,
+including other ubiquitous modules. Ordinary modules show ubiquitous module
+dependencies inside their cards instead of drawing arrows to those nodes.
+Ubiquitous external services appear inside module cards without their own
+nodes. Ledlight marks `core`, `fs`, `path`, and `zod` as ubiquitous.
 
 The sorted dependency views in `tests/architecture/depends-on.yaml` and
 `tests/architecture/used-by.yaml` are generated from that policy. The same

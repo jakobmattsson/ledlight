@@ -38,9 +38,9 @@ function nodeId(kind, name) {
 }
 
 function graphData(document, { ubiquitousModules, ubiquitousExternal }) {
-  const hiddenModules = new Set(ubiquitousModules);
+  const ubiquitousModuleNames = new Set(ubiquitousModules);
   const hiddenExternal = new Set(ubiquitousExternal);
-  const modules = Object.keys(document).filter((name) => !hiddenModules.has(name));
+  const modules = Object.keys(document);
   const allExternal = [...new Set(Object.values(document).flatMap((entry) => entry.external))];
   const external = allExternal.filter((name) => !hiddenExternal.has(name)).sort();
   const externalByModule = Object.fromEntries(modules.map((name) => [name, []]));
@@ -48,7 +48,6 @@ function graphData(document, { ubiquitousModules, ubiquitousExternal }) {
   const edges = [];
 
   for (const [consumer, dependencies] of Object.entries(document)) {
-    if (hiddenModules.has(consumer)) continue;
     for (const dependency of dependencies.external) {
       if (hiddenExternal.has(dependency)) externalByModule[consumer].push(dependency);
       else {
@@ -57,7 +56,9 @@ function graphData(document, { ubiquitousModules, ubiquitousExternal }) {
       }
     }
     for (const dependency of dependencies.modules) {
-      if (hiddenModules.has(dependency)) ubiquitousByModule[consumer].push(dependency);
+      if (ubiquitousModuleNames.has(dependency) && !ubiquitousModuleNames.has(consumer)) {
+        ubiquitousByModule[consumer].push(dependency);
+      }
       else {
         edges.push({ from: nodeId('module', consumer), to: nodeId('module', dependency),
           kind: 'module', tooltip: `${consumer} depends on ${dependency}` });
@@ -68,17 +69,20 @@ function graphData(document, { ubiquitousModules, ubiquitousExternal }) {
   return { modules: modules.sort(), external, externalByModule, ubiquitousByModule, edges };
 }
 
-function moduleLabel(name, external, ubiquitous) {
+function moduleLabel(name, external, moduleDependencies, standalone) {
   const names = external.sort().map(escapeHtml);
   const rows = [];
   for (let index = 0; index < names.length; index += 2) {
     rows.push(names.slice(index, index + 2).join(' &#183; '));
   }
   return '<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="9" '
-    + 'COLOR="#88A9CF" BGCOLOR="#F8FBFF">'
-    + `<TR><TD BGCOLOR="#DCEBFF"><FONT COLOR="#173E6B" POINT-SIZE="16"><B>${escapeHtml(name)}</B></FONT></TD></TR>`
-    + (ubiquitous.length ? '<TR><TD BGCOLOR="#EEF7F4">'
-      + `<FONT COLOR="#245B4F" POINT-SIZE="11">${ubiquitous.sort().map(escapeHtml).join(' &#183; ')}</FONT>`
+    + `COLOR="${standalone ? '#77B3A4' : '#88A9CF'}" BGCOLOR="#F8FBFF">`
+    + `<TR><TD BGCOLOR="${standalone ? '#DDEFE9' : '#DCEBFF'}">`
+    + `<FONT COLOR="${standalone ? '#245B4F' : '#173E6B'}" POINT-SIZE="16">`
+    + `<B>${escapeHtml(name)}</B></FONT></TD></TR>`
+    + (moduleDependencies.length ? '<TR><TD BGCOLOR="#EEF7F4">'
+      + '<FONT COLOR="#245B4F" POINT-SIZE="11">'
+      + `${moduleDependencies.sort().map(escapeHtml).join(' &#183; ')}</FONT>`
       + '</TD></TR>' : '')
     + (rows.length ? '<TR><TD BGCOLOR="#F5EFFA">'
       + `<FONT COLOR="#603E75" POINT-SIZE="11">${rows.join('<BR/>')}</FONT>`
@@ -103,7 +107,8 @@ function generateGraphDot(document, options) {
     '  node [shape=plain, fontname="Helvetica"];',
     '  edge [arrowsize=0.8, penwidth=1.7, color="#6994C6"];',
     ...modules.map((name) => `  ${nodeId('module', name)} [label=<${moduleLabel(name,
-      externalByModule[name], ubiquitousByModule[name])}>, tooltip="Module: ${name}"];`),
+      externalByModule[name], ubiquitousByModule[name],
+      options.ubiquitousModules.includes(name))}>, tooltip="Module: ${name}"];`),
     ...external.map((name) => `  ${nodeId('external', name)} [label=${quoted(name)}, `
       + 'shape=ellipse, style=filled, color="#AA86BF", fillcolor="#F5EFFA", '
       + 'fontcolor="#603E75", fontsize=12, margin="0.17,0.10", tooltip="External service"];'),

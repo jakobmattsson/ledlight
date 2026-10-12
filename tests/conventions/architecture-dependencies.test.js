@@ -36,15 +36,23 @@ test('architecture.svg matches the generated dependency view', async () => {
   assert.equal(actual, expected, 'architecture.svg is out of date; run npm run architecture:generate');
 });
 
-test('ubiquitous dependencies appear in cards while other external services remain nodes', () => {
+test('ubiquitous modules retain outgoing arrows and hide incoming ordinary arrows', () => {
   const graphOptions = loadGraphOptions(modulesRoot);
   assert.deepEqual(graphOptions.ubiquitousModules, ['core']);
   assert.deepEqual(graphOptions.ubiquitousExternal, ['fs', 'path', 'zod']);
   const yaml = fs.readFileSync(path.join(architectureRoot, 'depends-on.yaml'), 'utf8');
   const document = YAML.parse(yaml);
   const dot = generateGraphDot(document, graphOptions);
-  assert.doesNotMatch(dot, /"module:core" \[label=/u);
-  assert.doesNotMatch(dot, /"module:core" ->|-> "module:core"/u);
+  const coreNode = dot.split('\n').find((line) => line.startsWith('  "module:core" [label='));
+  assert.ok(coreNode);
+  for (const dependency of graphOptions.ubiquitousExternal) {
+    assert.ok(coreNode.includes(dependency), dependency);
+  }
+  for (const dependency of document.core.external) {
+    if (graphOptions.ubiquitousExternal.includes(dependency)) continue;
+    assert.ok(dot.includes(`"module:core" -> "external:${dependency}"`), dependency);
+  }
+  assert.doesNotMatch(dot, /"module:[^"]+" -> "module:core"/u);
   const external = new Set(Object.values(document).flatMap((entry) => entry.external));
   for (const service of external) {
     const node = `"external:${service}" [label=${JSON.stringify(service)}, shape=ellipse`;
@@ -53,6 +61,27 @@ test('ubiquitous dependencies appear in cards while other external services rema
   assert.doesNotMatch(dot, /UBIQUITOUS MODULES|EXTERNAL SERVICES/u);
   assert.match(dot, /<FONT COLOR="#245B4F" POINT-SIZE="11">core<\/FONT>/u);
   assert.match(dot, /<FONT COLOR="#603E75" POINT-SIZE="11">fs/u);
+});
+
+test('ubiquitous modules point to their dependencies, including other ubiquitous modules', () => {
+  const document = {
+    common: { external: [], modules: [] },
+    consumer: { external: [], modules: ['shared'] },
+    helper: { external: [], modules: [] },
+    shared: { external: ['clock', 'fs'], modules: ['common', 'helper'] },
+  };
+  const dot = generateGraphDot(document, {
+    ubiquitousModules: ['common', 'shared'], ubiquitousExternal: ['fs'],
+  });
+  const sharedNode = dot.split('\n').find((line) => line.startsWith('  "module:shared" [label='));
+  const consumerNode = dot.split('\n').find((line) => line.startsWith('  "module:consumer" [label='));
+  assert.ok(sharedNode?.includes('fs'));
+  assert.ok(consumerNode?.includes('shared'));
+  assert.match(dot, /"module:shared" -> "module:helper"/u);
+  assert.match(dot, /"module:shared" -> "module:common"/u);
+  assert.match(dot, /"module:shared" -> "external:clock"/u);
+  assert.doesNotMatch(dot, /"module:consumer" -> "module:shared"/u);
+  assert.doesNotMatch(dot, /"external:fs" \[label=/u);
 });
 
 test('ubiquitous metadata is optional and rejects unknown names', (t) => {
