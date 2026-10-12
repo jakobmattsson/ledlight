@@ -1,13 +1,14 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../../support/external-dependencies.js');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createPublicErrors = require('../../../../../src/impl/core/public-errors');
-const createDatabase = require('../../../../../src/impl/ingestion/database/database');
-const createRebuildLock = require('../../../../../src/impl/ingestion/database/database-rebuild-lock');
+const createPublicErrors = require('../../../../../src/modules/core/public-errors');
+const createDatabase = withExternal(require('../../../../../src/modules/database/database'), ['path']);
+const createRebuildLock = withExternal(require('../../../../../src/modules/database/database-rebuild-lock'), ['fs', 'processRuntime', 'systemClock']);
 
 function temporaryDatabasePath(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-rebuild-lock-'));

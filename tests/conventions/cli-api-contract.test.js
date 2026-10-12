@@ -1,16 +1,17 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../support/external-dependencies.js');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const commander = require('commander');
 const { resolveCommands, resolveRepositoryModule } = require('../support/repository-container');
-const createArguments = require('../../src/impl/cli/cli-arguments');
+const createArguments = withExternal(require('../../src/modules/cli/cli-arguments'), ['commander']);
 
 const commands = resolveCommands();
-const project = resolveRepositoryModule('src/impl/core/project.js');
+const project = resolveRepositoryModule('src/modules/project/project.js');
 const argumentsModule = createArguments({
   commander,
   commands,

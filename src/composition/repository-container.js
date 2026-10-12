@@ -1,193 +1,163 @@
 'use strict';
 
 const path = require('node:path');
+const { listModules } = require('../../lib/awilix');
 const {
-  asFunction,
-  asValue,
-  createContainer,
-  InjectionMode,
-  listModules,
-  Lifetime,
-} = require('../lib/awilix');
-const {
-  addUniqueName,
-  listUniqueModules,
-  moduleName: repositoryModuleName,
-  proxyDependencies,
-  registerModuleFactories,
-  surfaceModule: loadSurfaceModule,
+  assertPolicyKeys, createLocalContainer, dependencyOrder, discoverModules, moduleName,
+  scopedDependencies,
 } = require('./module-container');
 
-const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
-const REPOSITORY_MODULE_PATTERN = 'src/impl/**/*.js';
-const QUERY_MODULE_PATTERN = 'src/surface/queries/*.js';
-const COMMAND_MODULE_PATTERN = 'src/surface/commands/**/*.js';
-const COMMAND_DIRECTORY = path.join(REPOSITORY_ROOT, 'src/surface/commands');
+const MODULES_ROOT = path.resolve(__dirname, '../modules');
 
-function relativeModulePath(fileName) {
-  return path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
-}
-
-function commandGroup(relativePath) {
-  const segments = relativePath.split(path.sep);
-  if (segments.length !== 2 || !/^[a-z]+(?:-[a-z]+)*$/u.test(segments[0])) {
-    throw new TypeError(`Command module must be directly inside one group directory: ${relativePath}`);
-  }
-  return segments[0];
-}
-
-const REPOSITORY_MODULES = listUniqueModules(REPOSITORY_MODULE_PATTERN, {
-  cwd: REPOSITORY_ROOT,
-  reservedNames: ['queries', 'commands'],
+const allowedModules = Object.freeze({
+  core: [],
+  journal: ['core'],
+  accounting: ['core', 'journal'],
+  database: ['core', 'journal', 'accounting'],
+  queries: ['core', 'accounting', 'database'],
+  commands: [],
+  project: ['core', 'journal', 'database', 'queries'],
+  cli: ['core', 'commands', 'project'],
 });
-const REGISTRATION_LOCATIONS = new Map([
-  ...REPOSITORY_MODULES.map(({ path: fileName }) => [
-    repositoryModuleName(fileName),
-    relativeModulePath(fileName),
-  ]),
-  ['queries', 'src/surface/queries'],
-  ['commands', 'src/surface/commands'],
-]);
 
-function sourceArea(fileName) {
-  if (fileName === 'src/surface/queries' || fileName.startsWith('src/surface/queries/')) {
-    return 'queries';
-  }
-  if (fileName === 'src/surface/commands' || fileName.startsWith('src/surface/commands/')) {
-    return 'cli';
-  }
-  if (fileName === 'src/impl/query-support' || fileName.startsWith('src/impl/query-support/')) {
-    return 'queries';
-  }
-  return /^src\/impl\/([^/]+)/u.exec(fileName)?.[1];
-}
+const allowedExternal = Object.freeze({
+  core: ['crypto', 'currentWorkingDirectory', 'envPaths', 'fs', 'path', 'processEnvironment', 'zod'],
+  journal: ['buffer', 'crypto', 'fs', 'path', 'zod'],
+  accounting: [],
+  database: ['fs', 'path', 'processRuntime', 'schemaPath', 'sqlite', 'systemClock'],
+  queries: ['zod'],
+  commands: ['commander'],
+  project: ['fs', 'os', 'path'],
+  cli: ['commander', 'currentWorkingDirectory', 'packageMetadata',
+    'processRuntime', 'standardInput'],
+});
 
-function assertDependencyAllowed(consumerFile, dependencyName) {
-  const providerFile = REGISTRATION_LOCATIONS.get(dependencyName);
-  if (!providerFile) return;
-  const consumerArea = sourceArea(consumerFile);
-  const providerArea = sourceArea(providerFile);
-  if (providerArea === 'cli' && consumerArea !== 'cli') {
-    throw new Error(`${consumerFile} may not depend on CLI module ${providerFile}`);
-  }
-  if (consumerArea === 'ingestion' && providerArea === 'queries') {
-    throw new Error(`${consumerFile} may not depend on query module ${providerFile}`);
-  }
-}
-
-function restrictedDependencies(fileName, dependencies) {
-  const consumerFile = relativeModulePath(fileName);
-  return proxyDependencies(dependencies, (name) => assertDependencyAllowed(consumerFile, name));
-}
-
-function surfaceModule(fileName, kind, dependencies) {
-  return loadSurfaceModule(
-    fileName,
-    kind,
-    restrictedDependencies(fileName, dependencies),
-    relativeModulePath(fileName),
-  );
-}
-
-function queryFromFile(fileName, dependencies, names) {
-  const name = repositoryModuleName(fileName);
-  const query = surfaceModule(fileName, 'query', dependencies);
-  const relativeName = relativeModulePath(fileName);
-  addUniqueName(names, name, 'query');
-  if (typeof query.inputSchema?.safeParse !== 'function') {
-    throw new TypeError(`${relativeName} must expose an inputSchema.`);
-  }
-  if (typeof query.execute !== 'function') {
-    throw new TypeError(`${relativeName} must expose an execute function.`);
-  }
-  if (query.execute.length !== 3) {
-    throw new TypeError(
-      `${relativeName} execute must accept database, options, and caches.`,
-    );
-  }
-  return Object.freeze({ ...query, name });
-}
-
-function loadQueries(dependencies) {
-  const names = new Set();
-  return Object.freeze(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
-    .map(({ path: fileName }) => queryFromFile(fileName, dependencies, names)));
-}
-
-function commandFromFile(fileName, dependencies, names) {
-  const group = commandGroup(path.relative(COMMAND_DIRECTORY, fileName));
-  const command = surfaceModule(fileName, 'command', dependencies);
-  const name = path.basename(fileName, '.js');
-  addUniqueName(names, name, 'command');
-  return { ...command, name, operation: repositoryModuleName(fileName), group };
-}
-
-function loadCommands(dependencies) {
-  const names = new Set();
-  const commands = listModules(COMMAND_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
-    .map(({ path: fileName }) => commandFromFile(fileName, dependencies, names));
-  return Object.freeze(commands.sort((left, right) => left.name.localeCompare(right.name, 'en')));
-}
-
-function registerExternalModules(container) {
-  container.register({
-    buffer: asValue(Buffer),
-    commander: asValue(require('commander')),
-    crypto: asValue(require('node:crypto')),
-    currentWorkingDirectory: asValue(() => process.cwd()),
-    envPaths: asValue(require('env-paths')),
-    fs: asValue(require('node:fs')),
-    os: asValue(require('node:os')),
-    packageMetadata: asValue(require('../../package.json')),
-    path: asValue(require('node:path')),
-    processEnvironment: asValue(process.env),
-    processRuntime: asValue({
+function externalServices() {
+  return {
+    buffer: Buffer,
+    commander: require('commander'),
+    crypto: require('node:crypto'),
+    currentWorkingDirectory: () => process.cwd(),
+    envPaths: require('env-paths'),
+    fs: require('node:fs'),
+    os: require('node:os'),
+    packageMetadata: require('../../package.json'),
+    path: require('node:path'),
+    processEnvironment: process.env,
+    processRuntime: {
       pid: () => process.pid,
       commandLineArguments: () => process.argv.slice(2),
       setExitCode: (code) => { process.exitCode = code; },
       exit: (code) => process.exit(code),
       standardOutput: process.stdout,
       standardError: process.stderr,
-    }),
-    schemaPath: asValue(path.join(REPOSITORY_ROOT, 'src/surface/database/schema.sql')),
-    standardInput: asValue({
+    },
+    schemaPath: path.join(MODULES_ROOT, 'database/schema.sql'),
+    standardInput: {
       isTTY: () => Boolean(process.stdin.isTTY),
       read: () => require('node:fs').readFileSync(0, 'utf8'),
-    }),
-    systemClock: asValue({
+    },
+    systemClock: {
       now: () => Date.now(),
       sleep(milliseconds) {
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
       },
-    }),
-    sqlite: asValue(function LazyDatabase(...arguments_) {
+    },
+    sqlite: function LazyDatabase(...arguments_) {
       const Database = require('better-sqlite3');
       return new Database(...arguments_);
-    }),
-    zod: asValue(require('zod')),
-  });
-}
-
-function registerRepositoryModules(container) {
-  registerExternalModules(container);
-  registerModuleFactories(container, {
-    patterns: REPOSITORY_MODULE_PATTERN,
-    cwd: REPOSITORY_ROOT,
-    modules: REPOSITORY_MODULES,
-    displayPath: relativeModulePath,
-    wrapDependencies: restrictedDependencies,
-  });
-  container.register('queries', asFunction(loadQueries, { lifetime: Lifetime.SINGLETON }));
-  container.register('commands', asFunction(loadCommands, { lifetime: Lifetime.SINGLETON }));
-  return container;
+    },
+    zod: require('zod'),
+  };
 }
 
 function createRepositoryContainer() {
-  return registerRepositoryModules(createContainer({ injectionMode: InjectionMode.PROXY }));
+  const modules = discoverModules(MODULES_ROOT);
+  const order = dependencyOrder(modules, allowedModules);
+  assertPolicyKeys(modules, allowedExternal, 'External');
+  const services = externalServices();
+  const built = new Map();
+  const internalOverrides = new Map();
+
+  function build(moduleName) {
+    if (built.has(moduleName)) return built.get(moduleName);
+    const directory = path.join(MODULES_ROOT, moduleName);
+    const facadeFactory = require(path.join(directory, 'index.js'));
+    if (typeof facadeFactory !== 'function') {
+      throw new TypeError(`${moduleName}/index.js must export a facade factory`);
+    }
+    const externals = Object.freeze(Object.fromEntries(allowedExternal[moduleName].map((name) => {
+      if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
+      return [name, services[name]];
+    })));
+    let local;
+    const dependencies = scopedDependencies(moduleName, () => local?.container,
+      allowedModules[moduleName], (provider) => build(provider).facade, externals);
+    local = createLocalContainer(directory, dependencies);
+    for (const [name, registration] of internalOverrides.get(moduleName) ?? []) {
+      local.container.register(name, registration);
+    }
+    const definitions = ['queries', 'commands'].includes(moduleName)
+      ? listModules('definitions/**/*.js', { cwd: directory }).map(({ path: fileName }) => ({
+        name: moduleNameFromFile(fileName),
+        commandName: path.basename(fileName, '.js'),
+        group: commandGroup(moduleName, directory, fileName),
+        fileName,
+      }))
+      : [];
+    const facade = facadeFactory({ resolve: (name) => local.container.resolve(name), definitions });
+    if (!facade || typeof facade !== 'object') {
+      throw new TypeError(`${moduleName}/index.js must return a facade`);
+    }
+    const module = { ...local, facade };
+    built.set(moduleName, module);
+    return module;
+  }
+
+  return {
+    resolve(name) {
+      if (!modules.includes(name)) throw new Error(`Unknown module: ${name}`);
+      return build(name).facade;
+    },
+    register(registrations) {
+      for (const [name, registration] of Object.entries(registrations)) {
+        if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
+        if (registration?.kind !== 'value') throw new TypeError(`Expected value registration: ${name}`);
+        services[name] = registration.value;
+      }
+      built.clear();
+    },
+    $$private: {
+      order,
+      registerInternal(moduleName, name, registration) {
+        if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
+        if (!internalOverrides.has(moduleName)) internalOverrides.set(moduleName, new Map());
+        internalOverrides.get(moduleName).set(name, registration);
+        built.clear();
+      },
+      resolveInternal(moduleName, name) {
+        if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
+        return build(moduleName).container.resolve(name);
+      },
+    },
+  };
 }
 
-module.exports = {
-  createRepositoryContainer,
-  registerRepositoryModules,
-  $$private: { assertDependencyAllowed, commandGroup, repositoryModuleName },
-};
+function moduleNameFromFile(fileName) {
+  return moduleName(fileName);
+}
+
+function commandGroup(owner, directory, fileName) {
+  const relative = path.relative(path.join(directory, 'definitions'), fileName);
+  const segments = relative.split(path.sep);
+  if (owner === 'commands' && (segments.length !== 2 ||
+      !/^[a-z]+(?:-[a-z]+)*$/u.test(segments[0]))) {
+    throw new TypeError(`Command module must be directly inside one group directory: ${fileName}`);
+  }
+  if (owner === 'queries' && segments.length !== 1) {
+    throw new TypeError(`Query module must be directly inside definitions: ${fileName}`);
+  }
+  return segments.length === 2 ? segments[0] : 'queries';
+}
+
+module.exports = { allowedExternal, allowedModules, createRepositoryContainer };

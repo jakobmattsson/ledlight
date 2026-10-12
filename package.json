@@ -24,6 +24,7 @@
     ".": "./src/index.js"
   },
   "files": [
+    "lib",
     "docs/api.md",
     "docs/ledger-cli-equivalence.md",
     "docs/ledlight.md",

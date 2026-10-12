@@ -4,8 +4,8 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parse } = resolveRepositoryModule("src/impl/ingestion/syntax/ledger-parser.js");
-const { PostingResolver } = resolveRepositoryModule("src/impl/ingestion/accounting/posting-resolver.js");
+const { parse } = resolveRepositoryModule("src/modules/journal/syntax/ledger-parser.js");
+const { PostingResolver } = resolveRepositoryModule("src/modules/accounting/posting-resolver.js");
 
 function parseTransaction(sourceText) {
   return parse(sourceText, { source: 'fixture.ledger' }).entries[0];

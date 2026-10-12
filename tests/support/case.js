@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
-const { asValue } = require('../../src/lib/awilix');
+const { asValue } = require('../../lib/awilix');
 const espree = require('espree');
 const { createRepositoryContainer } = require('../../src/composition/repository-container');
 
@@ -237,11 +237,11 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
         : [cliArgs[0], '--file', journalPath, ...cliArgs.slice(1)];
       let output = '';
       let stderr = '';
-      container.register('output', asValue({
+      container.$$private.registerInternal('cli', 'output', asValue({
         writeOutput: (value) => { output += value; },
         writeError: (value) => { stderr += value; },
       }));
-      const exitCode = container.resolve('executeCli').run(args);
+      const exitCode = container.$$private.resolveInternal('cli', 'executeCli').run(args);
       actual.cli = {
         output,
         warnings: exitCode === 0 ? stderr : '',
@@ -267,7 +267,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
       if (heredoc !== undefined) fs.writeFileSync(journalPath, heredoc);
       const resultText = { output: '', warnings: '', error: '' };
       try {
-        const cliFormat = container.resolve('cliFormat');
+        const cliFormat = container.$$private.resolveInternal('cli', 'cliFormat');
         const journalApi = container.resolve('project').openJournal(journalPath);
         const method = journalApi[api.method];
         if (!Object.hasOwn(journalApi, api.method) || typeof method !== 'function') {

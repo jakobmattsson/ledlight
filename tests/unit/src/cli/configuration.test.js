@@ -1,12 +1,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createConfiguration = require('../../../../src/impl/cli/cli-configuration');
-const createProjectConfiguration = require('../../../../src/impl/core/configuration');
+const createConfiguration = require('../../../../src/modules/cli/cli-configuration');
+const createProjectConfiguration = withExternal(require('../../../../src/modules/core/configuration'), ['fs', 'path', 'processEnvironment', 'currentWorkingDirectory']);
 
 function temporaryDirectories(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-configuration-'));

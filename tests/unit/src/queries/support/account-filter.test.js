@@ -6,10 +6,10 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const Database = require('better-sqlite3');
 const { accountFilter, accountMatches } = resolveRepositoryModule(
-  "src/impl/query-support/account-filter.js",
+  "src/modules/queries/support/account-filter.js",
 );
 const { prefixUpperBound } = resolveRepositoryModule(
-  "src/impl/query-support/account-filter.js",
+  "src/modules/queries/support/account-filter.js",
 ).$$private;
 
 test('calculates exclusive Unicode prefix bounds', () => {

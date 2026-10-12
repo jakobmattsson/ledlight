@@ -3,14 +3,15 @@
 const { resolveCommands, resolveRepositoryModule } = require('../../../support/repository-container');
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const test = require('node:test');
 const commander = require('commander');
-const createCommand = require('../../../../src/impl/cli/cli-command');
-const createArguments = require('../../../../src/impl/cli/cli-arguments');
+const createCommand = withExternal(require('../../../../src/modules/cli/cli-command'), ['packageMetadata']);
+const createArguments = withExternal(require('../../../../src/modules/cli/cli-arguments'), ['commander']);
 const commands = resolveCommands();
-const cliArguments = resolveRepositoryModule('src/impl/cli/cli-arguments.js');
-const cliFormat = resolveRepositoryModule('src/impl/cli/cli-format.js');
-const coreProject = resolveRepositoryModule('src/impl/core/project.js');
+const cliArguments = resolveRepositoryModule('src/modules/cli/cli-arguments.js');
+const cliFormat = resolveRepositoryModule('src/modules/cli/cli-format.js');
+const coreProject = resolveRepositoryModule('src/modules/project/project.js');
 
 const commandNames = [...new Set(Object.values(cliArguments.apiCommands))];
 

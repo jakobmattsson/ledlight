@@ -1,12 +1,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const path = require('node:path');
 const test = require('node:test');
-const createProject = require('../../../../src/impl/core/project');
+const createProject = withExternal(require('../../../../src/modules/project/project'), ['fs', 'os', 'path']);
 const { resolveRepositoryModule } = require('../../../support/repository-container');
 
-const publicErrors = resolveRepositoryModule('src/impl/core/public-errors.js');
+const publicErrors = resolveRepositoryModule('src/modules/core/public-errors.js');
 
 test('reports an unexpected cache directory failure as a database error', () => {
   const project = createProject({
@@ -14,6 +15,8 @@ test('reports an unexpected cache directory failure as a database error', () => 
     fs: { mkdirSync: () => { throw new Error('cache directory is unavailable'); } },
     path,
     queries: [],
+    journal: { loadJournal: () => assert.fail('must not load a journal') },
+    journalWriter: { writeJournalDatabase: () => assert.fail('must not write a journal') },
     database: { ensureDatabaseCurrent: () => { throw new Error('must not rebuild'); } },
     databaseReader: { readDatabase: () => { throw new Error('must not read'); } },
     ingestionWarning: { groupWarnings: () => [] },

@@ -10,4 +10,4 @@
 
 const { createRepositoryContainer } = require('./composition/repository-container');
 
-createRepositoryContainer().resolve('runCli').run();
+createRepositoryContainer().resolve('cli').runCli.run();

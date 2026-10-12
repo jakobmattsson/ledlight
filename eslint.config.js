@@ -44,7 +44,7 @@ module.exports = [
     },
   },
   {
-    files: ["src/{impl,surface}/**/*.js"],
+    files: ["src/modules/**/*.js"],
     rules: {
       "no-restricted-globals": ["error", ...runtimeGlobals.map((name) => ({
         name,

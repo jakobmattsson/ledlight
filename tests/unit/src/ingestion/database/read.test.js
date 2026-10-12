@@ -1,9 +1,10 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../../support/external-dependencies.js');
 const path = require('node:path');
 const test = require('node:test');
-const createDatabaseReader = require('../../../../../src/impl/ingestion/database/database-reader');
+const createDatabaseReader = withExternal(require('../../../../../src/modules/database/database-reader'), ['path', 'sqlite']);
 
 function createReader(events) {
   const database = {

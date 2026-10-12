@@ -1,9 +1,10 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const { EventEmitter } = require('node:events');
 const test = require('node:test');
-const createOutput = require('../../../../src/impl/cli/output');
+const createOutput = withExternal(require('../../../../src/modules/cli/output'), ['processRuntime']);
 
 test('writes through injected streams and handles a broken stdout pipe', () => {
   const calls = [];

@@ -4,8 +4,8 @@ const path = require('node:path');
 const fs = require('node:fs');
 const {
   createRepositoryContainer,
-  $$private: { repositoryModuleName },
 } = require('../../src/composition/repository-container');
+const { moduleName } = require('../../src/composition/module-container');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const container = createRepositoryContainer();
@@ -17,7 +17,9 @@ function resolveRepositoryModule(fileName) {
   const resolvedFileName = fs.statSync(repositoryFileName).isDirectory()
     ? path.join(repositoryFileName, 'index.js')
     : repositoryFileName;
-  return container.resolve(repositoryModuleName(resolvedFileName));
+  const relative = path.relative(path.join(REPOSITORY_ROOT, 'src/modules'), resolvedFileName);
+  const owner = relative.split(path.sep)[0];
+  return container.$$private.resolveInternal(owner, moduleName(resolvedFileName));
 }
 
 function resolveQuery(name) {
@@ -36,9 +38,9 @@ function resolveReferenceParser() {
     fs,
     path,
     ohm: require('ohm-js'),
-    ingestionWarning: container.resolve('ingestionWarning'),
-    syntaxErrors: container.resolve('syntaxErrors'),
-    topLevelBlocks: container.resolve('topLevelBlocks'),
+    ingestionWarning: container.$$private.resolveInternal('journal', 'ingestionWarning'),
+    syntaxErrors: container.$$private.resolveInternal('journal', 'syntaxErrors'),
+    topLevelBlocks: container.$$private.resolveInternal('journal', 'topLevelBlocks'),
   });
 }
 
