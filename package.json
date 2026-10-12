@@ -44,6 +44,7 @@
     "access": "public"
   },
   "scripts": {
+    "architecture:generate": "node scripts/architecture/generate.js",
     "benchmark": "node scripts/benchmarks/run.js",
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",

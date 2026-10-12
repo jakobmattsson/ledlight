@@ -291,6 +291,11 @@ adapters are created by `src/modules/external.js`, a file outside the domain
 module graph. Each domain module's `index.js` is registered as a factory and
 receives its local dependencies through injection.
 
+The sorted dependency views in `tests/architecture/depends-on.yaml` and
+`tests/architecture/used-by.yaml` are generated from that policy. Run
+`npm run architecture:generate` after changing module dependencies; the
+architecture test checks that both views stay current.
+
 `createRepositoryContainer(...modulesPathParts)` resolves its string arguments
 as path segments and reads `dependencies.yaml` and `external.js` from that
 module directory. The composition code has no Ledlight module names or paths;

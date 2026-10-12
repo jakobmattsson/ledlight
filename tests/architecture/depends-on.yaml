@@ -1,0 +1,68 @@
+accounting:
+  external: []
+  modules:
+    - core
+    - journal
+cli:
+  external:
+    - commander
+    - currentWorkingDirectory
+    - packageMetadata
+    - processRuntime
+    - standardInput
+  modules:
+    - commands
+    - core
+    - project
+commands:
+  external:
+    - commander
+  modules: []
+core:
+  external:
+    - crypto
+    - currentWorkingDirectory
+    - envPaths
+    - fs
+    - path
+    - processEnvironment
+    - zod
+  modules: []
+database:
+  external:
+    - fs
+    - path
+    - processRuntime
+    - schemaPath
+    - sqlite
+    - systemClock
+  modules:
+    - accounting
+    - core
+    - journal
+journal:
+  external:
+    - buffer
+    - crypto
+    - fs
+    - path
+    - zod
+  modules:
+    - core
+project:
+  external:
+    - fs
+    - os
+    - path
+  modules:
+    - core
+    - database
+    - journal
+    - queries
+queries:
+  external:
+    - zod
+  modules:
+    - accounting
+    - core
+    - database

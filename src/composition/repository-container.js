@@ -110,7 +110,7 @@ function scopedDependencies(moduleName, localContainer, providers, getFacade, ex
   });
 }
 
-function createRepositoryContainer(...modulesPathParts) {
+function loadDependencyPolicy(...modulesPathParts) {
   const modulesRoot = path.resolve(...modulesPathParts);
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
   const allowedModules = Object.freeze(policy.allowedModules);
@@ -118,6 +118,34 @@ function createRepositoryContainer(...modulesPathParts) {
   const modules = discoverModules(modulesRoot);
   const order = dependencyOrder(modules, allowedModules);
   assertPolicyKeys(modules, allowedExternal, 'External');
+  return { modulesRoot, modules, order, allowedModules, allowedExternal };
+}
+
+function generateDependsOnYaml(...modulesPathParts) {
+  const { modules, allowedModules, allowedExternal } = loadDependencyPolicy(...modulesPathParts);
+  return YAML.stringify(Object.fromEntries(modules.map((name) => [name, {
+    external: [...allowedExternal[name]].sort(),
+    modules: [...allowedModules[name]].sort(),
+  }])));
+}
+
+function generateUsedByYaml(...modulesPathParts) {
+  const { modules, allowedModules, allowedExternal } = loadDependencyPolicy(...modulesPathParts);
+  const moduleUsers = Object.fromEntries(modules.map((name) => [name, []]));
+  const externalNames = [...new Set(modules.flatMap((name) => allowedExternal[name]))].sort();
+  const externalUsers = Object.fromEntries(externalNames.map((name) => [name, []]));
+  for (const name of modules) {
+    for (const dependency of allowedModules[name]) moduleUsers[dependency].push(name);
+    for (const dependency of allowedExternal[name]) externalUsers[dependency].push(name);
+  }
+  for (const users of Object.values(moduleUsers)) users.sort();
+  for (const users of Object.values(externalUsers)) users.sort();
+  return YAML.stringify({ external: externalUsers, modules: moduleUsers });
+}
+
+function createRepositoryContainer(...modulesPathParts) {
+  const { modulesRoot, modules, order, allowedModules, allowedExternal } =
+    loadDependencyPolicy(...modulesPathParts);
   const services = require(path.join(modulesRoot, 'external.js'))();
   const built = new Map();
   const internalOverrides = new Map();
@@ -177,5 +205,5 @@ function createRepositoryContainer(...modulesPathParts) {
 
 module.exports = {
   assertPolicyKeys, createLocalContainer, createRepositoryContainer, dependencyOrder,
-  discoverModules, moduleName, scopedDependencies,
+  discoverModules, generateDependsOnYaml, generateUsedByYaml, moduleName, scopedDependencies,
 };
