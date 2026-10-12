@@ -556,7 +556,7 @@ account Equity:Opening
   const { databasePath } = pathsForJournal(journalPath);
   let stdout = '';
   let stderr = '';
-  const container = createRepositoryContainer(path.resolve(__dirname, '../../../../../src/modules'));
+  const container = createRepositoryContainer(__dirname, '../../../../../src/modules');
   container.register({
     currentWorkingDirectory: asValue(() => directory),
     standardInput: asValue({

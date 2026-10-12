@@ -46,7 +46,7 @@ test('rejects missing, unknown, and cyclic module edges', () => {
 });
 
 test('resolves index factories as facades and hides internal factories', () => {
-  const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+  const container = createRepositoryContainer(__dirname, '../../src/modules');
   for (const name of discoverModules(root)) {
     assert.equal(container.resolve(name), container.$$private.resolveInternal(name, 'index'));
     assert.ok(Object.isFrozen(container.resolve(name)), `${name} facade must be frozen`);
@@ -58,7 +58,7 @@ test('resolves index factories as facades and hides internal factories', () => {
 });
 
 test('external overrides remain scoped to their permitted modules', () => {
-  const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+  const container = createRepositoryContainer(__dirname, '../../src/modules');
   container.register({ currentWorkingDirectory: asValue(() => '/test-journal') });
   assert.equal(container.resolve('core').configuration !== undefined, true);
   assert.equal(container.resolve('project'), container.resolve('project'));
@@ -83,9 +83,10 @@ allowedExternal:
   fs.writeFileSync(path.join(directory, 'consumer', 'index.js'),
     'module.exports = ({ source: { greeting } }) => ({ message: `${greeting}, world` });\n');
 
-  const container = createRepositoryContainer(directory);
+  const container = createRepositoryContainer(path.dirname(directory), path.basename(directory));
   assert.equal(container.resolve('consumer').message, 'hello, world');
   assert.deepEqual(container.$$private.order, ['source', 'consumer']);
+  assert.equal(createRepositoryContainer(directory).resolve('consumer').message, 'hello, world');
   container.register({ greeting: asValue('goodbye') });
   assert.equal(container.resolve('consumer').message, 'goodbye, world');
 });

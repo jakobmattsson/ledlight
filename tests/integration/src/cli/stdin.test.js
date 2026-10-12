@@ -36,7 +36,7 @@ function fixture(t) {
   let stdinSource = source;
   let stdout = '';
   let stderr = '';
-  const container = createRepositoryContainer(path.resolve(__dirname, '../../../../src/modules'));
+  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
   container.register({
     currentWorkingDirectory: asValue(() => directory),
     os: asValue({ tmpdir: () => temporaryDirectory }),

@@ -221,7 +221,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }, fixtureCach
     }
     if (fixtureKey !== undefined) fixtureCache.set(fixtureKey, temporaryDirectory);
   }
-  const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+  const container = createRepositoryContainer(__dirname, '../../src/modules');
   container.register({
     standardInput: asValue({ isTTY: () => false, read: () => heredoc }),
     currentWorkingDirectory: asValue(() => temporaryDirectory),

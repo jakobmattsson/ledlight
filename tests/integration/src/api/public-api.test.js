@@ -189,7 +189,7 @@ P 2024-01-01 USD 2 SEK
 });
 
 test('renders CLI help and the public package version without opening a project', () => {
-  const container = createRepositoryContainer(path.resolve(__dirname, '../../../../src/modules'));
+  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
   const project = container.resolve('project');
   let stdout = '';
   let stderr = '';

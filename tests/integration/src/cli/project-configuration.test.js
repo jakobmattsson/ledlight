@@ -24,7 +24,7 @@ test('CLI and API use the project cache while API uses its explicit journal', (t
   fs.writeFileSync(path.join(projectDirectory, '.ledlightrc'),
     '--file main.ledger\n--cache-home .ledlight-cache\n');
 
-  const container = createRepositoryContainer(path.resolve(__dirname, '../../../../src/modules'));
+  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
   const environment = { ...process.env, HOME: home };
   delete environment.LEDLIGHT_CACHE_HOME;
   container.register({

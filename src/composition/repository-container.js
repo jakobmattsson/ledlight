@@ -8,8 +8,8 @@ const {
   scopedDependencies,
 } = require('./module-container');
 
-function createRepositoryContainer(modulesPath) {
-  const modulesRoot = path.resolve(modulesPath);
+function createRepositoryContainer(...modulesPathParts) {
+  const modulesRoot = path.resolve(...modulesPathParts);
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
   const allowedModules = Object.freeze(policy.allowedModules);
   const allowedExternal = Object.freeze(policy.allowedExternal);
