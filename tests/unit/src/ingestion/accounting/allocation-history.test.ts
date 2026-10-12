@@ -7,14 +7,14 @@ const { AllocationHistory } = resolveRepositoryModule('src/modules/accounting/in
 const { maximize } = resolveRepositoryModule('src/modules/core/internal/linear-program.js');
 const { parse, format } = resolveRepositoryModule('src/modules/core/internal/rational.js');
 
-function measuredHistory(roundingUnit: any) {
+function measuredHistory(roundingUnit: string) {
   let optimizations = 0;
   const { AllocationHistory: MeasuredHistory } =
     require('../../../../../src/modules/accounting/internal/allocation-history.js')({
       core: {
         rational: resolveRepositoryModule('src/modules/core/internal/rational.js'),
         linearProgram: {
-          maximize(...args: any[]) {
+          maximize(...args: unknown[]) {
             optimizations += 1;
             return maximize(...args);
           },
@@ -46,7 +46,7 @@ test('falls back to exact allocation after an average-cost sale', () => {
   assert.ok(optimizationCount() > 0);
 });
 
-function ambiguousHistory(account: any, cheapCost: any, expensiveCost: any, saleCost: any) {
+function ambiguousHistory(account: string, cheapCost: string, expensiveCost: string, saleCost: string) {
   const history = new AllocationHistory(parse('0'));
   history.acquire(account, parse('10'), parse(cheapCost));
   history.acquire(account, parse('10'), parse(expensiveCost));
@@ -73,7 +73,7 @@ test('preserves ambiguous constraints through a full transfer and a reverse spli
   assert.equal(format(failure.maximum), '12');
 });
 
-function roundedHistory(quantity: any, cost: any, unit: any) {
+function roundedHistory(quantity: string, cost: string, unit: string) {
   const history = new AllocationHistory(parse(unit));
   history.acquire('Broker', parse(quantity), parse(cost));
   return history;

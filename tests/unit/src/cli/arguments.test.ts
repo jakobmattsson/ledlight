@@ -13,18 +13,18 @@ const project = resolveRepositoryModule('src/modules/project/internal/project.js
 const argumentsModule = createArguments({
   commander,
   commands: { definitions: commands },
-  cliConfiguration: { apply: (arguments_: any) => arguments_ },
+  cliConfiguration: { apply: (arguments_: string[]) => arguments_ },
   project,
 });
 const { parseArguments, usage } = argumentsModule;
 
-function withoutCliOptions(value: any) {
-  const parsed: any = { ...value };
+function withoutCliOptions(value: { options: Record<string, unknown>; cliOptions?: unknown; [key: string]: unknown }) {
+  const parsed = { ...value };
   delete parsed.cliOptions;
   return parsed;
 }
 
-function apiArguments(arguments_: any) {
+function apiArguments(arguments_: string[]) {
   return withoutCliOptions(parseArguments(arguments_));
 }
 
@@ -36,13 +36,13 @@ test('documents the effective default for every enum option in command help', ()
     const parsed = parseArguments([
       command, '--file', '/journal',
     ]);
-    const options: any = { ...parsed.options, ...parsed.cliOptions };
+    const options = { ...parsed.options, ...parsed.cliOptions };
     const help = usage(command);
-    for (const option of configured.options.filter((candidate: any) => candidate.argChoices)) {
+    for (const option of configured.options.filter((candidate: import('commander').Option) => candidate.argChoices)) {
       const flag = option.long;
       const input = option.attributeName();
       const optionHelp = help.split(/\n(?= {2}--)/u)
-        .find((entry: any) => entry.startsWith(`  ${flag} `));
+        .find((entry: string) => entry.startsWith(`  ${flag} `));
       assert.ok(optionHelp, `${command} ${flag} must appear in help`);
       for (const choice of option.argChoices) {
         assert.match(optionHelp, new RegExp(`"${choice}"`, 'u'), `${command} ${flag}`);
@@ -201,7 +201,7 @@ test('uses the CLI configuration file argument when --file is omitted', () => {
     commander,
     commands: { definitions: commands },
     cliConfiguration: {
-      apply: (arguments_: any) => [arguments_[0], '--file', '/configured-journal'],
+      apply: (arguments_: string[]) => [arguments_[0], '--file', '/configured-journal'],
     },
     project,
   });

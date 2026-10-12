@@ -6,7 +6,7 @@ const { resolveRepositoryModule } = require('../../../support/repository-contain
 
 const { calculateFlows } = resolveRepositoryModule('src/modules/queries/support/investment-flows.js');
 
-function posting(amount: any, selected: any, marketRate: any) {
+function posting(amount: { quantity: string; commodity: string }, selected: boolean, marketRate: string | null) {
   return {
     transactionId: 1,
     date: '2024-01-02',

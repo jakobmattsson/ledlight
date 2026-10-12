@@ -36,7 +36,7 @@ test('matches exact names by default and uses stars for open matching', () => {
       ['*EUR*', '~Fund:*'], ['~*'], ['^EUR$'],
     ];
     for (const patterns of selections) {
-      const expected = names.filter((name: any) => accountMatches(name, patterns));
+      const expected = names.filter((name) => accountMatches(name, patterns));
       const filter = accountFilter('name', patterns);
       const actual = database.prepare(`SELECT name FROM accounts WHERE ${filter.sql}`)
         .all(...filter.parameters).map(({ name }: any) => name);

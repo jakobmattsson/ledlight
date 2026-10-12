@@ -22,7 +22,7 @@ test('lists exact, direct, and nested modules without duplicates', (context: any
   fs.writeFileSync(path.join(root, 'src', 'nested', 'deep-module.js'), 'module.exports = () => ({});\n');
   fs.writeFileSync(path.join(root, 'src', 'notes.txt'), 'not a module\n');
 
-  const relativeNames = (patterns: any) => listModules(patterns, { cwd: root })
+  const relativeNames = (patterns: string | string[]) => listModules(patterns, { cwd: root })
     .map((module: any) => path.relative(root, module.path).replace(/\\/gu, '/'));
 
   assert.deepEqual(relativeNames('src/*.js'), ['src/direct.js']);

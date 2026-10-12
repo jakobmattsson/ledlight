@@ -1,5 +1,20 @@
 'use strict';
 
+import type { TransactionPosting, TransactionRow } from '../../../public-api';
+
+type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown[]; get(...parameters: unknown[]): unknown } };
+type Options = { accounts: string[]; id?: number; order: 'newest' | 'oldest'; page?: number; pageSize?: number };
+type PostingState = TransactionPosting & { id: number };
+type TransactionState = Omit<TransactionRow, 'postings'> & { postings: PostingState[] };
+type PostingSqlRow = { transactionId: number; postingId: number; postingDate: string; account: string;
+  amountQuantity: string | null; amountCommodity: string | null;
+  lotCostQuantity: string | null; lotCostCommodity: string | null; lotCostIsTotal: number | null;
+  costQuantity: string | null; costCommodity: string | null; costIsTotal: number | null;
+  balanceQuantity: string | null; balanceCommodity: string | null; quantity: string; commodity: string };
+type CommentRow = { transactionId?: number; postingId?: number; text: string };
+type TagRow = { transactionId?: number; postingId?: number; name: string; value: string | null };
+
+
 module.exports = ({
   accountFilter: { accountFilter },
   core: {
@@ -11,7 +26,7 @@ module.exports = ({
 }: any) => {
 
   const positiveInteger = z.union([z.string(), z.number()])
-    .refine((value: any) => {
+    .refine((value: string | number) => {
       const number = Number(value);
       return Number.isSafeInteger(number) && number > 0 && String(number) === String(value);
     }, { error: 'must be a positive integer' })
@@ -23,14 +38,14 @@ module.exports = ({
       .default('oldest'),
     page: positiveInteger.optional(),
     pageSize: positiveInteger.optional(),
-  }).refine(({ page, pageSize }: any) => (page === undefined) === (pageSize === undefined), {
+  }).refine(({ page, pageSize }: Options) => (page === undefined) === (pageSize === undefined), {
     error: 'page and pageSize must be provided together',
   });
 
-  function queryTransactions(database: any, options: any, _caches: any) {
+  function queryTransactions(database: Database, options: unknown, _caches: unknown) {
     const { accounts, id, order, page, pageSize } = parseOptions(
       optionsSchema, options, 'transactions',
-    );
+    ) as Options;
     const filters = [`EXISTS (
       SELECT 1
       FROM postings AS nonzero_postings
@@ -39,7 +54,7 @@ module.exports = ({
       WHERE nonzero_postings.transaction_id = transactions.entry_id
         AND decimal_cmp(nonzero_amounts.amount_quantity, '0') != 0
     )`];
-    const filterParameters: any = [];
+    const filterParameters: Array<string | number> = [];
     if (id !== undefined) {
       filters.push('transactions.entry_id = ?');
       filterParameters.push(id);
@@ -55,21 +70,21 @@ module.exports = ({
       filterParameters.push(...accountMatch.parameters);
     }
     const filter = filters.length === 0 ? '' : `WHERE ${filters.join(' AND ')}`;
-    const totalTransactions = database.prepare(`
+    const totalTransactions = (database.prepare(`
       SELECT COUNT(*) AS count
       FROM transactions
       ${filter}
-    `).get(...filterParameters).count;
-    const totalPages = page === undefined ? undefined : Math.ceil(totalTransactions / pageSize);
+    `).get(...filterParameters) as { count: number }).count;
+    const totalPages = page === undefined ? undefined : Math.ceil(totalTransactions / pageSize!);
     const selectedPage = page === undefined
       ? undefined
       : Math.min(page, Math.max(totalPages ?? 1, 1));
     const paginationClause = page === undefined ? '' : 'LIMIT ? OFFSET ?';
     const paginationParameters = page === undefined
       ? []
-      : [pageSize, ((selectedPage ?? 1) - 1) * pageSize];
+      : [pageSize!, ((selectedPage ?? 1) - 1) * pageSize!];
     const direction = order === 'newest' ? 'DESC' : 'ASC';
-    const transactionRows = database.prepare(`
+    const transactionRows = (database.prepare(`
       SELECT
         transactions.entry_id AS transactionId,
         transactions.date AS transactionDate,
@@ -78,19 +93,19 @@ module.exports = ({
       ${filter}
       ORDER BY transactions.entry_id ${direction}
       ${paginationClause}
-    `).all(...filterParameters, ...paginationParameters);
-    const transactions = transactionRows.map((row: any) => ({ ...row, comments: [], postings: [] }));
+    `).all(...filterParameters, ...paginationParameters) as Array<Pick<TransactionRow, 'transactionId' | 'transactionDate' | 'description'>>);
+    const transactions: TransactionState[] = transactionRows.map((row) => ({ ...row, comments: [], postings: [] }));
     if (transactions.length > 0) {
-      const byId = new Map(transactions.map((transaction: any) =>
+      const byId = new Map(transactions.map((transaction: TransactionState) =>
         [transaction.transactionId, transaction]));
-      const transactionIds = transactions.map((transaction: any) => transaction.transactionId);
-      const batches: any = [];
+      const transactionIds = transactions.map((transaction: TransactionState) => transaction.transactionId);
+      const batches = [];
       for (let offset = 0; offset < transactionIds.length; offset += 500) {
         batches.push(transactionIds.slice(offset, offset + 500));
       }
-      const postingRows = batches.flatMap((ids: any) => {
+      const postingRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
-        return database.prepare(`
+        return (database.prepare(`
           SELECT
             postings.transaction_id AS transactionId,
             postings.id AS postingId,
@@ -112,15 +127,15 @@ module.exports = ({
           JOIN resolved_posting_amounts AS amounts ON amounts.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
           ORDER BY postings.transaction_id, postings.position, amounts.position
-        `).all(...ids);
+        `).all(...ids) as PostingSqlRow[]);
       });
       for (const row of postingRows) {
-        const transaction = byId.get(row.transactionId);
-        let posting = (transaction as any).postings.find((item: any) => item.id === row.postingId);
+        const transaction = byId.get(row.transactionId!);
+        let posting = transaction!.postings.find((item: PostingState) => item.id === row.postingId);
         if (!posting) {
           const balance = row.balanceQuantity === null
             ? null
-            : { quantity: row.balanceQuantity, commodity: row.balanceCommodity };
+            : { quantity: row.balanceQuantity, commodity: row.balanceCommodity! };
           posting = {
             id: row.postingId,
             postingDate: row.postingDate,
@@ -128,83 +143,83 @@ module.exports = ({
             comments: [],
             amount: row.amountQuantity === null
               ? null
-              : { quantity: row.amountQuantity, commodity: row.amountCommodity },
+              : { quantity: row.amountQuantity, commodity: row.amountCommodity! },
             lotCost: row.lotCostQuantity === null
               ? null
               : {
                 quantity: row.lotCostQuantity,
-                commodity: row.lotCostCommodity,
+                commodity: row.lotCostCommodity!,
                 isTotal: Boolean(row.lotCostIsTotal),
               },
             cost: row.costQuantity === null
               ? null
               : {
                 quantity: row.costQuantity,
-                commodity: row.costCommodity,
+                commodity: row.costCommodity!,
                 isTotal: Boolean(row.costIsTotal),
               },
             balanceAssignment: row.amountQuantity === null ? balance : null,
             balanceAssertion: row.amountQuantity === null ? null : balance,
             amounts: [],
-          };
-          (transaction as any).postings.push(posting);
+          } as PostingState;
+          transaction!.postings.push(posting);
         }
-        posting.amounts.push({ quantity: row.quantity, commodity: row.commodity });
+        posting!.amounts.push({ quantity: row.quantity, commodity: row.commodity });
       }
-      const transactionCommentRows = batches.flatMap((ids: any) => {
+      const transactionCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
-        return database.prepare(`
+        return (database.prepare(`
           SELECT transaction_id AS transactionId, text
           FROM comments
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position
-        `).all(...ids);
+        `).all(...ids) as CommentRow[]);
       });
-      const postingCommentRows = batches.flatMap((ids: any) => {
+      const postingCommentRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
-        return database.prepare(`
+        return (database.prepare(`
           SELECT comments.posting_id AS postingId, comments.text
           FROM postings
           JOIN comments ON comments.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
           ORDER BY postings.transaction_id, postings.position, comments.position
-        `).all(...ids);
+        `).all(...ids) as CommentRow[]);
       });
-      const transactionTagRows = batches.flatMap((ids: any) => {
+      const transactionTagRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
-        return database.prepare(`
+        return (database.prepare(`
           SELECT transaction_id AS transactionId, name, value
           FROM tags
           WHERE transaction_id IN (${placeholders})
           ORDER BY transaction_id, position, ordinal
-        `).all(...ids);
+        `).all(...ids) as TagRow[]);
       });
-      const postingTagRows = batches.flatMap((ids: any) => {
+      const postingTagRows = batches.flatMap((ids) => {
         const placeholders = ids.map(() => '?').join(', ');
-        return database.prepare(`
+        return (database.prepare(`
           SELECT tags.posting_id AS postingId, tags.name, tags.value
           FROM postings
           JOIN tags ON tags.posting_id = postings.id
           WHERE postings.transaction_id IN (${placeholders})
           ORDER BY postings.transaction_id, postings.position, tags.position, tags.ordinal
-        `).all(...ids);
+        `).all(...ids) as TagRow[]);
       });
-      const postingsById = new Map(transactions.flatMap((transaction: any) =>
-        transaction.postings.map((posting: any) => [posting.id, posting])));
+      const postingsById = new Map<number, PostingState>(transactions.flatMap((transaction: TransactionState) =>
+        transaction.postings.map((posting: PostingState) => [posting.id, posting])));
       for (const row of [...transactionCommentRows, ...postingCommentRows]) {
         const owner = row.postingId === undefined
-          ? byId.get(row.transactionId)
+          ? byId.get(row.transactionId!)
           : postingsById.get(row.postingId);
         if (!owner) continue;
-        (owner as any).comments.push(row.text);
+        owner.comments.push(row.text);
       }
       for (const row of [...transactionTagRows, ...postingTagRows]) {
         const owner = row.postingId === undefined
-          ? byId.get(row.transactionId)
+          ? byId.get(row.transactionId!)
           : postingsById.get(row.postingId);
         if (!owner) continue;
-        if (!(owner as any).tags) (owner as any).tags = [];
-        (owner as any).tags.push({ name: row.name, value: row.value });
+        if (!owner.tags) owner.tags = [];
+        owner.tags.push({ name: row.name, value: row.value });
       }
     }
     return {
@@ -212,9 +227,9 @@ module.exports = ({
       ...(page === undefined ? {} : { page: selectedPage, pageSize }),
       totalTransactions,
       ...(page === undefined ? {} : { totalPages }),
-      transactions: transactions.map((transaction: any) => ({
+      transactions: transactions.map((transaction: TransactionState) => ({
         ...transaction,
-        postings: transaction.postings.map(({ id: _id, ...posting }: any) => posting),
+        postings: transaction.postings.map(({ id: _id, ...posting }: PostingState) => posting),
       })),
     };
   }

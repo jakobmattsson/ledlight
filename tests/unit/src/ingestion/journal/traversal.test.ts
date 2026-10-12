@@ -31,7 +31,7 @@ test('expands include globs in deterministic path order', (t: TestContext) => {
 
   const journal = loadJournal(journalPath);
   assert.deepEqual(journal.entries.map((entry: any) => entry.name), ['Assets:First', 'Assets:Second']);
-  assert.deepEqual(journal.files.map((file: any) => file.path), [journalPath, firstPath, secondPath]);
+  assert.deepEqual(journal.files.map((file: { path: string }) => file.path), [journalPath, firstPath, secondPath]);
   assert.deepEqual(loadJournalManifest(journalPath), {
     journalPath,
     files: journal.files,
@@ -100,11 +100,11 @@ test('loads a file once when multiple include branches reach it', (t: TestContex
     ['Assets:Shared', 'Assets:First', 'Assets:Second'],
   );
   assert.deepEqual(
-    journal.files.map((file: any) => file.path),
+    journal.files.map((file: { path: string }) => file.path),
     [journalPath, firstBranchPath, sharedPath, secondBranchPath],
   );
   assert.deepEqual(
-    loadJournalManifest(journalPath).files.map((file: any) => file.path),
+    loadJournalManifest(journalPath).files.map((file: { path: string }) => file.path),
     [journalPath, firstBranchPath, sharedPath, secondBranchPath],
   );
 });

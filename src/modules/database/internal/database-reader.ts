@@ -9,7 +9,7 @@ module.exports = ({
     sqlite: Database
   },
 }: any) => {
-  function readDatabase(databasePath: any, query: any) {
+  function readDatabase(databasePath: string, query: any) {
     const database = new Database(path.resolve(databasePath), {
       readonly: true,
       fileMustExist: true,

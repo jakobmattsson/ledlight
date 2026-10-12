@@ -7,14 +7,14 @@ const test = require('node:test');
 const createOutput = withExternal(require('../../../../src/modules/cli/internal/output'), ['processRuntime']);
 
 test('writes through injected streams and handles a broken stdout pipe', () => {
-  const calls: any = [];
+  const calls: Array<[string, string | number]> = [];
   const standardOutput = new EventEmitter();
   const standardError = new EventEmitter();
-  standardOutput.write = (value: any) => calls.push(['stdout', value]);
-  standardError.write = (value: any) => calls.push(['stderr', value]);
+  standardOutput.write = (value: string) => calls.push(['stdout', value]);
+  standardError.write = (value: string) => calls.push(['stderr', value]);
   const output = createOutput({
     processRuntime: {
-      exit: (code: any) => calls.push(['exit', code]),
+      exit: (code: number) => calls.push(['exit', code]),
       standardOutput,
       standardError,
     },
@@ -31,5 +31,5 @@ test('writes through injected streams and handles a broken stdout pipe', () => {
   ]);
 
   const unexpectedError = new Error('write failed');
-  assert.throws(() => standardOutput.emit('error', unexpectedError), (error: any) => error === unexpectedError);
+  assert.throws(() => standardOutput.emit('error', unexpectedError), (error: unknown) => error === unexpectedError);
 });

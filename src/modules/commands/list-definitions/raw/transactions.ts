@@ -1,15 +1,18 @@
 'use strict';
 
+import type { CommodityRow, LedgerAmount, LedgerTag, TransactionCollection, TransactionPosting } from '../../../../public-api';
+import type { Command } from 'commander';
+
 module.exports = ({ cliOptions: options }: any) => ({
   description: 'show transactions',
   examples: [
     'ledlight transactions --file main.ledger',
     'ledlight transactions --file main.ledger --accounts "Expenses:*" --order newest --page 1 --page-size 20',
   ],
-  loadFormatData(journal: any) {
+  loadFormatData(journal: { commodities(options: { usage: string }): CommodityRow[] }) {
     return journal.commodities({ usage: 'all' });
   },
-  configure(command: any) {
+  configure(command: Command) {
     options.journal(command);
     options.accounts(command);
     options.addValue(command, '--id <id>', 'select one transaction by its positive integer ID');
@@ -21,10 +24,10 @@ module.exports = ({ cliOptions: options }: any) => ({
     options.addValue(command, '--page-size <number>', 'set the page size to a positive number (requires --page)');
     options.format(command);
   },
-  formatCsv(report: any, _cliOptions: any, { csvField }: any) {
-    function transactionRows(report: any) {
-      return report.transactions.flatMap((transaction: any) =>
-        transaction.postings.flatMap((posting: any) => posting.amounts.map((amount: any) => ({
+  formatCsv(report: TransactionCollection, _cliOptions: unknown, { csvField }: { csvField(value: unknown): string }) {
+    function transactionRows(report: TransactionCollection) {
+      return report.transactions.flatMap((transaction: TransactionCollection['transactions'][number]) =>
+        transaction.postings.flatMap((posting: TransactionPosting) => posting.amounts.map((amount: { quantity: string; commodity: string }) => ({
           transactionId: transaction.transactionId,
           transactionDate: transaction.transactionDate,
           description: transaction.description,
@@ -39,7 +42,7 @@ module.exports = ({ cliOptions: options }: any) => ({
         }))));
     }
 
-    function formatTransactionsCsv(report: any) {
+    function formatTransactionsCsv(report: TransactionCollection) {
       const fields = [
         'transactionId', 'transactionDate', 'description', 'transactionComments',
         'transactionTags', 'postingDate', 'account', 'postingComments', 'postingTags',
@@ -47,38 +50,38 @@ module.exports = ({ cliOptions: options }: any) => ({
       ];
       const lines = [fields.join(',')];
       for (const row of transactionRows(report)) {
-        lines.push(fields.map((field: any) => csvField(row[field])).join(','));
+        lines.push(fields.map((field: string) => csvField(row[field as keyof typeof row])).join(','));
       }
       return `${lines.join('\n')}\n`;
     }
 
     return formatTransactionsCsv(report);
   },
-  formatText(report: any, _cliOptions: any, format: any, descriptions: any) {
+  formatText(report: TransactionCollection, _cliOptions: unknown, format: any, descriptions: CommodityRow[]) {
     const { addDecimals, commodityFormats, compareDecimals, decimalScale, displayQuantity, divideDecimals, formatDecimal, formatPriceQuantity, parseDecimal } = format;
 
-    function formatPostingAmount(amount: any, formats: any) {
+    function formatPostingAmount(amount: LedgerAmount, formats: Map<string, string | null>) {
       const quantity = formats.has(amount.commodity)
         ? displayQuantity(amount.quantity, amount.commodity, formats, null)
         : amount.quantity;
       return `${quantity} ${amount.commodity}`;
     }
 
-    function formatAnnotationAmount(amount: any, formats: any) {
+    function formatAnnotationAmount(amount: LedgerAmount, formats: Map<string, string | null>) {
       return `${formatPriceQuantity(
         amount.quantity, amount.commodity, formats,
       )} ` +
         amount.commodity;
     }
 
-    function formatPostingExpression(posting: any, formats: any) {
-      const expressions: any = [];
+    function formatPostingExpression(posting: TransactionPosting, formats: Map<string, string | null>) {
+      const expressions = [];
       let amountText = null;
       if (posting.amount !== null) {
         amountText = formatPostingAmount(posting.amount, formats);
       } else if (posting.balanceAssignment !== null) {
-        const inferredAmount = posting.amounts.find((amount: any) =>
-          amount.commodity === posting.balanceAssignment.commodity);
+        const inferredAmount = posting.amounts.find((amount: { quantity: string; commodity: string }) =>
+          amount.commodity === posting.balanceAssignment!.commodity);
         if (inferredAmount) {
           amountText = formatPostingAmount(inferredAmount, formats);
         }
@@ -86,16 +89,16 @@ module.exports = ({ cliOptions: options }: any) => ({
       if (amountText !== null) expressions.push(amountText);
       if (posting.lotCost !== null) {
         if (posting.lotCost.isTotal) {
-          const amount = parseDecimal(posting.amount.quantity);
+          const amount = parseDecimal(posting.amount!.quantity);
           const absoluteAmount = amount.coefficient < 0n
             ? { ...amount, coefficient: -amount.coefficient }
             : amount;
           const unitCostScale = decimalScale(posting.lotCost.quantity) +
-            decimalScale(posting.amount.quantity) + 6;
+            decimalScale(posting.amount!.quantity) + 6;
           const unitCost = divideDecimals(
             parseDecimal(posting.lotCost.quantity), absoluteAmount, unitCostScale,
           );
-          const lotCost: any = {
+          const lotCost = {
             quantity: formatDecimal(unitCost),
             commodity: posting.lotCost.commodity,
           };
@@ -129,14 +132,14 @@ module.exports = ({ cliOptions: options }: any) => ({
       };
     }
 
-    function formatTransactionsText(report: any, descriptions: any) {
-      const formatTag = ({ name, value }: any) => value === null
+    function formatTransactionsText(report: TransactionCollection, descriptions: CommodityRow[]) {
+      const formatTag = ({ name, value }: LedgerTag) => value === null
         ? `:${name}:` : `${name}: ${value}`;
       const accountColumnWidth = 34;
       const amountColumnWidth = 12;
       const maximumPostingLineWidth = 61;
       const formats = commodityFormats(descriptions);
-      const lines: any = [];
+      const lines = [];
       for (const transaction of report.transactions) {
         const date = transaction.transactionDate;
         const header = `${date} ${transaction.description}`;
@@ -149,7 +152,7 @@ module.exports = ({ cliOptions: options }: any) => ({
         for (const comment of transaction.comments.slice(1)) lines.push(`    ; ${comment}`);
         for (const tag of transaction.tags || []) lines.push(`    ; ${formatTag(tag)}`);
         const canElideAmount = transaction.postings.length === 2 &&
-          transaction.postings.every((posting: any) =>
+          transaction.postings.every((posting: TransactionPosting) =>
             posting.amounts.length === 1 && posting.lotCost === null && posting.cost === null &&
             posting.balanceAssignment === null && posting.balanceAssertion === null) &&
           transaction.postings[0].amounts[0].commodity ===
@@ -158,12 +161,12 @@ module.exports = ({ cliOptions: options }: any) => ({
             parseDecimal(transaction.postings[0].amounts[0].quantity),
             parseDecimal(transaction.postings[1].amounts[0].quantity),
           ), parseDecimal('0')) === 0;
-        const implicitPostingIndexes = transaction.postings.flatMap((posting: any, index: any) =>
+        const implicitPostingIndexes = transaction.postings.flatMap((posting: TransactionPosting, index: number) =>
           posting.amount === null ? [index] : []);
         const elidedAmountIndex = canElideAmount
           ? implicitPostingIndexes.length === 1 ? implicitPostingIndexes[0] : 1
           : -1;
-        transaction.postings.forEach((posting: any, index: any) => {
+        transaction.postings.forEach((posting: TransactionPosting, index: number) => {
           const inlinePostingComment = posting.comments[0];
           const postingDateMarker = posting.postingDate && posting.postingDate !== date
             ? `[${posting.postingDate}]` : null;
@@ -177,7 +180,7 @@ module.exports = ({ cliOptions: options }: any) => ({
           const alignmentWidth = posting.lotCost !== null || posting.cost !== null
             ? expression.length
             : formattedExpression.amountWidth;
-          const alignedExpression = (width: any) => expression.padStart(
+          const alignedExpression = (width: number) => expression.padStart(
             expression.length + Math.max(0, width - alignmentWidth),
           );
           const body = expression === ''

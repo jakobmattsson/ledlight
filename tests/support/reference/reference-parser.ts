@@ -72,14 +72,14 @@ module.exports = ({
     document(entries: Node, _end: Node) {
       return {
         source: this.args.source,
-        entries: values(entries, this.args.source).filter((entry: any) => entry !== null),
+        entries: values(entries, this.args.source).filter((entry) => entry !== null),
       };
     },
 
     topLevel_transaction(date: Node, _space: Node, description: Node, inlineComment: Node, _lineEnd: Node, body: Node) {
       const source = this.args.source;
       const text = description.sourceString.trim();
-      const items = values(body, source).filter((item: any) => item !== null);
+      const items = values(body, source).filter((item) => item !== null);
       const headerComment = optionalValue(inlineComment, source);
       const transaction: any = {
         type: 'transaction',
@@ -166,7 +166,7 @@ module.exports = ({
     topLevel_commodity(_keyword: Node, _space: Node, symbol: Node, comment: Node, _trailingSpace: Node, _lineEnd: Node, body: Node) {
       const source = this.args.source;
       const commodity = symbol.sourceString.trimEnd();
-      const properties = values(body, source).filter((item: any) => item !== null);
+      const properties = values(body, source).filter((item) => item !== null);
       for (const property of properties) {
         if (property.formatSymbol && property.formatSymbol !== commodity) {
           const where = property.location;
@@ -177,7 +177,7 @@ module.exports = ({
         type: 'commodity',
         symbol: commodity,
         comment: optionalValue(comment, source),
-        properties: properties.map(({ formatSymbol: _formatSymbol, ...property }: any) => property),
+        properties: properties.map(({ formatSymbol: _formatSymbol, ...property }) => property),
         location: location(this, source),
       };
     },
@@ -257,7 +257,7 @@ module.exports = ({
     _terminal() { return this.sourceString; },
   });
 
-  function parseStrict(sourceText: any, options: any) {
+  function parseStrict(sourceText: string, options: any) {
     const source = options.source || '<input>';
     const result = grammar.match(sourceText, 'document');
     if (result.failed()) {
@@ -267,10 +267,10 @@ module.exports = ({
     return semantics(result).ast(source);
   }
 
-  function parse(sourceText: any, options: any) {
+  function parse(sourceText: string, options: any) {
     const source = options.source || '<input>';
-    const entries: any = [];
-    const warnings: any = [];
+    const entries = [];
+    const warnings = [];
     for (const block of splitTopLevelBlocks(sourceText)) {
       try {
         const padding = '\n'.repeat(block.startLine - 1);

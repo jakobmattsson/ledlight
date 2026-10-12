@@ -6,7 +6,7 @@ module.exports = ({
   },
 }: any) => ({
   handleBrokenPipe() {
-    standardOutput.on('error', (error: any) => {
+    standardOutput.on('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EPIPE') {
         exit(0);
         return;
@@ -14,6 +14,6 @@ module.exports = ({
       throw error;
     });
   },
-  writeError: (value: any) => standardError.write(value),
-  writeOutput: (value: any) => standardOutput.write(value),
+  writeError: (value: string) => standardError.write(value),
+  writeOutput: (value: string) => standardOutput.write(value),
 });

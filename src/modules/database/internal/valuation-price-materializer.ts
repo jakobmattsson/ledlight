@@ -6,7 +6,7 @@ module.exports = ({
   },
 }: any) => {
 
-  function materializeValuationPrices(database: any, valuationCommodity: any) {
+  function materializeValuationPrices(database: any, valuationCommodity: string) {
     if (!valuationCommodity) return 0;
     const introductions = database.prepare(`
       WITH commodity_introductions AS (

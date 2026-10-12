@@ -4,8 +4,8 @@ module.exports = ({
   journalTraversal: { traverseJournal },
 }: any) => {
 
-  function includePaths(sourceText: any) {
-    const includes: any = [];
+  function includePaths(sourceText: string) {
+    const includes = [];
     for (const rawLine of sourceText.split(/\r?\n/u)) {
       if (!rawLine.startsWith('include') || !/[ \t]/u.test(rawLine[7] || '')) continue;
       const value = rawLine.slice(8).trimStart();
@@ -27,7 +27,7 @@ module.exports = ({
     return includes;
   }
 
-  function loadJournalManifest(journalPath: any) {
+  function loadJournalManifest(journalPath: string) {
     return traverseJournal(journalPath, ({ content, include }: any) => {
       for (const includePath of includePaths(content)) include(includePath);
     });

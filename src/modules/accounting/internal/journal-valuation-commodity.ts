@@ -1,18 +1,20 @@
 'use strict';
 
+import type { LedgerSyntaxTree } from '../../../public-api';
+
 module.exports = ({
   journal: {
     ingestionWarning: { createWarning, warningCodes },
   },
 }: any) => {
 
-  function valuationCommodityFromJournal(journal: any, suppliedWarnings: any, ignoredProperties: any) {
+  function valuationCommodityFromJournal(journal: LedgerSyntaxTree & { journalPath?: string }, suppliedWarnings: unknown[], ignoredProperties?: Set<{ name: string; location: { source: string; line: number; column: number } }>) {
     const warnings = suppliedWarnings || [];
     let valuationCommodity = null;
     let defaultLocation = null;
     for (const entry of journal.entries) {
       if (entry.type !== 'commodity') continue;
-      for (const property of entry.properties.filter(({ name }: any) => name === 'default')) {
+      for (const property of entry.properties.filter(({ name }) => name === 'default')) {
         if (defaultLocation) {
           warnings.push(createWarning(
             warningCodes.MULTIPLE_DEFAULT_COMMODITIES,

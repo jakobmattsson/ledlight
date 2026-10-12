@@ -1,5 +1,12 @@
 'use strict';
 
+type Database = {
+  prepare(sql: string): { pluck(): { get(...parameters: unknown[]): unknown } };
+  pragma(sql: string, options?: { simple: boolean }): unknown;
+  transaction(callback: () => void): () => void;
+  exec(sql: string): unknown;
+};
+
 module.exports = ({
   external: {
     fs,
@@ -14,23 +21,23 @@ module.exports = ({
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', SCHEMA_VERSION,
   ]);
 
-  function tableExists(database: any, name: any) {
+  function tableExists(database: Database, name: string) {
     return database.prepare(
       'SELECT 1 FROM sqlite_schema WHERE type = \'table\' AND name = ?',
     ).pluck().get(name) !== undefined;
   }
 
-  function storedSchemaVersion(database: any) {
+  function storedSchemaVersion(database: Database) {
     const table = tableExists(database, 'database_metadata')
       ? 'database_metadata'
       : (tableExists(database, 'metadata') ? 'metadata' : null);
     if (!table) return undefined;
     return database.prepare(
       `SELECT value FROM ${table} WHERE key = 'schema_version'`,
-    ).pluck().get();
+    ).pluck().get() as string | undefined;
   }
 
-  function recreateDatabase(database: any) {
+  function recreateDatabase(database: Database) {
     const foreignKeys = database.pragma('foreign_keys', { simple: true });
     database.pragma('foreign_keys = OFF');
     try {
@@ -66,7 +73,7 @@ module.exports = ({
     }
   }
 
-  function migrateDatabase(database: any) {
+  function migrateDatabase(database: Database) {
     const existingVersion = storedSchemaVersion(database);
     if (existingVersion !== undefined && !supportedVersions.has(existingVersion)) {
       throw new Error(`Unsupported Ledlight database schema version: ${existingVersion}`);

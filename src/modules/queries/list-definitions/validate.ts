@@ -10,7 +10,7 @@ module.exports = ({
 }: any) => {
   const inputSchema = z.strictObject({});
 
-  function validate(_database: any, options: any, _caches: any) {
+  function validate(_database: unknown, options: unknown, _caches: unknown) {
     parseOptions(inputSchema, options, 'validate');
     return '';
   }

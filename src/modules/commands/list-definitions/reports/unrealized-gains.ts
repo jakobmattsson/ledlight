@@ -1,15 +1,18 @@
 'use strict';
 
+import type { AggregateRow, CommodityRow } from '../../../../public-api';
+import type { Command } from 'commander';
+
 module.exports = ({ cliOptions: options }: any) => ({
   description: 'show unrealized investment gains',
   examples: [
     'ledlight unrealized-gains --file main.ledger',
     'ledlight unrealized-gains --file main.ledger --to 2024-12-31 --accounts "Assets:*" --include-total',
   ],
-  loadFormatData(journal: any) {
+  loadFormatData(journal: { commodities(options: { usage: string }): CommodityRow[] }) {
     return journal.commodities({ usage: 'all' });
   },
-  configure(command: any) {
+  configure(command: Command) {
     options.journal(command);
     options.addValue(command, '--to <date>', 'value positions and prices through YYYY-MM-DD');
     options.accounts(command);
@@ -17,22 +20,22 @@ module.exports = ({ cliOptions: options }: any) => ({
     options.format(command);
     options.addBoolean(command, '--include-total', 'append a total gain row to the output', { outputInput: true });
   },
-  prepareOutput(rows: any, { includeTotal }: any, { appendTotal }: any) {
+  prepareOutput(rows: AggregateRow[], { includeTotal }: { includeTotal?: boolean }, { appendTotal }: any) {
     return includeTotal ? appendTotal(rows) : rows;
   },
-  formatCsv(rows: any, _cliOptions: any, { formatCsvTable, formatDecimalFixed, parseDecimal }: any) {
-    return formatCsvTable(['account', 'amount', 'commodity'], rows.map((row: any) => [
+  formatCsv(rows: AggregateRow[], _cliOptions: unknown, { formatCsvTable, formatDecimalFixed, parseDecimal }: any) {
+    return formatCsvTable(['account', 'amount', 'commodity'], rows.map((row: AggregateRow) => [
       row.account,
       formatDecimalFixed(parseDecimal(row.quantity), 2),
       row.commodity,
     ]));
   },
-  formatText(rows: any, _cliOptions: any, format: any, descriptions: any) {
+  formatText(rows: AggregateRow[], _cliOptions: unknown, format: any, descriptions: CommodityRow[]) {
     const {
       commodityFormats, displayQuantity, formatAlignedAmounts, parseCommodityFormat,
     } = format;
     const formats = commodityFormats(descriptions);
-    return formatAlignedAmounts(rows.map((row: any) => ({
+    return formatAlignedAmounts(rows.map((row: AggregateRow) => ({
       quantity: displayQuantity(row.quantity, row.commodity, formats, 2),
       commodity: row.commodity,
       label: row.account,

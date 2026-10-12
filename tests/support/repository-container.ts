@@ -9,7 +9,7 @@ const {
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const container = createRepositoryContainer(__dirname, '../../src/modules');
 
-function resolveRepositoryModule(fileName: any) {
+function resolveRepositoryModule(fileName: string) {
   const repositoryFileName = path.isAbsolute(fileName)
     ? fileName
     : path.resolve(REPOSITORY_ROOT, fileName);

@@ -1,5 +1,14 @@
 'use strict';
 
+type CommandDefinition = { name: string; operation: string;
+  prepareOutput?: (result: unknown, options: unknown, format: unknown) => unknown;
+  loadFormatData?: (journal: unknown) => unknown;
+  formatCsv: (result: unknown, options: unknown, format: unknown) => string;
+  formatText: (result: unknown, options: unknown, format: unknown, descriptions?: unknown) => string;
+};
+type Journal = { warnings?: unknown[]; [operation: string]: unknown };
+
+
 module.exports = ({
   commands: { definitions: commands },
   project,
@@ -10,10 +19,10 @@ module.exports = ({
     packageMetadata: { version }
   },
 }: any) => {
-  const commandByName = new Map(commands.map((command: any) => [command.name, command]));
-  let lastWarnings: any = [];
+  const commandByName = new Map<string, CommandDefinition>(commands.map((command: CommandDefinition) => [command.name, command]));
+  let lastWarnings: unknown[] = [];
 
-  function runReportCommand(arguments_: any, stdinSource: any) {
+  function runReportCommand(arguments_: string[], stdinSource: string | undefined) {
     if (arguments_.length === 0 ||
         (arguments_.length === 1 && arguments_[0] === '--help')) {
       return `${usage()}\n`;
@@ -25,32 +34,32 @@ module.exports = ({
       return `${usage(arguments_[0])}\n`;
     }
     const parsed = parseArguments(arguments_);
-    const run = (journal: any) => {
+    const run = (journal: Journal) => {
       lastWarnings = journal.warnings || [];
       const command = commandByName.get(parsed.command);
       if (!command) throw new Error(`Unsupported command: ${parsed.command}`);
-      const query = journal[(command as any).operation];
+      const query = journal[command.operation];
       if (typeof query !== 'function') {
-        throw new Error(`Unsupported API operation: ${(command as any).operation}`);
+        throw new Error(`Unsupported API operation: ${command.operation}`);
       }
-      const result = query.call(journal, parsed.options);
-      const output = (command as any).prepareOutput
-        ? (command as any).prepareOutput(result, parsed.cliOptions, cliFormat)
+      const result = (query as (options: unknown) => unknown).call(journal, parsed.options);
+      const output = command.prepareOutput
+        ? command.prepareOutput(result, parsed.cliOptions, cliFormat)
         : result;
       if (parsed.cliOptions.format === 'json') return cliFormat.formatJson(output);
-      const formatData = (command as any).loadFormatData && parsed.cliOptions.format === 'text'
-        ? (command as any).loadFormatData(journal)
+      const formatData = command.loadFormatData && parsed.cliOptions.format === 'text'
+        ? command.loadFormatData(journal)
         : undefined;
       return parsed.cliOptions.format === 'csv'
-        ? (command as any).formatCsv(output, parsed.cliOptions, cliFormat)
-        : (command as any).formatText(output, parsed.cliOptions, cliFormat, formatData);
+        ? command.formatCsv(output, parsed.cliOptions, cliFormat)
+        : command.formatText(output, parsed.cliOptions, cliFormat, formatData);
     };
     return parsed.journalPath === '-'
       ? cliStdinJournal.withJournal(stdinSource, run)
       : run(project.openJournal(parsed.journalPath));
   }
 
-  function runReportCommandWithWarnings(arguments_: any, stdinSource: any) {
+  function runReportCommandWithWarnings(arguments_: string[], stdinSource: string | undefined) {
     lastWarnings = [];
     const output = runReportCommand(arguments_, stdinSource);
     return { output, warnings: lastWarnings };

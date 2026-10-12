@@ -34,7 +34,7 @@ function fixture(t: TestContext) {
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(journalPath, source);
   const cacheDirectory = path.join(directory, 'cache');
-  const environment: any = { ...process.env, HOME: directory, LEDLIGHT_CACHE_HOME: cacheDirectory };
+  const environment = { ...process.env, HOME: directory, LEDLIGHT_CACHE_HOME: cacheDirectory };
   let stdinSource = source;
   let stdout = '';
   let stderr = '';
@@ -47,12 +47,12 @@ function fixture(t: TestContext) {
   });
   container.$$private.registerInternal('cli', 'output', asValue({
     handleBrokenPipe() {},
-    writeError(value: any) { stderr += value; },
-    writeOutput(value: any) { stdout += value; },
+    writeError(value: string) { stderr += value; },
+    writeOutput(value: string) { stdout += value; },
   }));
   const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
 
-  function run(arguments_: any, content?: any) {
+  function run(arguments_: string[], content?: string) {
     stdinSource = content ?? source;
     stdout = '';
     stderr = '';
@@ -61,7 +61,7 @@ function fixture(t: TestContext) {
     return { status, stdout, stderr };
   }
 
-  function runProcess(arguments_: any, input: any) {
+  function runProcess(arguments_: string[], input: string) {
     const result = spawnSync(process.execPath, [cliPath, ...arguments_], {
       cwd: directory,
       input,

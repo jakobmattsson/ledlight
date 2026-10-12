@@ -45,7 +45,7 @@ test('ubiquitous modules retain outgoing arrows and hide incoming ordinary arrow
   const yaml = fs.readFileSync(path.join(architectureRoot, 'depends-on.yaml'), 'utf8');
   const document = YAML.parse(yaml);
   const dot = generateGraphDot(document, graphOptions);
-  const coreNode = dot.split('\n').find((line: any) => line.startsWith('  "module:core" [label='));
+  const coreNode = dot.split('\n').find((line: string) => line.startsWith('  "module:core" [label='));
   assert.ok(coreNode);
   for (const dependency of graphOptions.ubiquitousExternal) {
     assert.ok(coreNode.includes(dependency), dependency);
@@ -55,7 +55,7 @@ test('ubiquitous modules retain outgoing arrows and hide incoming ordinary arrow
     assert.ok(dot.includes(`"module:core" -> "external:${dependency}"`), dependency);
   }
   assert.doesNotMatch(dot, /"module:[^"]+" -> "module:core"/u);
-  const external = new Set(Object.values(document).flatMap((entry: any) => entry.external));
+  const external = new Set((Object.values(document) as Array<{ external: string[] }>).flatMap((entry) => entry.external));
   for (const service of external) {
     const node = `"external:${service}" [label=${JSON.stringify(service)}, shape=ellipse`;
     assert.equal(dot.includes(node), !graphOptions.ubiquitousExternal.includes(service), service);
@@ -66,7 +66,7 @@ test('ubiquitous modules retain outgoing arrows and hide incoming ordinary arrow
 });
 
 test('ubiquitous modules point to their dependencies, including other ubiquitous modules', () => {
-  const document: any = {
+  const document = {
     common: { external: [], modules: [] },
     consumer: { external: [], modules: ['shared'] },
     helper: { external: [], modules: [] },
@@ -75,8 +75,8 @@ test('ubiquitous modules point to their dependencies, including other ubiquitous
   const dot = generateGraphDot(document, {
     ubiquitousModules: ['common', 'shared'], ubiquitousExternal: ['fs'],
   });
-  const sharedNode = dot.split('\n').find((line: any) => line.startsWith('  "module:shared" [label='));
-  const consumerNode = dot.split('\n').find((line: any) => line.startsWith('  "module:consumer" [label='));
+  const sharedNode = dot.split('\n').find((line: string) => line.startsWith('  "module:shared" [label='));
+  const consumerNode = dot.split('\n').find((line: string) => line.startsWith('  "module:consumer" [label='));
   assert.ok(sharedNode?.includes('fs'));
   assert.ok(consumerNode?.includes('shared'));
   assert.match(dot, /"module:shared" -> "module:helper"/u);

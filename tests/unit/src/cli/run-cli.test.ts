@@ -6,10 +6,10 @@ const test = require('node:test');
 const createRunCli = withExternal(require('../../../../src/modules/cli/internal/run-cli'), ['processRuntime']);
 
 function runWithExitCode(exitCode: any) {
-  const calls: any = [];
+  const calls: Array<[string] | [string, string[] | number]> = [];
   const runCli = createRunCli({
     executeCli: {
-      run(arguments_: any) {
+      run(arguments_: string[]) {
         calls.push(['run', arguments_]);
         return exitCode;
       },

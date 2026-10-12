@@ -1,5 +1,15 @@
 'use strict';
 
+import type { AggregateOptions, AggregateRow } from '../../../public-api';
+
+type ParsedOptions = AggregateOptions & { accounts: string[] };
+type Database = {
+  prepare(sql: string): { all(...parameters: unknown[]): unknown[] };
+  function(name: string, options: { deterministic: boolean }, callback: (commodity: string) => string | undefined): void;
+};
+type Cache = Map<symbol, (commodity: string, throughDate: string) => string>;
+
+
 module.exports = ({
   core: {
     decimal: {
@@ -30,7 +40,7 @@ module.exports = ({
     denominate: booleanOption,
     invert: booleanOption,
     withValuationValue: booleanOption,
-  }).superRefine(validateDateRange).superRefine((input: any, context: any) => {
+  }).superRefine(validateDateRange).superRefine((input: ParsedOptions, context: { addIssue(issue: { code: 'custom'; message: string }): void }) => {
     if (input.denominate && input.withValuationValue) {
       context.addIssue({
         code: 'custom',
@@ -45,10 +55,10 @@ module.exports = ({
     }
   });
 
-  function reportFilter(options: any) {
+  function reportFilter(options: ParsedOptions) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.posting_date';
-    const clauses: any = [];
-    const parameters: any = [];
+    const clauses = [];
+    const parameters = [];
     if (options.from) {
       clauses.push(`${dateExpression} >= ?`);
       parameters.push(options.from);
@@ -68,7 +78,7 @@ module.exports = ({
     };
   }
 
-  function queryCommodityTotals(database: any, options: any) {
+  function queryCommodityTotals(database: Database, options: ParsedOptions) {
     const filter = reportFilter(options);
     const costColumn = options.withValuationValue && options.valuation === 'cost'
       ? `, decimal_sum(${costValueSql}) AS valuationValue`
@@ -91,18 +101,18 @@ module.exports = ({
     ${filter.sql}
     GROUP BY ${groupBy}${nonZero}
     ORDER BY ${orderBy}
-  `).all(...filter.parameters);
+  `).all(...filter.parameters) as AggregateRow[];
   }
 
-  function queryValuationTotals(database: any, options: any, commodityTotals: any, valuationPriceCache: any) {
+  function queryValuationTotals(database: Database, options: ParsedOptions, commodityTotals: AggregateRow[], valuationPriceCache: Cache) {
     if (options.valuation === 'market') {
       const rates = queryValuationRates(
         database,
         options.to,
-        new Set(commodityTotals.map((row: any) => row.commodity)),
+        new Set(commodityTotals.map((row: AggregateRow) => row.commodity)),
         valuationPriceCache,
       );
-      database.function('valuation_rate', { deterministic: true }, (commodity: any) => rates.get(commodity));
+      database.function('valuation_rate', { deterministic: true }, (commodity: string) => rates.get(commodity));
     }
     const valueSql = options.valuation === 'cost'
       ? costValueSql
@@ -129,18 +139,18 @@ module.exports = ({
     ${filter.sql}
     GROUP BY ${groupBy}${nonZero}
     ORDER BY ${orderBy}
-  `).all(valuationCommodity, ...filter.parameters);
+  `).all(valuationCommodity, ...filter.parameters) as AggregateRow[];
   }
 
-  function withValuationValues(database: any, options: any, commodityTotals: any, valuationPriceCache: any) {
+  function withValuationValues(database: Database, options: ParsedOptions, commodityTotals: AggregateRow[], valuationPriceCache: Cache) {
     if (options.valuation === 'cost') return commodityTotals;
     const rates = queryValuationRates(
       database,
       options.to,
-      new Set(commodityTotals.map((row: any) => row.commodity)),
+      new Set(commodityTotals.map((row: AggregateRow) => row.commodity)),
       valuationPriceCache,
     );
-    return commodityTotals.map((row: any) => ({
+    return commodityTotals.map((row: AggregateRow) => ({
       ...row,
       valuationValue: formatDecimal(multiplyDecimals(
         parseDecimal(row.quantity),
@@ -149,9 +159,9 @@ module.exports = ({
     }));
   }
 
-  function transformRows(rows: any, options: any) {
+  function transformRows(rows: AggregateRow[], options: ParsedOptions) {
     const transformed = options.invert
-      ? rows.map((row: any) => ({
+      ? rows.map((row: AggregateRow) => ({
         ...row,
         quantity: formatDecimal(negateDecimal(parseDecimal(row.quantity))),
         ...(row.valuationValue === undefined ? {} : {
@@ -162,8 +172,8 @@ module.exports = ({
     return options.includeTotal ? appendTotal(transformed) : transformed;
   }
 
-  function queryAggregate(database: any, options: any, { valuationPriceCache }: any) {
-    const reportOptions = parseOptions(optionsSchema, options, 'aggregate');
+  function queryAggregate(database: Database, options: AggregateOptions, { valuationPriceCache }: { valuationPriceCache: Cache }) {
+    const reportOptions = parseOptions(optionsSchema, options, 'aggregate') as ParsedOptions;
     if (reportOptions.valuation === 'cost' &&
         (reportOptions.denominate || reportOptions.withValuationValue)) {
       validateCostValuation(database, reportFilter(reportOptions));

@@ -14,14 +14,14 @@ module.exports = ({
   const LOCK_TIMEOUT_MILLISECONDS = 5_000;
   const RETRY_INTERVAL_MILLISECONDS = 25;
 
-  function lockTimeout(databasePath: any) {
+  function lockTimeout(databasePath: string) {
     return createError(
       errorCodes.DATABASE,
       `Timed out waiting for the Ledlight database rebuild lock at ${databasePath}.lock`,
     );
   }
 
-  function withRebuildLock(databasePath: any, operation: any) {
+  function withRebuildLock(databasePath: string, operation: any) {
     const lockPath = `${databasePath}.lock`;
     const deadline = systemClock.now() + LOCK_TIMEOUT_MILLISECONDS;
     let descriptor;

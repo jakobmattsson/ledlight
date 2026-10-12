@@ -1,13 +1,15 @@
 'use strict';
 
+import type { LedgerEntry, WarningGroup } from '../../../public-api';
+
 module.exports = ({
   journalTraversal: { traverseJournal },
 }: any) => {
 
   function createJournalLoader(parseSource: any) {
-    return function loadJournal(journalPath: any, rootSource: any) {
-      const entries: any = [];
-      const warnings: any = [];
+    return function loadJournal(journalPath: string, rootSource: string | undefined) {
+      const entries: LedgerEntry[] = [];
+      const warnings: WarningGroup[] = [];
       const traversal = traverseJournal(journalPath, ({ content, path, include }: any) => {
         const document = parseSource(content, { source: path });
         warnings.push(...(document.warnings || []));

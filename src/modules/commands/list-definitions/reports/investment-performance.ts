@@ -1,12 +1,15 @@
 'use strict';
 
+import type { InvestmentPerformanceResult, CommodityRow } from '../../../../public-api';
+import type { Command } from 'commander';
+
 module.exports = ({ cliOptions: options }: any) => ({
   description: 'show investment performance',
   examples: [
     'ledlight investment-performance --file main.ledger',
     'ledlight investment-performance --file main.ledger --from 2024-01-01 --to 2024-12-31 --accounts "Assets:Broker*"',
   ],
-  loadFormatData(journal: any) {
+  loadFormatData(journal: { commodities(options: { usage: string }): CommodityRow[] }) {
     return journal.commodities({ usage: 'all' });
   },
   helpDetails: `Return measures:
@@ -32,7 +35,7 @@ module.exports = ({ cliOptions: options }: any) => ({
     Use this to compare your own returns across periods of different lengths.
     The yearly compound rate (XIRR) that makes the present value of the dated
     opening value, contributions, withdrawals, and ending value equal zero.`,
-  configure(command: any) {
+  configure(command: Command) {
     options.journal(command);
     options.dateRange(
       command,
@@ -45,26 +48,26 @@ module.exports = ({ cliOptions: options }: any) => ({
     });
     options.format(command);
   },
-  formatCsv(report: any, _cliOptions: any, { csvField }: any) {
+  formatCsv(report: InvestmentPerformanceResult, _cliOptions: unknown, { csvField }: any) {
     const fields = [
       'from', 'to', 'commodities', 'valuationCommodity', 'openingValue',
       'endingValue', 'netContributions', 'profitLoss', 'timeWeightedReturn',
       'timeWeightedReturnAnnualized',
       'moneyWeightedReturn', 'moneyWeightedReturnTotal', 'points',
     ];
-    const value = (field: any) => {
-      const fieldValue = report[field];
+    const value = (field: string) => {
+      const fieldValue = report[field as keyof InvestmentPerformanceResult];
       if (fieldValue === null || fieldValue === undefined) return '';
       return Array.isArray(fieldValue) ? JSON.stringify(fieldValue) : fieldValue;
     };
-    return `${fields.join(',')}\n${fields.map((field: any) => csvField(value(field))).join(',')}\n`;
+    return `${fields.join(',')}\n${fields.map((field: string) => csvField(value(field))).join(',')}\n`;
   },
-  formatText(report: any, _cliOptions: any, { commodityFormats, displayQuantity }: any, descriptions: any) {
+  formatText(report: InvestmentPerformanceResult, _cliOptions: unknown, { commodityFormats, displayQuantity }: any, descriptions: CommodityRow[]) {
     const formats = commodityFormats(descriptions);
-    const money = (value: any) => `${displayQuantity(
+    const money = (value: number) => `${displayQuantity(
       String(value), report.valuationCommodity, formats, 2, false,
     )} ${report.valuationCommodity}`;
-    const percent = (value: any) => value === null ? 'n/a' : `${(value * 100).toFixed(2)} %`;
+    const percent = (value: number | null) => value === null ? 'n/a' : `${(value * 100).toFixed(2)} %`;
     return [
       `Investment performance from ${report.from ?? 'n/a'} to ${report.to ?? 'n/a'}`,
       `Instruments: ${report.commodities.length}`,

@@ -13,9 +13,9 @@ module.exports = ({
     mode: z.enum(['effective', 'directives']).default('effective'),
   });
   const inferredPriceScale = 30;
-  const decimalScale = (quantity: any) => quantity.split('.')[1]?.length ?? 0;
+  const decimalScale = (quantity: string) => quantity.split('.')[1]?.length ?? 0;
 
-  function queryPrices(database: any, options: any, _caches: any) {
+  function queryPrices(database: any, options: any, _caches: unknown) {
     const { mode } = parseOptions(optionsSchema, options, 'prices');
     if (mode === 'directives') {
       return database.prepare(`
@@ -110,7 +110,7 @@ module.exports = ({
       const key = `${pair}\u0000${event.date}`;
       byKey.set(key, event);
     }
-    return [...byKey.values()].sort((left: any, right: any) =>
+    return [...byKey.values()].sort((left, right) =>
       left.date.localeCompare(right.date) ||
       (left.baseCommodity < right.baseCommodity ? -1 :
         left.baseCommodity > right.baseCommodity ? 1 : 0) ||

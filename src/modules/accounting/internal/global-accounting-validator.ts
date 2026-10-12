@@ -1,5 +1,12 @@
 'use strict';
 
+import type { LedgerAmount, LedgerEntry, LedgerPosting } from '../../../public-api';
+
+type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+type CommodityDeclaration = Extract<LedgerEntry, { type: 'commodity' }>;
+type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
+
+
 module.exports = ({
   core: {
     rational: { zero, parse, add, neg, format },
@@ -11,10 +18,10 @@ module.exports = ({
     ingestionWarning: { createWarning, warningCodes },
   },
 }: any) => {
-  function validatePostingDateHoldings(resolvedTransactions: any, valuationCommodity: any, warnings: any) {
+  function validatePostingDateHoldings(resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: unknown[]) {
     const positions = new Map();
     for (const [transaction, resolved] of resolvedTransactions) {
-      transaction.postings.forEach((posting: any, index: any) => {
+      transaction.postings.forEach((posting: LedgerPosting, index: number) => {
         for (const amount of resolved[index]) {
           if (amount.commodity === valuationCommodity) continue;
           const key = JSON.stringify([posting.account, amount.commodity]);
@@ -33,7 +40,7 @@ module.exports = ({
       const [account, commodity] = JSON.parse(key);
       let balance = zero;
       // Reports expose daily positions, so same-day movements are netted first.
-      for (const [date, day] of [...days].sort(([left]: any, [right]: any) => left.localeCompare(right))) {
+      for (const [date, day] of [...days].sort(([left], [right]: [string, unknown]) => left.localeCompare(right))) {
         balance = add(balance, day.quantity);
         if (balance.n < 0n && day.quantity.n < 0n) {
           warnings.push(createWarning(warningCodes.NEGATIVE_POSTING_DATE_HOLDING,
@@ -44,33 +51,38 @@ module.exports = ({
     }
   }
 
-  function validateGlobalAccounting(entries: any, resolvedTransactions: any, valuationCommodity: any, warnings: any) {
+  function validateGlobalAccounting(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: unknown[]) {
     if (!valuationCommodity) return;
     validatePostingDateHoldings(resolvedTransactions, valuationCommodity, warnings);
-    const declaration = entries.find((entry: any) =>
+    const declaration = entries.find((entry): entry is CommodityDeclaration =>
       entry.type === 'commodity' && entry.symbol === valuationCommodity);
-    const declaredFormat = declaration?.properties.find(({ name }: any) => name === 'format')?.value;
+    const declaredFormat = declaration?.properties.find(({ name }) => name === 'format')?.value;
     const formatMatch = /^(?:[\d,]+)(?:\.(\d+))?[ \t]+/u.exec(declaredFormat || '');
     const scale = formatMatch?.[1]?.length ?? 0;
     const roundingUnit = formatMatch ? parse(scale ? `0.${'0'.repeat(scale - 1)}1` : '1') : zero;
     const histories = new Map();
     const positions = new Map();
-    const impossible: any = [];
-    const transactions = entries.filter((entry: any) => resolvedTransactions.has(entry))
-      .sort((left: any, right: any) => left.date.localeCompare(right.date));
-    const historyFor = (account: any, commodity: any) => {
+    const impossible: Array<{
+      transaction: { description: string }; posting: { account: string; location: unknown };
+      key: string; commodity: string; quantity: { n: bigint; d: bigint };
+      cost: { n: bigint; d: bigint }; closed: boolean; insufficient?: boolean;
+      minimum?: { n: bigint; d: bigint }; maximum?: { n: bigint; d: bigint };
+    }> = [];
+    const transactions = entries.filter((entry): entry is Transaction => entry.type === 'transaction' && resolvedTransactions.has(entry))
+      .sort((left: Transaction, right: Transaction) => left.date.localeCompare(right.date));
+    const historyFor = (account: string, commodity: string) => {
       const key = JSON.stringify([account, commodity]);
       if (!histories.has(key)) histories.set(key, new AllocationHistory(roundingUnit));
       return histories.get(key);
     };
 
     for (const transaction of transactions) {
-      const resolved = resolvedTransactions.get(transaction);
+      const resolved = resolvedTransactions.get(transaction)!;
       const pairs = carriedMovements(transaction, valuationCommodity);
       validateSaleProceeds(transaction, resolved, valuationCommodity,
-        new Set(pairs.flatMap(({ outgoing, incoming }: any) => [outgoing, incoming])), roundingUnit, warnings);
+        new Set(pairs.flatMap(({ outgoing, incoming }: Movement) => [outgoing, incoming])), roundingUnit, warnings);
       for (const pair of pairs) {
-        const commodity = pair.outgoing.amount.commodity;
+        const commodity = pair.outgoing.amount!.commodity;
         const source = historyFor(pair.outgoing.account, commodity);
         const target = historyFor(pair.incoming.account, commodity);
         if (source !== target) {
@@ -78,9 +90,9 @@ module.exports = ({
           for (const [key, history] of histories) if (history === target) histories.set(key, source);
         }
       }
-      const incoming = new Set(pairs.map((pair: any) => pair.incoming));
-      const outgoing = new Map(pairs.map((pair: any) => [pair.outgoing, pair.incoming]));
-      transaction.postings.forEach((posting: any, index: any) => {
+      const incoming = new Set<LedgerPosting>(pairs.map((pair: Movement) => pair.incoming));
+      const outgoing = new Map<LedgerPosting, LedgerPosting>(pairs.map((pair: Movement) => [pair.outgoing, pair.incoming]));
+      transaction.postings.forEach((posting: LedgerPosting, index: number) => {
         for (const amount of resolved[index]) {
           const quantity = parse(amount.quantity);
           if (amount.commodity === valuationCommodity) continue;
@@ -109,7 +121,7 @@ module.exports = ({
             const destination = outgoing.get(posting);
             const failure = history.dispose(
               posting.account, neg(quantity), neg(cost),
-              (destination as any)?.account, destination ? parse((destination as any).amount.quantity) : undefined,
+              destination?.account, destination ? parse(destination.amount!.quantity) : undefined,
             );
             if (failure) {
               impossible.push({

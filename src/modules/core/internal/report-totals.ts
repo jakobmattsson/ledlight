@@ -17,7 +17,7 @@ module.exports = ({ decimal: { addDecimals, formatDecimal, parseDecimal } }: any
         );
       }
     }
-    return [...rows, ...[...totals.keys()].sort().map((commodity: any) => {
+    return [...rows, ...[...totals.keys()].sort().map((commodity) => {
       const total = totals.get(commodity);
       return {
         account: 'Total',

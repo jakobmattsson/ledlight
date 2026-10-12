@@ -5,8 +5,8 @@ module.exports = ({
     configuration,
   },
 }: any) => {
-  function apply(arguments_: any) {
-    if (arguments_.some((argument: any) => argument === '--file' || argument.startsWith('--file='))) {
+  function apply(arguments_: string[]) {
+    if (arguments_.some((argument: string) => argument === '--file' || argument.startsWith('--file='))) {
       return arguments_;
     }
     const { journalPath } = configuration.read();

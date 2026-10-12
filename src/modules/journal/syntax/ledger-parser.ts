@@ -197,7 +197,7 @@ module.exports = ({
   }
 
   /** Fast runtime parser. Its behavior is checked against ledger.ohm. */
-  function parseStrict(sourceText: any, options: any, lineOffset: any) {
+  function parseStrict(sourceText: string, options: any, lineOffset: number) {
     if (typeof sourceText !== 'string') {
       throw createError(errorCodes.INVALID_API_INPUT, 'Ledger source text must be a string', TypeError);
     }
@@ -210,7 +210,7 @@ module.exports = ({
       );
     }
     const source = result.data.source || '<input>';
-    const entries: any = [];
+    const entries = [];
     let transaction: any = null;
     let commodity = null;
     let lineNumber = lineOffset || 0;
@@ -310,7 +310,7 @@ module.exports = ({
     return { source, entries };
   }
 
-  function parse(sourceText: any, options: any) {
+  function parse(sourceText: string, options: any) {
     const result = optionsSchema.safeParse(options ?? {});
     if (!result.success) {
       throw createError(
@@ -320,8 +320,8 @@ module.exports = ({
       );
     }
     const source = result.data.source || '<input>';
-    const entries: any = [];
-    const warnings: any = [];
+    const entries = [];
+    const warnings = [];
     for (const block of splitTopLevelBlocks(sourceText)) {
       try {
         entries.push(...parseStrict(

@@ -28,11 +28,11 @@ module.exports = () => ({
   },
   systemClock: {
     now: () => Date.now(),
-    sleep(milliseconds: any) {
+    sleep(milliseconds: number) {
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
     },
   },
-  sqlite: function LazyDatabase(...arguments_: any[]) {
+  sqlite: function LazyDatabase(...arguments_: string[][]) {
     const Database = require('better-sqlite3');
     return new Database(...arguments_);
   },

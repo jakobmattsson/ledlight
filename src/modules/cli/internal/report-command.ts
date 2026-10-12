@@ -7,8 +7,8 @@ module.exports = ({
     standardInput
   },
 }: any) => {
-  function run(arguments_: any) {
-    const hasFile = arguments_.some((argument: any) =>
+  function run(arguments_: string[]) {
+    const hasFile = arguments_.some((argument: string) =>
       argument === '--file' || argument.startsWith('--file='));
     const readsJournal = Object.values(apiCommands).includes(arguments_[0]) &&
       !arguments_.includes('--help');

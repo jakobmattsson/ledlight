@@ -7,7 +7,7 @@ const path = require('node:path');
 const test = require('node:test');
 const createCachePaths = withExternal(require('../../../../src/modules/core/internal/cache-paths'), ['crypto', 'envPaths', 'fs', 'path', 'processEnvironment']);
 
-function cachePaths(settings_?: any) {
+function cachePaths(settings_?: { canonicalPath?: string; environment?: NodeJS.ProcessEnv; generatedCachePath?: string; pathModule?: typeof import('node:path').posix }) {
   const {
     canonicalPath = '/books/main.ledger',
     environment = {},
@@ -18,7 +18,7 @@ function cachePaths(settings_?: any) {
   realpathSync.native = realpathSync;
   return createCachePaths({
     crypto,
-    envPaths: (name: any, options: any) => {
+    envPaths: (name: string, options: { suffix: string }) => {
       assert.equal(name, 'ledlight');
       assert.deepEqual(options, { suffix: '' });
       return { cache: generatedCachePath };

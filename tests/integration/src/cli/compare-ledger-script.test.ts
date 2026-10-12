@@ -45,7 +45,7 @@ test('comparison matrix applies ISO dates to every Ledger command', (t: TestCont
   const { directory, journal } = withJournal(t, parseCase(fixture).file);
   const matrix = runComparison(directory, ['--list']);
   assert.equal(matrix.stderr, '');
-  const ledgerCommands = matrix.stdout.split('\n').filter((line: any) => line.includes('`ledger '));
+  const ledgerCommands = matrix.stdout.split('\n').filter((line: string) => line.includes('`ledger '));
   assert.equal(ledgerCommands.length, 8);
   for (const command of ledgerCommands) assert.match(command, /--date-format %Y-%m-%d/u);
   const result = runComparison(directory, ['--file', journal, '--ledger-bin', ledgerBinary]);

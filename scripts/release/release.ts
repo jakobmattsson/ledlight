@@ -60,8 +60,8 @@ function readPackage(cwd: string) {
   let manifest;
   try {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  } catch (error: any) {
-    throw new ReleaseError(`Cannot read package.json: ${error.message}`);
+  } catch (error) {
+    throw new ReleaseError(`Cannot read package.json: ${error instanceof Error ? error.message : String(error)}`);
   }
   if (typeof manifest.version !== 'string' || !stableVersion.test(manifest.version)) {
     throw new ReleaseError('package.json needs a stable MAJOR.MINOR.PATCH version.');
@@ -80,8 +80,8 @@ function ensureLockfilesMatch(cwd: string, version: string) {
     let lock;
     try {
       lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
-    } catch (error: any) {
-      throw new ReleaseError(`Cannot read ${filename}: ${error.message}`);
+    } catch (error) {
+      throw new ReleaseError(`Cannot read ${filename}: ${error instanceof Error ? error.message : String(error)}`);
     }
     if (lock.version !== version || (lock.packages && lock.packages['']?.version !== version)) {
       throw new ReleaseError(`${filename} does not match package.json version ${version}.`);
@@ -136,15 +136,15 @@ function inspectWorkflow(cwd: string, tag: string): Workflow {
     let document;
     try {
       document = yaml.parse(fs.readFileSync(path.join(directory, file), 'utf8'));
-    } catch (error: any) {
-      throw new ReleaseError(`Cannot parse ${relativePath}: ${error.message}`);
+    } catch (error) {
+      throw new ReleaseError(`Cannot parse ${relativePath}: ${error instanceof Error ? error.message : String(error)}`);
     }
     if (!document?.jobs || !Object.hasOwn(document.jobs, 'publish')) continue;
     const job = document.jobs.publish;
     if (!job || job.if !== requiredCondition) {
       throw new ReleaseError(`${relativePath}: publish job needs the exact required if condition.`);
     }
-    if (!Array.isArray(job.steps) || !job.steps.some((step: any) => step?.run === 'npm publish')) {
+    if (!Array.isArray(job.steps) || !job.steps.some((step: { run?: string } | null) => step?.run === 'npm publish')) {
       throw new ReleaseError(`${relativePath}: publish job needs a step whose run is exactly npm publish.`);
     }
     const name = job.name || 'publish';
@@ -193,9 +193,9 @@ function github(exec: Exec, cwd: string, host: string, endpoint: string, paramet
   let response;
   try {
     response = JSON.parse(checked(exec, 'gh', args, cwd));
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof ReleaseError) throw error;
-    throw new ReleaseError(`GitHub returned invalid JSON for ${endpoint}: ${error.message}`);
+    throw new ReleaseError(`GitHub returned invalid JSON for ${endpoint}: ${error instanceof Error ? error.message : String(error)}`);
   }
   return response;
 }
@@ -290,10 +290,10 @@ async function waitForWorkflow(exec: Exec, cwd: string, details: ReleaseDetails,
       const listing = github(exec, cwd, details.host, `repos/${details.slug}/actions/workflows/${filename}/runs`, {
         event: 'push', head_sha: sha, per_page: '100',
       });
-      const matches = (listing.workflow_runs || []).filter((run: any) => run.head_sha === sha &&
+      const matches = (listing.workflow_runs || []).filter((run: { id: number; head_sha: string; head_branch: string; path?: string }) => run.head_sha === sha &&
         run.head_branch === details.tag && run.path?.split('@')[0] === details.workflow.path);
       if (matches.length) {
-        const run = matches.reduce((latest: any, candidate: any) => candidate.id > latest.id ? candidate : latest);
+        const run = matches.reduce((latest: { id: number; html_url?: string }, candidate: { id: number; html_url?: string }) => candidate.id > latest.id ? candidate : latest);
         runId = run.id;
         log(`Tag workflow run found: ${run.html_url || `https://${details.host}/${details.slug}/actions/runs/${runId}`}`);
       }
@@ -302,7 +302,7 @@ async function waitForWorkflow(exec: Exec, cwd: string, details: ReleaseDetails,
       const jobs = github(exec, cwd, details.host, `repos/${details.slug}/actions/runs/${runId}/jobs`, {
         per_page: '100',
       }).jobs || [];
-      const matching = jobs.filter((job: any) => job.name === details.workflow.name);
+      const matching = jobs.filter((job: { name: string; status: string; conclusion: string }) => job.name === details.workflow.name);
       if (matching.length > 1) throw new ReleaseError(`Multiple publish jobs found in GitHub run ${runId}.`);
       if (matching.length === 1 && matching[0].status === 'completed' && matching[0].conclusion !== 'success') {
         throw new ReleaseError(`Publish job in GitHub run ${runId} ended as ${matching[0].conclusion}.`);

@@ -9,10 +9,10 @@ const { resolveRepositoryModule } = require('../support/repository-container');
 
 const { warningCodes } = resolveRepositoryModule('src/modules/journal/warnings/ingestion-warning.js');
 const directory = path.resolve(__dirname, '../api/queries/warnings');
-const exampleFiles = fs.readdirSync(directory).filter((name: any) => name.endsWith('.case'));
+const exampleFiles = fs.readdirSync(directory).filter((name: string) => name.endsWith('.case'));
 
 test('every warning code has exactly one named example', () => {
-  const exampleCodes = exampleFiles.map((name: any) => name.slice(0, -'.case'.length));
+  const exampleCodes = exampleFiles.map((name: string) => name.slice(0, -'.case'.length));
   assert.deepEqual(exampleCodes.sort(), Object.values(warningCodes).sort());
   for (const name of exampleFiles) {
     const code = name.slice(0, -'.case'.length);

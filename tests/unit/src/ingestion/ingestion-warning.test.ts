@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { groupWarnings } = resolveRepositoryModule('src/modules/journal/warnings/ingestion-warning.js');
 
-function warning(code: any, message: any, line: any) {
+function warning(code: string, message: string, line: number) {
   return {
     code,
     message,
@@ -20,7 +20,7 @@ function warning(code: any, message: any, line: any) {
 
 test('groups matching warnings and retains at most ten instances', () => {
   const warnings = [
-    ...Array.from({ length: 12 }, (_value: any, index: any) =>
+    ...Array.from({ length: 12 }, (_value: unknown, index: number) =>
       warning('UNDECLARED_COMMODITY', 'Commodity FUND must be declared before use', index + 1)),
     warning('UNDECLARED_COMMODITY', 'Commodity USD must be declared before use', 20),
     warning('UNDECLARED_ACCOUNT', 'Account Assets:Cash must be declared before use', 21),
@@ -31,7 +31,7 @@ test('groups matching warnings and retains at most ten instances', () => {
   assert.deepEqual(groups, [{
     code: 'UNDECLARED_COMMODITY',
     message: 'Commodity FUND must be declared before use',
-    instances: Array.from({ length: 10 }, (_value: any, index: any) => ({
+    instances: Array.from({ length: 10 }, (_value: unknown, index: number) => ({
       source: '/journal.ledger',
       line: index + 1,
       column: 5,

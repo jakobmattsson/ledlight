@@ -14,9 +14,9 @@ if (!summaryPath) {
 const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
 const metrics = ['statements', 'branches', 'functions', 'lines'];
 const files = Object.entries(report)
-  .filter(([name]: any) => name !== 'total')
-  .map(([name, coverage]: any) => [path.relative(process.cwd(), name), coverage])
-  .sort(([left]: any, [right]: any) => left.localeCompare(right));
+  .filter(([name]) => name !== 'total')
+  .map(([name, coverage]) => [path.relative(process.cwd(), name), coverage])
+  .sort(([left], [right]: any) => left.localeCompare(right));
 
 if (!report.total || files.length === 0) {
   throw new Error('The coverage report has no file results.');
@@ -35,7 +35,7 @@ const lines = [
 
 for (const [name, coverage] of [['**Total**', report.total], ...files]) {
   const label = name === '**Total**' ? name : `\`${name.replaceAll('|', '\\|')}\``;
-  lines.push(`| ${label} | ${metrics.map((metric: any) => percentage(coverage, metric)).join(' | ')} |`);
+  lines.push(`| ${label} | ${metrics.map((metric) => percentage(coverage, metric)).join(' | ')} |`);
 }
 
 lines.push('', 'Download the `coverage-report` artifact and open `index.html` to inspect covered and uncovered source lines.', '');

@@ -28,11 +28,11 @@ test('validates public parser API inputs', () => {
   const { parseLedgerText } = require(ledlightPath);
   assert.throws(
     () => parseLedgerText(123),
-    (error: any) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
     () => parseLedgerText('account Assets:Cash\n', { unknown: true }),
-    (error: any) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
 });
 
@@ -50,7 +50,7 @@ test('warns when a posting uses an unquoted commodity name that Ledger cannot pa
 `);
 
   const journal = openJournal(journalPath);
-  assert.deepEqual(journal.warnings.map(({ code }: any) => code), ['SYNTAX_ERROR']);
+  assert.deepEqual(journal.warnings.map(({ code }: { code: string }) => code), ['SYNTAX_ERROR']);
   assert.equal(journal.warnings[0].instances[0].line, 5);
   assert.deepEqual(journal.transactions().transactions, []);
 });
@@ -81,9 +81,9 @@ tag Receipt
     { name: 'Imported', value: null },
     { name: 'Source', value: 'statement.csv' },
   ]);
-  assert.deepEqual(parsed.comments.map(({ text }: any) => text), ['bank statement']);
+  assert.deepEqual(parsed.comments.map(({ text }: { text: string }) => text), ['bank statement']);
   assert.deepEqual(parsed.postings[0].tags, [{ name: 'Receipt', value: null }]);
-  assert.deepEqual(parsed.postings[0].comments.map(({ text }: any) => text), ['card payment']);
+  assert.deepEqual(parsed.postings[0].comments.map(({ text }: { text: string }) => text), ['card payment']);
 
   const journal = openJournal(journalPath);
   const transaction = journal.transactions().transactions[0];
@@ -110,7 +110,7 @@ test('exposes stable error code strings instead of public error classes', (t: Te
 
   assert.throws(
     () => ledlight.openJournal('/missing/journal.ledger'),
-    (error: any) => error.code === 'LEDLIGHT_PROJECT_CONFIGURATION',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_PROJECT_CONFIGURATION',
   );
 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-error-codes-'));
@@ -120,16 +120,16 @@ test('exposes stable error code strings instead of public error classes', (t: Te
   const journal = ledlight.openJournal(journalPath);
   assert.throws(
     () => journal.aggregate({ unknown: true }),
-    (error: any) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
     () => journal.aggregate({ denominate: true }),
-    (error: any) => error.code === 'LEDLIGHT_MISSING_VALUATION_DATA',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_MISSING_VALUATION_DATA',
   );
   fs.rmSync(journal.databasePath);
   assert.throws(
     () => journal.accounts(),
-    (error: any) => error.code === 'LEDLIGHT_DATABASE',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_DATABASE',
   );
 });
 
@@ -162,7 +162,7 @@ P 2024-01-01 USD 2 SEK
   const journal = openJournal(journalPath);
   const message = 'Assets:Stock: lot cost in USD must be expressed in the default commodity SEK. ' +
     'Unrealized gains omit affected positions; their totals may be incomplete';
-  assert.deepEqual(journal.warnings.map(({ code, message }: any) => ({ code, message })), [{
+  assert.deepEqual(journal.warnings.map(({ code, message }: { code: string; message: string }) => ({ code, message })), [{
     code: 'FOREIGN_LOT_COST_CURRENCY', message,
   }, {
     code: 'INVALID_COMMODITY_TRADE',
@@ -200,11 +200,11 @@ test('renders CLI help and the public package version without opening a project'
     openJournal: () => assert.fail('help and version must not open a project'),
   }));
   container.$$private.registerInternal('cli', 'output', asValue({
-    writeError(value: any) { stderr += value; },
-    writeOutput(value: any) { stdout += value; },
+    writeError(value: string) { stderr += value; },
+    writeOutput(value: string) { stdout += value; },
   }));
   const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
-  function run(arguments_: any) {
+  function run(arguments_: string[]) {
     stdout = '';
     stderr = '';
     assert.equal(executeCli.run(arguments_), 0);
@@ -242,7 +242,7 @@ test('returns all transactions without pagination and paginates only when reques
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-transactions-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const journalPath = path.join(directory, 'journal.ledger');
-  const entries = Array.from({ length: 501 }, (_value: any, index: any) => `
+  const entries = Array.from({ length: 501 }, (_value: unknown, index: number) => `
 2024-01-01 Entry ${index + 1}
   Assets:Cash  1 SEK
   Equity:Opening  -1 SEK
@@ -293,15 +293,15 @@ test('print returns plain journal text and validates its options', (t: TestConte
     'account Assets:Database\n');
   assert.throws(
     () => journal.print({ density: 'dense' }),
-    (error: any) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
     () => journal.print({ sortDeclarations: 'true' }),
-    (error: any) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_INVALID_API_INPUT',
   );
   assert.throws(
     () => journal.print({ unknown: true }),
-    (error: any) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&
+    (error: { code?: string; message?: string }) => error.code === 'LEDLIGHT_INVALID_API_INPUT' &&
       error.message === 'Unknown print option: unknown',
   );
 });
@@ -325,7 +325,7 @@ account Equity:Opening
 `);
 
   const journal = ledlight.openJournal(journalPath);
-  assert.deepEqual(journal.warnings.map(({ code }: any) => code), [
+  assert.deepEqual(journal.warnings.map(({ code }: { code: string }) => code), [
     'SYNTAX_ERROR',
     'BALANCE_ASSERTION_FAILED',
     'UNBALANCED_TRANSACTION',
@@ -370,7 +370,7 @@ P 2024-01-01 FUND 100 USD
 `);
   const { openJournal } = require(ledlightPath);
   const journal = openJournal(journalPath);
-  assert.deepEqual(journal.warnings.map(({ code, message }: any) => ({ code, message })), [{
+  assert.deepEqual(journal.warnings.map(({ code, message }: { code: string; message: string }) => ({ code, message })), [{
     code: 'RESIDUAL_COST_BASIS',
     message: 'Assets:Broker: zero FUND units retain cost basis 1000 USD',
   }]);

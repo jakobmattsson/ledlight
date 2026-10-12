@@ -9,37 +9,43 @@ const {
   appendTotal,
   formatWarnings,
 } = cliFormat;
-const commands = new Map(resolveCommands().map((command: any) => [command.name, command]));
+type FormatCommand = {
+  name: string;
+  prepareOutput?: (...args: unknown[]) => unknown;
+  formatCsv: (...args: unknown[]) => string;
+  formatText: (...args: unknown[]) => string;
+};
+const commands = new Map<string, FormatCommand>(resolveCommands().map((command: FormatCommand) => [command.name, command]));
 
-function formatCommand(name: any, result: any, cliOptions: any, descriptions?: any) {
+function formatCommand(name: string, result: unknown, cliOptions: { format: string; [key: string]: unknown }, descriptions?: unknown) {
   const command = commands.get(name);
-  const output = (command as any).prepareOutput
-    ? (command as any).prepareOutput(result, cliOptions, cliFormat)
+  const output = command!.prepareOutput
+    ? command!.prepareOutput(result, cliOptions, cliFormat)
     : result;
   if (cliOptions.format === 'json') return cliFormat.formatJson(output);
   return cliOptions.format === 'csv'
-    ? (command as any).formatCsv(output, cliOptions, cliFormat)
-    : (command as any).formatText(output, cliOptions, cliFormat, descriptions);
+    ? command!.formatCsv(output, cliOptions, cliFormat)
+    : command!.formatText(output, cliOptions, cliFormat, descriptions);
 }
 
-const formatAggregateText = (rows: any, denominate: any, descriptions: any, groupBy: any) =>
+const formatAggregateText = (rows: unknown[], denominate: boolean, descriptions: unknown, groupBy?: string) =>
   formatCommand('aggregate', rows, {
     format: 'text',
     denominate,
     groupBy,
   }, descriptions);
-const formatCsv = (rows: any, denominate: any, groupBy: any) =>
+const formatCsv = (rows: unknown[], denominate: boolean, groupBy: string) =>
   formatCommand('aggregate', rows, { format: 'csv', denominate, groupBy });
-const formatHumanReadable = (rows: any, denominate: any, descriptions?: any, groupBy?: any) =>
+const formatHumanReadable = (rows: unknown[], denominate: boolean, descriptions?: unknown, groupBy?: string) =>
   denominate && groupBy !== 'commodity'
     ? formatCommand('unrealized-gains', rows, { format: 'text' }, descriptions)
     : formatAggregateText(rows, denominate, descriptions, groupBy);
-const formatInvestmentPerformanceCsv = (report: any) =>
+const formatInvestmentPerformanceCsv = (report: unknown) =>
   formatCommand('investment-performance', report, { format: 'csv' });
-const formatCommodities = (rows: any, output: any) => formatCommand('commodities', rows, output);
-const formatPostings = (rows: any, output: any) => formatCommand('postings', rows, output);
-const formatTags = (rows: any, output: any) => formatCommand('tags', rows, output);
-const formatTransactions = (transactions: any, descriptions: any) => formatCommand('transactions', {
+const formatCommodities = (rows: unknown[], output: { format: string; [key: string]: unknown }) => formatCommand('commodities', rows, output);
+const formatPostings = (rows: unknown[], output: { format: string; [key: string]: unknown }) => formatCommand('postings', rows, output);
+const formatTags = (rows: unknown[], output: { format: string; [key: string]: unknown }) => formatCommand('tags', rows, output);
+const formatTransactions = (transactions: unknown[], descriptions: unknown) => formatCommand('transactions', {
   transactions,
 }, { format: 'text' }, descriptions);
 
@@ -81,7 +87,7 @@ test('formats grouped warnings for a terminal', () => {
 });
 
 test('prints transaction annotations and balance markers with declared precision', () => {
-  const posting = (account: any, amount: any, overrides: any) => ({
+  const posting = (account: string, amount: { quantity: string; commodity: string }, overrides: Record<string, unknown>) => ({
     postingDate: '2024-01-01', account, comments: [], tags: [], amount,
     amounts: [amount], lotCost: null, cost: null,
     balanceAssignment: null, balanceAssertion: null, ...overrides,
@@ -147,7 +153,7 @@ test('appends an exact total without mutating report rows', () => {
 });
 
 test('writes one investment performance CSV row with nested API fields', () => {
-  const report: any = {
+  const report = {
     from: null,
     to: null,
     commodities: ['FUND,A'],

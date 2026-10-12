@@ -14,7 +14,7 @@ module.exports = ({
  */
   const load = createJournalLoader(parse);
 
-  function loadJournal(journalPath: any, rootSource: any) {
+  function loadJournal(journalPath: string, rootSource: string | undefined) {
     try {
       return load(journalPath, rootSource);
     } catch (error: any) {

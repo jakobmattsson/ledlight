@@ -1,15 +1,22 @@
 'use strict';
 
+import type { CommodityRow, PriceRow } from '../../../../public-api';
+import type { Command } from 'commander';
+
+type DisplayPrice = PriceRow & { ledgerPrice?: { totalQuantity: string; baseQuantity: string;
+  hasTransactionCost: boolean; baseScale: number; quoteScale: number } };
+
+
 module.exports = ({ cliOptions: options }: any) => ({
   description: 'show prices',
   examples: [
     'ledlight prices --file main.ledger',
     'ledlight prices --file main.ledger --mode directives --format csv',
   ],
-  loadFormatData(journal: any) {
+  loadFormatData(journal: { commodities(options: { usage: string }): CommodityRow[] }) {
     return journal.commodities({ usage: 'all' });
   },
-  configure(command: any) {
+  configure(command: Command) {
     options.journal(command);
     options.addValue(command, '--mode <mode>', 'show effective prices or explicit journal P directives', {
       choices: ['effective', 'directives'],
@@ -17,7 +24,7 @@ module.exports = ({ cliOptions: options }: any) => ({
     });
     options.format(command);
   },
-  formatCsv(rows: any, _cliOptions: any, { csvField }: any) {
+  formatCsv(rows: DisplayPrice[], _cliOptions: unknown, { csvField }: { csvField(value: unknown): string }) {
     const lines = ['date,baseCommodity,quoteQuantity,quoteCommodity,comment'];
     for (const row of rows) {
       lines.push([
@@ -30,10 +37,10 @@ module.exports = ({ cliOptions: options }: any) => ({
     }
     return `${lines.join('\n')}\n`;
   },
-  formatText(rows: any, _cliOptions: any, format: any, descriptions: any) {
+  formatText(rows: DisplayPrice[], _cliOptions: unknown, format: any, descriptions: CommodityRow[]) {
     const { commodityFormats, decimalScale, divideDecimalsHalfEven, formatDecimal, formatPriceQuantity, parseCommodityFormat, parseDecimal } = format;
 
-    function ledgerPriceQuantity(row: any, formats: any) {
+    function ledgerPriceQuantity(row: DisplayPrice, formats: Map<string, string | null>) {
       if (!row.ledgerPrice) return row.quoteQuantity;
       const { totalQuantity, baseQuantity, hasTransactionCost, baseScale, quoteScale } = row.ledgerPrice;
       const commodityScale = parseCommodityFormat(formats.get(row.quoteCommodity))?.scale ?? quoteScale;
@@ -57,7 +64,7 @@ module.exports = ({ cliOptions: options }: any) => ({
     }
 
     const formats = commodityFormats(descriptions);
-    const lines = rows.map((row: any) => {
+    const lines = rows.map((row: DisplayPrice) => {
       const quantity = formatPriceQuantity(ledgerPriceQuantity(row, formats), row.quoteCommodity, formats);
       const amount = `${quantity} ${row.quoteCommodity}`;
       return `${row.date} ${row.baseCommodity.padEnd(8)} ` +

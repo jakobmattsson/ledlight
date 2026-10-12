@@ -1,5 +1,17 @@
 'use strict';
 
+import type { InvestmentPerformanceOptions } from '../../../public-api';
+
+type Options = InvestmentPerformanceOptions & { accounts: string[]; commodities: string[] };
+type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown[] } };
+type FlowRow = {
+  transaction_id: number; posting_date: string; account: string; quantity: string; commodity: string;
+  lot_cost_quantity: string | null; lot_cost_commodity: string | null; lot_cost_is_total: number | null;
+  cost_quantity: string | null; cost_commodity: string | null; cost_is_total: number | null;
+  market_rate: string | null; lot_rate: string | null; cost_rate: string | null;
+};
+
+
 module.exports = ({
   accountFilter: { accountFilter, accountMatches },
   core: {
@@ -20,14 +32,14 @@ module.exports = ({
     ...dateRange,
   }).superRefine(validateDateRange);
 
-  function selectedCommodities(database: any, options: any) {
-    const included = options.commodities.filter((pattern: any) => !pattern.startsWith('~'));
+  function selectedCommodities(database: Database, options: Options) {
+    const included = options.commodities.filter((pattern: string) => !pattern.startsWith('~'));
     if (included.length > 0) {
-      const available = database.prepare('SELECT symbol FROM commodity_declarations ORDER BY symbol').all()
-        .map((row: any) => row.symbol);
-      return [...new Set(included.flatMap((pattern: any) => available.filter((commodity: any) =>
+      const available = (database.prepare('SELECT symbol FROM commodity_declarations ORDER BY symbol').all() as Array<{ symbol: string }>)
+        .map((row) => row.symbol);
+      return [...new Set(included.flatMap((pattern: string) => available.filter((commodity: string) =>
         accountMatches(commodity, [pattern]))))]
-        .filter((commodity: any) => accountMatches(commodity, options.commodities));
+        .filter((commodity) => accountMatches(commodity, options.commodities));
     }
     const clauses = ["p.posting_date <= COALESCE(?, '9999-12-31')"];
     const parameters = [options.to ?? null];
@@ -37,17 +49,17 @@ module.exports = ({
       parameters.push(...filter.parameters);
     }
     const where = clauses.length > 0 ? `WHERE ${clauses.join('\n      AND ')}` : '';
-    return database.prepare(`
+    return (database.prepare(`
     SELECT DISTINCT r.amount_commodity AS commodity
     FROM resolved_posting_amounts AS r
     JOIN postings AS p ON p.id = r.posting_id
     ${where}
     ORDER BY r.amount_commodity
-  `).all(...parameters).map((row: any) => row.commodity)
-      .filter((commodity: any) => accountMatches(commodity, options.commodities));
+  `).all(...parameters) as Array<{ commodity: string }>).map((row) => row.commodity)
+      .filter((commodity: string) => accountMatches(commodity, options.commodities));
   }
 
-  function selectionFilter(options: any, commodities: any, alias: any) {
+  function selectionFilter(options: Options, commodities: string[], alias: string) {
     const clauses = [`${alias}.amount_commodity IN (${commodities.map(() => '?').join(', ')})`];
     const parameters = [...commodities];
     if (options.accounts.length > 0) {
@@ -58,7 +70,7 @@ module.exports = ({
     return { sql: clauses.join('\n          AND '), parameters };
   }
 
-  function queryDailyValues(database: any, options: any, commodities: any, valuationCommodity: any) {
+  function queryDailyValues(database: Database, options: Options, commodities: string[], valuationCommodity: string) {
     const filter = selectionFilter(options, commodities, 'r');
     const reportEnd = `SELECT MIN(value, COALESCE(?, value)) AS value
       FROM (
@@ -78,7 +90,7 @@ module.exports = ({
       ...filter.parameters,
       options.from ?? null,
     ];
-    return database.prepare(`
+    return (database.prepare(`
     WITH RECURSIVE
       selected_changes AS (
         SELECT p.posting_date AS date, r.amount_commodity AS commodity, decimal_sum(r.amount_quantity) AS quantity
@@ -123,7 +135,7 @@ module.exports = ({
     )
     GROUP BY positions.date
     ORDER BY positions.date
-  `).all(...parameters).map((row: any) => {
+  `).all(...parameters) as Array<{ date: string; value: string; missing_commodity: string | null }>).map((row) => {
       if (row.missing_commodity) {
         throw createError(errorCodes.MISSING_VALUATION_DATA, `No price for ${row.missing_commodity} on or before ${row.date} can convert it to ${valuationCommodity}`);
       }
@@ -131,7 +143,7 @@ module.exports = ({
     });
   }
 
-  function queryDailyFlows(database: any, options: any, commodities: any, valuationCommodity: any) {
+  function queryDailyFlows(database: Database, options: Options, commodities: string[], valuationCommodity: string) {
     const filter = selectionFilter(options, commodities, 'r');
     const rows = database.prepare(`
       WITH selected_transactions AS (
@@ -154,12 +166,12 @@ module.exports = ({
       LEFT JOIN valuation_prices AS price
         ON price.commodity = p.cost_commodity AND price.date = p.posting_date
       ORDER BY p.transaction_id, p.position, r.position
-    `).all(...filter.parameters, options.from ?? null, options.to ?? null);
+    `).all(...filter.parameters, options.from ?? null, options.to ?? null) as FlowRow[];
     const selected = new Set(commodities);
-    const annotation = (quantity: any, commodity: any, total: any) => quantity === null ? null : {
+    const annotation = (quantity: string | null, commodity: string | null, total: number | null) => quantity === null ? null : {
       amount: { quantity, commodity }, total: Boolean(total),
     };
-    const postings = rows.map((row: any) => {
+    const postings = rows.map((row) => {
       const selectedAccount = options.accounts.length === 0 ||
         accountMatches(row.account, options.accounts);
       return {
@@ -179,8 +191,8 @@ module.exports = ({
     return calculateFlows(postings, options, valuationCommodity);
   }
 
-  function queryInvestmentPerformance(database: any, options: any, _caches: any) {
-    const reportOptions = parseOptions(optionsSchema, options, 'investmentPerformance');
+  function queryInvestmentPerformance(database: Database, options: Options, _caches: unknown) {
+    const reportOptions = parseOptions(optionsSchema, options, 'investmentPerformance') as Options;
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const commodities = selectedCommodities(database, reportOptions);
     if (commodities.length === 0) return calculatePerformance([], [], reportOptions, [], valuationCommodity);

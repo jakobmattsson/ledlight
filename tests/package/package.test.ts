@@ -10,22 +10,23 @@ const test = require('node:test');
 const repositoryRoot = path.resolve(__dirname, '../..');
 const packageMetadata = require('../../package.json');
 
-function run(command: any, arguments_: any, options: any) {
+function run(command: string, arguments_: string[], options: { cwd?: string; env?: NodeJS.ProcessEnv }) {
   try {
     return execFileSync(command, arguments_, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       ...options,
     });
-  } catch (error: any) {
-    throw new Error(error.stdout?.toString() || error.stderr?.toString() || error.message,
+  } catch (error) {
+    const failure = error as Error & { stdout?: Buffer; stderr?: Buffer };
+    throw new Error(failure.stdout?.toString() || failure.stderr?.toString() || failure.message,
       { cause: error });
   }
 }
 
-function runNpm(arguments_: any, options: any) {
+function runNpm(arguments_: string[], options: { cwd?: string; env?: NodeJS.ProcessEnv }) {
   assert.ok(process.env.npm_execpath, 'npm_execpath must identify the npm CLI');
-  return run(process.execPath, [process.env.npm_execpath, ...arguments_], options);
+  return run(process.execPath, [process.env.npm_execpath!, ...arguments_], options);
 }
 
 test('the published archive installs and exposes the module and CLI', () => {
@@ -41,7 +42,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       '--json',
       '--pack-destination', archiveDirectory,
     ], { cwd: repositoryRoot }))[0];
-    const packagedPaths = new Set<string>(packResult.files.map(({ path: packagedPath }: any) => packagedPath));
+    const packagedPaths = new Set<string>(packResult.files.map(({ path: packagedPath }: { path: string }) => packagedPath));
     for (const requiredPath of [
       'LICENSE',
       'README.md',
@@ -102,7 +103,7 @@ account Equity:Opening
   Equity:Opening
 `);
 
-    const consumerEnvironment: any = {
+    const consumerEnvironment = {
       ...process.env,
       LEDLIGHT_CACHE_HOME: path.join(consumerDirectory, 'cache'),
       NODE_PATH: '',

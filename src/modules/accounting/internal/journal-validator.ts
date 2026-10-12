@@ -1,5 +1,12 @@
 'use strict';
 
+import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting, LedgerTag, SourceLocation } from '../../../public-api';
+
+type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+type Declarations = { accounts: Set<string>; commodities: Set<string>; tags: Set<string> };
+type LocatedTag = LedgerTag & { location?: SourceLocation };
+type ResolvedPosting = LedgerPosting & { amount: LedgerAmount; original: LedgerPosting };
+
 module.exports = ({
   core: {
     decimal: { compareDecimals, parseDecimal },
@@ -14,7 +21,7 @@ module.exports = ({
 
   const ZERO = parseDecimal('0');
 
-  function warnUnlessDeclared(kind: any, name: any, declarations: any, location: any, warnings: any) {
+  function warnUnlessDeclared(kind: 'account' | 'commodity' | 'tag', name: string | null | undefined, declarations: Set<string>, location: SourceLocation, warnings: unknown[]) {
     if (name === null || name === undefined || declarations.has(name)) return;
     const label = kind[0].toUpperCase() + kind.slice(1);
     warnings.push(createWarning(
@@ -24,7 +31,7 @@ module.exports = ({
     ));
   }
 
-  function declare(kind: any, name: any, declarations: any, location: any, warnings: any) {
+  function declare(kind: 'account' | 'commodity' | 'tag', name: string, declarations: Set<string>, location: SourceLocation, warnings: unknown[]) {
     const label = kind[0].toUpperCase() + kind.slice(1);
     if (declarations.has(name)) {
       warnings.push(createWarning(
@@ -38,7 +45,7 @@ module.exports = ({
     return true;
   }
 
-  function validatePostingDeclarations(posting: any, declarations: any, warnings: any) {
+  function validatePostingDeclarations(posting: LedgerPosting, declarations: Declarations, warnings: unknown[]) {
     warnUnlessDeclared(
       'account', posting.account, declarations.accounts, posting.location, warnings,
     );
@@ -53,13 +60,13 @@ module.exports = ({
         'commodity', amount?.commodity, declarations.commodities, posting.location, warnings,
       );
     }
-    for (const tag of posting.tags || []) {
+    for (const tag of (posting.tags || []) as LocatedTag[]) {
       warnUnlessDeclared('tag', tag.name, declarations.tags, tag.location || posting.location, warnings);
     }
   }
 
-  function validateTransactionDeclarations(transaction: any, declarations: any, warnings: any) {
-    for (const tag of transaction.tags || []) {
+  function validateTransactionDeclarations(transaction: Transaction, declarations: Declarations, warnings: unknown[]) {
+    for (const tag of (transaction.tags || []) as LocatedTag[]) {
       warnUnlessDeclared('tag', tag.name, declarations.tags, tag.location || transaction.location, warnings);
     }
     for (const posting of transaction.postings) {
@@ -67,7 +74,7 @@ module.exports = ({
     }
   }
 
-  function validatePostingDates(transaction: any, warnings: any) {
+  function validatePostingDates(transaction: Transaction, warnings: unknown[]) {
     for (const posting of transaction.postings) {
       if (posting.postingDate && posting.postingDate < transaction.date) {
         warnings.push(createWarning(
@@ -79,12 +86,12 @@ module.exports = ({
     }
   }
 
-  function validateCommodityTrade(posting: any, defaultCommodity: any, warnings: any) {
+  function validateCommodityTrade(posting: LedgerPosting, defaultCommodity: string | null | undefined, warnings: unknown[]) {
     if (!posting.amount || !defaultCommodity) return;
     if (posting.amount.commodity === defaultCommodity) {
-      for (const [label, annotation] of [
+      for (const [label, annotation] of ([
         ['lot cost', posting.lotCost], ['transaction price', posting.cost],
-      ]) {
+      ] as Array<[string, LedgerCost | null]>)) {
         if (annotation && annotation.amount.commodity !== defaultCommodity) {
           warnings.push(createWarning(
             warningCodes.INVALID_COMMODITY_TRADE,
@@ -115,13 +122,13 @@ module.exports = ({
     }
   }
 
-  function validateSelfCommodityCosts(posting: any, warnings: any) {
+  function validateSelfCommodityCosts(posting: LedgerPosting, warnings: unknown[]) {
     if (!posting.amount?.commodity) return;
     const { commodity, quantity } = posting.amount;
-    for (const [label, annotation] of [
+    for (const [label, annotation] of ([
       ['Lot cost', posting.lotCost], ['Transaction price', posting.cost],
-    ]) {
-      if (annotation?.amount.commodity !== commodity) continue;
+    ] as Array<[string, LedgerCost | null]>)) {
+      if (!annotation || annotation.amount.commodity !== commodity) continue;
       const expected = parseRational(annotation.total ? quantity : '1');
       const actual = annotation.total
         ? annotatedTotal(annotation, expected)
@@ -137,7 +144,7 @@ module.exports = ({
     }
   }
 
-  function validatePosting(posting: any, defaultCommodity: any, warnings: any, carried: any) {
+  function validatePosting(posting: LedgerPosting, defaultCommodity: string | null | undefined, warnings: unknown[], carried: Set<LedgerPosting>) {
     if (posting.lotCost) {
       const costCommodity = posting.lotCost.amount.commodity;
       if (defaultCommodity && costCommodity && costCommodity !== defaultCommodity &&
@@ -155,11 +162,11 @@ module.exports = ({
     if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
   }
 
-  function validateResolvedCommodityTrades(transaction: any, resolved: any, defaultCommodity: any, warnings: any) {
-    const postings = transaction.postings.flatMap((posting: any, index: any) =>
-      resolved[index].map((amount: any) => ({ ...posting, amount, original: posting })));
-    const carried = new Set(carriedMovements({ ...transaction, postings }, defaultCommodity)
-      .flatMap(({ outgoing, incoming }: any) => [outgoing, incoming]));
+  function validateResolvedCommodityTrades(transaction: Transaction, resolved: LedgerAmount[][], defaultCommodity: string | null | undefined, warnings: unknown[]) {
+    const postings: ResolvedPosting[] = transaction.postings.flatMap((posting, index) =>
+      resolved[index].map((amount) => ({ ...posting, amount, original: posting })));
+    const carried = new Set<LedgerPosting>(carriedMovements({ ...transaction, postings }, defaultCommodity)
+      .flatMap(({ outgoing, incoming }: { outgoing: LedgerPosting; incoming: LedgerPosting }) => [outgoing, incoming]));
     const replacement = unpricedReplacement({ ...transaction, postings }, defaultCommodity);
     if (replacement) { carried.add(replacement.outgoing); carried.add(replacement.incoming); }
     for (const posting of postings) {
@@ -167,7 +174,7 @@ module.exports = ({
       // the actual change in holdings, not the target balance's sign.
       if (posting.original.amount && !posting.original.balanceAssignment) continue;
       if (!posting.original.amount && !posting.original.balanceAssignment &&
-          postings.some((candidate: any) => candidate !== posting && candidate.original.amount &&
+          postings.some((candidate) => candidate !== posting && candidate.original.amount &&
             candidate.amount.commodity === posting.amount.commodity &&
             cmp(add(parseRational(candidate.amount.quantity),
               parseRational(posting.amount.quantity)), zero) === 0 &&
@@ -177,16 +184,16 @@ module.exports = ({
     }
   }
 
-  function validateJournal(journal: any, defaultCommodity: any, initialWarnings: any) {
+  function validateJournal(journal: { entries: LedgerEntry[] }, defaultCommodity: string | null | undefined, initialWarnings?: unknown[]) {
     const warnings = [...(initialWarnings || [])];
-    const invalidEntries = new Set();
+    const invalidEntries = new Set<LedgerEntry>();
     const effectiveDefaultCommodity = defaultCommodity === undefined
       ? valuationCommodityFromJournal(journal, warnings)
       : defaultCommodity;
-    const declarations: any = {
-      accounts: new Set(),
-      commodities: new Set(),
-      tags: new Set(),
+    const declarations = {
+      accounts: new Set<string>(),
+      commodities: new Set<string>(),
+      tags: new Set<string>(),
     };
     for (const entry of journal.entries) {
       if (entry.type === 'account') {
@@ -198,7 +205,7 @@ module.exports = ({
           'commodity', entry.symbol, declarations.commodities, entry.location, warnings,
         )) {
           invalidEntries.add(entry);
-        } else if (!entry.properties.some(({ name }: any) => name === 'format')) {
+        } else if (!entry.properties.some(({ name }) => name === 'format')) {
           warnings.push(createWarning(
             warningCodes.MISSING_COMMODITY_FORMAT,
             `Commodity ${entry.symbol} must declare a format property`,
@@ -212,20 +219,20 @@ module.exports = ({
       } else if (entry.type === 'transaction') {
         validateTransactionDeclarations(entry, declarations, warnings);
         validatePostingDates(entry, warnings);
-        const carried = new Set(carriedMovements(entry, effectiveDefaultCommodity)
-          .flatMap(({ outgoing, incoming }: any) => [outgoing, incoming]));
+        const carried = new Set<LedgerPosting>(carriedMovements(entry, effectiveDefaultCommodity)
+          .flatMap(({ outgoing, incoming }: { outgoing: LedgerPosting; incoming: LedgerPosting }) => [outgoing, incoming]));
         const replacement = unpricedReplacement(entry, effectiveDefaultCommodity);
         if (replacement) { carried.add(replacement.outgoing); carried.add(replacement.incoming); }
-        if (entry.postings.length === 2 && entry.postings.every((posting: any) =>
+        if (entry.postings.length === 2 && entry.postings.every((posting) =>
           posting.amount && !posting.lotCost && !posting.cost) &&
-          entry.postings[0].amount.commodity === entry.postings[1].amount.commodity &&
-          cmp(add(parseRational(entry.postings[0].amount.quantity),
-            parseRational(entry.postings[1].amount.quantity)), zero) === 0) {
-          const outgoing = entry.postings.find((posting: any) =>
-            parseRational(posting.amount.quantity).n < 0n);
+          entry.postings[0].amount!.commodity === entry.postings[1].amount!.commodity &&
+          cmp(add(parseRational(entry.postings[0].amount!.quantity),
+            parseRational(entry.postings[1].amount!.quantity)), zero) === 0) {
+          const outgoing = entry.postings.find((posting) =>
+            parseRational(posting.amount!.quantity).n < 0n);
           if (outgoing) carried.add(outgoing);
         }
-        entry.postings.forEach((posting: any) => validatePosting(
+        entry.postings.forEach((posting) => validatePosting(
           posting, effectiveDefaultCommodity, warnings, carried,
         ));
       } else if (entry.type === 'price') {

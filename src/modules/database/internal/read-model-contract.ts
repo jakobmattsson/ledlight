@@ -2,7 +2,7 @@
 
 // Queries may read these tables and columns from the derived SQLite database.
 module.exports = () => {
-  const columns: any = {
+  const columns = {
     database_metadata: ['key', 'value'],
     source_files: ['id', 'path', 'sha256', 'size'],
     journal_entries: ['id', 'source_file_id', 'line'],
@@ -22,7 +22,7 @@ module.exports = () => {
       'amount_commodity', 'balance_quantity'],
     valuation_prices: ['commodity', 'date', 'rate'],
   };
-  return Object.freeze(Object.fromEntries(Object.entries(columns).map(([table, names]: any) => [
+  return Object.freeze(Object.fromEntries(Object.entries(columns).map(([table, names]) => [
     table, Object.freeze(names),
   ])));
 };

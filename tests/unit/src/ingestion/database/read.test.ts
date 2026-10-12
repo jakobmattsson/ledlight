@@ -6,13 +6,13 @@ const path = require('node:path');
 const test = require('node:test');
 const createDatabaseReader = withExternal(require('../../../../../src/modules/database/internal/database-reader'), ['path', 'sqlite']);
 
-function createReader(events: any) {
-  const database: any = {
+function createReader(events: unknown[]) {
+  const database = {
     close() {
       events.push('close');
     },
   };
-  const Database = function Database(databasePath: any, options: any) {
+  const Database = function Database(databasePath: string, options: { readonly: boolean; fileMustExist: boolean }) {
     events.push({ databasePath, options });
     return database;
   };
@@ -21,7 +21,7 @@ function createReader(events: any) {
     sqlite: Database,
     core: {
       decimal: {
-        registerDecimalFunctions(receivedDatabase: any) {
+        registerDecimalFunctions(receivedDatabase: unknown) {
           assert.equal(receivedDatabase, database);
           events.push('register');
         },
@@ -32,10 +32,10 @@ function createReader(events: any) {
 }
 
 test('provides a configured read-only database to a query and closes it afterwards', () => {
-  const events: any = [];
+  const events: unknown[] = [];
   const { database, readDatabase } = createReader(events);
 
-  assert.equal(readDatabase('journal.sqlite', (receivedDatabase: any) => {
+  assert.equal(readDatabase('journal.sqlite', (receivedDatabase: unknown) => {
     assert.equal(receivedDatabase, database);
     events.push('query');
     return 'result';
@@ -52,7 +52,7 @@ test('provides a configured read-only database to a query and closes it afterwar
 });
 
 test('closes the database when a query fails', () => {
-  const events: any = [];
+  const events: unknown[] = [];
   const { readDatabase } = createReader(events);
 
   assert.throws(() => readDatabase('journal.sqlite', () => {

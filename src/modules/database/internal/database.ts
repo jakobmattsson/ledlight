@@ -15,7 +15,7 @@ module.exports = ({
   },
 }: any) => {
 
-  function buildDatabase(databasePath: any, journalPath: any) {
+  function buildDatabase(databasePath: string, journalPath: string) {
     try {
       return writeJournalDatabase(databasePath, loadJournal(journalPath));
     } catch (error: any) {
@@ -23,7 +23,7 @@ module.exports = ({
     }
   }
 
-  function ensureDatabaseCurrent(databasePath: any, sourceJournalPath: any) {
+  function ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string) {
     const journalPath = sourceJournalPath ? path.resolve(sourceJournalPath) : databaseJournalPath(databasePath);
     if (!journalPath) {
       throw databaseError(new Error('Cannot update the database without a journal path'));

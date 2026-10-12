@@ -1,5 +1,7 @@
 'use strict';
 
+import type { AggregateRow } from '../../../../src/public-api';
+
 const { resolveCommands, resolveRepositoryModule } = require('../../../support/repository-container');
 
 const assert = require('node:assert/strict');
@@ -34,13 +36,13 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
     commander,
     commands: { definitions: commands },
     cliConfiguration: {
-      apply: (arguments_: any) => [arguments_[0], '--file', '/configured-journal'],
+      apply: (arguments_: string[]) => [arguments_[0], '--file', '/configured-journal'],
     },
     project: coreProject,
   });
-  const opened: any = [];
-  const project: any = {
-    openJournal(journalPath: any) {
+  const opened: string[] = [];
+  const project = {
+    openJournal(journalPath: string) {
       opened.push(journalPath);
       return {
         warnings: [],
@@ -75,9 +77,9 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
 });
 
 test('prepares selected output before shared JSON encoding', () => {
-  const account: any = { account: 'Assets:Cash', comment: 'Cash', transactionCount: 1 };
-  const gain: any = { account: 'Assets:Broker', quantity: '5', commodity: 'USD' };
-  const project: any = {
+  const account = { account: 'Assets:Cash', comment: 'Cash', transactionCount: 1 };
+  const gain = { account: 'Assets:Broker', quantity: '5', commodity: 'USD' };
+  const project = {
     openJournal: () => ({
       warnings: [],
       accounts: () => [account],
@@ -103,9 +105,9 @@ test('prepares selected output before shared JSON encoding', () => {
 });
 
 test('delegates report behavior to the public Node API and only formats results', () => {
-  const calls: any = [];
-  const journal: any = {
-    aggregate(options: any) {
+  const calls: unknown[] = [];
+  const journal = {
+    aggregate(options: Record<string, unknown>) {
       calls.push({ operation: 'aggregate', options });
       if (options.groupBy === 'commodity') {
         return [{ quantity: '-10', commodity: 'USD' }];
@@ -115,15 +117,15 @@ test('delegates report behavior to the public Node API and only formats results'
         { account: 'Total', quantity: '-10', commodity: 'USD', isTotal: true },
       ];
     },
-    totalHistory(options: any) {
+    totalHistory(options: Record<string, unknown>) {
       calls.push({ operation: 'totalHistory', options });
       return [{ date: '2024-01-01', amount: '-10', commodity: 'USD' }];
     },
-    unrealizedGains(options: any) {
+    unrealizedGains(options: Record<string, unknown>) {
       calls.push({ operation: 'unrealizedGains', options });
       return [{ account: 'Assets:Broker', quantity: '12.5', commodity: 'USD' }];
     },
-    investmentPerformance(options: any) {
+    investmentPerformance(options: Record<string, unknown>) {
       calls.push({ operation: 'investmentPerformance', options });
       return {
         from: null,
@@ -140,7 +142,7 @@ test('delegates report behavior to the public Node API and only formats results'
         moneyWeightedReturn: null,
       };
     },
-    commodities(options: any) {
+    commodities(options: Record<string, unknown>) {
       calls.push({ operation: 'commodities', options });
       return [{
         commodity: 'USD', comment: null, format: '1,000.00 USD',
@@ -148,8 +150,8 @@ test('delegates report behavior to the public Node API and only formats results'
       }];
     },
   };
-  const project: any = {
-    openJournal(journalPath: any) {
+  const project = {
+    openJournal(journalPath: string) {
       calls.push({ operation: 'openJournal', journalPath });
       return journal;
     },
@@ -252,14 +254,14 @@ test('delegates report behavior to the public Node API and only formats results'
 });
 
 test('aggregate includes a total only when requested in every output format', () => {
-  const calls: any = [];
+  const calls: Array<{ includeTotal?: boolean }> = [];
   const { runReportCommand } = createCommand({
     commands: { definitions: commands },
     project: {
       openJournal: () => ({
-        aggregate(options: any) {
+        aggregate(options: Record<string, unknown>) {
           calls.push(options);
-          const rows: any[] = [{ account: 'Assets:Cash', quantity: '10', commodity: 'USD' }];
+          const rows: AggregateRow[] = [{ account: 'Assets:Cash', quantity: '10', commodity: 'USD' }];
           if (options.includeTotal) {
             rows.push({ account: 'Total', quantity: '10', commodity: 'USD', isTotal: true });
           }
@@ -278,27 +280,27 @@ test('aggregate includes a total only when requested in every output format', ()
     const output = runReportCommand(arguments_);
     assert.match(output, /Assets:Cash/u);
     assert.doesNotMatch(output, /Total/u);
-    assert.equal(calls.at(-1).includeTotal, undefined);
+    assert.equal(calls.at(-1)?.includeTotal, undefined);
 
     const outputWithTotal = runReportCommand([...arguments_, '--include-total']);
     assert.match(outputWithTotal, /Assets:Cash/u);
     if (format === 'text') assert.match(outputWithTotal, /-{20}\n\s+10\.00 USD\n$/u);
     else assert.match(outputWithTotal, /Total/u);
-    assert.equal(calls.at(-1).includeTotal, true);
+    assert.equal(calls.at(-1)?.includeTotal, true);
   }
 });
 
 test('delegates non-report commands to the corresponding journal operations', () => {
-  const calls: any = [];
-  const journal: any = {
-    accounts(options: any) {
+  const calls: unknown[] = [];
+  const journal = {
+    accounts(options: Record<string, unknown>) {
       calls.push(['accounts', options]);
       return [{ account: 'Assets:Cash', comment: 'Daily use', transactionCount: 2 }];
     },
-    tags(options: any) { calls.push(['tags', options]); return [{ tag: 'Imported' }]; },
-    commodities(options: any) {
+    tags(options: Record<string, unknown>) { calls.push(['tags', options]); return [{ tag: 'Imported' }]; },
+    commodities(options: Record<string, unknown>) {
       calls.push(['commodities', options]);
-      const usd: any = {
+      const usd = {
         commodity: 'USD', comment: null, format: '1,000.00 USD',
         isDefault: true, used: true,
       };
@@ -308,14 +310,14 @@ test('delegates non-report commands to the corresponding journal operations', ()
         isDefault: false, used: false,
       }, usd];
     },
-    prices(options: any) {
+    prices(options: Record<string, unknown>) {
       calls.push(['prices', options]);
       return [{
         date: '2024-01-01', baseCommodity: 'EUR', quoteQuantity: '1.1',
         quoteCommodity: 'USD', comment: null,
       }];
     },
-    transactions(options: any) {
+    transactions(options: Record<string, unknown>) {
       calls.push(['transactions', options]);
       return {
         order: 'newest', page: 2, pageSize: 10, totalTransactions: 1, totalPages: 1,
@@ -334,8 +336,8 @@ test('delegates non-report commands to the corresponding journal operations', ()
       };
     },
   };
-  const project: any = {
-    openJournal(journalPath: any) { calls.push(['openJournal', journalPath]); return journal; },
+  const project = {
+    openJournal(journalPath: string) { calls.push(['openJournal', journalPath]); return journal; },
   };
   const { runReportCommand } = createCommand({
     commands: { definitions: commands },
@@ -344,7 +346,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     cliArguments,
     cliFormat,
   });
-  const run = (arguments_: any) => JSON.parse(runReportCommand(arguments_));
+  const run = (arguments_: string[]) => JSON.parse(runReportCommand(arguments_));
 
   assert.equal(runReportCommand(['accounts', '--file', '/journal']), 'Assets:Cash\n');
   assert.deepEqual(run([
@@ -406,14 +408,14 @@ test('delegates non-report commands to the corresponding journal operations', ()
 });
 
 test('collects ingestion warnings before invoking a query', () => {
-  const calls: any = [];
+  const calls: unknown[] = [];
   const warning = Object.freeze({ code: 'EXAMPLE', message: 'Example warning' });
-  const journal: any = {
+  const journal = {
     get warnings() {
       calls.push('warnings');
       return [warning];
     },
-    accounts(_options: any) {
+    accounts(_options: Record<string, unknown>) {
       calls.push('query');
       return [];
     },
@@ -434,7 +436,7 @@ test('collects ingestion warnings before invoking a query', () => {
 });
 
 test('formats the postings API result in the requested CLI format', () => {
-  const calls: any = [];
+  const calls: unknown[] = [];
   const postings = [{
     postingId: 2,
     transactionId: 1,
@@ -451,12 +453,12 @@ test('formats the postings API result in the requested CLI format', () => {
     balanceAssertion: null,
     amounts: [{ quantity: '10', commodity: 'SEK' }],
   }];
-  const project: any = {
-    openJournal(journalPath: any) {
+  const project = {
+    openJournal(journalPath: string) {
       calls.push(['openJournal', journalPath]);
       return {
         warnings: [],
-        postings(options: any) {
+        postings(options: Record<string, unknown>) {
           calls.push(['postings', options]);
           return postings;
         },

@@ -1,5 +1,8 @@
 'use strict';
 
+import type { Dirent } from 'node:fs';
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -19,22 +22,22 @@ const allowedExternal = policy['allowed-external'];
 
 test('discovers exactly the modules declared in the dependency policy', () => {
   const directories = fs.readdirSync(root, { withFileTypes: true })
-    .filter((entry: any) => entry.isDirectory()).map((entry: any) => entry.name).sort();
+    .filter((entry: Dirent) => entry.isDirectory()).map((entry: Dirent) => entry.name).sort();
   assert.deepEqual(discoverModules(root), directories);
   assert.ok(fs.statSync(path.join(root, 'external.ts')).isFile());
   assert.deepEqual(Object.keys(allowedModules).sort(), directories);
   assert.deepEqual(Object.keys(allowedExternal).sort(), directories);
-  const rootAssets: any = { database: ['schema.sql'], journal: ['ledger.ohm'] };
+  const rootAssets = { database: ['schema.sql'], journal: ['ledger.ohm'] };
   for (const name of directories) {
     const rootFiles = fs.readdirSync(path.join(root, name), { withFileTypes: true })
-      .filter((entry: any) => entry.isFile() && !/\.(?:js|d\.ts|js\.map)$/u.test(entry.name))
-      .map((entry: any) => entry.name).sort();
-    assert.deepEqual(rootFiles, ['index.ts', ...(rootAssets[name] ?? [])].sort(),
+      .filter((entry: Dirent) => entry.isFile() && !/\.(?:js|d\.ts|js\.map)$/u.test(entry.name))
+      .map((entry: Dirent) => entry.name).sort();
+    assert.deepEqual(rootFiles, ['index.ts', ...(rootAssets[name as keyof typeof rootAssets] ?? [])].sort(),
       `${name} must expose only its facade and declared assets at its root`);
   }
 });
 
-test('rejects a discovered module without an index facade', (context: any) => {
+test('rejects a discovered module without an index facade', (context: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-module-scope-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.mkdirSync(path.join(directory, 'incomplete'));
@@ -67,7 +70,7 @@ test('external overrides remain scoped to their permitted modules', () => {
   assert.equal(container.resolve('project'), container.resolve('project'));
 });
 
-test('composes an independent module tree from the supplied path', (context: any) => {
+test('composes an independent module tree from the supplied path', (context: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'module-composition-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.mkdirSync(path.join(directory, 'source'));
@@ -99,7 +102,7 @@ test('registration names derive from kebab-case filenames', () => {
   assert.throws(() => moduleName('/example/database_reader.js'), /kebab-case/u);
 });
 
-test('list directories inject resolved files recursively with names and relative paths', (context: any) => {
+test('list directories inject resolved files recursively with names and relative paths', (context: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-list-module-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.mkdirSync(path.join(directory, 'list-items', 'nested'), { recursive: true });
@@ -113,9 +116,9 @@ test('list directories inject resolved files recursively with names and relative
   fs.writeFileSync(path.join(directory, 'list-items', 'nested', 'second.js'),
     "module.exports = ({ helper }) => ({ value: helper.value });\n");
 
-  let local: any;
+  let local: ReturnType<typeof createLocalContainer>;
   const dependencies = new Proxy(Object.create(null), {
-    get: (_target: any, name: any) => local.container.resolve(name),
+    get: (_target: object, name: string | symbol) => local.container.resolve(name as string),
   });
   local = createLocalContainer(directory, dependencies);
   const { items } = local.container.resolve('index');
@@ -127,7 +130,7 @@ test('list directories inject resolved files recursively with names and relative
   assert.ok(Object.isFrozen(items));
 });
 
-test('list dependency names cannot collide with a file registration', (context: any) => {
+test('list dependency names cannot collide with a file registration', (context: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-list-collision-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.mkdirSync(path.join(directory, 'list-items'));
@@ -138,7 +141,7 @@ test('list dependency names cannot collide with a file registration', (context: 
 });
 
 test('module scope exposes local factories and allowed facades by module name only', () => {
-  const local: any = { hasRegistration: (name: any) => name === 'privateHelper',
+  const local = { hasRegistration: (name: string) => name === 'privateHelper',
     resolve: () => 'local value' };
   const facade = Object.freeze({ publicValue: 'visible' });
   const dependencies = scopedDependencies('consumer', () => local, ['provider'],

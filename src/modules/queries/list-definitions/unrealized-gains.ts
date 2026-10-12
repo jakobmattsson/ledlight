@@ -1,5 +1,14 @@
 'use strict';
 
+import type { UnrealizedGainsOptions } from '../../../public-api';
+
+type Options = UnrealizedGainsOptions & { accounts: string[] };
+type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown[] } };
+type Position = { account: string; commodity: string; quantity: string; cost_basis: string; missing_lot_cost: string | null; foreign_lot_cost_commodity: string | null };
+type Decimal = { coefficient: bigint; scale: number };
+type Cache = Map<symbol, (commodity: string, throughDate: string) => string>;
+
+
 module.exports = ({
   core: {
     decimal: {
@@ -27,7 +36,7 @@ module.exports = ({
     to: dateOption,
   });
 
-  function reportFilter(options: any, valuationCommodity: any) {
+  function reportFilter(options: Options, valuationCommodity: string) {
     const dateExpression = options.dateBasis === 'transaction' ? 't.date' : 'p.posting_date';
     const clauses = [
       'r.amount_commodity != ?',
@@ -42,7 +51,7 @@ module.exports = ({
     return { sql: `WHERE ${clauses.join('\n      AND ')}`, parameters };
   }
 
-  function queryPositions(database: any, options: any, valuationCommodity: any) {
+  function queryPositions(database: Database, options: Options, valuationCommodity: string) {
     const filter = reportFilter(options, valuationCommodity);
     return database.prepare(`
       SELECT
@@ -70,10 +79,10 @@ module.exports = ({
       GROUP BY p.account, r.amount_commodity
       HAVING decimal_cmp(decimal_sum(r.amount_quantity), '0') != 0
       ORDER BY p.account, r.amount_commodity
-    `).all(valuationCommodity, ...filter.parameters);
+    `).all(valuationCommodity, ...filter.parameters) as Position[];
   }
 
-  function validateCostBases(positions: any) {
+  function validateCostBases(positions: Position[]) {
     for (const position of positions) {
       if (position.missing_lot_cost) {
         throw new Error(
@@ -84,8 +93,8 @@ module.exports = ({
     }
   }
 
-  function calculateRows(positions: any, rates: any, valuationCommodity: any) {
-    const gains = new Map();
+  function calculateRows(positions: Position[], rates: Map<string, string>, valuationCommodity: string) {
+    const gains = new Map<string, Decimal>();
     for (const position of positions) {
       const marketValue = multiplyDecimals(
         parseDecimal(position.quantity),
@@ -95,25 +104,25 @@ module.exports = ({
       gains.set(position.account, addDecimals(gains.get(position.account) || ZERO, gain));
     }
     return [...gains]
-      .filter(([, gain]: any) => compareDecimals(gain, ZERO) !== 0)
-      .sort(([left]: any, [right]: any) => left.localeCompare(right, 'en'))
-      .map(([account, gain]: any) => ({
+      .filter(([, gain]) => compareDecimals(gain, ZERO) !== 0)
+      .sort(([left], [right]: any) => left.localeCompare(right, 'en'))
+      .map(([account, gain]) => ({
         account,
         quantity: formatDecimal(gain),
         commodity: valuationCommodity,
       }));
   }
 
-  function queryUnrealizedGains(database: any, options: any, { valuationPriceCache }: any) {
-    const reportOptions = parseOptions(optionsSchema, options, 'unrealizedGains');
+  function queryUnrealizedGains(database: Database, options: Options, { valuationPriceCache }: { valuationPriceCache: Cache }) {
+    const reportOptions = parseOptions(optionsSchema, options, 'unrealizedGains') as Options;
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const positions = queryPositions(database, reportOptions, valuationCommodity)
-      .filter((position: any) => !position.foreign_lot_cost_commodity);
+      .filter((position) => !position.foreign_lot_cost_commodity);
     validateCostBases(positions);
     const rates = queryValuationRates(
       database,
       reportOptions.to,
-      new Set(positions.map((position: any) => position.commodity)),
+      new Set(positions.map((position) => position.commodity)),
       valuationPriceCache,
     );
     return calculateRows(positions, rates, valuationCommodity);

@@ -17,7 +17,7 @@ const project = resolveRepositoryModule('src/modules/project/internal/project.js
 const argumentsModule = createArguments({
   commander,
   commands: { definitions: commands },
-  cliConfiguration: { apply: (arguments_: any) => arguments_ },
+  cliConfiguration: { apply: (arguments_: string[]) => arguments_ },
   project,
 });
 
@@ -35,8 +35,8 @@ test('defines exactly one CLI command for every public journal operation', (t: T
   const { openJournal } = require('../..');
   const journal = openJournal(journalPath);
   const journalOperations = Object.entries(journal)
-    .filter(([, value]: any) => typeof value === 'function')
-    .map(([name]: any) => name);
+    .filter(([, value]) => typeof value === 'function')
+    .map(([name]) => name);
   assert.deepEqual(commands.map(({ operation }: any) => operation).sort(), journalOperations.sort());
   assert.deepEqual(
     argumentsModule.apiCommands,
@@ -45,7 +45,7 @@ test('defines exactly one CLI command for every public journal operation', (t: T
 });
 
 test('fails when a locally declared API input has no actual CLI option', () => {
-  const apiDefinitions: any = {
+  const apiDefinitions = {
     ...project.apiDefinitions,
     aggregate: {
       inputs: [...project.apiDefinitions.aggregate.inputs, 'futureOption'],
@@ -55,7 +55,7 @@ test('fails when a locally declared API input has no actual CLI option', () => {
     () => createArguments({
       commander,
       commands: { definitions: commands },
-      cliConfiguration: { apply: (arguments_: any) => arguments_ },
+      cliConfiguration: { apply: (arguments_: string[]) => arguments_ },
       project: { apiDefinitions },
     }),
     /CLI inputs do not cover the aggregate API contract/u,

@@ -16,14 +16,14 @@ test('the query read model matches the schema and every referenced table', () =>
   try {
     database.exec(fs.readFileSync(path.join(root, 'src/modules/database/schema.sql'), 'utf8'));
     for (const [table, columns] of Object.entries(contract)) {
-      const actual = database.prepare(`PRAGMA table_info(${table})`).all().map(({ name }: any) => name);
+      const actual = database.prepare(`PRAGMA table_info(${table})`).all().map(({ name }: { name: string }) => name);
       assert.deepEqual(actual, columns, table);
     }
     const source = listModules('src/modules/queries/**/*.js', { cwd: root })
-      .map(({ path: fileName }: any) => fs.readFileSync(fileName, 'utf8')).join('\n');
+      .map(({ path: fileName }: { path: string }) => fs.readFileSync(fileName, 'utf8')).join('\n');
     const tables = database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
-      .all().map(({ name }: any) => name);
-    const referenced = tables.filter((table: any) => new RegExp(
+      .all().map(({ name }: { name: string }) => name);
+    const referenced = tables.filter((table: string) => new RegExp(
       `\\b(?:FROM|JOIN)\\s+${table}\\b`, 'iu',
     ).test(source));
     assert.deepEqual(Object.keys(contract).sort(), referenced.sort());

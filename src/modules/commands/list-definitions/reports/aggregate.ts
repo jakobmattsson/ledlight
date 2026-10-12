@@ -1,15 +1,18 @@
 'use strict';
 
+import type { AggregateRow, CommodityRow } from '../../../../public-api';
+import type { Command } from 'commander';
+
 module.exports = ({ cliOptions: options }: any) => ({
   description: 'aggregate postings',
   examples: [
     'ledlight aggregate --file main.ledger',
     'ledlight aggregate --file main.ledger --to 2024-12-31 --accounts "Assets:*" --denominate --include-total',
   ],
-  loadFormatData(journal: any) {
+  loadFormatData(journal: { commodities(options: { usage: string }): CommodityRow[] }) {
     return journal.commodities({ usage: 'all' });
   },
-  configure(command: any) {
+  configure(command: Command) {
     options.journal(command);
     options.dateRange(
       command,
@@ -29,24 +32,24 @@ module.exports = ({ cliOptions: options }: any) => ({
     options.addBoolean(command, '--include-total', 'append an exact total per commodity (requires account grouping)');
     options.format(command);
   },
-  formatCsv(rows: any, { denominate, groupBy }: any, format: any) {
+  formatCsv(rows: AggregateRow[], { denominate, groupBy }: { denominate?: boolean; groupBy?: string }, format: any) {
     const { formatCsvTable, formatDecimalFixed, parseDecimal } = format;
     const showAccounts = groupBy !== 'commodity';
     const headings = showAccounts ? ['account', 'amount', 'commodity'] : ['amount', 'commodity'];
-    return formatCsvTable(headings, rows.map((row: any) => {
+    return formatCsvTable(headings, rows.map((row: AggregateRow) => {
       const quantity = denominate ? formatDecimalFixed(parseDecimal(row.quantity), 2) : row.quantity;
       return showAccounts
         ? [row.account, quantity, row.commodity]
         : [quantity, row.commodity];
     }));
   },
-  formatText(rows: any, { denominate, groupBy }: any, format: any, descriptions: any) {
+  formatText(rows: AggregateRow[], { denominate, groupBy }: { denominate?: boolean; groupBy?: string }, format: any, descriptions: CommodityRow[]) {
     const {
       commodityFormats, displayQuantity, formatAlignedAmounts, parseCommodityFormat, parseDecimal,
     } = format;
     if (!denominate || groupBy === 'commodity') {
       const formats = commodityFormats(descriptions);
-      return formatAlignedAmounts(rows.map((row: any) => ({
+      return formatAlignedAmounts(rows.map((row: AggregateRow) => ({
         quantity: displayQuantity(row.quantity, row.commodity, formats, denominate ? 2 : null),
         commodity: row.commodity,
         label: row.account,
@@ -57,7 +60,7 @@ module.exports = ({ cliOptions: options }: any) => ({
       })), groupBy !== 'commodity');
     }
     const formats = commodityFormats(descriptions);
-    const lines: any = [];
+    const lines = [];
     for (const row of rows) {
       const quantity = displayQuantity(row.quantity, row.commodity, formats, 2);
       const amount = parseDecimal(quantity.replaceAll(',', '')).coefficient === 0n

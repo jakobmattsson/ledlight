@@ -12,9 +12,9 @@ runCli({
   repositoryDirectory: path.resolve(__dirname, '../..'),
   spawnSync,
   now: () => Date.now(),
-  sleep: (ms: any) => new Promise((resolve: any) => setTimeout(resolve, ms)),
-  log: (message: any) => console.log(`${new Date().toTimeString().slice(0, 8)} ${message}`),
-}).catch((error: any) => {
-  console.error(`Release stopped: ${error.message}`);
+  sleep: (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
+  log: (message: string) => console.log(`${new Date().toTimeString().slice(0, 8)} ${message}`),
+}).catch((error: unknown) => {
+  console.error(`Release stopped: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
 });

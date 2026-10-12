@@ -16,7 +16,7 @@ test('registers all queries as one immutable dependency', () => {
   assert.ok(Object.isFrozen(queries));
   assert.ok(Object.isFrozen(queries.definitions));
   assert.equal(queries.definitions.length, fs.readdirSync(queryDirectory)
-    .filter((fileName: any) => fileName.endsWith('.js')).length);
+    .filter((fileName: string) => fileName.endsWith('.js')).length);
   for (const registrationName of [
     'aggregateQuery',
     'totalHistoryQuery',
@@ -31,7 +31,7 @@ test('registers all queries as one immutable dependency', () => {
 
 test('each query module is exposed through the query collection', () => {
   const queryFiles = fs.readdirSync(queryDirectory)
-    .filter((fileName: any) => fileName.endsWith('.js'))
+    .filter((fileName: string) => fileName.endsWith('.js'))
     .sort();
 
   for (const fileName of queryFiles) {

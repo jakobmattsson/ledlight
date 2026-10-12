@@ -27,7 +27,7 @@ test('CLI and API use the project cache while API uses its explicit journal', (t
     '--file main.ledger\n--cache-home .ledlight-cache\n');
 
   const container = createRepositoryContainer(__dirname, '../../../../src/modules');
-  const environment: any = { ...process.env, HOME: home };
+  const environment: NodeJS.ProcessEnv = { ...process.env, HOME: home };
   delete environment.LEDLIGHT_CACHE_HOME;
   container.register({
     currentWorkingDirectory: asValue(() => workingDirectory),

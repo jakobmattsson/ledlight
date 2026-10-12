@@ -21,7 +21,7 @@ tag Reviewed
 `, { source: 'fixture.ledger' });
 
   const result = validateJournal(journal);
-  assert.deepEqual(result.warnings.map(({ code, line }: any) => ({ code, line })), [{
+  assert.deepEqual(result.warnings.map(({ code, line }: { code: string; line: number }) => ({ code, line })), [{
     code: 'DUPLICATE_ACCOUNT_DECLARATION', line: 2,
   }, {
     code: 'DUPLICATE_COMMODITY_DECLARATION', line: 6,
@@ -53,7 +53,7 @@ account Equity:Opening
   assert.deepEqual([...result.invalidEntries], []);
 });
 
-function parseTrade(posting: any) {
+function parseTrade(posting: string) {
   return parse(`commodity SEK
   format 1,000.00 SEK
   default
@@ -111,7 +111,7 @@ test('warns about foreign lot cost currencies without discarding the transaction
     for (const amount of [`1 FUND ${annotation}`, `-1 FUND ${annotation} @ 12 USD`]) {
       const journal = parseTrade(amount);
       const result = validateJournal(journal);
-      assert.deepEqual(result.warnings.filter(({ code }: any) => code === 'FOREIGN_LOT_COST_CURRENCY'), [{
+      assert.deepEqual(result.warnings.filter(({ code }: { code: string }) => code === 'FOREIGN_LOT_COST_CURRENCY'), [{
         code: 'FOREIGN_LOT_COST_CURRENCY',
         message: 'Assets:Fund: lot cost in USD must be expressed in the default commodity SEK. ' +
           'Unrealized gains omit affected positions; their totals may be incomplete',
@@ -137,10 +137,10 @@ test('warns when a cost in the posting commodity changes its nominal value', () 
     '100 FUND {2 FUND}',
   ]) {
     const result = validateJournal(parseTrade(posting));
-    assert.deepEqual(result.warnings.map(({ code }: any) => code), posting === '100 FUND {2 FUND}'
+    assert.deepEqual(result.warnings.map(({ code }: { code: string }) => code), posting === '100 FUND {2 FUND}'
       ? ['FOREIGN_LOT_COST_CURRENCY', 'INVALID_COMMODITY_TRADE']
       : ['INVALID_COMMODITY_TRADE'], posting);
-    const warning = result.warnings.find(({ code }: any) => code === 'INVALID_COMMODITY_TRADE');
+    const warning = result.warnings.find(({ code }: { code: string }) => code === 'INVALID_COMMODITY_TRADE');
     assert.match(warning.message, /must value one (SEK|FUND) at exactly one \1/u);
     assert.equal(warning.line, 9, posting);
   }
@@ -167,7 +167,7 @@ test('warns when a default-commodity posting has a cost in another commodity', (
     ['100 SEK @@ 200 FUND', 'transaction price'],
   ]) {
     const result = validateJournal(parseTrade(posting));
-    assert.deepEqual(result.warnings.map(({ code }: any) => code), ['INVALID_COMMODITY_TRADE']);
+    assert.deepEqual(result.warnings.map(({ code }: { code: string }) => code), ['INVALID_COMMODITY_TRADE']);
     assert.equal(result.warnings[0].message,
       `A SEK posting cannot have a ${label} in FUND. ` +
         'Amounts in the default commodity are valued at face value.');

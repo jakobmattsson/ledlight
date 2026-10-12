@@ -228,7 +228,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }: any, fixtur
     os: asValue({ tmpdir: () => temporaryDirectory }),
     processEnvironment: asValue({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
   });
-  const actual: any = {};
+  const actual: { cli?: unknown; ledgerCli?: unknown; api?: unknown } = {};
   let remaining;
   try {
     if (cliArgs) {
@@ -265,7 +265,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }: any, fixtur
     }
     if (api) {
       if (heredoc !== undefined) fs.writeFileSync(journalPath, heredoc);
-      const resultText: any = { output: '', warnings: '', error: '' };
+      const resultText = { output: '', warnings: '', error: '' };
       try {
         const cliFormat = container.$$private.resolveInternal('cli', 'cliFormat');
         const journalApi = container.resolve('project').openJournal(journalPath);
@@ -286,7 +286,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }: any, fixtur
     }
   } finally {
     remaining = fs.readdirSync(temporaryDirectory)
-      .filter((name: any) => name.startsWith('ledlight-stdin-'));
+      .filter((name: string) => name.startsWith('ledlight-stdin-'));
     if (fixtureKey === undefined) fs.rmSync(temporaryDirectory, { recursive: true, force: true });
   }
   if (remaining.length > 0) {

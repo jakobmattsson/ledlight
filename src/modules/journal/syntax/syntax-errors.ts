@@ -6,7 +6,7 @@ module.exports = ({
   },
 }: any) => {
 
-  function syntaxError(message: any, source: any, line: any, column: any) {
+  function syntaxError(message: string, source: any, line: any, column: number) {
     const error = withCode(
       new SyntaxError(`${source}:${line}:${column}: ${message}`),
       errorCodes.SYNTAX,

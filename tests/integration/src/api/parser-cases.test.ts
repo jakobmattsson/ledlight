@@ -19,7 +19,7 @@ function warningContract({ code, source, line, startLine, endLine }: any) {
   return { code, source, line, startLine, endLine };
 }
 
-for (const name of fs.readdirSync(casesDirectory).filter((file: any) => file.endsWith('.case')).sort()) {
+for (const name of fs.readdirSync(casesDirectory).filter((file: string) => file.endsWith('.case')).sort()) {
   test(name, () => {
     const contents = fs.readFileSync(path.join(casesDirectory, name), 'utf8');
     const textSeparator = contents.indexOf(textHeader);

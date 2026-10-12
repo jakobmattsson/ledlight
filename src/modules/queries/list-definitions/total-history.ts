@@ -1,5 +1,12 @@
 'use strict';
 
+import type { TotalHistoryOptions } from '../../../public-api';
+
+type Options = TotalHistoryOptions & { accounts: string[] };
+type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown[] } };
+type Row = { date: string; amount: string; missing_commodity: string | null };
+
+
 module.exports = ({
   core: {
     decimal: {
@@ -26,7 +33,7 @@ module.exports = ({
     invert: booleanOption,
   }).superRefine(validateDateRange);
 
-  function selectTotalHistory(database: any, options: any, valuationCommodity: any) {
+  function selectTotalHistory(database: Database, options: Options, valuationCommodity: string) {
     const atCost = options.valuation === 'cost';
     const quantitySql = atCost ? costValueSql : 'r.amount_quantity';
     const totalSql = atCost
@@ -122,7 +129,7 @@ module.exports = ({
     WHERE date >= COALESCE(?, '0000-00-00')
       AND date <= COALESCE(?, '9999-12-31')
     ORDER BY date
-  `).all(...parameters);
+  `).all(...parameters) as Row[];
     for (const row of rows) {
       if (row.missing_commodity) {
         throw createError(
@@ -131,7 +138,7 @@ module.exports = ({
         );
       }
     }
-    return rows.map(({ date, amount }: any) => {
+    return rows.map(({ date, amount }: Row) => {
       const value = options.invert
         ? formatDecimal(negateDecimal(parseDecimal(amount)))
         : amount;
@@ -143,8 +150,8 @@ module.exports = ({
     });
   }
 
-  function queryTotalHistory(database: any, options: any, _caches: any) {
-    const reportOptions = parseOptions(optionsSchema, options, 'totalHistory');
+  function queryTotalHistory(database: Database, options: Options, _caches: unknown) {
+    const reportOptions = parseOptions(optionsSchema, options, 'totalHistory') as Options;
     return selectTotalHistory(database, reportOptions, valuationCommodityFromDatabase(database));
   }
 

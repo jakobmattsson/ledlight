@@ -1,5 +1,8 @@
 'use strict';
 
+type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown[] } };
+type Row = { tag: string; used: number };
+
 module.exports = ({
   core: {
     apiOptions: { usage, parseOptions },
@@ -12,15 +15,14 @@ module.exports = ({
     usage,
   });
 
-  function queryTags(database: any, options: any, _caches: any) {
+  function queryTags(database: Database, options: unknown, _caches: unknown) {
     const { usage } = parseOptions(optionsSchema, options, 'tags');
-    return database.prepare(`
+    return (database.prepare(`
       SELECT name AS tag, used
       FROM tag_declarations
       WHERE ? = 'all' OR used = (? = 'used')
       ORDER BY tag, entry_id
-    `).all(usage, usage)
-      .map((row: any) => ({ ...row, used: Boolean(row.used) }));
+    `).all(usage, usage) as Row[]).map((row) => ({ ...row, used: Boolean(row.used) }));
   }
 
   return { inputSchema: optionsSchema, execute: queryTags };

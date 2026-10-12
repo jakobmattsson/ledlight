@@ -5,8 +5,8 @@ const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../support/repository-container');
 const { maximize } = resolveRepositoryModule('src/modules/core/internal/linear-program.js');
 const { parse, format } = resolveRepositoryModule('src/modules/core/internal/rational.js');
-const coefficients = (values: any) => new Map(values.map((value: any, index: any) => [index, parse(value)]));
-const constraint = (values: any, bound: any) => ({ coefficients: coefficients(values), bound: parse(bound) });
+const coefficients = (values: string[]) => new Map(values.map((value: string, index: number) => [index, parse(value)]));
+const constraint = (values: string[], bound: string) => ({ coefficients: coefficients(values), bound: parse(bound) });
 
 test('solves fractional optima without rounding even above the safe integer range', () => {
   const result = maximize(2, [

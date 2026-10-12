@@ -20,13 +20,13 @@ test('repository modules reject ambient runtime dependencies', async () => {
       filePath: path.join(root, 'src', directory, 'runtime-boundary-example.ts'),
     });
     const globalErrors = result.messages
-      .filter(({ ruleId }: any) => ruleId === 'no-restricted-globals')
-      .map(({ message }: any) => message);
+      .filter(({ ruleId }: { ruleId: string }) => ruleId === 'no-restricted-globals')
+      .map(({ message }: { message: string }) => message);
     for (const name of ['process', 'Buffer', 'window', 'globalThis', 'setTimeout', 'require']) {
-      assert.ok(globalErrors.some((message: any) => message.includes(`'${name}'`)), `${directory}: ${name}`);
+      assert.ok(globalErrors.some((message: string) => message.includes(`'${name}'`)), `${directory}: ${name}`);
     }
-    assert.ok(result.messages.some(({ ruleId }: any) => ruleId === 'no-restricted-syntax'), directory);
-    assert.ok(result.messages.some(({ ruleId }: any) => ruleId === 'no-restricted-properties'), directory);
+    assert.ok(result.messages.some(({ ruleId }: { ruleId: string }) => ruleId === 'no-restricted-syntax'), directory);
+    assert.ok(result.messages.some(({ ruleId }: { ruleId: string }) => ruleId === 'no-restricted-properties'), directory);
   }
 });
 

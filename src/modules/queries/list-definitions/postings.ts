@@ -15,10 +15,10 @@ module.exports = ({
     ...dateRange,
   }).superRefine(validateDateRange);
 
-  function queryPostings(database: any, options: any, _caches: any) {
+  function queryPostings(database: any, options: any, _caches: unknown) {
     const { accounts, from, to } = parseOptions(optionsSchema, options, 'postings');
-    const clauses: any = [];
-    const parameters: any = [];
+    const clauses = [];
+    const parameters = [];
     if (from) {
       clauses.push('postings.posting_date >= ?');
       parameters.push(from);
@@ -64,7 +64,7 @@ module.exports = ({
       ${where}
       ORDER BY transactions.entry_id, postings.position, amounts.position
     `).all(...parameters);
-    const postings: any = [];
+    const postings = [];
     const byId = new Map();
     for (const row of rows) {
       let posting = byId.get(row.postingId);
@@ -114,9 +114,9 @@ module.exports = ({
       });
     }
     if (postings.length > 0) {
-      const transactionIds = [...new Set(postings.map(({ transactionId }: any) => transactionId))];
-      const commentsByTransaction = new Map<any, string[]>(transactionIds.map((id: any) => [id, []]));
-      const tagsByTransaction = new Map<any, any[]>(transactionIds.map((id: any) => [id, []]));
+      const transactionIds = [...new Set(postings.map(({ transactionId }) => transactionId))];
+      const commentsByTransaction = new Map<number, string[]>(transactionIds.map((id) => [id, []]));
+      const tagsByTransaction = new Map<number, Array<{ name: string; value: string | null }>>(transactionIds.map((id) => [id, []]));
       for (let offset = 0; offset < transactionIds.length; offset += 500) {
         const ids = transactionIds.slice(offset, offset + 500);
         const placeholders = ids.map(() => '?').join(', ');
@@ -127,7 +127,7 @@ module.exports = ({
           ORDER BY transaction_id, position
         `).all(...ids);
         for (const comment of transactionComments) {
-          (commentsByTransaction.get as any)(comment.transactionId).push(comment.text);
+          commentsByTransaction.get(comment.transactionId)!.push(comment.text);
         }
         const postingComments = database.prepare(`
           SELECT comments.posting_id AS postingId, comments.text
@@ -144,7 +144,7 @@ module.exports = ({
           ORDER BY transaction_id, position, ordinal
         `).all(...ids);
         for (const tag of transactionTags) {
-          (tagsByTransaction.get as any)(tag.transactionId).push({ name: tag.name, value: tag.value });
+          tagsByTransaction.get(tag.transactionId)!.push({ name: tag.name, value: tag.value });
         }
         const postingTags = database.prepare(`
           SELECT tags.posting_id AS postingId, tags.name, tags.value

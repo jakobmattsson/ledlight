@@ -1,5 +1,7 @@
 'use strict';
 
+type CodedError = Error & { code?: string; sqliteCode?: string };
+
 module.exports = () => {
 
   const errorCodes = Object.freeze({
@@ -10,17 +12,17 @@ module.exports = () => {
     DATABASE: 'LEDLIGHT_DATABASE',
   });
 
-  function withCode(error: any, code: any) {
+  function withCode(error: CodedError, code: string) {
     if (error.code === undefined) error.code = code;
     return error;
   }
 
-  function createError(code: any, message: any, ErrorType: any) {
+  function createError(code: string, message: string, ErrorType?: new (message: string) => CodedError) {
     const Constructor = ErrorType ?? Error;
     return withCode(new Constructor(message), code);
   }
 
-  function databaseError(error: any) {
+  function databaseError(error: CodedError) {
     if (error.code && !String(error.code).startsWith('SQLITE_')) return error;
     if (String(error.code).startsWith('SQLITE_')) error.sqliteCode = error.code;
     error.code = errorCodes.DATABASE;

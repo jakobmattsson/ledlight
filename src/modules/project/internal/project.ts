@@ -1,5 +1,11 @@
 'use strict';
 
+type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown[] } };
+type QueryDefinition = { name: string; inputSchema: { shape: Record<string, unknown> };
+  execute(database: Database, options: unknown, caches: unknown): unknown };
+type CurrentJournal = { databasePath: string; journalPath: string };
+
+
 module.exports = ({
   core: {
     cachePaths: { pathsForJournal },
@@ -22,14 +28,14 @@ module.exports = ({
   },
 }: any) => {
 
-  const apiDefinitions = Object.freeze(Object.fromEntries(queries.map(({ name, inputSchema }: any) => [
+  const apiDefinitions = Object.freeze(Object.fromEntries(queries.map(({ name, inputSchema }: QueryDefinition) => [
     name,
     { inputs: ['journalPath', ...Object.keys(inputSchema.shape)] },
   ])));
-  const projectConfigurationError = (message: any) =>
+  const projectConfigurationError = (message: string) =>
     createError(errorCodes.PROJECT_CONFIGURATION, message);
 
-  function queryDatabase(databasePath: any, operation: any) {
+  function queryDatabase(databasePath: string, operation: (database: Database) => unknown) {
     try {
       return readDatabase(databasePath, operation);
     } catch (error: any) {
@@ -37,7 +43,7 @@ module.exports = ({
     }
   }
 
-  function journalPaths(journalPath: any) {
+  function journalPaths(journalPath: string) {
     try {
       return pathsForJournal(journalPath);
     } catch (error: any) {
@@ -45,11 +51,11 @@ module.exports = ({
     }
   }
 
-  function ensureCurrent(journalPath: any) {
+  function ensureCurrent(journalPath: string) {
     const paths = journalPaths(journalPath);
     try {
       fs.mkdirSync(path.dirname(paths.databasePath), { recursive: true, mode: 0o700 });
-      const current: any = { ...paths, ...ensureDatabaseCurrent(paths.databasePath, paths.journalPath) };
+      const current = { ...paths, ...ensureDatabaseCurrent(paths.databasePath, paths.journalPath) };
       fs.chmodSync(paths.databasePath, 0o600);
       return current;
     } catch (error: any) {
@@ -58,11 +64,11 @@ module.exports = ({
     }
   }
 
-  function openJournal(journalPath: any) {
+  function openJournal(journalPath: string) {
     return journalFromDatabase(ensureCurrent(journalPath));
   }
 
-  function withJournalText(content: any, baseDirectory: any, operation: any) {
+  function withJournalText(content: string, baseDirectory: string, operation: (journal: ReturnType<typeof journalFromDatabase>) => unknown) {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-stdin-'));
     try {
       const databasePath = path.join(directory, 'journal.sqlite');
@@ -74,10 +80,10 @@ module.exports = ({
     }
   }
 
-  function journalFromDatabase(current: any) {
+  function journalFromDatabase(current: CurrentJournal) {
     const warnings = groupWarnings(queryDatabase(
       current.databasePath,
-      (database: any) => database.prepare(`
+      (database: Database) => database.prepare(`
         SELECT code, message, source, line, column,
           start_line AS startLine, end_line AS endLine
         FROM ingestion_warnings
@@ -85,11 +91,11 @@ module.exports = ({
       `).all(),
     ));
     const caches = Object.freeze({ valuationPriceCache: new Map() });
-    const operations = Object.fromEntries(queries.map(({ name, execute }: any) => [
+    const operations = Object.fromEntries(queries.map(({ name, execute }: QueryDefinition) => [
       name,
-      (options: any) => queryDatabase(
+      (options: unknown) => queryDatabase(
         current.databasePath,
-        (database: any) => execute(database, options, caches),
+        (database: Database) => execute(database, options, caches),
       ),
     ]));
     return {

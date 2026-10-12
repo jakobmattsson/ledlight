@@ -1,12 +1,16 @@
 'use strict';
 
+type Database = { prepare(sql: string): { get(...parameters: unknown[]): unknown } };
+type Filter = { sql: string; parameters: unknown[] };
+
+
 module.exports = ({
   core: {
     publicErrors: { createError, errorCodes },
   },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
 }: any) => {
-  function validateCostValuation(database: any, filter: any) {
+  function validateCostValuation(database: Database, filter: Filter) {
     const valuationCommodity = valuationCommodityFromDatabase(database);
     const missing = database.prepare(`
       SELECT p.account, r.amount_commodity AS commodity
@@ -17,7 +21,7 @@ module.exports = ({
         ${filter.sql ? 'AND' : 'WHERE'} r.amount_commodity != ?
         AND (p.lot_cost_quantity IS NULL OR p.lot_cost_commodity != ?)
       LIMIT 1
-    `).get(...filter.parameters, valuationCommodity, valuationCommodity);
+    `).get(...filter.parameters, valuationCommodity, valuationCommodity) as { commodity: string; account: string } | undefined;
     if (missing) {
       throw createError(
         errorCodes.MISSING_VALUATION_DATA,

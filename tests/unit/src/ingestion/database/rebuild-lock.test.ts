@@ -18,7 +18,7 @@ function temporaryDatabasePath(t: TestContext) {
   return path.join(directory, 'journal.sqlite');
 }
 
-function rebuildLock(systemClock: any) {
+function rebuildLock(systemClock: { now(): number; sleep(milliseconds: number): void | Promise<void> }) {
   const publicErrors = createPublicErrors();
   return {
     ...createRebuildLock({
@@ -39,7 +39,7 @@ test('waits for another rebuild and releases its own lock', (t: TestContext) => 
   let sleeps = 0;
   const { withRebuildLock } = rebuildLock({
     now: () => now,
-    sleep(milliseconds: any) {
+    sleep(milliseconds: number) {
       now += milliseconds;
       sleeps += 1;
       fs.rmSync(lockPath);
@@ -67,7 +67,7 @@ test('fails with a database code when the rebuild lock times out', (t: TestConte
 
   assert.throws(
     () => withRebuildLock(databasePath, () => assert.fail('must not acquire the lock')),
-    (error: any) => error.code === errorCodes.DATABASE && /Timed out waiting/u.test(error.message),
+    (error: { code: string; message: string }) => error.code === errorCodes.DATABASE && /Timed out waiting/u.test(error.message),
   );
 });
 
@@ -88,7 +88,7 @@ test('rechecks freshness after acquiring the rebuild lock', () => {
       },
       databaseJournalPath: () => assert.fail('the journal path was supplied'),
     },
-    databaseRebuildLock: { withRebuildLock: (_databasePath: any, operation: any) => operation() },
+    databaseRebuildLock: { withRebuildLock: (_databasePath: string, operation: () => unknown) => operation() },
     journalWriter: { writeJournalDatabase: () => assert.fail('must not rebuild a current database') },
     core: { publicErrors: createPublicErrors() },
   });

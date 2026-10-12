@@ -14,7 +14,7 @@ module.exports = ({
     sortDeclarations: z.boolean().default(false),
   });
 
-  function print(database: any, options: any, _caches: any) {
+  function print(database: unknown, options: unknown, _caches: unknown) {
     return printJournal(database, parseOptions(inputSchema, options, 'print'));
   }
 

@@ -10,7 +10,7 @@ function command(standardInput: any) {
     standardInput,
     cliArguments: { apiCommands: { aggregate: 'aggregate' } },
     cliCommand: {
-      runReportCommandWithWarnings: (arguments_: any, source: any) => ({ arguments_, source }),
+      runReportCommandWithWarnings: (arguments_: string[], source: any) => ({ arguments_, source }),
     },
   });
 }
