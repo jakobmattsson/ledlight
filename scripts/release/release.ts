@@ -12,13 +12,28 @@ const registryTimeoutMs = 10 * 60_000;
 
 class ReleaseError extends Error {}
 
-function execute(spawnSync: any, environment: any, command: any, args: any, options: any) {
+type CommandResult = { status: number | null; stdout: string; stderr: string; error?: Error };
+type CommandOptions = { cwd: string; encoding?: string; maxBuffer?: number };
+type Exec = (command: string, args: string[], options: CommandOptions) => CommandResult;
+type Spawn = (command: string, args: string[], options: CommandOptions) => CommandResult;
+type Workflow = { path: string; name: string; on?: unknown };
+type ReleaseDetails = { host: string; slug: string; defaultBranch: string; name: string; version: string; tag: string; workflow: Workflow };
+type Clock = () => number;
+type Sleep = (milliseconds: number) => Promise<void>;
+type Log = (message: string) => void;
+type ReleaseDependencies = { cwd: string; spawnSync: Spawn; environment: NodeJS.ProcessEnv; now: Clock; sleep: Sleep; log: Log };
+type CliOptions = Omit<ReleaseDependencies, 'cwd'> & {
+  argv: string[];
+  invocationDirectory: string;
+  repositoryDirectory: string;
+};
+
+function execute(spawnSync: Spawn, environment: NodeJS.ProcessEnv, command: string, args: string[], options: CommandOptions): CommandResult {
   const actualCommand = command === 'npm' && environment.npm_execpath ? process.execPath : command;
   const actualArgs = command === 'npm' && environment.npm_execpath
     ? [environment.npm_execpath, ...args]
     : args;
   const result = spawnSync(actualCommand, actualArgs, {
-    cwd: options.cwd,
     encoding: 'utf8',
     maxBuffer: 10 * 1024 * 1024,
     ...options,
@@ -27,7 +42,7 @@ function execute(spawnSync: any, environment: any, command: any, args: any, opti
   return { status: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
 }
 
-function checkedOutput(exec: any, command: any, args: any, cwd: any) {
+function checkedOutput(exec: Exec, command: string, args: string[], cwd: string): string {
   const result = exec(command, args, { cwd });
   if (result.status !== 0) {
     throw new ReleaseError(`${command} ${args.slice(0, 2).join(' ')} failed: ${result.stderr.trim() || result.stdout.trim() || `exit ${result.status}`}`);
@@ -35,11 +50,11 @@ function checkedOutput(exec: any, command: any, args: any, cwd: any) {
   return result.stdout;
 }
 
-function checked(exec: any, command: any, args: any, cwd: any) {
+function checked(exec: Exec, command: string, args: string[], cwd: string): string {
   return checkedOutput(exec, command, args, cwd).trim();
 }
 
-function readPackage(cwd: any) {
+function readPackage(cwd: string) {
   const manifestPath = path.join(cwd, 'package.json');
   if (!fs.existsSync(manifestPath)) throw new ReleaseError('No package.json exists at the repository root.');
   let manifest;
@@ -58,7 +73,7 @@ function readPackage(cwd: any) {
   return { name: manifest.name, version: manifest.version };
 }
 
-function ensureLockfilesMatch(cwd: any, version: any) {
+function ensureLockfilesMatch(cwd: string, version: string) {
   for (const filename of ['package-lock.json', 'npm-shrinkwrap.json']) {
     const lockPath = path.join(cwd, filename);
     if (!fs.existsSync(lockPath)) continue;
@@ -74,7 +89,7 @@ function ensureLockfilesMatch(cwd: any, version: any) {
   }
 }
 
-function nextVersion(version: any, bump: any) {
+function nextVersion(version: string, bump: string | undefined): string {
   const match = stableVersion.exec(version);
   if (!match) throw new ReleaseError(`Unsupported version: ${version}`);
   const [major, minor, patch] = match.slice(1).map(BigInt);
@@ -84,37 +99,38 @@ function nextVersion(version: any, bump: any) {
   throw new ReleaseError(`Choose one release type: major, minor, or patch (got ${bump || 'none'}).`);
 }
 
-function matchesTag(patterns: any, tag: any) {
+function matchesTag(patterns: unknown[], tag: string): boolean {
   let accepted = false;
   for (const pattern of patterns) {
     if (typeof pattern !== 'string') return false;
     const negative = pattern.startsWith('!');
     const glob = negative ? pattern.slice(1) : pattern;
-    const expression = new RegExp(`^${glob.split('*').map((part: any) => part.replace(/[|\\{}()[\]^$+?.]/gu, '\\$&')).join('.*')}$`, 'u');
+    const expression = new RegExp(`^${glob.split('*').map((part) => part.replace(/[|\\{}()[\]^$+?.]/gu, '\\$&')).join('.*')}$`, 'u');
     if (expression.test(tag)) accepted = !negative;
   }
   return accepted;
 }
 
-function acceptsTag(on: any, tag: any) {
+function acceptsTag(on: unknown, tag: string): boolean {
   if (on === 'push') return true;
   if (Array.isArray(on)) return on.includes('push');
   if (!on || typeof on !== 'object' || !Object.hasOwn(on, 'push')) return false;
-  const push = on.push;
+  const push = (on as Record<string, unknown>).push;
   if (push === null || push === undefined) return true;
   if (typeof push !== 'object' || Array.isArray(push)) return false;
-  if ((push.branches || push['branches-ignore']) && !push.tags && !push['tags-ignore']) return false;
-  if (push.tags) return Array.isArray(push.tags) && matchesTag(push.tags, tag);
-  if (push['tags-ignore']) return Array.isArray(push['tags-ignore']) && !matchesTag(push['tags-ignore'], tag);
+  const filters = push as Record<string, unknown>;
+  if ((filters.branches || filters['branches-ignore']) && !filters.tags && !filters['tags-ignore']) return false;
+  if (filters.tags) return Array.isArray(filters.tags) && matchesTag(filters.tags, tag);
+  if (filters['tags-ignore']) return Array.isArray(filters['tags-ignore']) && !matchesTag(filters['tags-ignore'], tag);
   return true;
 }
 
-function inspectWorkflow(cwd: any, tag: any) {
+function inspectWorkflow(cwd: string, tag: string): Workflow {
   const directory = path.join(cwd, '.github', 'workflows');
   const files = fs.existsSync(directory)
-    ? fs.readdirSync(directory).filter((name: any) => /\.ya?ml$/u.test(name)).sort()
+    ? fs.readdirSync(directory).filter((name: string) => /\.ya?ml$/u.test(name)).sort()
     : [];
-  const matches: any = [];
+  const matches: Workflow[] = [];
   for (const file of files) {
     const relativePath = `.github/workflows/${file}`;
     let document;
@@ -146,7 +162,7 @@ function inspectWorkflow(cwd: any, tag: any) {
   return matches[0];
 }
 
-function originRepository(remote: any) {
+function originRepository(remote: string) {
   const scp = /^git@([^:]+):([^/]+\/[^/]+?)(?:\.git)?$/u.exec(remote);
   let host;
   let slug;
@@ -171,7 +187,7 @@ function originRepository(remote: any) {
   return { host, slug };
 }
 
-function github(exec: any, cwd: any, host: any, endpoint: any, parameters: any) {
+function github(exec: Exec, cwd: string, host: string, endpoint: string, parameters: Record<string, string>) {
   const args = ['api', '--hostname', host, '--method', 'GET', endpoint];
   for (const [key, value] of Object.entries(parameters)) args.push('-f', `${key}=${value}`);
   let response;
@@ -184,13 +200,13 @@ function github(exec: any, cwd: any, host: any, endpoint: any, parameters: any) 
   return response;
 }
 
-function ensureClean(exec: any, cwd: any) {
+function ensureClean(exec: Exec, cwd: string) {
   if (checked(exec, 'git', ['status', '--porcelain=v1', '--untracked-files=all'], cwd)) {
     throw new ReleaseError('Repository has uncommitted or untracked work.');
   }
 }
 
-function prepare(exec: any, cwd: any, bump: any, log: any) {
+function prepare(exec: Exec, cwd: string, bump: string, log: Log): ReleaseDetails {
   const gitRoot = checked(exec, 'git', ['rev-parse', '--show-toplevel'], cwd);
   if (fs.realpathSync(gitRoot) !== fs.realpathSync(cwd)) {
     throw new ReleaseError(`Release must run from its repository root (${gitRoot}).`);
@@ -238,16 +254,16 @@ function prepare(exec: any, cwd: any, bump: any, log: any) {
   return { host, slug, defaultBranch, name: packageInfo.name, version, tag, workflow };
 }
 
-function makeVersionCommit(exec: any, cwd: any, bump: any, version: any) {
+function makeVersionCommit(exec: Exec, cwd: string, bump: string, version: string): string {
   checked(exec, 'npm', ['version', bump, '--no-git-tag-version', '--ignore-scripts'], cwd);
   if (readPackage(cwd).version !== version) {
     throw new ReleaseError(`npm did not produce the expected version ${version}; inspect the working tree.`);
   }
   ensureLockfilesMatch(cwd, version);
   const changed = checkedOutput(exec, 'git', ['status', '--porcelain=v1', '--untracked-files=all'], cwd)
-    .split('\n').filter(Boolean).map((line: any) => line.slice(3));
+    .split('\n').filter(Boolean).map((line) => line.slice(3));
   const allowed = new Set(['package.json', 'package-lock.json', 'npm-shrinkwrap.json']);
-  if (!changed.length || changed.some((file: any) => !allowed.has(file))) {
+  if (!changed.length || changed.some((file) => !allowed.has(file))) {
     throw new ReleaseError(`npm version changed unexpected files: ${changed.join(', ')}.`);
   }
   checked(exec, 'git', ['add', '--', ...changed], cwd);
@@ -257,14 +273,14 @@ function makeVersionCommit(exec: any, cwd: any, bump: any, version: any) {
   }
   const committed = checked(exec, 'git', ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'], cwd)
     .split('\n').filter(Boolean);
-  if (!committed.length || committed.some((file: any) => !allowed.has(file))) {
+  if (!committed.length || committed.some((file) => !allowed.has(file))) {
     throw new ReleaseError(`Version commit includes unexpected files: ${committed.join(', ')}.`);
   }
   ensureClean(exec, cwd);
   return checked(exec, 'git', ['rev-parse', 'HEAD'], cwd);
 }
 
-async function waitForWorkflow(exec: any, cwd: any, details: any, sha: any, now: any, sleep: any, log: any) {
+async function waitForWorkflow(exec: Exec, cwd: string, details: ReleaseDetails, sha: string, now: Clock, sleep: Sleep, log: Log) {
   const deadline = now() + workflowTimeoutMs;
   let runId;
   log(`Waiting for GitHub to start the workflow run for ${details.tag}.`);
@@ -309,7 +325,7 @@ async function waitForWorkflow(exec: any, cwd: any, details: any, sha: any, now:
   throw new ReleaseError(`Timed out waiting for the workflow run for ${details.tag}.`);
 }
 
-async function waitForRegistry(exec: any, cwd: any, details: any, workflow: any, now: any, sleep: any, log: any) {
+async function waitForRegistry(exec: Exec, cwd: string, details: ReleaseDetails, workflow: { completedAt: number; durationMs: number }, now: Clock, sleep: Sleep, log: Log): Promise<number> {
   const deadline = now() + registryTimeoutMs;
   log(`Workflow run for ${details.tag} completed in ${(workflow.durationMs / 1000).toFixed(1)} seconds; waiting for ${details.name}@${details.version} on npm.`);
   while (now() < deadline) {
@@ -327,9 +343,9 @@ async function waitForRegistry(exec: any, cwd: any, details: any, workflow: any,
   throw new ReleaseError(`Timed out waiting for ${details.name}@${details.version} on npm.`);
 }
 
-async function release(bump: any, dependencies: any) {
+async function release(bump: string, dependencies: ReleaseDependencies): Promise<void> {
   const { cwd, spawnSync, environment, now, sleep, log } = dependencies;
-  const exec = (command: any, args: any, options: any) => execute(spawnSync, environment, command, args, options);
+  const exec: Exec = (command, args, options) => execute(spawnSync, environment, command, args, options);
   const details = prepare(exec, cwd, bump, log);
   const sha = makeVersionCommit(exec, cwd, bump, details.version);
   log(`Created version commit ${sha} (${details.version}).`);
@@ -344,7 +360,7 @@ async function release(bump: any, dependencies: any) {
   log(`Published ${details.name}@${details.version}; visible on npm ${(elapsedMs / 1000).toFixed(1)} seconds after the workflow run completed.`);
 }
 
-function usageCommand({ argv, environment, invocationDirectory, repositoryDirectory }: any) {
+function usageCommand({ argv, environment, invocationDirectory, repositoryDirectory }: CliOptions): string {
   const scriptPath = path.resolve(argv[1]);
   const projectRelativePath = path.relative(repositoryDirectory, scriptPath);
   if (environment.npm_lifecycle_event && environment.npm_lifecycle_script?.includes(projectRelativePath)) {
@@ -355,7 +371,7 @@ function usageCommand({ argv, environment, invocationDirectory, repositoryDirect
   return `${path.basename(argv[0])} ${printablePath}`;
 }
 
-async function runCli(options: any) {
+async function runCli(options: CliOptions): Promise<void> {
   const { argv, environment, repositoryDirectory, spawnSync, now, sleep, log } = options;
   const bump = argv[2];
   if (!['major', 'minor', 'patch'].includes(bump) || argv.length !== 3) {

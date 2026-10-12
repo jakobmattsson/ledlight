@@ -4,22 +4,27 @@ const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
 
-function quoted(value: any) {
+type GraphOptions = { ubiquitousModules: string[]; ubiquitousExternal: string[] };
+type DependencyEntry = { external: string[]; modules: string[] };
+type DependencyDocument = Record<string, DependencyEntry>;
+type GraphEdge = { from: string; to: string; kind: 'module' | 'external'; tooltip: string };
+
+function quoted(value: string): string {
   return JSON.stringify(value);
 }
 
-function escapeHtml(value: any) {
+function escapeHtml(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
 
-function loadGraphOptions(modulesRoot: any) {
+function loadGraphOptions(modulesRoot: string): GraphOptions {
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
   const knownModules = new Set(Object.keys(policy['allowed-modules']));
   const knownExternal = new Set(Object.values(policy['allowed-external']).flat());
   const names = policy.ubiquitous ?? [];
   if (!Array.isArray(names)) throw new TypeError('ubiquitous must be a list');
-  const seen = new Set();
+  const seen = new Set<string>();
   for (const name of names) {
     if (!knownModules.has(name) && !knownExternal.has(name)) {
       throw new Error(`Unknown ubiquitous dependency: ${name}`);
@@ -28,34 +33,34 @@ function loadGraphOptions(modulesRoot: any) {
     seen.add(name);
   }
   return {
-    ubiquitousModules: names.filter((name: any) => knownModules.has(name)),
-    ubiquitousExternal: names.filter((name: any) => knownExternal.has(name)),
+    ubiquitousModules: names.filter((name: string) => knownModules.has(name)),
+    ubiquitousExternal: names.filter((name: string) => knownExternal.has(name)),
   };
 }
 
-function nodeId(kind: any, name: any) {
+function nodeId(kind: string, name: string): string {
   return quoted(`${kind}:${name}`);
 }
 
-function graphData(document: any, { ubiquitousModules, ubiquitousExternal }: any) {
+function graphData(document: DependencyDocument, { ubiquitousModules, ubiquitousExternal }: GraphOptions) {
   const ubiquitousModuleNames = new Set(ubiquitousModules);
   const hiddenExternal = new Set(ubiquitousExternal);
   const modules = Object.keys(document);
-  const allExternal = [...new Set(Object.values(document).flatMap((entry: any) => entry.external))];
-  const external = allExternal.filter((name: any) => !hiddenExternal.has(name)).sort();
-  const externalByModule = Object.fromEntries(modules.map((name: any) => [name, []]));
-  const ubiquitousByModule = Object.fromEntries(modules.map((name: any) => [name, []]));
-  const edges: any = [];
+  const allExternal = [...new Set(Object.values(document).flatMap((entry) => entry.external))];
+  const external = allExternal.filter((name) => !hiddenExternal.has(name)).sort();
+  const externalByModule: Record<string, string[]> = Object.fromEntries(modules.map((name) => [name, []]));
+  const ubiquitousByModule: Record<string, string[]> = Object.fromEntries(modules.map((name) => [name, []]));
+  const edges: GraphEdge[] = [];
 
   for (const [consumer, dependencies] of Object.entries(document)) {
-    for (const dependency of (dependencies as any).external) {
+    for (const dependency of dependencies.external) {
       if (hiddenExternal.has(dependency)) externalByModule[consumer].push(dependency);
       else {
         edges.push({ from: nodeId('module', consumer), to: nodeId('external', dependency),
           kind: 'external', tooltip: `${consumer} uses ${dependency}` });
       }
     }
-    for (const dependency of (dependencies as any).modules) {
+    for (const dependency of dependencies.modules) {
       if (ubiquitousModuleNames.has(dependency) && !ubiquitousModuleNames.has(consumer)) {
         ubiquitousByModule[consumer].push(dependency);
       }
@@ -69,9 +74,9 @@ function graphData(document: any, { ubiquitousModules, ubiquitousExternal }: any
   return { modules: modules.sort(), external, externalByModule, ubiquitousByModule, edges };
 }
 
-function moduleLabel(name: any, external: any, moduleDependencies: any, standalone: any) {
+function moduleLabel(name: string, external: string[], moduleDependencies: string[], standalone: boolean): string {
   const names = external.sort().map(escapeHtml);
-  const rows: any = [];
+  const rows: string[] = [];
   for (let index = 0; index < names.length; index += 2) {
     rows.push(names.slice(index, index + 2).join(' &#183; '));
   }
@@ -90,7 +95,7 @@ function moduleLabel(name: any, external: any, moduleDependencies: any, standalo
     + '</TABLE>';
 }
 
-function generateGraphDot(document: any, options: any) {
+function generateGraphDot(document: DependencyDocument, options: GraphOptions): string {
   const { modules, external, externalByModule, ubiquitousByModule, edges } =
     graphData(document, options);
   const lines = [
@@ -106,13 +111,13 @@ function generateGraphDot(document: any, options: any) {
       + '</TD></TR></TABLE>>];',
     '  node [shape=plain, fontname="Helvetica"];',
     '  edge [arrowsize=0.8, penwidth=1.7, color="#6994C6"];',
-    ...modules.map((name: any) => `  ${nodeId('module', name)} [label=<${moduleLabel(name,
+    ...modules.map((name) => `  ${nodeId('module', name)} [label=<${moduleLabel(name,
       externalByModule[name], ubiquitousByModule[name],
       options.ubiquitousModules.includes(name))}>, tooltip="Module: ${name}"];`),
-    ...external.map((name: any) => `  ${nodeId('external', name)} [label=${quoted(name)}, `
+    ...external.map((name) => `  ${nodeId('external', name)} [label=${quoted(name)}, `
       + 'shape=ellipse, style=filled, color="#AA86BF", fillcolor="#F5EFFA", '
       + 'fontcolor="#603E75", fontsize=12, margin="0.17,0.10", tooltip="External service"];'),
-    ...edges.map(({ from, to, kind, tooltip }: any) => `  ${from} -> ${to} [`
+    ...edges.map(({ from, to, kind, tooltip }) => `  ${from} -> ${to} [`
       + `color="${kind === 'module' ? '#6994C6' : '#AC8DBD'}", `
       + `style=${kind === 'module' ? 'solid' : 'dashed'}, tooltip=${quoted(tooltip)}];`),
     '}',

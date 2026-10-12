@@ -16,26 +16,26 @@ module.exports = ({
   const DATE_LENGTH = 10;
   const COMMODITY_PROPERTY_NAMES = new Set(['default', 'format']);
   const CANONICAL_COMMODITY_FORMAT = /^(\d,?\d{3})(?:\.(\d+))?[ \t]+([^ \t]+)$/u;
-  const isWhitespace = (code: any) => code === 32 || code === 9;
-  const isCommoditySymbol = (value: any) => /^[\p{L}_]+$/u.test(value);
-  const sourceLocation = (source: any, line: any, column: any) => ({ source, line, column });
+  const isWhitespace = (code: number) => code === 32 || code === 9;
+  const isCommoditySymbol = (value: string) => /^[\p{L}_]+$/u.test(value);
+  const sourceLocation = (source: string, line: number, column: number) => ({ source, line, column });
   const optionsSchema = z.strictObject({ source: z.string().optional() });
 
-  function assertCommoditySymbol(value: any, source: any, line: any, column: any) {
+  function assertCommoditySymbol(value: string, source: string, line: number, column: number): string {
     if (!isCommoditySymbol(value)) {
       throw syntaxError(`Invalid commodity symbol ${JSON.stringify(value)}`, source, line, column);
     }
     return value;
   }
 
-  function assertAccountName(value: any, source: any, line: any, column: any) {
+  function assertAccountName(value: string, source: string, line: number, column: number): string {
     if (/[*~\t]| {2}/u.test(value)) {
       throw syntaxError(`Account name ${JSON.stringify(value)} cannot contain *, ~, tabs, or consecutive spaces`, source, line, column);
     }
     return value;
   }
 
-  function isDateAt(input: any, offset: any) {
+  function isDateAt(input: string, offset: number): boolean {
     if (input.length - offset < DATE_LENGTH) return false;
     for (let index = 0; index < DATE_LENGTH; index++) {
       const code = input.charCodeAt(offset + index);
@@ -46,7 +46,7 @@ module.exports = ({
     return true;
   }
 
-  function assertDate(value: any, source: any, line: any, column: any) {
+  function assertDate(value: string, source: string, line: number, column: number): string {
     const year = Number(value.slice(0, 4));
     const month = Number(value.slice(5, 7));
     const day = Number(value.slice(8, 10));
@@ -57,7 +57,7 @@ module.exports = ({
     return value;
   }
 
-  function splitComment(input: any) {
+  function splitComment(input: string) {
     let quote = 0;
     for (let index = 0; index < input.length; index++) {
       const code = input.charCodeAt(index);
@@ -69,11 +69,11 @@ module.exports = ({
     return { text: input.trimEnd(), comment: null };
   }
 
-  function parseCommentTags(comment: any) {
+  function parseCommentTags(comment: string) {
     const binary = /^:([^\s:;]+(?::[^\s:;]+)*:)(?:[ \t]+(.*))?$/u.exec(comment);
     if (binary) {
       return {
-        tags: binary[1].slice(0, -1).split(':').map((name: any) => ({ name, value: null })),
+        tags: binary[1].slice(0, -1).split(':').map((name) => ({ name, value: null })),
         text: binary[2]?.trim() ?? '',
         tagged: true,
       };
@@ -84,10 +84,10 @@ module.exports = ({
       : { tags: [], text: comment, tagged: false };
   }
 
-  function parseComment(text: any, source: any, line: any, column: any) {
+  function parseComment(text: string, source: string, line: number, column: number) {
     const parsed = parseCommentTags(text);
     const location = sourceLocation(source, line, column);
-    const tags = parsed.tags.map((tag: any) => {
+    const tags = parsed.tags.map((tag) => {
       Object.defineProperty(tag, 'location', { value: location });
       return tag;
     });
@@ -98,7 +98,7 @@ module.exports = ({
     };
   }
 
-  function findFieldSeparator(input: any) {
+  function findFieldSeparator(input: string) {
     for (let index = 0; index < input.length; index++) {
       const code = input.charCodeAt(index);
       if (code === 9) return { start: index, end: index + 1 };
@@ -111,7 +111,7 @@ module.exports = ({
     return null;
   }
 
-  function parseTransactionHeader(text: any, source: any, line: any) {
+  function parseTransactionHeader(text: string, source: string, line: number) {
     let cursor = DATE_LENGTH;
     const date = assertDate(text.slice(0, cursor), source, line, 1);
     if (cursor < text.length && !isWhitespace(text.charCodeAt(cursor))) {
@@ -123,7 +123,7 @@ module.exports = ({
     const description = parts.text.trim();
     if (!description) throw syntaxError('Expected a transaction description', source, line, cursor + 1);
     const parsedComment = parts.comment === null ? null : parseComment(
-      parts.comment, source, line, cursor + (parts.index as any) + 1,
+      parts.comment, source, line, cursor + (parts.index ?? 0) + 1,
     );
     const tags = parsedComment?.tags || [];
     return {
@@ -134,7 +134,7 @@ module.exports = ({
     };
   }
 
-  function parsePosting(raw: any, source: any, line: any) {
+  function parsePosting(raw: string, source: string, line: number) {
     let indent = 0;
     while (isWhitespace(raw.charCodeAt(indent))) indent++;
     const parts = splitComment(raw.slice(indent));
@@ -148,7 +148,7 @@ module.exports = ({
     const postingDateMatch = parts.comment && /^\[(\d{4}-\d{2}-\d{2})\](?:\s|$)/u.exec(parts.comment);
     const commentAfterDate = postingDateMatch ? parts.comment.slice(postingDateMatch[0].length).trimStart() : parts.comment;
     const parsedComment = parts.comment === null || (postingDateMatch && !commentAfterDate) ? null : parseComment(
-      commentAfterDate, source, line, indent + (parts.index as any) + 1,
+      commentAfterDate ?? '', source, line, indent + (parts.index ?? 0) + 1,
     );
     const tags = parsedComment?.tags || [];
     return {
@@ -161,7 +161,7 @@ module.exports = ({
     };
   }
 
-  function parsePrice(text: any, source: any, line: any) {
+  function parsePrice(text: string, source: string, line: number) {
     let cursor = 1;
     while (isWhitespace(text.charCodeAt(cursor))) cursor++;
     if (!isDateAt(text, cursor)) throw syntaxError('Expected a date after P', source, line, cursor + 1);
@@ -181,14 +181,14 @@ module.exports = ({
     return { type: 'price', date, commodity, price: expression.amount, comment: parts.comment, location: sourceLocation(source, line, 1) };
   }
 
-  function parseNamedDirective(text: any, keyword: any, type: any, source: any, line: any) {
+  function parseNamedDirective(text: string, keyword: string, type: string, source: string, line: number) {
     const value = splitComment(text.slice(keyword.length).trimStart());
     if (!value.text) throw syntaxError(`Expected a value after ${keyword}`, source, line, keyword.length + 1);
     return { type, name: value.text, comment: value.comment, location: sourceLocation(source, line, 1) };
   }
 
-  function assertCommodityFormat(value: any, commodity: any, source: any, line: any, column: any) {
-    const match = CANONICAL_COMMODITY_FORMAT.exec(value);
+  function assertCommodityFormat(value: string | null, commodity: string, source: string, line: number, column: number) {
+    const match = CANONICAL_COMMODITY_FORMAT.exec(value ?? '');
     if (!match) throw syntaxError('Expected a canonical commodity format', source, line, column);
     const symbol = assertCommoditySymbol(match[3], source, line, column);
     if (symbol !== commodity) {
@@ -283,10 +283,8 @@ module.exports = ({
         transaction = parseTransactionHeader(trimmed, source, lineNumber);
         entries.push(transaction);
       } else if (trimmed.startsWith('include') && isWhitespace(trimmed.charCodeAt(7))) {
-        const include = parseNamedDirective(trimmed, 'include', 'include', source, lineNumber);
-        (include as any).path = include.name;
-        delete include.name;
-        entries.push(include);
+        const { name, ...include } = parseNamedDirective(trimmed, 'include', 'include', source, lineNumber);
+        entries.push({ ...include, path: name });
       } else if (trimmed.startsWith('account') && isWhitespace(trimmed.charCodeAt(7))) {
         const account = parseNamedDirective(trimmed, 'account', 'account', source, lineNumber);
         assertAccountName(account.name, source, lineNumber, 9);
@@ -294,10 +292,8 @@ module.exports = ({
       }
       else if (trimmed.startsWith('tag') && isWhitespace(trimmed.charCodeAt(3))) entries.push(parseNamedDirective(trimmed, 'tag', 'tag', source, lineNumber));
       else if (trimmed.startsWith('commodity') && isWhitespace(trimmed.charCodeAt(9))) {
-        commodity = parseNamedDirective(trimmed, 'commodity', 'commodity', source, lineNumber);
-        (commodity as any).symbol = assertCommoditySymbol(commodity.name, source, lineNumber, 11);
-        delete commodity.name;
-        (commodity as any).properties = [];
+        const { name, ...directive } = parseNamedDirective(trimmed, 'commodity', 'commodity', source, lineNumber);
+        commodity = { ...directive, symbol: assertCommoditySymbol(name, source, lineNumber, 11), properties: [] };
         entries.push(commodity);
       } else if (marker === 'P' && isWhitespace(trimmed.charCodeAt(1))) entries.push(parsePrice(trimmed, source, lineNumber));
       else {

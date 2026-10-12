@@ -8,7 +8,12 @@ const path = require('node:path');
 const test = require('node:test');
 const release = require('../../../scripts/release/release.js');
 
-function withTemporaryRepository(callback: any) {
+type CommandOptions = { cwd: string };
+type CommandResult = { status: number | null; stdout: string; stderr: string };
+type TestFixture = { repo: string; origin: string; command: (cwd: string, executable: string, args: string[]) => CommandResult; git: (...args: string[]) => string };
+type FailureSettings = { failBranchPush?: boolean; failTagPush?: boolean; failJob?: boolean };
+
+function withTemporaryRepository(callback: (directory: string) => void) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-release-'));
   try {
     callback(directory);
@@ -17,7 +22,7 @@ function withTemporaryRepository(callback: any) {
   }
 }
 
-async function withTemporaryRepositoryAsync(callback: any) {
+async function withTemporaryRepositoryAsync(callback: (directory: string) => Promise<void>) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-release-'));
   try {
     await callback(directory);
@@ -26,11 +31,11 @@ async function withTemporaryRepositoryAsync(callback: any) {
   }
 }
 
-function fixture(directory: any) {
+function fixture(directory: string): TestFixture {
   const repo = path.join(directory, 'repo');
   const origin = path.join(directory, 'origin.git');
   fs.mkdirSync(repo);
-  function command(cwd: any, executable: any, args: any) {
+  function command(cwd: string, executable: string, args: string[]): CommandResult {
     const actualCommand = executable === 'npm' && process.env.npm_execpath ? process.execPath : executable;
     const actualArgs = executable === 'npm' && process.env.npm_execpath
       ? [process.env.npm_execpath, ...args]
@@ -38,7 +43,7 @@ function fixture(directory: any) {
     const result = spawnSync(actualCommand, actualArgs, { cwd, encoding: 'utf8' });
     return { status: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
   }
-  function git(...args: any[]) {
+  function git(...args: string[]): string {
     const result = command(repo, 'git', args);
     assert.equal(result.status, 0, result.stderr);
     return result.stdout.trim();
@@ -61,12 +66,12 @@ function fixture(directory: any) {
   return { repo, origin, command, git };
 }
 
-function fakeServices(testFixture: any, settings: any) {
-  const calls: any = [];
+function fakeServices(testFixture: TestFixture, settings: FailureSettings) {
+  const calls: string[][] = [];
   let registryChecks = 0;
   const completed = Date.parse('2026-10-11T12:00:00Z');
   let now = completed + 3_000;
-  const spawnSync = (command: any, args: any, options: any) => {
+  const spawnSync = (command: string, args: string[], options: CommandOptions): CommandResult => {
     calls.push([command, ...args]);
     if (command === 'git' && args[0] === 'remote' && args[1] === 'get-url') {
       return { status: 0, stdout: 'git@github.com:owner/repo.git\n', stderr: '' };
@@ -110,12 +115,12 @@ function fakeServices(testFixture: any, settings: any) {
     return testFixture.command(options.cwd, command, args);
   };
   return {
-    spawnSync, calls, now: () => now, sleep: async (ms: any) => { now += ms; },
+    spawnSync, calls, now: () => now, sleep: async (ms: number) => { now += ms; },
     registryChecks: () => registryChecks,
   };
 }
 
-function writeWorkflow(directory: any, condition: any, command: any, trigger: any) {
+function writeWorkflow(directory: string, condition: string, command: string, trigger: string) {
   const workflows = path.join(directory, '.github', 'workflows');
   fs.mkdirSync(workflows, { recursive: true });
   fs.writeFileSync(path.join(workflows, 'package.yml'), `on:\n  push:\n    tags: ['${trigger}']\njobs:\n  publish:\n    name: Publish to npm\n    if: ${condition}\n    steps:\n      - run: ${command}\n`);
@@ -131,7 +136,7 @@ test('release level increments exactly one stable version component', () => {
 });
 
 test('release rejects a lockfile version that differs from the package version', () => {
-  withTemporaryRepository((directory: any) => {
+  withTemporaryRepository((directory) => {
     fs.writeFileSync(path.join(directory, 'package-lock.json'), JSON.stringify({
       version: '1.3.5', packages: { '': { version: '1.3.4' } },
     }));
@@ -142,7 +147,7 @@ test('release rejects a lockfile version that differs from the package version',
 });
 
 test('package preflight requires a root package.json and a stable version', () => {
-  withTemporaryRepository((directory: any) => {
+  withTemporaryRepository((directory) => {
     assert.throws(() => release.readPackage(directory), /No package.json/u);
     fs.writeFileSync(path.join(directory, 'package.json'), JSON.stringify({ name: 'example' }));
     assert.throws(() => release.readPackage(directory), /stable MAJOR.MINOR.PATCH/u);
@@ -152,8 +157,8 @@ test('package preflight requires a root package.json and a stable version', () =
 });
 
 test('version commit updates package files and uses only the version as its message', () => {
-  withTemporaryRepository((directory: any) => {
-    function exec(command: any, args: any, options: any) {
+  withTemporaryRepository((directory) => {
+    function exec(command: string, args: string[], options: CommandOptions): CommandResult {
       const actualCommand = command === 'npm' && process.env.npm_execpath ? process.execPath : command;
       const actualArgs = command === 'npm' && process.env.npm_execpath
         ? [process.env.npm_execpath, ...args]
@@ -161,7 +166,7 @@ test('version commit updates package files and uses only the version as its mess
       const result = spawnSync(actualCommand, actualArgs, { cwd: options.cwd, encoding: 'utf8' });
       return { status: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
     }
-    function git(...args: any[]) {
+    function git(...args: string[]): string {
       const result = exec('git', args, { cwd: directory });
       assert.equal(result.status, 0, result.stderr);
       return result.stdout.trim();
@@ -186,8 +191,8 @@ test('version commit updates package files and uses only the version as its mess
 });
 
 test('version commit also works for a package without an npm lockfile', () => {
-  withTemporaryRepository((directory: any) => {
-    function exec(command: any, args: any, options: any) {
+  withTemporaryRepository((directory) => {
+    function exec(command: string, args: string[], options: CommandOptions): CommandResult {
       const actualCommand = command === 'npm' && process.env.npm_execpath ? process.execPath : command;
       const actualArgs = command === 'npm' && process.env.npm_execpath
         ? [process.env.npm_execpath, ...args]
@@ -195,7 +200,7 @@ test('version commit also works for a package without an npm lockfile', () => {
       const result = spawnSync(actualCommand, actualArgs, { cwd: options.cwd, encoding: 'utf8' });
       return { status: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
     }
-    function git(...args: any[]) {
+    function git(...args: string[]): string {
       const result = exec('git', args, { cwd: directory });
       assert.equal(result.status, 0, result.stderr);
       return result.stdout.trim();
@@ -213,7 +218,7 @@ test('version commit also works for a package without an npm lockfile', () => {
 });
 
 test('publish workflow requires the exact job condition, command, and tag trigger', () => {
-  withTemporaryRepository((directory: any) => {
+  withTemporaryRepository((directory) => {
     const condition = "${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}";
     writeWorkflow(directory, condition, 'npm publish', 'v*');
     assert.equal(release.inspectWorkflow(directory, 'v1.3.6').name, 'Publish to npm');
@@ -270,13 +275,13 @@ test('usage follows a differently named npm script when it invokes the release C
 });
 
 test('publish workflow monitoring uses the pushed tag and commit, then measures the whole run', async () => {
-  const workflow: any = { path: '.github/workflows/package.yml', name: 'Publish to npm' };
-  const details: any = { host: 'github.com', slug: 'owner/repo', tag: 'v1.3.6', workflow };
-  const endpoints: any = [];
+  const workflow: { path: string; name: string } = { path: '.github/workflows/package.yml', name: 'Publish to npm' };
+  const details: { host: string; slug: string; tag: string; workflow: typeof workflow } = { host: 'github.com', slug: 'owner/repo', tag: 'v1.3.6', workflow };
+  const endpoints: string[] = [];
   let jobChecks = 0;
   let runChecks = 0;
   let currentTime = Date.parse('2026-10-11T12:00:00Z');
-  const exec = (_command: any, args: any) => {
+  const exec = (_command: string, args: string[]) => {
     const endpoint = args[5];
     endpoints.push(endpoint);
     if (endpoint.endsWith('/runs')) {
@@ -303,20 +308,20 @@ test('publish workflow monitoring uses the pushed tag and commit, then measures 
     }
     throw new Error(`Unexpected endpoint: ${endpoint}`);
   };
-  const messages: any = [];
+  const messages: string[] = [];
   const workflowRun = await release.waitForWorkflow(exec, '/tmp', details, 'abc',
     () => currentTime,
-    async (ms: any) => {
+    async (ms: number) => {
       assert.deepEqual(messages, [
         'Waiting for GitHub to start the workflow run for v1.3.6.',
         'Tag workflow run found: https://github.com/owner/repo/actions/runs/12',
       ]);
       currentTime += ms;
-    }, (message: any) => messages.push(message));
+    }, (message: string) => messages.push(message));
   assert.deepEqual(workflowRun, { completedAt: Date.parse('2026-10-11T12:00:00Z'), durationMs: 90_000 });
   assert.equal(jobChecks, 3);
   assert.equal(runChecks, 3);
-  assert.ok(endpoints.some((endpoint: any) => endpoint.endsWith('/runs/12/jobs')));
+  assert.ok(endpoints.some((endpoint) => endpoint.endsWith('/runs/12/jobs')));
   assert.deepEqual(messages, [
     'Waiting for GitHub to start the workflow run for v1.3.6.',
     'Tag workflow run found: https://github.com/owner/repo/actions/runs/12',
@@ -332,11 +337,11 @@ test('registry wait measures from the workflow completion without real time dela
     return checks === 1 ? { status: 1, stdout: '', stderr: 'not found' }
       : { status: 0, stdout: '"1.3.6"', stderr: '' };
   };
-  const messages: any = [];
+  const messages: string[] = [];
   const elapsed = await release.waitForRegistry(exec, '/tmp', {
     name: '@example/package', version: '1.3.6', tag: 'v1.3.6',
   }, { completedAt: completed, durationMs: 90_000 }, () => now,
-  async (ms: any) => { now += ms; }, (message: any) => messages.push(message));
+  async (ms: number) => { now += ms; }, (message: string) => messages.push(message));
   assert.equal(elapsed, 8_000);
   assert.equal(checks, 2);
   assert.deepEqual(messages, [
@@ -345,7 +350,7 @@ test('registry wait measures from the workflow completion without real time dela
 });
 
 test('release stops before versioning when the worktree is dirty or default branch diverges', () => {
-  withTemporaryRepository((directory: any) => {
+  withTemporaryRepository((directory) => {
     const project = fixture(directory);
     const services = fakeServices(project, { failBranchPush: false, failJob: false });
     fs.writeFileSync(path.join(project.repo, 'untracked.txt'), 'local work');
@@ -356,12 +361,12 @@ test('release stops before versioning when the worktree is dirty or default bran
     project.git('commit', '-m', 'local');
     assert.throws(() => release.prepare(services.spawnSync, project.repo, 'patch', () => {}),
       /differs from origin\/main/u);
-    assert.equal(services.calls.some(([command, subcommand]: any) => command === 'npm' && subcommand === 'version'), false);
+    assert.equal(services.calls.some(([command, subcommand]) => command === 'npm' && subcommand === 'version'), false);
   });
 });
 
 test('preflight switches a clean feature branch to the synchronized default branch', () => {
-  withTemporaryRepository((directory: any) => {
+  withTemporaryRepository((directory) => {
     const project = fixture(directory);
     project.git('switch', '-c', 'feature');
     const services = fakeServices(project, { failBranchPush: false, failTagPush: false, failJob: false });
@@ -373,7 +378,7 @@ test('preflight switches a clean feature branch to the synchronized default bran
 });
 
 test('preflight refuses to reuse an existing release tag', () => {
-  withTemporaryRepository((directory: any) => {
+  withTemporaryRepository((directory) => {
     const project = fixture(directory);
     project.git('tag', 'v1.3.6');
     const services = fakeServices(project, { failBranchPush: false, failTagPush: false, failJob: false });
@@ -383,7 +388,7 @@ test('preflight refuses to reuse an existing release tag', () => {
 });
 
 test('a failed branch push leaves no version tag', async () => {
-  await withTemporaryRepositoryAsync(async (directory: any) => {
+  await withTemporaryRepositoryAsync(async (directory) => {
     const project = fixture(directory);
     const services = fakeServices(project, { failBranchPush: true, failJob: false });
     await assert.rejects(release.release('patch', {
@@ -392,12 +397,12 @@ test('a failed branch push leaves no version tag', async () => {
     }), /non-fast-forward/u);
     assert.equal(project.git('log', '-1', '--format=%B'), '1.3.6');
     assert.equal(project.command(project.repo, 'git', ['show-ref', '--verify', '--quiet', 'refs/tags/v1.3.6']).status, 1);
-    assert.equal(services.calls.some(([command, subcommand]: any) => command === 'git' && subcommand === 'tag'), false);
+    assert.equal(services.calls.some(([command, subcommand]) => command === 'git' && subcommand === 'tag'), false);
   });
 });
 
 test('a failed tag push stops before workflow polling', async () => {
-  await withTemporaryRepositoryAsync(async (directory: any) => {
+  await withTemporaryRepositoryAsync(async (directory) => {
     const project = fixture(directory);
     const services = fakeServices(project, { failBranchPush: false, failTagPush: true, failJob: false });
     await assert.rejects(release.release('patch', {
@@ -406,28 +411,28 @@ test('a failed tag push stops before workflow polling', async () => {
     }), /tag rejected/u);
     assert.equal(project.git('rev-parse', 'refs/tags/v1.3.6'), project.git('rev-parse', 'HEAD'));
     assert.equal(project.git('ls-remote', 'origin', 'refs/tags/v1.3.6'), '');
-    assert.equal(services.calls.some((call: any) => call[0] === 'gh' && call[6]?.includes('/actions/')), false);
+    assert.equal(services.calls.some((call) => call[0] === 'gh' && call[6]?.includes('/actions/')), false);
   });
 });
 
 test('CLI accepts a mocked spawnSync and pushes the version before waiting for npm visibility', async () => {
-  await withTemporaryRepositoryAsync(async (directory: any) => {
+  await withTemporaryRepositoryAsync(async (directory) => {
     const project = fixture(directory);
     const services = fakeServices(project, { failBranchPush: false, failJob: false });
-    const messages: any = [];
+    const messages: string[] = [];
     await release.runCli({
       argv: [process.execPath, path.resolve(__dirname, '../../../scripts/release/cli.js'), 'patch'],
       environment: {}, invocationDirectory: project.repo, repositoryDirectory: project.repo,
       spawnSync: services.spawnSync, now: services.now, sleep: services.sleep,
-      log: (message: any) => messages.push(message),
+      log: (message: string) => messages.push(message),
     });
     const sha = project.git('rev-parse', 'HEAD');
     assert.match(project.git('ls-remote', 'origin', 'refs/heads/main'), new RegExp(`^${sha}`, 'u'));
     assert.match(project.git('ls-remote', 'origin', 'refs/tags/v1.3.6'), new RegExp(`^${sha}`, 'u'));
-    const branchPush = services.calls.findIndex((call: any) => call[0] === 'git' && call[1] === 'push' &&
+    const branchPush = services.calls.findIndex((call) => call[0] === 'git' && call[1] === 'push' &&
       call[3] === 'HEAD:refs/heads/main');
-    const tag = services.calls.findIndex((call: any) => call[0] === 'git' && call[1] === 'tag');
-    const tagPush = services.calls.findIndex((call: any) => call[0] === 'git' && call[1] === 'push' &&
+    const tag = services.calls.findIndex((call) => call[0] === 'git' && call[1] === 'tag');
+    const tagPush = services.calls.findIndex((call) => call[0] === 'git' && call[1] === 'push' &&
       call[3] === 'refs/tags/v1.3.6');
     assert.ok(branchPush >= 0 && branchPush < tag && tag < tagPush);
     assert.equal(services.registryChecks(), 2);
@@ -436,7 +441,7 @@ test('CLI accepts a mocked spawnSync and pushes the version before waiting for n
 });
 
 test('a failed publish job stops before npm registry polling', async () => {
-  await withTemporaryRepositoryAsync(async (directory: any) => {
+  await withTemporaryRepositoryAsync(async (directory) => {
     const project = fixture(directory);
     const services = fakeServices(project, { failBranchPush: false, failJob: true });
     await assert.rejects(release.release('patch', {

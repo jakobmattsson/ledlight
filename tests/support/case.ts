@@ -19,8 +19,8 @@ const HEADERS = new Map([
   ['========== ERROR ==========', 'error'],
 ]);
 
-function parseArguments(command: any) {
-  const args: any = [];
+function parseArguments(command: string): string[] {
+  const args: string[] = [];
   let token = '';
   let quote = null;
   let started = false;
@@ -74,7 +74,7 @@ function apiLiteral(node: any) {
   throw new Error('API arguments must be JavaScript literals');
 }
 
-function parseApi(statement: any) {
+function parseApi(statement: string) {
   if (statement.endsWith(';')) throw new Error('API statement must not end with a semicolon');
   const program = espree.parse(statement, { ecmaVersion: 'latest' });
   const expression = program.body[0]?.expression;
@@ -89,11 +89,11 @@ function parseApi(statement: any) {
   };
 }
 
-function parseCase(fileName: any) {
+function parseCase(fileName: string) {
   const lines = fs.readFileSync(fileName, 'utf8').replaceAll('\r\n', '\n').split('\n');
   if (lines.at(-1) === '') lines.pop();
-  const sections: any = {};
-  const files: any = {};
+  const sections: Record<string, string> = {};
+  const files: Record<string, string> = {};
   for (let index = 0; index < lines.length;) {
     const extraFile = /^========== FILE ([^=]+) ==========$/u.exec(lines[index]);
     const name = HEADERS.get(lines[index]) ?? (extraFile ? 'extraFile' : undefined);
@@ -116,7 +116,7 @@ function parseCase(fileName: any) {
     const content = start >= end ? '' : `${lines.slice(start, end).join('\n')}\n`;
     if (name === 'extraFile') {
       const relativePath = extraFile![1];
-      if (path.isAbsolute(relativePath) || relativePath.split('/').some((part: any) =>
+      if (path.isAbsolute(relativePath) || relativePath.split('/').some((part) =>
         part === '' || part === '.' || part === '..') || relativePath === 'journal.ledger') {
         throw new Error(`${fileName}: invalid FILE path ${relativePath}`);
       }
@@ -130,7 +130,7 @@ function parseCase(fileName: any) {
   if (cli === undefined && sections.api === undefined && sections.ledgerCli === undefined) {
     throw new Error(`${fileName}: expected a CLI, LEDGER-CLI, or API section`);
   }
-  let cliArgs: any;
+  let cliArgs: string[] | undefined;
   let heredoc;
   let hasHeredoc = false;
   if (cli !== undefined) {
@@ -144,8 +144,8 @@ function parseCase(fileName: any) {
     if (!match) throw new Error(`${fileName}: expected a ledlight command in CLI`);
     cliArgs = parseArguments(match[1] ?? '');
     if (cliArgs.length === 0) throw new Error(`${fileName}: expected a CLI command`);
-    if (cliArgs.some((argument: any, index: any) =>
-      (argument === '--file' && (!hasHeredoc || cliArgs[index + 1] !== '-')) ||
+    if (cliArgs.some((argument, index) =>
+      (argument === '--file' && (!hasHeredoc || cliArgs?.[index + 1] !== '-')) ||
       (argument.startsWith('--file=') && (!hasHeredoc || argument !== '--file=-')))) {
       throw new Error(`${fileName}: the case supplies the journal; use --file - only for stdin`);
     }
@@ -168,7 +168,7 @@ function parseCase(fileName: any) {
     if (!match) throw new Error(`${fileName}: expected a ledger command in LEDGER-CLI`);
     ledgerArgs = parseArguments(match[1] ?? '');
     if (ledgerArgs.length === 0) throw new Error(`${fileName}: expected a LEDGER-CLI command`);
-    if (ledgerArgs.some((argument: any) => argument === '--file' || argument.startsWith('--file='))) {
+    if (ledgerArgs.some((argument) => argument === '--file' || argument.startsWith('--file='))) {
       throw new Error(`${fileName}: the case supplies the journal; omit --file`);
     }
   }

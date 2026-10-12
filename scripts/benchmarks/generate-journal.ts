@@ -13,30 +13,30 @@ const CLEARING_ACCOUNT_COUNT = 55;
 const START = Date.UTC(2014, 0, 1);
 const DAYS = Math.round((Date.UTC(2020, 0, 1) - START) / 86400000);
 
-function dateAt(index: any, count: any) {
+function dateAt(index: number, count: number): string {
   const day = Math.floor(index * (DAYS - 1) / (count - 1));
   return new Date(START + day * 86400000).toISOString().slice(0, 10);
 }
 
-function instrument(index: any) {
+function instrument(index: number): string {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   return `UNIT${letters[Math.floor(index / letters.length)]}${letters[index % letters.length]}`;
 }
 
-function category(index: any) {
+function category(index: number): string {
   return `Expenses:Category${String(index + 1).padStart(3, '0')}`;
 }
 
-function clearing(index: any) {
+function clearing(index: number): string {
   return `Assets:Clearing${String(index + 1).padStart(3, '0')}`;
 }
 
-function eventSlots(count: any) {
-  return Array.from({ length: count }, (_: any, index: any) =>
+function eventSlots(count: number): number[] {
+  return Array.from({ length: count }, (_, index) =>
     Math.floor((index + 0.5) * TRANSACTION_COUNT / count));
 }
 
-function generateJournal(fileName: any) {
+function generateJournal(fileName: string): void {
   const lines = [
     '; Entirely synthetic performance fixture.',
     'commodity BASE',
@@ -69,7 +69,7 @@ function generateJournal(fileName: any) {
 
   const tradeSlots = new Set(eventSlots(TRADE_COUNT));
   const commentSlots = new Set(eventSlots(580));
-  const clearingSlots = new Set();
+  const clearingSlots = new Set<number>();
   for (const initialSlot of eventSlots(CLEARING_ACCOUNT_COUNT * 2)) {
     let slot = initialSlot;
     while (tradeSlots.has(slot) || clearingSlots.has(slot)) slot += 1;

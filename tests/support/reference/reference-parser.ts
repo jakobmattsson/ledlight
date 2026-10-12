@@ -1,5 +1,7 @@
 'use strict';
 
+import type { Node } from 'ohm-js' with { 'resolution-mode': 'import' };
+
 module.exports = ({
   fs,
   ingestionWarning: { createWarning, warningCodes },
@@ -12,21 +14,21 @@ module.exports = ({
   const grammarSource = fs.readFileSync(path.join(__dirname, '../../../src/modules/journal/ledger.ohm'), 'utf8');
   const grammar = ohm.grammar(grammarSource);
 
-  function location(node: any, source: any) {
+  function location(node: Node, source: string) {
     const value = node.source.getLineAndColumn();
     return { source, line: value.lineNum, column: value.colNum };
   }
 
-  function indentedLocation(indent: any, source: any) {
+  function indentedLocation(indent: Node, source: string) {
     const value = location(indent, source);
     return { ...value, column: value.column + indent.sourceString.length };
   }
 
-  function optionalValue(node: any, source: any) {
+  function optionalValue(node: Node, source: string) {
     return node.children.length === 0 ? null : node.children[0].ast(source);
   }
 
-  function values(node: any, source: any) {
+  function values(node: Node, source: string) {
     return node.children.map((child: any) => child.ast(source));
   }
 
@@ -54,7 +56,7 @@ module.exports = ({
     };
   }
 
-  function parseDate(value: any, node: any, source: any) {
+  function parseDate(value: string, node: Node, source: string) {
     const year = Number(value.slice(0, 4));
     const month = Number(value.slice(5, 7));
     const day = Number(value.slice(8, 10));
@@ -67,14 +69,14 @@ module.exports = ({
   }
 
   const semantics = grammar.createSemantics().addOperation('ast(source)', {
-    document(entries: any, _end: any) {
+    document(entries: Node, _end: Node) {
       return {
         source: this.args.source,
         entries: values(entries, this.args.source).filter((entry: any) => entry !== null),
       };
     },
 
-    topLevel_transaction(date: any, _space: any, description: any, inlineComment: any, _lineEnd: any, body: any) {
+    topLevel_transaction(date: Node, _space: Node, description: Node, inlineComment: Node, _lineEnd: Node, body: Node) {
       const source = this.args.source;
       const text = description.sourceString.trim();
       const items = values(body, source).filter((item: any) => item !== null);
@@ -103,7 +105,7 @@ module.exports = ({
       return transaction;
     },
 
-    posting(_indent: any, account: any, amountPart: any, _space: any, comment: any, _lineEnd: any) {
+    posting(_indent: Node, account: Node, amountPart: Node, _space: Node, comment: Node, _lineEnd: Node) {
       const expression = optionalValue(amountPart, this.args.source) || {
         amount: null,
         lotCost: null,
@@ -122,12 +124,12 @@ module.exports = ({
         location: location(account, this.args.source),
       };
     },
-    amountPart(_separator: any, expression: any) { return optionalValue(expression, this.args.source); },
+    amountPart(_separator: Node, expression: Node) { return optionalValue(expression, this.args.source); },
 
-    balanceAssignment(_equals: any, _space: any, amount: any) {
+    balanceAssignment(_equals: Node, _space: Node, amount: Node) {
       return { amount: null, lotCost: null, cost: null, balanceAssignment: amount.ast(this.args.source), balanceAssertion: null };
     },
-    explicitAmount(amount: any, lotCost: any, cost: any, assertion: any) {
+    explicitAmount(amount: Node, lotCost: Node, cost: Node, assertion: Node) {
       return {
         amount: amount.ast(this.args.source),
         lotCost: optionalValue(lotCost, this.args.source),
@@ -136,32 +138,32 @@ module.exports = ({
         balanceAssertion: optionalValue(assertion, this.args.source),
       };
     },
-    lotCost_total(_spaceBefore: any, _open: any, _spaceAfter: any, amount: any, _spaceBeforeClose: any, _close: any) {
+    lotCost_total(_spaceBefore: Node, _open: Node, _spaceAfter: Node, amount: Node, _spaceBeforeClose: Node, _close: Node) {
       return { total: true, amount: amount.ast(this.args.source) };
     },
-    lotCost_unit(_spaceBefore: any, _open: any, _spaceAfter: any, amount: any, _spaceBeforeClose: any, _close: any) {
+    lotCost_unit(_spaceBefore: Node, _open: Node, _spaceAfter: Node, amount: Node, _spaceBeforeClose: Node, _close: Node) {
       return { total: false, amount: amount.ast(this.args.source) };
     },
-    cost(_spaceBefore: any, operator: any, _spaceAfter: any, amount: any) {
+    cost(_spaceBefore: Node, operator: Node, _spaceAfter: Node, amount: Node) {
       return { total: operator.sourceString === '@@', amount: amount.ast(this.args.source) };
     },
-    balanceAssertion(_spaceBefore: any, _equals: any, _spaceAfter: any, amount: any) { return amount.ast(this.args.source); },
-    amount(number: any, _space: any, commodity: any) {
+    balanceAssertion(_spaceBefore: Node, _equals: Node, _spaceAfter: Node, amount: Node) { return amount.ast(this.args.source); },
+    amount(number: Node, _space: Node, commodity: Node) {
       return { quantity: number.ast(this.args.source), commodity: commodity.ast(this.args.source) };
     },
-    number(_sign: any, _integer: any, _point: any, _fraction: any) { return this.sourceString; },
-    commoditySymbol(_characters: any) { return this.sourceString; },
+    number(_sign: Node, _integer: Node, _point: Node, _fraction: Node) { return this.sourceString; },
+    commoditySymbol(_characters: Node) { return this.sourceString; },
 
-    topLevel_include(_keyword: any, _space: any, value: any, comment: any, _lineEnd: any) {
+    topLevel_include(_keyword: Node, _space: Node, value: Node, comment: Node, _lineEnd: Node) {
       return { type: 'include', path: value.sourceString.trimEnd(), comment: optionalValue(comment, this.args.source), location: location(this, this.args.source) };
     },
-    topLevel_account(_keyword: any, _space: any, value: any, comment: any, _lineEnd: any) {
+    topLevel_account(_keyword: Node, _space: Node, value: Node, comment: Node, _lineEnd: Node) {
       return { type: 'account', name: value.sourceString.trimEnd(), comment: optionalValue(comment, this.args.source), location: location(this, this.args.source) };
     },
-    topLevel_tag(_keyword: any, _space: any, value: any, comment: any, _lineEnd: any) {
+    topLevel_tag(_keyword: Node, _space: Node, value: Node, comment: Node, _lineEnd: Node) {
       return { type: 'tag', name: value.sourceString.trimEnd(), comment: optionalValue(comment, this.args.source), location: location(this, this.args.source) };
     },
-    topLevel_commodity(_keyword: any, _space: any, symbol: any, comment: any, _trailingSpace: any, _lineEnd: any, body: any) {
+    topLevel_commodity(_keyword: Node, _space: Node, symbol: Node, comment: Node, _trailingSpace: Node, _lineEnd: Node, body: Node) {
       const source = this.args.source;
       const commodity = symbol.sourceString.trimEnd();
       const properties = values(body, source).filter((item: any) => item !== null);
@@ -179,7 +181,7 @@ module.exports = ({
         location: location(this, source),
       };
     },
-    commodityBody_format(_indent: any, _keyword: any, _space: any, quantity: any, _symbolSpace: any, symbol: any, comment: any, _trailingSpace: any, _lineEnd: any) {
+    commodityBody_format(_indent: Node, _keyword: Node, _space: Node, quantity: Node, _symbolSpace: Node, symbol: Node, comment: Node, _trailingSpace: Node, _lineEnd: Node) {
       return {
         name: 'format',
         value: `${quantity.sourceString}${_symbolSpace.sourceString}${symbol.sourceString}`,
@@ -188,7 +190,7 @@ module.exports = ({
         location: indentedLocation(_indent, this.args.source),
       };
     },
-    commodityBody_default(_indent: any, _keyword: any, comment: any, _lineEnd: any) {
+    commodityBody_default(_indent: Node, _keyword: Node, comment: Node, _lineEnd: Node) {
       return {
         name: 'default',
         value: null,
@@ -196,7 +198,7 @@ module.exports = ({
         location: indentedLocation(_indent, this.args.source),
       };
     },
-    topLevel_price(_keyword: any, _space1: any, date: any, _space2: any, commodity: any, _space3: any, price: any, _space4: any, comment: any, _lineEnd: any) {
+    topLevel_price(_keyword: Node, _space1: Node, date: Node, _space2: Node, commodity: Node, _space3: Node, price: Node, _space4: Node, comment: Node, _lineEnd: Node) {
       return {
         type: 'price',
         date: date.ast(this.args.source),
@@ -207,7 +209,7 @@ module.exports = ({
       };
     },
 
-    indentedComment(_indent: any, marker: any, _space: any, metadata: any, _lineEnd: any) {
+    indentedComment(_indent: Node, marker: Node, _space: Node, metadata: Node, _lineEnd: Node) {
       const tags = metadata.ast(this.args.source);
       const value = metadata.sourceString.trim();
       return {
@@ -215,13 +217,13 @@ module.exports = ({
         ...parsedComment(value, tags, location(marker, this.args.source)),
       };
     },
-    topLevel_comment(semicolon: any, _space: any, text: any, _lineEnd: any) {
+    topLevel_comment(semicolon: Node, _space: Node, text: Node, _lineEnd: Node) {
       return {
         type: 'comment', text: text.sourceString.trim(),
         location: location(semicolon, this.args.source),
       };
     },
-    postingInlineComment(_semicolon: any, _space: any, _open: any, date: any, _close: any, _dateSpace: any, metadata: any) {
+    postingInlineComment(_semicolon: Node, _space: Node, _open: Node, date: Node, _close: Node, _dateSpace: Node, metadata: Node) {
       const tags = metadata.ast(this.args.source);
       const postingDate = optionalValue(date, this.args.source);
       const text = metadata.sourceString.trim();
@@ -232,26 +234,26 @@ module.exports = ({
           : parsedComment(text, tags, location(_semicolon, this.args.source))),
       };
     },
-    transactionInlineComment(_space1: any, _semicolon: any, _space2: any, metadata: any) {
+    transactionInlineComment(_space1: Node, _semicolon: Node, _space2: Node, metadata: Node) {
       return parsedComment(this.sourceString.slice(this.sourceString.indexOf(';') + 1).trim(),
         metadata.ast(this.args.source), location(_semicolon, this.args.source));
     },
-    inlineComment(_space1: any, _semicolon: any, _space2: any, text: any) { return text.sourceString.trim(); },
-    metadataComment_tags(tags: any, _space: any, _text: any) { return tags.ast(this.args.source); },
-    metadataComment_value(name: any, _colon: any, _space: any, text: any) {
+    inlineComment(_space1: Node, _semicolon: Node, _space2: Node, text: Node) { return text.sourceString.trim(); },
+    metadataComment_tags(tags: Node, _space: Node, _text: Node) { return tags.ast(this.args.source); },
+    metadataComment_value(name: Node, _colon: Node, _space: Node, text: Node) {
       return [{ name: name.sourceString, value: text.sourceString.trim() }];
     },
-    metadataComment_text(_text: any) { return []; },
-    binaryTags(_open: any, _first: any, _separators: any, _names: any, _close: any) {
+    metadataComment_text(_text: Node) { return []; },
+    binaryTags(_open: Node, _first: Node, _separators: Node, _names: Node, _close: Node) {
       return this.sourceString.slice(1, -1).split(':').map((name: any) => ({ name, value: null }));
     },
-    topLevel_blank(_space: any, _newline: any) { return null; },
+    topLevel_blank(_space: Node, _newline: Node) { return null; },
 
-    date(_year1: any, _year2: any, _year3: any, _year4: any, _separator1: any, _month1: any, _month2: any, _separator2: any, _day1: any, _day2: any) {
+    date(_year1: Node, _year2: Node, _year3: Node, _year4: Node, _separator1: Node, _month1: Node, _month2: Node, _separator2: Node, _day1: Node, _day2: Node) {
       return parseDate(this.sourceString, this, this.args.source);
     },
 
-    _iter(...children: any[]) { return children.map((child: any) => child.ast(this.args.source)); },
+    _iter(...children: Node[]) { return children.map((child: any) => child.ast(this.args.source)); },
     _terminal() { return this.sourceString; },
   });
 

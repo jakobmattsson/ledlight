@@ -6,16 +6,21 @@ const path = require('node:path');
 const InjectionMode = Object.freeze({ PROXY: 'PROXY' });
 const Lifetime = Object.freeze({ SINGLETON: 'SINGLETON' });
 
-function asValue(value: any) {
+type Registration =
+  | { kind: 'value'; value: unknown }
+  | { kind: 'function'; factory: (dependencies: Record<string, unknown>) => unknown; lifetime?: string };
+type ModuleEntry = { path: string };
+
+function asValue(value: unknown): Registration {
   return { kind: 'value', value };
 }
 
-function asFunction(factory: any, options: any) {
+function asFunction(factory: (dependencies: Record<string, unknown>) => unknown, options?: { lifetime?: string }): Registration {
   if (typeof factory !== 'function') throw new TypeError('Factory must be a function.');
   return { kind: 'function', factory, lifetime: options?.lifetime };
 }
 
-function globPattern(pattern: any) {
+function globPattern(pattern: string): RegExp {
   let source = '^';
   for (let index = 0; index < pattern.length; index += 1) {
     const character = pattern[index];
@@ -34,8 +39,8 @@ function globPattern(pattern: any) {
   return new RegExp(`${source}$`, 'u');
 }
 
-function filesBelow(directory: any) {
-  const files: any = [];
+function filesBelow(directory: string): string[] {
+  const files: string[] = [];
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const fileName = path.join(directory, entry.name);
     if (entry.isDirectory()) files.push(...filesBelow(fileName));
@@ -44,8 +49,8 @@ function filesBelow(directory: any) {
   return files;
 }
 
-function listModules(patterns: any, options: any) {
-  const matches = new Set();
+function listModules(patterns: string | string[], options: { cwd: string }): ModuleEntry[] {
+  const matches = new Set<string>();
   for (const pattern of Array.isArray(patterns) ? patterns : [patterns]) {
     const wildcardIndex = pattern.indexOf('*');
     if (wildcardIndex === -1) {
@@ -63,20 +68,20 @@ function listModules(patterns: any, options: any) {
       if (matcher.test(relativePath)) matches.add(fileName);
     }
   }
-  return [...matches].sort().map((fileName: any) => ({ path: fileName }));
+  return [...matches].sort().map((fileName) => ({ path: fileName }));
 }
 
-function createContainer(options: any) {
+function createContainer(options: { injectionMode: string }) {
   if (options?.injectionMode !== InjectionMode.PROXY) {
     throw new Error('Only proxy injection is supported.');
   }
-  const registrations = Object.create(null);
-  const singletons = new Map();
-  const resolving = new Set();
-  const container: any = {
+  const registrations: Record<string, Registration> = Object.create(null);
+  const singletons = new Map<string, unknown>();
+  const resolving = new Set<string>();
+  const container = {
     registrations,
-    register(nameOrRegistrations: any, resolver: any) {
-      const entries = typeof nameOrRegistrations === 'string'
+    register(nameOrRegistrations: string | Record<string, Registration>, resolver?: Registration) {
+      const entries: Array<[string, Registration | undefined]> = typeof nameOrRegistrations === 'string'
         ? [[nameOrRegistrations, resolver]]
         : Object.entries(nameOrRegistrations);
       for (const [name, registration] of entries) {
@@ -88,10 +93,10 @@ function createContainer(options: any) {
       }
       return this;
     },
-    hasRegistration(name: any) {
+    hasRegistration(name: string): boolean {
       return Object.hasOwn(registrations, name);
     },
-    resolve(name: any) {
+    resolve(name: string): unknown {
       if (singletons.has(name)) return singletons.get(name);
       if (!this.hasRegistration(name)) throw new Error(`Unknown dependency: ${name}`);
       if (resolving.has(name)) throw new Error(`Circular dependency: ${name}`);
@@ -106,21 +111,25 @@ function createContainer(options: any) {
         resolving.delete(name);
       }
     },
-    loadModules(patterns: any, settings: any) {
+    loadModules(patterns: string | string[], settings: {
+      formatName: string;
+      cwd: string;
+      resolverOptions: { register: (factory: unknown, options: unknown) => Registration };
+    }) {
       if (settings.formatName !== 'camelCase') {
         throw new Error('Only camelCase module names are supported.');
       }
       for (const module of listModules(patterns, { cwd: settings.cwd })) {
         const factory = require(module.path);
         const baseName = path.basename(module.path, path.extname(module.path));
-        const name = baseName.replace(/-([a-z])/gu, (_match: any, letter: any) => letter.toUpperCase());
+        const name = baseName.replace(/-([a-z])/gu, (_match: string, letter: string) => letter.toUpperCase());
         this.register(name, settings.resolverOptions.register(factory, settings.resolverOptions));
       }
       return this;
     },
   };
-  const dependencies = new Proxy(Object.create(null), {
-    get(_target: any, property: any) {
+  const dependencies: Record<string, unknown> = new Proxy(Object.create(null), {
+    get(_target, property: string | symbol) {
       if (typeof property !== 'string') return undefined;
       return container.resolve(property);
     },

@@ -1,5 +1,10 @@
 'use strict';
 
+type CommodityDescription = { commodity: string; format: string | null };
+type AlignedAmount = { quantity: string; decimalSeparator: string | null; commodity: string; isTotal?: boolean; label?: string };
+type Warning = { code: string; message: string; instances: Array<{ source: string; line: number; column: number | null; startLine: number; endLine: number }> };
+type TextColumn = { heading: string; value: (row: unknown) => unknown; align?: 'left' | 'right' };
+
 module.exports = ({
   core: {
     reportTotals: { appendTotal },
@@ -15,12 +20,12 @@ module.exports = ({
   },
 }: any) => {
 
-  function csvField(value: any) {
+  function csvField(value: unknown): string {
     const text = String(value);
     return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
   }
 
-  function groupThousands(quantity: any) {
+  function groupThousands(quantity: string): string {
     const [integer, fraction] = quantity.split('.');
     const negative = integer.startsWith('-');
     const digits = negative ? integer.slice(1) : integer;
@@ -28,13 +33,13 @@ module.exports = ({
     return `${negative ? '-' : ''}${groupedInteger}${fraction === undefined ? '' : `.${fraction}`}`;
   }
 
-  function commodityFormats(descriptions: any) {
+  function commodityFormats(descriptions: CommodityDescription[] | null | undefined): Map<string, string | null> {
     return new Map((descriptions ?? [])
-      .filter(({ format }: any) => format !== null)
-      .map(({ commodity, format }: any) => [commodity, format]));
+      .filter(({ format }) => format !== null)
+      .map(({ commodity, format }) => [commodity, format]));
   }
 
-  function parseCommodityFormat(format: any) {
+  function parseCommodityFormat(format: string) {
     const match = /^((?:\d{1,3}(?:,\d{3})+|\d+))(?:\.(\d+))?[ \t]+[^ \t]+$/u.exec(format);
     if (!match) return null;
     return {
@@ -44,7 +49,7 @@ module.exports = ({
     };
   }
 
-  function formatDeclaredQuantity(quantity: any, format: any) {
+  function formatDeclaredQuantity(quantity: string, format: string): string {
     const parsedFormat = parseCommodityFormat(format);
     if (!parsedFormat) return quantity;
     const fixed = formatDecimalFixed(parseDecimal(quantity), parsedFormat.scale);
@@ -58,7 +63,7 @@ module.exports = ({
     return `${negative ? '-' : ''}${grouped}${decimal}`;
   }
 
-  function formatPriceQuantity(quantity: any, commodity: any, formats: any) {
+  function formatPriceQuantity(quantity: string, commodity: string, formats: Map<string, string | null>): string {
     const format = formats.get(commodity);
     if (!format) return quantity;
     const parsedFormat = parseCommodityFormat(format);
@@ -74,7 +79,7 @@ module.exports = ({
     return fraction === undefined ? grouped : `${grouped}.${fraction}`;
   }
 
-  function displayQuantity(quantity: any, commodity: any, formats: any, fallbackScale: any) {
+  function displayQuantity(quantity: string, commodity: string, formats: Map<string, string | null>, fallbackScale: number | null): string {
     const format = formats.get(commodity);
     if (format) return formatDeclaredQuantity(quantity, format);
     const fallback = fallbackScale === null
@@ -83,25 +88,25 @@ module.exports = ({
     return groupThousands(fallback);
   }
 
-  function formatCsvTable(headings: any, rows: any) {
+  function formatCsvTable(headings: unknown[], rows: unknown[][]): string {
     const lines = [headings.map(csvField).join(',')];
     for (const row of rows) lines.push(row.map(csvField).join(','));
     return `${lines.join('\n')}\n`;
   }
 
-  function formatAlignedAmounts(rows: any, showLabels: any) {
-    const commodityWidth = Math.max(0, ...rows.map((row: any) => row.commodity.length));
-    const amounts = rows.map((row: any) => {
+  function formatAlignedAmounts(rows: AlignedAmount[], showLabels: boolean): string {
+    const commodityWidth = Math.max(0, ...rows.map((row) => row.commodity.length));
+    const amounts = rows.map((row) => {
       const [integer, fraction] = row.decimalSeparator === null
         ? [row.quantity, undefined]
         : row.quantity.split(row.decimalSeparator);
       return { integer, fraction, separator: row.decimalSeparator };
     });
-    const integerWidth = Math.max(0, ...amounts.map((amount: any) => amount.integer.length));
-    const fractionWidth = Math.max(0, ...amounts.map((amount: any) => amount.fraction?.length ?? 0));
-    const lines: any = [];
+    const integerWidth = Math.max(0, ...amounts.map((amount) => amount.integer.length));
+    const fractionWidth = Math.max(0, ...amounts.map((amount) => amount.fraction?.length ?? 0));
+    const lines: string[] = [];
 
-    rows.forEach((row: any, index: any) => {
+    rows.forEach((row, index) => {
       const { integer, fraction, separator } = amounts[index];
       const integerColumn = integer.padStart(integerWidth);
       const fractionColumn = fractionWidth === 0
@@ -120,13 +125,13 @@ module.exports = ({
     return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
   }
 
-  function formatJson(value: any) {
+  function formatJson(value: unknown): string {
     return `${JSON.stringify(value, null, 2)}\n`;
   }
 
-  function formatWarnings(warnings: any) {
+  function formatWarnings(warnings: Warning[]): string {
     if (warnings.length === 0) return '';
-    const lines: any = [];
+    const lines: string[] = [];
     for (const warning of warnings) {
       if (lines.length > 0) lines.push('');
       lines.push(`[${warning.code}] ${warning.message}`);
@@ -143,30 +148,30 @@ module.exports = ({
     return `${lines.join('\n')}\n`;
   }
 
-  function formatTextTable(rows: any, columns: any) {
-    const widths = columns.map(({ heading, value }: any) => Math.max(
+  function formatTextTable(rows: unknown[], columns: TextColumn[]): string {
+    const widths = columns.map(({ heading, value }) => Math.max(
       heading.length,
-      ...rows.map((row: any) => String(value(row)).length),
+      ...rows.map((row) => String(value(row)).length),
     ));
-    const line = (values: any) => values.map((value: any, index: any) => {
+    const line = (values: unknown[]) => values.map((value, index) => {
       const text = String(value);
       return columns[index].align === 'right'
         ? text.padStart(widths[index])
         : text.padEnd(widths[index]);
     }).join('  ').trimEnd();
     return `${[
-      line(columns.map(({ heading }: any) => heading)),
-      line(widths.map((width: any) => '-'.repeat(width))),
-      ...rows.map((row: any) => line(columns.map(({ value }: any) => value(row)))),
+      line(columns.map(({ heading }) => heading)),
+      line(widths.map((width) => '-'.repeat(width))),
+      ...rows.map((row) => line(columns.map(({ value }) => value(row)))),
     ].join('\n')}\n`;
   }
 
-  function decimalScale(quantity: any) {
+  function decimalScale(quantity: string): number {
     const point = quantity.indexOf('.');
     return point < 0 ? 0 : quantity.length - point - 1;
   }
 
-  const shared: any = {
+  const shared = {
     addDecimals, commodityFormats, compareDecimals, csvField, decimalScale, formatCsvTable,
     displayQuantity, divideDecimals, divideDecimalsHalfEven, formatDecimal,
     formatDecimalFixed, formatAlignedAmounts, formatJson,
