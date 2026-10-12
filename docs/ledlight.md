@@ -308,9 +308,10 @@ Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as
 `core: { rational, linearProgram }`. Other module internals are
-unavailable. Each module root contains only its `index.js` facade;
-implementation files live in subdirectories. Factories have unique kebab-case
-file names within their module. The local Awilix subset lives in
+unavailable. Each module root contains its `index.js` facade. The database
+schema (`schema.sql`) and journal grammar (`ledger.ohm`) sit beside their
+module facades; implementation files live in subdirectories. Factories have
+unique kebab-case file names within their module. The local Awilix subset lives in
 `lib/awilix.js`.
 
 A directory named `list-<name>` directly under a module root registers an
@@ -330,7 +331,7 @@ builds and removes a temporary database for CLI stdin input.
 Queries receive a read-only database handle through the project and may run SQL
 against the tables and columns in `database/internal/read-model-contract.js`. That file
 is the explicit read-model contract; a convention test checks its complete column
-lists against `database/internal/schema.sql` and checks that it covers every schema table
+lists against `database/schema.sql` and checks that it covers every schema table
 referenced by query SQL. Changing these columns requires a coordinated query
 update. Moving all query SQL behind database functions is outside this module
 reorganization.
@@ -484,7 +485,7 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/modules/journal/syntax/ledger.ohm` is the normative description of the
+`src/modules/journal/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
 semantics in `tests/support/reference/reference-parser.js`. The fixtures in
 `tests/api/parser` define expected syntax trees, a shared error contract for

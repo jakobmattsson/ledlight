@@ -14,7 +14,7 @@ test('the query read model matches the schema and every referenced table', () =>
   const contract = createRepositoryContainer(__dirname, '../../src/modules').resolve('database').readModelContract;
   const database = new Database(':memory:');
   try {
-    database.exec(fs.readFileSync(path.join(root, 'src/modules/database/internal/schema.sql'), 'utf8'));
+    database.exec(fs.readFileSync(path.join(root, 'src/modules/database/schema.sql'), 'utf8'));
     for (const [table, columns] of Object.entries(contract)) {
       const actual = database.prepare(`PRAGMA table_info(${table})`).all().map(({ name }) => name);
       assert.deepEqual(actual, columns, table);

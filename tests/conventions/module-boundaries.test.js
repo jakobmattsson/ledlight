@@ -24,10 +24,12 @@ test('discovers exactly the modules declared in the dependency policy', () => {
   assert.ok(fs.statSync(path.join(root, 'external.js')).isFile());
   assert.deepEqual(Object.keys(allowedModules).sort(), directories);
   assert.deepEqual(Object.keys(allowedExternal).sort(), directories);
+  const rootAssets = { database: ['schema.sql'], journal: ['ledger.ohm'] };
   for (const name of directories) {
     const rootFiles = fs.readdirSync(path.join(root, name), { withFileTypes: true })
       .filter((entry) => entry.isFile()).map((entry) => entry.name).sort();
-    assert.deepEqual(rootFiles, ['index.js'], `${name} must expose only index.js at its root`);
+    assert.deepEqual(rootFiles, ['index.js', ...(rootAssets[name] ?? [])].sort(),
+      `${name} must expose only its facade and declared assets at its root`);
   }
 });
 
