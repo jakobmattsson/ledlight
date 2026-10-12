@@ -4,9 +4,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { instance } = require('@viz-js/viz');
+const YAML = require('yaml');
 const {
   validateDependsOnYaml, validateUsedByYaml,
 } = require('../../src/composition/repository-container');
+const { generateGraphDot } = require('../../scripts/architecture/graph');
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
 const architectureRoot = path.resolve(__dirname, '../architecture');
@@ -20,6 +23,17 @@ for (const [fileName, validate] of [
     validate(actual, modulesRoot);
   });
 }
+
+test('architecture diagrams match the generated dependency views', async () => {
+  const viz = await instance();
+  for (const name of ['depends-on', 'used-by']) {
+    const yaml = fs.readFileSync(path.join(architectureRoot, `${name}.yaml`), 'utf8');
+    const actual = fs.readFileSync(path.join(architectureRoot, `${name}.svg`), 'utf8');
+    const expected = viz.renderString(generateGraphDot(name, YAML.parse(yaml)),
+      { format: 'svg', engine: 'dot' });
+    assert.equal(actual, expected, `${name}.svg is out of date; run npm run architecture:generate`);
+  }
+});
 
 test('dependency validators identify changed values, malformed YAML, and stale formatting', () => {
   const dependsOn = fs.readFileSync(path.join(architectureRoot, 'depends-on.yaml'), 'utf8');

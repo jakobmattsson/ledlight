@@ -292,10 +292,12 @@ module graph. Each domain module's `index.js` is registered as a factory and
 receives its local dependencies through injection.
 
 The sorted dependency views in `tests/architecture/depends-on.yaml` and
-`tests/architecture/used-by.yaml` are generated from that policy. Run
-`npm run architecture:generate` after changing module dependencies; the
-architecture test calls composition's validators to check that both views stay
-current and report the first mismatch.
+`tests/architecture/used-by.yaml` are generated from that policy. The same
+command renders `depends-on.svg` and `used-by.svg` beside them. In each diagram,
+arrows show module dependencies and each module card lists its external
+services. Run `npm run architecture:generate` after changing module
+dependencies; the architecture tests check that the YAML and SVG views stay
+current.
 
 `createRepositoryContainer(...modulesPathParts)` resolves its string arguments
 as path segments and reads `dependencies.yaml` and `external.js` from that
