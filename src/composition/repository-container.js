@@ -1,193 +1,272 @@
 'use strict';
 
+const fs = require('node:fs');
 const path = require('node:path');
-const {
-  asFunction,
-  asValue,
-  createContainer,
-  InjectionMode,
-  listModules,
-  Lifetime,
-} = require('../lib/awilix');
-const {
-  addUniqueName,
-  listUniqueModules,
-  moduleName: repositoryModuleName,
-  proxyDependencies,
-  registerModuleFactories,
-  surfaceModule: loadSurfaceModule,
-} = require('./module-container');
+const YAML = require('yaml');
+const { asFunction, createContainer, InjectionMode, listModules, Lifetime } = require('../../lib/awilix');
 
-const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
-const REPOSITORY_MODULE_PATTERN = 'src/impl/**/*.js';
-const QUERY_MODULE_PATTERN = 'src/surface/queries/*.js';
-const COMMAND_MODULE_PATTERN = 'src/surface/commands/**/*.js';
-const COMMAND_DIRECTORY = path.join(REPOSITORY_ROOT, 'src/surface/commands');
-
-function relativeModulePath(fileName) {
-  return path.relative(REPOSITORY_ROOT, fileName).replace(/\\/gu, '/');
+function moduleName(fileName) {
+  const baseName = path.basename(fileName, path.extname(fileName));
+  if (!/^[a-z]+(?:-[a-z]+)*$/u.test(baseName)) {
+    throw new Error(`Module filename must use lowercase kebab-case: ${fileName}`);
+  }
+  return baseName.replace(/-([a-z])/gu, (_match, letter) => letter.toUpperCase());
 }
 
-function commandGroup(relativePath) {
-  const segments = relativePath.split(path.sep);
-  if (segments.length !== 2 || !/^[a-z]+(?:-[a-z]+)*$/u.test(segments[0])) {
-    throw new TypeError(`Command module must be directly inside one group directory: ${relativePath}`);
+function discoverModules(directory) {
+  const modules = fs.readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  for (const name of modules) {
+    if (!fs.statSync(path.join(directory, name, 'index.js'), { throwIfNoEntry: false })?.isFile()) {
+      throw new Error(`Module ${name} must contain index.js`);
+    }
   }
-  return segments[0];
+  return modules;
 }
 
-const REPOSITORY_MODULES = listUniqueModules(REPOSITORY_MODULE_PATTERN, {
-  cwd: REPOSITORY_ROOT,
-  reservedNames: ['queries', 'commands'],
-});
-const REGISTRATION_LOCATIONS = new Map([
-  ...REPOSITORY_MODULES.map(({ path: fileName }) => [
-    repositoryModuleName(fileName),
-    relativeModulePath(fileName),
-  ]),
-  ['queries', 'src/surface/queries'],
-  ['commands', 'src/surface/commands'],
-]);
-
-function sourceArea(fileName) {
-  if (fileName === 'src/surface/queries' || fileName.startsWith('src/surface/queries/')) {
-    return 'queries';
-  }
-  if (fileName === 'src/surface/commands' || fileName.startsWith('src/surface/commands/')) {
-    return 'cli';
-  }
-  if (fileName === 'src/impl/query-support' || fileName.startsWith('src/impl/query-support/')) {
-    return 'queries';
-  }
-  return /^src\/impl\/([^/]+)/u.exec(fileName)?.[1];
-}
-
-function assertDependencyAllowed(consumerFile, dependencyName) {
-  const providerFile = REGISTRATION_LOCATIONS.get(dependencyName);
-  if (!providerFile) return;
-  const consumerArea = sourceArea(consumerFile);
-  const providerArea = sourceArea(providerFile);
-  if (providerArea === 'cli' && consumerArea !== 'cli') {
-    throw new Error(`${consumerFile} may not depend on CLI module ${providerFile}`);
-  }
-  if (consumerArea === 'ingestion' && providerArea === 'queries') {
-    throw new Error(`${consumerFile} may not depend on query module ${providerFile}`);
+function assertPolicyKeys(modules, policy, label) {
+  const discovered = new Set(modules);
+  const configured = new Set(Object.keys(policy));
+  const missing = modules.filter((name) => !configured.has(name));
+  const unknown = [...configured].filter((name) => !discovered.has(name));
+  if (missing.length || unknown.length) {
+    throw new Error(`${label} policy mismatch: missing [${missing.join(', ')}], unknown [${unknown.join(', ')}]`);
   }
 }
 
-function restrictedDependencies(fileName, dependencies) {
-  const consumerFile = relativeModulePath(fileName);
-  return proxyDependencies(dependencies, (name) => assertDependencyAllowed(consumerFile, name));
-}
-
-function surfaceModule(fileName, kind, dependencies) {
-  return loadSurfaceModule(
-    fileName,
-    kind,
-    restrictedDependencies(fileName, dependencies),
-    relativeModulePath(fileName),
-  );
-}
-
-function queryFromFile(fileName, dependencies, names) {
-  const name = repositoryModuleName(fileName);
-  const query = surfaceModule(fileName, 'query', dependencies);
-  const relativeName = relativeModulePath(fileName);
-  addUniqueName(names, name, 'query');
-  if (typeof query.inputSchema?.safeParse !== 'function') {
-    throw new TypeError(`${relativeName} must expose an inputSchema.`);
+function dependencyOrder(modules, policy) {
+  assertPolicyKeys(modules, policy, 'Module');
+  const discovered = new Set(modules);
+  const order = [];
+  const active = new Set();
+  const visited = new Set();
+  function visit(name) {
+    if (active.has(name)) throw new Error(`Module dependency cycle: ${[...active, name].join(' -> ')}`);
+    if (visited.has(name)) return;
+    active.add(name);
+    for (const dependency of policy[name]) {
+      if (!discovered.has(dependency)) {
+        throw new Error(`Unknown module dependency: ${name} -> ${dependency}`);
+      }
+      visit(dependency);
+    }
+    active.delete(name);
+    visited.add(name);
+    order.push(name);
   }
-  if (typeof query.execute !== 'function') {
-    throw new TypeError(`${relativeName} must expose an execute function.`);
+  for (const name of modules) visit(name);
+  return order;
+}
+
+function createLocalContainer(directory, dependencies) {
+  const container = createContainer({ injectionMode: InjectionMode.PROXY });
+  const locations = new Map();
+  for (const { path: fileName } of listModules('**/*.js', { cwd: directory })) {
+    const name = moduleName(fileName);
+    if (locations.has(name)) {
+      throw new Error(`Duplicate module registration ${name}: ${locations.get(name)} and ${fileName}`);
+    }
+    locations.set(name, fileName);
+    const factory = require(fileName);
+    if (typeof factory !== 'function') throw new TypeError(`${fileName} must export a factory`);
+    container.register(name, asFunction(() => factory(dependencies), { lifetime: Lifetime.SINGLETON }));
   }
-  if (query.execute.length !== 3) {
-    throw new TypeError(
-      `${relativeName} execute must accept database, options, and caches.`,
-    );
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !entry.name.startsWith('list-')) continue;
+    if (!/^list-[a-z]+(?:-[a-z]+)*$/u.test(entry.name)) {
+      throw new Error(`List directory must use list-<kebab-case>: ${entry.name}`);
+    }
+    const name = moduleName(`${entry.name.slice('list-'.length)}.js`);
+    const listDirectory = path.join(directory, entry.name);
+    if (locations.has(name)) {
+      throw new Error(`Duplicate module registration ${name}: ${locations.get(name)} and ${listDirectory}`);
+    }
+    locations.set(name, listDirectory);
+    const files = listModules('**/*.js', { cwd: listDirectory });
+    container.register(name, asFunction(() => Object.freeze(files.map(({ path: fileName }) => {
+      const registrationName = moduleName(fileName);
+      const relativePath = path.relative(listDirectory, fileName).split(path.sep).join('/');
+      return Object.freeze({ name: registrationName, relativePath,
+        value: container.resolve(registrationName) });
+    })), { lifetime: Lifetime.SINGLETON }));
   }
-  return Object.freeze({ ...query, name });
+  return { container, locations };
 }
 
-function loadQueries(dependencies) {
-  const names = new Set();
-  return Object.freeze(listModules(QUERY_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
-    .map(({ path: fileName }) => queryFromFile(fileName, dependencies, names)));
+function scopedDependencies(moduleName, localContainer, providers, getFacade, externals) {
+  return new Proxy(Object.create(null), {
+    get(_target, name) {
+      if (typeof name !== 'string') return undefined;
+      if (name === 'external') return externals;
+      const local = localContainer();
+      if (local?.hasRegistration(name)) return local.resolve(name);
+      for (const provider of providers) {
+        if (provider === name) return getFacade(provider);
+      }
+      throw new Error(`${moduleName} cannot access unknown or forbidden dependency ${name}`);
+    },
+  });
 }
 
-function commandFromFile(fileName, dependencies, names) {
-  const group = commandGroup(path.relative(COMMAND_DIRECTORY, fileName));
-  const command = surfaceModule(fileName, 'command', dependencies);
-  const name = path.basename(fileName, '.js');
-  addUniqueName(names, name, 'command');
-  return { ...command, name, operation: repositoryModuleName(fileName), group };
+function loadDependencyPolicy(...modulesPathParts) {
+  const modulesRoot = path.resolve(...modulesPathParts);
+  const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
+  const allowedModules = Object.freeze(policy['allowed-modules']);
+  const allowedExternal = Object.freeze(policy['allowed-external']);
+  const modules = discoverModules(modulesRoot);
+  const order = dependencyOrder(modules, allowedModules);
+  assertPolicyKeys(modules, allowedExternal, 'External');
+  return { modulesRoot, modules, order, allowedModules, allowedExternal };
 }
 
-function loadCommands(dependencies) {
-  const names = new Set();
-  const commands = listModules(COMMAND_MODULE_PATTERN, { cwd: REPOSITORY_ROOT })
-    .map(({ path: fileName }) => commandFromFile(fileName, dependencies, names));
-  return Object.freeze(commands.sort((left, right) => left.name.localeCompare(right.name, 'en')));
+function generateDependsOnYaml(...modulesPathParts) {
+  const { modules, allowedModules, allowedExternal } = loadDependencyPolicy(...modulesPathParts);
+  const sections = modules.map((name) => YAML.stringify({ [name]: {
+    external: [...allowedExternal[name]].sort(),
+    modules: [...allowedModules[name]].sort(),
+  } }).trimEnd());
+  return sections.length === 0 ? YAML.stringify({}) : `${sections.join('\n\n')}\n`;
 }
 
-function registerExternalModules(container) {
-  container.register({
-    buffer: asValue(Buffer),
-    commander: asValue(require('commander')),
-    crypto: asValue(require('node:crypto')),
-    currentWorkingDirectory: asValue(() => process.cwd()),
-    envPaths: asValue(require('env-paths')),
-    fs: asValue(require('node:fs')),
-    os: asValue(require('node:os')),
-    packageMetadata: asValue(require('../../package.json')),
-    path: asValue(require('node:path')),
-    processEnvironment: asValue(process.env),
-    processRuntime: asValue({
-      pid: () => process.pid,
-      commandLineArguments: () => process.argv.slice(2),
-      setExitCode: (code) => { process.exitCode = code; },
-      exit: (code) => process.exit(code),
-      standardOutput: process.stdout,
-      standardError: process.stderr,
-    }),
-    schemaPath: asValue(path.join(REPOSITORY_ROOT, 'src/surface/database/schema.sql')),
-    standardInput: asValue({
-      isTTY: () => Boolean(process.stdin.isTTY),
-      read: () => require('node:fs').readFileSync(0, 'utf8'),
-    }),
-    systemClock: asValue({
-      now: () => Date.now(),
-      sleep(milliseconds) {
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+function generateUsedByYaml(...modulesPathParts) {
+  const { modules, allowedModules, allowedExternal } = loadDependencyPolicy(...modulesPathParts);
+  const moduleUsers = Object.fromEntries(modules.map((name) => [name, []]));
+  const externalNames = [...new Set(modules.flatMap((name) => allowedExternal[name]))].sort();
+  const externalUsers = Object.fromEntries(externalNames.map((name) => [name, []]));
+  for (const name of modules) {
+    for (const dependency of allowedModules[name]) moduleUsers[dependency].push(name);
+    for (const dependency of allowedExternal[name]) externalUsers[dependency].push(name);
+  }
+  for (const users of Object.values(moduleUsers)) users.sort();
+  for (const users of Object.values(externalUsers)) users.sort();
+  return `${YAML.stringify({ external: externalUsers }).trimEnd()}\n\n${YAML.stringify({ modules: moduleUsers })}`;
+}
+
+function firstYamlDifference(actual, expected, location) {
+  if (Array.isArray(expected)) {
+    if (!Array.isArray(actual)) return `${location}: expected a list`;
+    for (let index = 0; index < Math.max(actual.length, expected.length); index += 1) {
+      const item = `${location}[${index}]`;
+      if (index >= actual.length) return `${item}: missing ${JSON.stringify(expected[index])}`;
+      if (index >= expected.length) return `${item}: unexpected ${JSON.stringify(actual[index])}`;
+      const difference = firstYamlDifference(actual[index], expected[index], item);
+      if (difference) return difference;
+    }
+    return null;
+  }
+  if (expected !== null && typeof expected === 'object') {
+    if (actual === null || typeof actual !== 'object' || Array.isArray(actual)) {
+      return `${location || 'root'}: expected a mapping`;
+    }
+    for (const key of Object.keys(expected)) {
+      const entry = location ? `${location}.${key}` : key;
+      if (!Object.hasOwn(actual, key)) return `${entry}: missing entry`;
+      const difference = firstYamlDifference(actual[key], expected[key], entry);
+      if (difference) return difference;
+    }
+    for (const key of Object.keys(actual)) {
+      if (!Object.hasOwn(expected, key)) {
+        return `${location ? `${location}.` : ''}${key}: unexpected entry`;
+      }
+    }
+    return null;
+  }
+  return Object.is(actual, expected) ? null
+    : `${location}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`;
+}
+
+function validateGeneratedYaml(source, expected, fileName) {
+  if (typeof source !== 'string') throw new TypeError(`${fileName}: expected YAML text`);
+  let actual;
+  try {
+    actual = YAML.parse(source);
+  } catch (error) {
+    throw new Error(`${fileName}: invalid YAML: ${error.message}`, { cause: error });
+  }
+  const difference = firstYamlDifference(actual, YAML.parse(expected), '');
+  if (difference) throw new Error(`${fileName}: ${difference}`);
+  if (source !== expected) {
+    const actualLines = source.split('\n');
+    const expectedLines = expected.split('\n');
+    const index = Array.from({ length: Math.max(actualLines.length, expectedLines.length) })
+      .findIndex((_line, position) => expectedLines[position] !== actualLines[position]);
+    throw new Error(`${fileName}: formatting differs at line ${index + 1}: expected `
+      + `${JSON.stringify(expectedLines[index])}, got ${JSON.stringify(actualLines[index])}`);
+  }
+}
+
+function validateDependsOnYaml(source, ...modulesPathParts) {
+  validateGeneratedYaml(source, generateDependsOnYaml(...modulesPathParts), 'depends-on.yaml');
+}
+
+function validateUsedByYaml(source, ...modulesPathParts) {
+  validateGeneratedYaml(source, generateUsedByYaml(...modulesPathParts), 'used-by.yaml');
+}
+
+function createRepositoryContainer(...modulesPathParts) {
+  const { modulesRoot, modules, order, allowedModules, allowedExternal } =
+    loadDependencyPolicy(...modulesPathParts);
+  const services = require(path.join(modulesRoot, 'external.js'))();
+  const built = new Map();
+  const internalOverrides = new Map();
+
+  function build(moduleName) {
+    if (built.has(moduleName)) return built.get(moduleName);
+    const directory = path.join(modulesRoot, moduleName);
+    const externals = Object.freeze(Object.fromEntries(allowedExternal[moduleName].map((name) => {
+      if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
+      return [name, services[name]];
+    })));
+    let local;
+    const dependencies = scopedDependencies(moduleName, () => local?.container,
+      allowedModules[moduleName], (provider) => build(provider).facade, externals);
+    local = createLocalContainer(directory, dependencies);
+    for (const [name, registration] of internalOverrides.get(moduleName) ?? []) {
+      local.container.register(name, registration);
+    }
+    const facade = local.container.resolve('index');
+    if (!facade || typeof facade !== 'object') {
+      throw new TypeError(`${moduleName}/index.js must return a facade`);
+    }
+    Object.freeze(facade);
+    const module = { ...local, facade };
+    built.set(moduleName, module);
+    return module;
+  }
+
+  return {
+    resolve(name) {
+      if (!modules.includes(name)) throw new Error(`Unknown module: ${name}`);
+      return build(name).facade;
+    },
+    register(registrations) {
+      for (const [name, registration] of Object.entries(registrations)) {
+        if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
+        if (registration?.kind !== 'value') throw new TypeError(`Expected value registration: ${name}`);
+        services[name] = registration.value;
+      }
+      built.clear();
+    },
+    $$private: {
+      order,
+      registerInternal(moduleName, name, registration) {
+        if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
+        if (!internalOverrides.has(moduleName)) internalOverrides.set(moduleName, new Map());
+        internalOverrides.get(moduleName).set(name, registration);
+        built.clear();
       },
-    }),
-    sqlite: asValue(function LazyDatabase(...arguments_) {
-      const Database = require('better-sqlite3');
-      return new Database(...arguments_);
-    }),
-    zod: asValue(require('zod')),
-  });
-}
-
-function registerRepositoryModules(container) {
-  registerExternalModules(container);
-  registerModuleFactories(container, {
-    patterns: REPOSITORY_MODULE_PATTERN,
-    cwd: REPOSITORY_ROOT,
-    modules: REPOSITORY_MODULES,
-    displayPath: relativeModulePath,
-    wrapDependencies: restrictedDependencies,
-  });
-  container.register('queries', asFunction(loadQueries, { lifetime: Lifetime.SINGLETON }));
-  container.register('commands', asFunction(loadCommands, { lifetime: Lifetime.SINGLETON }));
-  return container;
-}
-
-function createRepositoryContainer() {
-  return registerRepositoryModules(createContainer({ injectionMode: InjectionMode.PROXY }));
+      resolveInternal(moduleName, name) {
+        if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
+        return build(moduleName).container.resolve(name);
+      },
+    },
+  };
 }
 
 module.exports = {
-  createRepositoryContainer,
-  registerRepositoryModules,
-  $$private: { assertDependencyAllowed, commandGroup, repositoryModuleName },
+  assertPolicyKeys, createLocalContainer, createRepositoryContainer, dependencyOrder,
+  discoverModules, generateDependsOnYaml, generateUsedByYaml, moduleName, scopedDependencies,
+  validateDependsOnYaml, validateUsedByYaml,
 };

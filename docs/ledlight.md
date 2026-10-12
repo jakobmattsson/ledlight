@@ -85,10 +85,9 @@ application interface. It owns journal loading, database freshness, report
 selection, filtering, transformations such as inversion, and calculated rows
 such as totals.
 
-The source definitions for external boundaries live in `src/surface`:
-`queries` exposes API operations, `commands` defines CLI commands,
-`database/schema.sql` defines persistent storage, and `parser/ledger.ohm`
-describes the input language. Their implementation support lives in `src/impl`.
+The source is divided into sibling modules under `src/modules`. Query definitions,
+CLI command definitions, the database schema, and the Ledger grammar live in their
+owning modules. Each module's `index.js` selects the values visible to other modules.
 
 The CLI is a thin adapter over that public module. It parses command-line
 arguments, maps semantic inputs to public API options, and invokes a journal
@@ -271,53 +270,89 @@ formatter or presentation; they are never passed to a journal operation.
 
 ## Architecture
 
-The public definitions live in `src/surface`, and their implementation lives in
-`src/impl`:
+The eight modules and their dependency direction are:
 
-- `surface/queries` contains one module per public API/CLI query, with its Zod
-  schema beside its execution function;
-- `surface/commands` contains the CLI command definitions;
-- `surface/database` and `surface/parser` contain the database schema and input
-  grammar;
-- `impl/core` contains project composition for the stable Node.js API,
-  public errors, shared runtime-input validation, exact decimal arithmetic, and
-  valuation logic;
-- `impl/ingestion` owns the optimized parser, traverses
-  journal includes, validates and resolves journal postings, persists the
-  normalized database, and materializes query optimizations;
-- `impl/query-support` contains internal SQL, valuation, and investment-return
-  calculations used by query implementations; and
-- `impl/cli` contains argument parsing, output formatting, and the executable runner
-  over the public Node.js API.
+| Module | Owns | May use |
+| --- | --- | --- |
+| `core` | Arithmetic, API options, errors, configuration, and valuation helpers | None |
+| `journal` | Parsing, includes, warnings, and `ledger.ohm` | `core` |
+| `accounting` | Posting resolution, costs, validation, and allocation | `core`, `journal` |
+| `database` | SQLite schema, rebuilds, readers, and materialization | `core`, `journal`, `accounting` |
+| `queries` | Query definitions, SQL, and report calculations | `core`, `accounting`, `database` |
+| `commands` | CLI command definitions and option builders | None |
+| `project` | Public journal operations and temporary stdin journals | `core`, `journal`, `database`, `queries` |
+| `cli` | Argument parsing, execution, and output formatting | `core`, `commands`, `project` |
 
-Dependencies point inward: ingestion writes the database, queries read it, and
-core composes those capabilities into the public Node.js API. The CLI command
-layer depends on that public API; only its output formatter uses shared
-exact-decimal helpers directly.
+`src/modules/dependencies.yaml` is the source of truth for these edges
+and for the external services permitted to each module. The `allowed-modules`
+and `allowed-external` mappings define the composition policy. The repository
+container discovers the module directories, checks that they match both
+policies, rejects cycles, and builds module-local factory containers. Runtime
+adapters are created by `src/modules/external.js`, a file outside the domain
+module graph. Each domain module's `index.js` is registered as a factory and
+receives its local dependencies through injection.
+
+The optional `ubiquitous` list in `dependencies.yaml` affects only diagram
+rendering. Entries may name modules or external services; they remain ordinary
+dependencies in composition and in the generated YAML views. In the SVG,
+ubiquitous modules have their own cards with arrows to their dependencies,
+including other ubiquitous modules. Ordinary modules show ubiquitous module
+dependencies inside their cards instead of drawing arrows to those nodes.
+Ubiquitous external services appear inside module cards without their own
+nodes. Ledlight marks `core`, `fs`, `path`, and `zod` as ubiquitous.
+
+The sorted dependency views in `tests/architecture/depends-on.yaml` and
+`tests/architecture/used-by.yaml` are generated from that policy. The same
+command renders the repository root's `architecture.svg` from `depends-on.yaml`.
+Its arrows point to required dependencies. Module cards are blue, external
+service nodes are purple, and ubiquitous dependencies appear as green or purple
+rows inside consuming cards. Run `npm run architecture:generate` after changing
+module dependencies; the architecture tests check that the YAML and SVG views
+stay current.
+
+`createRepositoryContainer(...modulesPathParts)` resolves its string arguments
+as path segments and reads `dependencies.yaml` and `external.js` from that
+module directory. The composition code has no Ledlight module names or paths;
+another module tree can use the same API with its own policy and external
+services. The CLI entry point passes `__dirname, 'modules'` before resolving
+`cli`. All composition logic lives in `src/composition/repository-container.js`.
+
+Composition freezes the returned facade before providing it to other modules.
+A factory can use its own private registrations directly. Dependencies from
+permitted modules must be requested under the provider's name, such as
+`core: { rational, linearProgram }`. Other module internals are
+unavailable. Each module root contains its `index.js` facade. The database
+schema (`schema.sql`) and journal grammar (`ledger.ohm`) sit beside their
+module facades; implementation files live in subdirectories. Factories have
+unique kebab-case file names within their module. The local Awilix subset lives in
+`lib/awilix.js`.
+
+A directory named `list-<name>` directly under a module root registers an
+array dependency called `<name>`. Composition resolves every JavaScript factory
+in that directory and its subdirectories, sorted by relative path, and injects
+entries with `name`, `relativePath`, and `value`. The module's `index.js` can
+interpret those entries without embedding module-specific list rules in
+composition. `queries` and `commands` use `list-definitions`; their index
+factories validate and shape query and command metadata, respectively.
+
+The `queries` and `commands` facades each expose a frozen `definitions` array.
 The project builds journal operations and API input definitions from the query
-modules. The CLI runner invokes each command's declared API operation and passes
-its result to the command's formatting step. Commands declare how to load any
-additional data needed for text output.
-The local Awilix subset supplies each repository factory through a
-boundary-checking proxy. Code outside `cli` cannot resolve CLI modules, and
-`ingestion` cannot resolve modules from `queries`. The complete container is
-resolved in a unit test so violations fail the verification suite even when the
-affected feature is not otherwise exercised. Repository factories use unique
-lowercase kebab-case filenames; the subset converts each basename to its
-camel-case dependency name.
-`src/lib/awilix.js` implements the container and module discovery APIs used here.
-`src/composition/module-container.js` handles reusable module
-loading and factory checks. `src/composition/repository-container.js` defines
-this project's module paths, dependency boundaries, external services, and query
-and command contracts. Every JavaScript file under `src/impl` is a factory. The
-`src/run.js` executable creates the container and invokes its
-registered `runCli` module. ESLint rejects Node and browser runtime globals,
-`globalThis`, direct `require()` calls, and `module.require()` in `src/impl` and
-`src/surface`. The CommonJS `module.exports` binding remains available for
-module definitions, as do standard JavaScript built-ins. Composition injects
-external dependencies, including paths and `Buffer`. An injectable
-`processRuntime` adapter supplies process metadata, command-line arguments,
-output streams, and exit behavior.
+definitions. The CLI uses the command definitions and invokes the corresponding
+public journal operation. The project's `withJournalText` capability
+builds and removes a temporary database for CLI stdin input.
+
+Queries receive a read-only database handle through the project and may run SQL
+against the tables and columns in `database/internal/read-model-contract.js`. That file
+is the explicit read-model contract; a convention test checks its complete column
+lists against `database/schema.sql` and checks that it covers every schema table
+referenced by query SQL. Changing these columns requires a coordinated query
+update. Moving all query SQL behind database functions is outside this module
+reorganization.
+
+`src/index.js` and `src/run.js` compose the public Node.js API and CLI. ESLint
+rejects ambient runtime globals and direct imports in `src/modules/**/*.js`;
+composition injects runtime adapters, including `processRuntime`, paths, and
+`Buffer`.
 
 ## Supported grammar
 
@@ -463,7 +498,7 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/surface/parser/ledger.ohm` is the normative description of the
+`src/modules/journal/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
 semantics in `tests/support/reference/reference-parser.js`. The fixtures in
 `tests/api/parser` define expected syntax trees, a shared error contract for

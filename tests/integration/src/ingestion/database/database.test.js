@@ -7,17 +7,17 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('../../../../../src/lib/awilix');
+const { asValue } = require('../../../../../lib/awilix');
 const Database = require('better-sqlite3');
 const { createRepositoryContainer } = require('../../../../../src/composition/repository-container');
-const { pathsForJournal } = resolveRepositoryModule("src/impl/core/cache-paths.js");
+const { pathsForJournal } = resolveRepositoryModule("src/modules/core/internal/cache-paths.js");
 const {
   ensureDatabaseCurrent,
-} = resolveRepositoryModule("src/impl/ingestion/database/database.js");
+} = resolveRepositoryModule("src/modules/database/internal/database.js");
 const {
   buildDatabase,
   checkDatabaseSync,
-} = resolveRepositoryModule("src/impl/ingestion/database/database.js").$$private;
+} = resolveRepositoryModule("src/modules/database/internal/database.js").$$private;
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-database-cache-'));
 process.env.LEDLIGHT_CACHE_HOME = cacheDirectory;
 test.after(() => fs.rmSync(cacheDirectory, { recursive: true, force: true }));
@@ -556,19 +556,19 @@ account Equity:Opening
   const { databasePath } = pathsForJournal(journalPath);
   let stdout = '';
   let stderr = '';
-  const container = createRepositoryContainer();
+  const container = createRepositoryContainer(__dirname, '../../../../../src/modules');
   container.register({
     currentWorkingDirectory: asValue(() => directory),
-    output: asValue({
-      writeError(value) { stderr += value; },
-      writeOutput(value) { stdout += value; },
-    }),
     standardInput: asValue({
       isTTY: () => true,
       read: () => assert.fail('an explicit journal path must not read stdin'),
     }),
   });
-  const executeCli = container.resolve('executeCli');
+  container.$$private.registerInternal('cli', 'output', asValue({
+    writeError(value) { stderr += value; },
+    writeOutput(value) { stdout += value; },
+  }));
+  const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
 
   function runAggregate() {
     stdout = '';

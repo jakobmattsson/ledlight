@@ -1,0 +1,71 @@
+external:
+  buffer:
+    - journal
+  commander:
+    - cli
+    - commands
+  crypto:
+    - core
+    - journal
+  currentWorkingDirectory:
+    - cli
+    - core
+  envPaths:
+    - core
+  fs:
+    - core
+    - database
+    - journal
+    - project
+  os:
+    - project
+  packageMetadata:
+    - cli
+  path:
+    - core
+    - database
+    - journal
+    - project
+  processEnvironment:
+    - core
+  processRuntime:
+    - cli
+    - database
+  schemaPath:
+    - database
+  sqlite:
+    - database
+  standardInput:
+    - cli
+  systemClock:
+    - database
+  zod:
+    - core
+    - journal
+    - queries
+
+modules:
+  accounting:
+    - database
+    - queries
+  cli: []
+  commands:
+    - cli
+  core:
+    - accounting
+    - cli
+    - database
+    - journal
+    - project
+    - queries
+  database:
+    - project
+    - queries
+  journal:
+    - accounting
+    - database
+    - project
+  project:
+    - cli
+  queries:
+    - project

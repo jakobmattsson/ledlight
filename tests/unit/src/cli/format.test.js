@@ -4,7 +4,7 @@ const { resolveCommands, resolveRepositoryModule } = require('../../../support/r
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const cliFormat = resolveRepositoryModule('src/impl/cli/cli-format.js');
+const cliFormat = resolveRepositoryModule('src/modules/cli/internal/cli-format.js');
 const {
   appendTotal,
   formatWarnings,

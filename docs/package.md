@@ -2,9 +2,9 @@
 
 Ledlight is distributed as the public `@jakobm/ledlight` npm package under the MIT
 license. The package contains the CommonJS entry point, CLI, runtime source,
-license, README, and consumer documentation. Repository configuration, tests,
-fixtures, the Ohm-based reference parser, and the improvement backlog are not
-published.
+local container implementation in `lib/`, license, README, and consumer
+documentation. Repository configuration, tests, fixtures, the Ohm-based
+reference parser, and the improvement backlog are not published.
 
 ## Releasing
 

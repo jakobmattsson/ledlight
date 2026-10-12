@@ -7,14 +7,15 @@ const test = require('node:test');
 const { resolveQuery } = require('../support/repository-container');
 const { createRepositoryContainer } = require('../../src/composition/repository-container');
 
-const queryDirectory = path.resolve(__dirname, '../../src/surface/queries');
+const queryDirectory = path.resolve(__dirname, '../../src/modules/queries/list-definitions');
 
 test('registers all queries as one immutable dependency', () => {
-  const container = createRepositoryContainer();
+  const container = createRepositoryContainer(__dirname, '../../src/modules');
   const queries = container.resolve('queries');
 
   assert.ok(Object.isFrozen(queries));
-  assert.equal(queries.length, fs.readdirSync(queryDirectory)
+  assert.ok(Object.isFrozen(queries.definitions));
+  assert.equal(queries.definitions.length, fs.readdirSync(queryDirectory)
     .filter((fileName) => fileName.endsWith('.js')).length);
   for (const registrationName of [
     'aggregateQuery',
@@ -24,7 +25,7 @@ test('registers all queries as one immutable dependency', () => {
     'accountsQuery',
     'transactionsQuery',
   ]) {
-    assert.equal(container.hasRegistration(registrationName), false);
+    assert.throws(() => container.resolve(registrationName), /Unknown module/u);
   }
 });
 

@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../support/repository-container');
 
-const { calculateFlows } = resolveRepositoryModule('src/impl/query-support/investment-flows.js');
+const { calculateFlows } = resolveRepositoryModule('src/modules/queries/support/investment-flows.js');
 
 function posting(amount, selected, marketRate) {
   return {

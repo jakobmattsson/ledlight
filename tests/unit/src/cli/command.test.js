@@ -3,20 +3,21 @@
 const { resolveCommands, resolveRepositoryModule } = require('../../../support/repository-container');
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const test = require('node:test');
 const commander = require('commander');
-const createCommand = require('../../../../src/impl/cli/cli-command');
-const createArguments = require('../../../../src/impl/cli/cli-arguments');
+const createCommand = withExternal(require('../../../../src/modules/cli/internal/cli-command'), ['packageMetadata']);
+const createArguments = withExternal(require('../../../../src/modules/cli/internal/cli-arguments'), ['commander']);
 const commands = resolveCommands();
-const cliArguments = resolveRepositoryModule('src/impl/cli/cli-arguments.js');
-const cliFormat = resolveRepositoryModule('src/impl/cli/cli-format.js');
-const coreProject = resolveRepositoryModule('src/impl/core/project.js');
+const cliArguments = resolveRepositoryModule('src/modules/cli/internal/cli-arguments.js');
+const cliFormat = resolveRepositoryModule('src/modules/cli/internal/cli-format.js');
+const coreProject = resolveRepositoryModule('src/modules/project/internal/project.js');
 
 const commandNames = [...new Set(Object.values(cliArguments.apiCommands))];
 
 test('shows command help only with the explicit help option', () => {
   const { runReportCommand } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project: { openJournal: () => { throw new Error('must not open a journal'); } },
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -31,7 +32,7 @@ test('shows command help only with the explicit help option', () => {
 test('runs a bare command when CLI configuration supplies the journal path', () => {
   const configuredArguments = createArguments({
     commander,
-    commands,
+    commands: { definitions: commands },
     cliConfiguration: {
       apply: (arguments_) => [arguments_[0], '--file', '/configured-journal'],
     },
@@ -62,7 +63,7 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
     },
   };
   const { runReportCommand } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments: configuredArguments,
@@ -84,7 +85,7 @@ test('prepares selected output before shared JSON encoding', () => {
     }),
   };
   const { runReportCommand } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -154,7 +155,7 @@ test('delegates report behavior to the public Node API and only formats results'
     },
   };
   const { runReportCommand } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -253,7 +254,7 @@ test('delegates report behavior to the public Node API and only formats results'
 test('aggregate includes a total only when requested in every output format', () => {
   const calls = [];
   const { runReportCommand } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project: {
       openJournal: () => ({
         aggregate(options) {
@@ -337,7 +338,7 @@ test('delegates non-report commands to the corresponding journal operations', ()
     openJournal(journalPath) { calls.push(['openJournal', journalPath]); return journal; },
   };
   const { runReportCommand } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -418,7 +419,7 @@ test('collects ingestion warnings before invoking a query', () => {
     },
   };
   const { runReportCommandWithWarnings } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project: { openJournal: () => journal },
     packageMetadata: { version: '1.2.3' },
     cliArguments,
@@ -463,7 +464,7 @@ test('formats the postings API result in the requested CLI format', () => {
     },
   };
   const { runReportCommand } = createCommand({
-    commands,
+    commands: { definitions: commands },
     project,
     packageMetadata: { version: '1.2.3' },
     cliArguments,

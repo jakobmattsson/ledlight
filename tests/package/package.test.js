@@ -49,10 +49,13 @@ test('the published archive installs and exposes the module and CLI', () => {
       'scripts/ledger-compatibility/compare-ledger.js',
       'scripts/ledger-compatibility/ledger-compatibility-matrix.yaml',
       'src/run.js',
-      'src/surface/commands/reports/aggregate.js',
-      'src/surface/queries/aggregate.js',
-      'src/surface/database/schema.sql',
-      'src/surface/parser/ledger.ohm',
+      'lib/awilix.js',
+      'src/modules/dependencies.yaml',
+      'src/modules/external.js',
+      'src/modules/commands/index.js',
+      'src/modules/queries/index.js',
+      'src/modules/database/schema.sql',
+      'src/modules/journal/ledger.ohm',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);
     }

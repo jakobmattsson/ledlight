@@ -1,27 +1,26 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const test = require('node:test');
-const { asValue } = require('../../../../src/lib/awilix');
-const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
+const createRunCli = withExternal(require('../../../../src/modules/cli/internal/run-cli'), ['processRuntime']);
 
 function runWithExitCode(exitCode) {
   const calls = [];
-  const container = createRepositoryContainer();
-  container.register({
-    executeCli: asValue({
+  const runCli = createRunCli({
+    executeCli: {
       run(arguments_) {
         calls.push(['run', arguments_]);
         return exitCode;
       },
-    }),
-    output: asValue({ handleBrokenPipe: () => calls.push(['handleBrokenPipe']) }),
-    processRuntime: asValue({
+    },
+    output: { handleBrokenPipe: () => calls.push(['handleBrokenPipe']) },
+    processRuntime: {
       commandLineArguments: () => ['--version'],
       setExitCode: (code) => calls.push(['setExitCode', code]),
-    }),
+    },
   });
-  container.resolve('runCli').run();
+  runCli.run();
   return calls;
 }
 

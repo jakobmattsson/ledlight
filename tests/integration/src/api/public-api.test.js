@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('../../../../src/lib/awilix');
+const { asValue } = require('../../../../lib/awilix');
 const packageMetadata = require('../../../../package.json');
 const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
 const sqliteModulePath = require.resolve('better-sqlite3');
@@ -189,21 +189,19 @@ P 2024-01-01 USD 2 SEK
 });
 
 test('renders CLI help and the public package version without opening a project', () => {
-  const container = createRepositoryContainer();
+  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
   const project = container.resolve('project');
   let stdout = '';
   let stderr = '';
-  container.register({
-    project: asValue({
-      ...project,
-      openJournal: () => assert.fail('help and version must not open a project'),
-    }),
-    output: asValue({
-      writeError(value) { stderr += value; },
-      writeOutput(value) { stdout += value; },
-    }),
-  });
-  const executeCli = container.resolve('executeCli');
+  container.$$private.registerInternal('project', 'project', asValue({
+    ...project,
+    openJournal: () => assert.fail('help and version must not open a project'),
+  }));
+  container.$$private.registerInternal('cli', 'output', asValue({
+    writeError(value) { stderr += value; },
+    writeOutput(value) { stdout += value; },
+  }));
+  const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
   function run(arguments_) {
     stdout = '';
     stderr = '';

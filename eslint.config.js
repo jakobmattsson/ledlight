@@ -44,7 +44,7 @@ module.exports = [
     },
   },
   {
-    files: ["src/{impl,surface}/**/*.js"],
+    files: ["src/modules/**/*.js"],
     rules: {
       "no-restricted-globals": ["error", ...runtimeGlobals.map((name) => ({
         name,
@@ -59,6 +59,14 @@ module.exports = [
         selector: "CallExpression[callee.name='require']",
         message: "Inject dependencies from the composition layer instead of using require.",
       }],
+    },
+  },
+  {
+    files: ["src/modules/external.js"],
+    rules: {
+      "no-restricted-globals": "off",
+      "no-restricted-properties": "off",
+      "no-restricted-syntax": ["error", ...restrictedSyntax],
     },
   },
 ];

@@ -24,6 +24,7 @@
     ".": "./src/index.js"
   },
   "files": [
+    "lib",
     "docs/api.md",
     "docs/ledger-cli-equivalence.md",
     "docs/ledlight.md",
@@ -43,6 +44,7 @@
     "access": "public"
   },
   "scripts": {
+    "architecture:generate": "node scripts/architecture/generate.js",
     "benchmark": "node scripts/benchmarks/run.js",
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
@@ -68,6 +70,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@viz-js/viz": "3.29.0",
     "allure": "3.20.1",
     "allure-js-commons": "3.13.0",
     "allure-node-test": "3.13.0",

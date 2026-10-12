@@ -1,9 +1,10 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../../support/external-dependencies.js');
 const path = require('node:path');
 const test = require('node:test');
-const createDatabaseReader = require('../../../../../src/impl/ingestion/database/database-reader');
+const createDatabaseReader = withExternal(require('../../../../../src/modules/database/internal/database-reader'), ['path', 'sqlite']);
 
 function createReader(events) {
   const database = {
@@ -18,10 +19,12 @@ function createReader(events) {
   const { readDatabase } = createDatabaseReader({
     path,
     sqlite: Database,
-    decimal: {
-      registerDecimalFunctions(receivedDatabase) {
-        assert.equal(receivedDatabase, database);
-        events.push('register');
+    core: {
+      decimal: {
+        registerDecimalFunctions(receivedDatabase) {
+          assert.equal(receivedDatabase, database);
+          events.push('register');
+        },
       },
     },
   });

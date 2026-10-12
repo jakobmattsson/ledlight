@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('../../../../src/lib/awilix');
+const { asValue } = require('../../../../lib/awilix');
 const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
 
 const cliPath = path.resolve(__dirname, '../../../../src/run.js');
@@ -36,19 +36,19 @@ function fixture(t) {
   let stdinSource = source;
   let stdout = '';
   let stderr = '';
-  const container = createRepositoryContainer();
+  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
   container.register({
     currentWorkingDirectory: asValue(() => directory),
     os: asValue({ tmpdir: () => temporaryDirectory }),
-    output: asValue({
-      handleBrokenPipe() {},
-      writeError(value) { stderr += value; },
-      writeOutput(value) { stdout += value; },
-    }),
     processEnvironment: asValue(environment),
     standardInput: asValue({ isTTY: () => false, read: () => stdinSource }),
   });
-  const executeCli = container.resolve('executeCli');
+  container.$$private.registerInternal('cli', 'output', asValue({
+    handleBrokenPipe() {},
+    writeError(value) { stderr += value; },
+    writeOutput(value) { stdout += value; },
+  }));
+  const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
 
   function run(arguments_, content) {
     stdinSource = content ?? source;

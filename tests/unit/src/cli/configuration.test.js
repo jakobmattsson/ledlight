@@ -1,12 +1,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createConfiguration = require('../../../../src/impl/cli/cli-configuration');
-const createProjectConfiguration = require('../../../../src/impl/core/configuration');
+const createConfiguration = require('../../../../src/modules/cli/internal/cli-configuration');
+const createProjectConfiguration = withExternal(require('../../../../src/modules/core/internal/configuration'), ['fs', 'path', 'processEnvironment', 'currentWorkingDirectory']);
 
 function temporaryDirectories(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-configuration-'));
@@ -19,12 +20,12 @@ function temporaryDirectories(t) {
 }
 
 function configuration(home, workingDirectory) {
-  return createConfiguration({ configuration: createProjectConfiguration({
+  return createConfiguration({ core: { configuration: createProjectConfiguration({
     fs,
     path,
     processEnvironment: { HOME: home },
     currentWorkingDirectory: () => workingDirectory,
-  }) });
+  }) } });
 }
 
 test('supplies --file from the project .ledlightrc', (t) => {

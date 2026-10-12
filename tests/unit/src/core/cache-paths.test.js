@@ -1,10 +1,11 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../support/external-dependencies.js');
 const crypto = require('node:crypto');
 const path = require('node:path');
 const test = require('node:test');
-const createCachePaths = require('../../../../src/impl/core/cache-paths');
+const createCachePaths = withExternal(require('../../../../src/modules/core/internal/cache-paths'), ['crypto', 'envPaths', 'fs', 'path', 'processEnvironment']);
 
 function cachePaths(settings_) {
   const {

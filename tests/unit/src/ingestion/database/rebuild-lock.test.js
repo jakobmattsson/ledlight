@@ -1,13 +1,14 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const withExternal = require('../../../../support/external-dependencies.js');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createPublicErrors = require('../../../../../src/impl/core/public-errors');
-const createDatabase = require('../../../../../src/impl/ingestion/database/database');
-const createRebuildLock = require('../../../../../src/impl/ingestion/database/database-rebuild-lock');
+const createPublicErrors = require('../../../../../src/modules/core/internal/public-errors');
+const createDatabase = withExternal(require('../../../../../src/modules/database/internal/database'), ['path']);
+const createRebuildLock = withExternal(require('../../../../../src/modules/database/internal/database-rebuild-lock'), ['fs', 'processRuntime', 'systemClock']);
 
 function temporaryDatabasePath(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-rebuild-lock-'));
@@ -21,7 +22,7 @@ function rebuildLock(systemClock) {
     ...createRebuildLock({
       fs,
       processRuntime: { pid: () => 1234 },
-      publicErrors,
+      core: { publicErrors },
       systemClock,
     }),
     errorCodes: publicErrors.errorCodes,
@@ -76,7 +77,7 @@ test('rechecks freshness after acquiring the rebuild lock', () => {
   let checks = 0;
   const database = createDatabase({
     path,
-    journal: { loadJournal: () => assert.fail('must not reload a current database') },
+    journal: { journal: { loadJournal: () => assert.fail('must not reload a current database') } },
     databaseFreshness: {
       checkDatabaseSync() {
         const status = statuses[checks];
@@ -87,7 +88,7 @@ test('rechecks freshness after acquiring the rebuild lock', () => {
     },
     databaseRebuildLock: { withRebuildLock: (_databasePath, operation) => operation() },
     journalWriter: { writeJournalDatabase: () => assert.fail('must not rebuild a current database') },
-    publicErrors: createPublicErrors(),
+    core: { publicErrors: createPublicErrors() },
   });
 
   assert.deepEqual(database.ensureDatabaseCurrent('journal.sqlite', 'journal.ledger'), {

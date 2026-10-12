@@ -4,10 +4,10 @@ const { resolveRepositoryModule } = require("../../../../support/repository-cont
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parse } = resolveRepositoryModule("src/impl/ingestion/syntax/ledger-parser.js");
+const { parse } = resolveRepositoryModule("src/modules/journal/syntax/ledger-parser.js");
 const {
   validateJournal,
-} = resolveRepositoryModule("src/impl/ingestion/accounting/journal-validator.js");
+} = resolveRepositoryModule("src/modules/accounting/internal/journal-validator.js");
 
 test('warns about duplicate declarations and marks the later entries unstoreable', () => {
   const journal = parse(`account Assets:Cash
