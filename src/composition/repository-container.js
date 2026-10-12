@@ -123,10 +123,11 @@ function loadDependencyPolicy(...modulesPathParts) {
 
 function generateDependsOnYaml(...modulesPathParts) {
   const { modules, allowedModules, allowedExternal } = loadDependencyPolicy(...modulesPathParts);
-  return YAML.stringify(Object.fromEntries(modules.map((name) => [name, {
+  const sections = modules.map((name) => YAML.stringify({ [name]: {
     external: [...allowedExternal[name]].sort(),
     modules: [...allowedModules[name]].sort(),
-  }])));
+  } }).trimEnd());
+  return sections.length === 0 ? YAML.stringify({}) : `${sections.join('\n\n')}\n`;
 }
 
 function generateUsedByYaml(...modulesPathParts) {

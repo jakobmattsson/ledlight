@@ -3,6 +3,7 @@ accounting:
   modules:
     - core
     - journal
+
 cli:
   external:
     - commander
@@ -14,10 +15,12 @@ cli:
     - commands
     - core
     - project
+
 commands:
   external:
     - commander
   modules: []
+
 core:
   external:
     - crypto
@@ -28,6 +31,7 @@ core:
     - processEnvironment
     - zod
   modules: []
+
 database:
   external:
     - fs
@@ -40,6 +44,7 @@ database:
     - accounting
     - core
     - journal
+
 journal:
   external:
     - buffer
@@ -49,6 +54,7 @@ journal:
     - zod
   modules:
     - core
+
 project:
   external:
     - fs
@@ -59,6 +65,7 @@ project:
     - database
     - journal
     - queries
+
 queries:
   external:
     - zod
