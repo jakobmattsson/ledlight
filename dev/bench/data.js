@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791700705902,
+  "lastUpdate": 1791838067867,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -1130,6 +1130,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 6.343277,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "afd3f33e0e168622b7c71de5ab7cbf6213d40c05",
+          "message": "Merge pull request #122 from jakobmattsson/codex/explicit-module-boundaries\n\nDefine explicit module boundaries and dependency architecture",
+          "timestamp": "2026-10-12T22:47:20+02:00",
+          "tree_id": "b06291030adee4a0072d54026bea588906645ca7",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/afd3f33e0e168622b7c71de5ab7cbf6213d40c05"
+        },
+        "date": 1791838065996,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 2100.92293,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 14.523576,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 14.45059,
             "unit": "ms"
           }
         ]
