@@ -9,5 +9,5 @@ module.exports = ({ definitions }) => {
     return Object.freeze({ ...command, name: definition.commandName, operation: definition.name,
       group: definition.group });
   }).sort((left, right) => left.name.localeCompare(right.name, 'en'));
-  return Object.freeze({ definitions: Object.freeze(commands) });
+  return { definitions: Object.freeze(commands) };
 };

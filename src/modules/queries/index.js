@@ -8,5 +8,5 @@ module.exports = ({ definitions }) => {
     }
     return Object.freeze({ ...query, name });
   });
-  return Object.freeze({ definitions: Object.freeze(queries) });
+  return { definitions: Object.freeze(queries) };
 };

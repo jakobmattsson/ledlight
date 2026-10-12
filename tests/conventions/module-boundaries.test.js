@@ -46,6 +46,7 @@ test('resolves index factories as facades and hides internal factories', () => {
   const container = createRepositoryContainer();
   for (const name of discoverModules(root)) {
     assert.equal(container.resolve(name), container.$$private.resolveInternal(name, 'index'));
+    assert.ok(Object.isFrozen(container.resolve(name)), `${name} facade must be frozen`);
   }
   assert.throws(() => container.resolve('decimal'), /Unknown module/u);
   assert.equal(Object.hasOwn(container.resolve('queries'), 'accountFilter'), false);

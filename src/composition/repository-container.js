@@ -108,6 +108,7 @@ function createRepositoryContainer() {
     if (!facade || typeof facade !== 'object') {
       throw new TypeError(`${moduleName}/index.js must return a facade`);
     }
+    Object.freeze(facade);
     const module = { ...local, facade };
     built.set(moduleName, module);
     return module;
