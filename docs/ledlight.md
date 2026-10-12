@@ -283,7 +283,7 @@ The eight modules and their dependency direction are:
 | `project` | Public journal operations and temporary stdin journals | `core`, `journal`, `database`, `queries` |
 | `cli` | Argument parsing, execution, and output formatting | `core`, `commands`, `project` |
 
-`src/composition/dependency-policy.yaml` is the source of truth for these edges
+`src/modules/dependencies.yaml` is the source of truth for these edges
 and for the external services permitted to each module. The repository
 container discovers the module directories, checks that they match both
 policies, rejects cycles, and builds module-local factory containers. Runtime

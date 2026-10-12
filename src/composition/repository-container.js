@@ -11,7 +11,7 @@ const {
 
 const MODULES_ROOT = path.resolve(__dirname, '../modules');
 
-const policy = YAML.parse(fs.readFileSync(path.join(__dirname, 'dependency-policy.yaml'), 'utf8'));
+const policy = YAML.parse(fs.readFileSync(path.join(MODULES_ROOT, 'dependencies.yaml'), 'utf8'));
 const allowedModules = Object.freeze(policy.allowedModules);
 const allowedExternal = Object.freeze(policy.allowedExternal);
 
