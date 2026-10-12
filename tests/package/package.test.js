@@ -51,7 +51,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       'src/run.js',
       'lib/awilix.js',
       'src/composition/dependency-policy.yaml',
-      'src/modules/_external/index.js',
+      'src/modules/external.js',
       'src/modules/commands/index.js',
       'src/modules/queries/index.js',
       'src/modules/database/internal/schema.sql',

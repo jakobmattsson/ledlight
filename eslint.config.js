@@ -62,7 +62,7 @@ module.exports = [
     },
   },
   {
-    files: ["src/modules/_external/index.js"],
+    files: ["src/modules/external.js"],
     rules: {
       "no-restricted-globals": "off",
       "no-restricted-properties": "off",

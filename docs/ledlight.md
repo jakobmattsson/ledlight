@@ -287,10 +287,9 @@ The eight modules and their dependency direction are:
 and for the external services permitted to each module. The repository
 container discovers the module directories, checks that they match both
 policies, rejects cycles, and builds module-local factory containers. Runtime
-adapters are created by the reserved bootstrap module
-`src/modules/_external/index.js`, which is excluded from the domain module
-graph. Each domain module's `index.js` is registered as a factory and receives
-its local dependencies through injection.
+adapters are created by `src/modules/external.js`, a file outside the domain
+module graph. Each domain module's `index.js` is registered as a factory and
+receives its local dependencies through injection.
 Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as
