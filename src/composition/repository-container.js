@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const externalServices = require('./external-services');
+const externalServices = require('../modules/_external');
 const {
   assertPolicyKeys, createLocalContainer, dependencyOrder, discoverModules,
   scopedDependencies,

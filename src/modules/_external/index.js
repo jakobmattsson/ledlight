@@ -21,7 +21,7 @@ module.exports = () => ({
     standardOutput: process.stdout,
     standardError: process.stderr,
   },
-  schemaPath: path.join(__dirname, '../../modules/database/internal/schema.sql'),
+  schemaPath: path.join(__dirname, '../database/internal/schema.sql'),
   standardInput: {
     isTTY: () => Boolean(process.stdin.isTTY),
     read: () => require('node:fs').readFileSync(0, 'utf8'),

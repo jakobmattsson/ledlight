@@ -14,7 +14,7 @@ function moduleName(fileName) {
 
 function discoverModules(directory) {
   const modules = fs.readdirSync(directory, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
+    .filter((entry) => entry.isDirectory() && entry.name !== '_external')
     .map((entry) => entry.name)
     .sort();
   for (const name of modules) {

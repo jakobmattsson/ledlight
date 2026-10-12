@@ -17,8 +17,10 @@ const root = path.resolve(__dirname, '../../src/modules');
 
 test('discovers exactly the modules declared in the dependency policy', () => {
   const directories = fs.readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+    .filter((entry) => entry.isDirectory() && entry.name !== '_external')
+    .map((entry) => entry.name).sort();
   assert.deepEqual(discoverModules(root), directories);
+  assert.deepEqual(fs.readdirSync(path.join(root, '_external')), ['index.js']);
   assert.deepEqual(Object.keys(allowedModules).sort(), directories);
   assert.deepEqual(Object.keys(allowedExternal).sort(), directories);
   for (const name of directories) {

@@ -30,10 +30,13 @@ test('repository modules reject ambient runtime dependencies', async () => {
   }
 });
 
-test('the composition layer remains able to provide runtime dependencies', async () => {
+test('composition and the external bootstrap can provide runtime dependencies', async () => {
   const eslint = new ESLint({ cwd: root });
-  const [result] = await eslint.lintText(source, {
-    filePath: path.join(root, 'src/composition/runtime-boundary-example.js'),
-  });
-  assert.deepEqual(result.messages, []);
+  for (const filePath of [
+    'src/composition/runtime-boundary-example.js',
+    'src/modules/_external/index.js',
+  ]) {
+    const [result] = await eslint.lintText(source, { filePath: path.join(root, filePath) });
+    assert.deepEqual(result.messages, [], filePath);
+  }
 });
