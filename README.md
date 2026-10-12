@@ -34,6 +34,11 @@ npm install
 npm test
 ```
 
+The maintained source is TypeScript. Run `npm run build` after editing source to
+generate the CommonJS files and declarations used by the tests, CLI, and npm
+package. `npm test` builds automatically and includes strict type checking and
+linting. Generated files are ignored by Git.
+
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.
 
@@ -58,6 +63,15 @@ Use the JavaScript API from the package root:
 const { openJournal } = require('@jakobm/ledlight');
 
 const journal = openJournal('/path/to/books/main.ledger');
+```
+
+The package also includes TypeScript declarations for the public API:
+
+```ts
+import ledlight = require('@jakobm/ledlight');
+
+const journal = ledlight.openJournal('/path/to/books/main.ledger');
+const balances = journal.aggregate({ accounts: ['Assets:*'] });
 ```
 
 Database operations take the path of the root journal directly. Ledlight stores

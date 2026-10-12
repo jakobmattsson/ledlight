@@ -6,3 +6,6 @@ tmp/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+**/*.js
+**/*.d.ts
+**/*.js.map

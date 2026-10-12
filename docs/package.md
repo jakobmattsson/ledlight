@@ -1,7 +1,8 @@
 # Package support and versioning
 
 Ledlight is distributed as the public `@jakobm/ledlight` npm package under the MIT
-license. The package contains the CommonJS entry point, CLI, runtime source,
+license. The package contains generated CommonJS runtime files, TypeScript
+declarations, the CLI,
 local container implementation in `lib/`, license, README, and consumer
 documentation. Repository configuration, tests, fixtures, the Ohm-based
 reference parser, and the improvement backlog are not published.
@@ -51,8 +52,11 @@ There is no separate native ESM build. The package root is the only exported
 package path; source files and package metadata are implementation details and
 cannot be imported through package subpaths.
 
-The package does not currently publish TypeScript declarations. Parameter and
-result types are defined by the Node.js API reference.
+The package publishes TypeScript declarations for the package root. Its
+maintained source is TypeScript, compiled to CommonJS before packing or
+publishing. Consumers can type-check calls to `openJournal`, `parseLedgerText`,
+and the journal methods without a separate `@types` package. The Node.js API
+reference remains the detailed description of runtime behavior and validation.
 
 ## Node.js and native platform support
 
