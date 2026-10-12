@@ -7,10 +7,10 @@ const path = require('node:path');
 const test = require('node:test');
 const YAML = require('yaml');
 const { asValue } = require('../../lib/awilix');
-const { createRepositoryContainer } = require('../../src/composition/repository-container');
 const {
-  createLocalContainer, dependencyOrder, discoverModules, moduleName, scopedDependencies,
-} = require('../../src/composition/module-container');
+  createLocalContainer, createRepositoryContainer, dependencyOrder, discoverModules,
+  moduleName, scopedDependencies,
+} = require('../../src/composition/repository-container');
 
 const root = path.resolve(__dirname, '../../src/modules');
 const { allowedExternal, allowedModules } = YAML.parse(

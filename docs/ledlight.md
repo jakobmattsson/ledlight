@@ -296,7 +296,7 @@ as path segments and reads `dependencies.yaml` and `external.js` from that
 module directory. The composition code has no Ledlight module names or paths;
 another module tree can use the same API with its own policy and external
 services. The CLI entry point passes `__dirname, 'modules'` before resolving
-`cli`.
+`cli`. All composition logic lives in `src/composition/repository-container.js`.
 
 Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from

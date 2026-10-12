@@ -3,9 +3,8 @@
 const path = require('node:path');
 const fs = require('node:fs');
 const {
-  createRepositoryContainer,
+  createRepositoryContainer, moduleName,
 } = require('../../src/composition/repository-container');
-const { moduleName } = require('../../src/composition/module-container');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const container = createRepositoryContainer(__dirname, '../../src/modules');
