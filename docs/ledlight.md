@@ -283,10 +283,11 @@ The eight modules and their dependency direction are:
 | `project` | Public journal operations and temporary stdin journals | `core`, `journal`, `database`, `queries` |
 | `cli` | Argument parsing, execution, and output formatting | `core`, `commands`, `project` |
 
-`src/composition/repository-container.js` is the source of truth for these edges
-and for the external services permitted to each module. It discovers the module
-directories, checks that they match both policies, rejects cycles, and builds
-module-local factory containers. Runtime adapters are created in
+`src/composition/dependency-policy.yaml` is the source of truth for these edges
+and for the external services permitted to each module. The repository
+container discovers the module directories, checks that they match both
+policies, rejects cycles, and builds module-local factory containers. Runtime
+adapters are created in
 `src/composition/external-services/index.js`. Each module's `index.js` is
 registered as a factory and receives its local dependencies through injection.
 Composition freezes the returned facade before providing it to other modules.

@@ -1,6 +1,8 @@
 'use strict';
 
+const fs = require('node:fs');
 const path = require('node:path');
+const YAML = require('yaml');
 const externalServices = require('./external-services');
 const {
   assertPolicyKeys, createLocalContainer, dependencyOrder, discoverModules,
@@ -9,28 +11,9 @@ const {
 
 const MODULES_ROOT = path.resolve(__dirname, '../modules');
 
-const allowedModules = Object.freeze({
-  core: [],
-  journal: ['core'],
-  accounting: ['core', 'journal'],
-  database: ['core', 'journal', 'accounting'],
-  queries: ['core', 'accounting', 'database'],
-  commands: [],
-  project: ['core', 'journal', 'database', 'queries'],
-  cli: ['core', 'commands', 'project'],
-});
-
-const allowedExternal = Object.freeze({
-  core: ['crypto', 'currentWorkingDirectory', 'envPaths', 'fs', 'path', 'processEnvironment', 'zod'],
-  journal: ['buffer', 'crypto', 'fs', 'path', 'zod'],
-  accounting: [],
-  database: ['fs', 'path', 'processRuntime', 'schemaPath', 'sqlite', 'systemClock'],
-  queries: ['zod'],
-  commands: ['commander'],
-  project: ['fs', 'os', 'path'],
-  cli: ['commander', 'currentWorkingDirectory', 'packageMetadata',
-    'processRuntime', 'standardInput'],
-});
+const policy = YAML.parse(fs.readFileSync(path.join(__dirname, 'dependency-policy.yaml'), 'utf8'));
+const allowedModules = Object.freeze(policy.allowedModules);
+const allowedExternal = Object.freeze(policy.allowedExternal);
 
 function createRepositoryContainer() {
   const modules = discoverModules(MODULES_ROOT);

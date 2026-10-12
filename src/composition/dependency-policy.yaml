@@ -1,0 +1,37 @@
+allowedModules:
+  core: []
+  journal: [core]
+  accounting: [core, journal]
+  database: [core, journal, accounting]
+  queries: [core, accounting, database]
+  commands: []
+  project: [core, journal, database, queries]
+  cli: [core, commands, project]
+
+allowedExternal:
+  core:
+    - crypto
+    - currentWorkingDirectory
+    - envPaths
+    - fs
+    - path
+    - processEnvironment
+    - zod
+  journal: [buffer, crypto, fs, path, zod]
+  accounting: []
+  database:
+    - fs
+    - path
+    - processRuntime
+    - schemaPath
+    - sqlite
+    - systemClock
+  queries: [zod]
+  commands: [commander]
+  project: [fs, os, path]
+  cli:
+    - commander
+    - currentWorkingDirectory
+    - packageMetadata
+    - processRuntime
+    - standardInput
