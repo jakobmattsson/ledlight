@@ -294,7 +294,8 @@ receives its local dependencies through injection.
 The sorted dependency views in `tests/architecture/depends-on.yaml` and
 `tests/architecture/used-by.yaml` are generated from that policy. Run
 `npm run architecture:generate` after changing module dependencies; the
-architecture test checks that both views stay current.
+architecture test calls composition's validators to check that both views stay
+current and report the first mismatch.
 
 `createRepositoryContainer(...modulesPathParts)` resolves its string arguments
 as path segments and reads `dependencies.yaml` and `external.js` from that

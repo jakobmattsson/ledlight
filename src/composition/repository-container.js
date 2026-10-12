@@ -144,6 +144,67 @@ function generateUsedByYaml(...modulesPathParts) {
   return `${YAML.stringify({ external: externalUsers }).trimEnd()}\n\n${YAML.stringify({ modules: moduleUsers })}`;
 }
 
+function firstYamlDifference(actual, expected, location) {
+  if (Array.isArray(expected)) {
+    if (!Array.isArray(actual)) return `${location}: expected a list`;
+    for (let index = 0; index < Math.max(actual.length, expected.length); index += 1) {
+      const item = `${location}[${index}]`;
+      if (index >= actual.length) return `${item}: missing ${JSON.stringify(expected[index])}`;
+      if (index >= expected.length) return `${item}: unexpected ${JSON.stringify(actual[index])}`;
+      const difference = firstYamlDifference(actual[index], expected[index], item);
+      if (difference) return difference;
+    }
+    return null;
+  }
+  if (expected !== null && typeof expected === 'object') {
+    if (actual === null || typeof actual !== 'object' || Array.isArray(actual)) {
+      return `${location || 'root'}: expected a mapping`;
+    }
+    for (const key of Object.keys(expected)) {
+      const entry = location ? `${location}.${key}` : key;
+      if (!Object.hasOwn(actual, key)) return `${entry}: missing entry`;
+      const difference = firstYamlDifference(actual[key], expected[key], entry);
+      if (difference) return difference;
+    }
+    for (const key of Object.keys(actual)) {
+      if (!Object.hasOwn(expected, key)) {
+        return `${location ? `${location}.` : ''}${key}: unexpected entry`;
+      }
+    }
+    return null;
+  }
+  return Object.is(actual, expected) ? null
+    : `${location}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`;
+}
+
+function validateGeneratedYaml(source, expected, fileName) {
+  if (typeof source !== 'string') throw new TypeError(`${fileName}: expected YAML text`);
+  let actual;
+  try {
+    actual = YAML.parse(source);
+  } catch (error) {
+    throw new Error(`${fileName}: invalid YAML: ${error.message}`, { cause: error });
+  }
+  const difference = firstYamlDifference(actual, YAML.parse(expected), '');
+  if (difference) throw new Error(`${fileName}: ${difference}`);
+  if (source !== expected) {
+    const actualLines = source.split('\n');
+    const expectedLines = expected.split('\n');
+    const index = Array.from({ length: Math.max(actualLines.length, expectedLines.length) })
+      .findIndex((_line, position) => expectedLines[position] !== actualLines[position]);
+    throw new Error(`${fileName}: formatting differs at line ${index + 1}: expected `
+      + `${JSON.stringify(expectedLines[index])}, got ${JSON.stringify(actualLines[index])}`);
+  }
+}
+
+function validateDependsOnYaml(source, ...modulesPathParts) {
+  validateGeneratedYaml(source, generateDependsOnYaml(...modulesPathParts), 'depends-on.yaml');
+}
+
+function validateUsedByYaml(source, ...modulesPathParts) {
+  validateGeneratedYaml(source, generateUsedByYaml(...modulesPathParts), 'used-by.yaml');
+}
+
 function createRepositoryContainer(...modulesPathParts) {
   const { modulesRoot, modules, order, allowedModules, allowedExternal } =
     loadDependencyPolicy(...modulesPathParts);
@@ -207,4 +268,5 @@ function createRepositoryContainer(...modulesPathParts) {
 module.exports = {
   assertPolicyKeys, createLocalContainer, createRepositoryContainer, dependencyOrder,
   discoverModules, generateDependsOnYaml, generateUsedByYaml, moduleName, scopedDependencies,
+  validateDependsOnYaml, validateUsedByYaml,
 };
