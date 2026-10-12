@@ -1,3 +1,6 @@
+ubiquitous-modules:
+  - core
+
 allowedModules:
   core: []
   journal: [core]

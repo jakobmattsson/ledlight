@@ -291,13 +291,18 @@ adapters are created by `src/modules/external.js`, a file outside the domain
 module graph. Each domain module's `index.js` is registered as a factory and
 receives its local dependencies through injection.
 
+The optional `ubiquitous-modules` list in `dependencies.yaml` affects only
+diagram rendering. Its modules remain ordinary dependencies in composition
+and in the generated YAML views. In SVG diagrams, they appear inside each
+consumer's card rather than as separate nodes. Ledlight marks `core` this way.
+
 The sorted dependency views in `tests/architecture/depends-on.yaml` and
 `tests/architecture/used-by.yaml` are generated from that policy. The same
 command renders `depends-on.svg` and `used-by.svg` beside them. In each diagram,
-arrows show module dependencies and each module card lists its external
-services. Run `npm run architecture:generate` after changing module
-dependencies; the architecture tests check that the YAML and SVG views stay
-current.
+arrows show the remaining module dependencies. Each card shows ubiquitous
+modules in green and external services in purple. Run `npm run architecture:generate`
+after changing module dependencies; the architecture tests check that the YAML
+and SVG views stay current.
 
 `createRepositoryContainer(...modulesPathParts)` resolves its string arguments
 as path segments and reads `dependencies.yaml` and `external.js` from that
