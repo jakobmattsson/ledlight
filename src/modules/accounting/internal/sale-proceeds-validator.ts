@@ -4,11 +4,11 @@ import type { LedgerAmount, LedgerEntry, LedgerPosting } from '../../../public-a
 
 type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
-type Core = ReturnType<typeof import('../../core')>;
+type Numeric = ReturnType<typeof import('../../numeric')>;
 type Journal = ReturnType<typeof import('../../journal')>;
 type Movements = ReturnType<typeof import('./commodity-movements')>;
 type Dependencies = {
-  core: Pick<Core, 'rational'>;
+  numeric: Pick<Numeric, 'rational'>;
   commodityMovements: Pick<Movements, 'annotatedTotal'>;
   journal: Pick<Journal, 'ingestionWarning'>;
 };
@@ -18,7 +18,7 @@ type Result = { validateSaleProceeds(
 ): void };
 
 export = ({
-  core: {
+  numeric: {
     rational: { zero, parse, add, sub, neg, cmp, div, format },
   },
   commodityMovements: { annotatedTotal },

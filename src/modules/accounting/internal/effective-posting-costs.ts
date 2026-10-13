@@ -6,12 +6,12 @@ type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type HoldingGroup = { price: Fraction; remaining: { constant: Fraction; coefficients: Map<number, Fraction> } };
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
-type Core = ReturnType<typeof import('../../core')>;
+type Numeric = ReturnType<typeof import('../../numeric')>;
 type Journal = ReturnType<typeof import('../../journal')>;
 type Movements = ReturnType<typeof import('./commodity-movements')>;
 type History = ReturnType<typeof import('./allocation-history')>;
 type Dependencies = {
-  core: Pick<Core, 'rational'>;
+  numeric: Pick<Numeric, 'rational'>;
   commodityMovements: Movements;
   allocationHistory: History;
   journal: Pick<Journal, 'ingestionWarning'>;
@@ -20,7 +20,7 @@ type Result = { inferEffectivePostingCosts(entries: LedgerEntry[], valuationComm
 
 
 export = ({
-  core: {
+  numeric: {
     rational: { zero, parse, neg, div, mul, cmp, format },
   },
   commodityMovements: { annotatedTotal, carriedMovements, unpricedReplacement },

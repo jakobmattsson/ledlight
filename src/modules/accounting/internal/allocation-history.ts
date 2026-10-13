@@ -25,12 +25,12 @@ type AllocationHistoryContract = {
 type Result = { AllocationHistory: new (roundingUnit: Fraction) => AllocationHistoryContract };
 
 export = ({
-  core: {
+  numeric: {
     rational: { zero, one, add, sub, mul, div, neg, cmp },
   },
   linearProgram: { maximize },
 }: {
-  core: {
+  numeric: {
     rational: {
       zero: Fraction; one: Fraction;
       add(left: Fraction, right: Fraction): Fraction;

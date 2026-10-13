@@ -10,12 +10,14 @@ type Row = { date: string; amount: string; missing_commodity: string | null };
 module.exports = ({
   apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
   core: {
+    publicErrors: { createError, errorCodes },
+  },
+  numeric: {
     decimal: {
       formatDecimal,
       negateDecimal,
       parseDecimal,
     },
-    publicErrors: { createError, errorCodes },
   },
   accountFilter: { accountFilter },
   costValuation: { validateCostValuation, costValueSql },

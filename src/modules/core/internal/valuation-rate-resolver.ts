@@ -3,10 +3,12 @@
 type PriceRow = { date: string; base_commodity: string; quote_commodity: string; quote_quantity: string };
 type Decimal = { coefficient: bigint; scale: number };
 type Dependencies = {
-  decimal: {
-    formatDecimal(value: Decimal): string;
-    multiplyDecimals(left: Decimal, right: Decimal): Decimal;
-    parseDecimal(value: string): Decimal;
+  numeric: {
+    decimal: {
+      formatDecimal(value: Decimal): string;
+      multiplyDecimals(left: Decimal, right: Decimal): Decimal;
+      parseDecimal(value: string): Decimal;
+    };
   };
   publicErrors: {
     createError(code: string, message: string, ErrorType?: new (message: string) => Error): Error;
@@ -17,10 +19,8 @@ type Dependencies = {
 type Resolver = (commodity: unknown, throughDate: unknown) => string;
 
 export = ({
-  decimal: {
-    formatDecimal,
-    multiplyDecimals,
-    parseDecimal,
+  numeric: {
+    decimal: { formatDecimal, multiplyDecimals, parseDecimal },
   },
   publicErrors: { createError, errorCodes },
   external: {

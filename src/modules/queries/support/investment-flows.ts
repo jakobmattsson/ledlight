@@ -10,8 +10,10 @@ type Posting = { transactionId: number; date: string; account: string; amount: L
 
 module.exports = ({
   core: {
-    rational: { zero, parse, add, mul, neg, format },
     publicErrors: { createError, errorCodes },
+  },
+  numeric: {
+    rational: { zero, parse, add, mul, neg, format },
   },
   accounting: {
     commodityMovements: { annotatedTotal, carriedMovements },

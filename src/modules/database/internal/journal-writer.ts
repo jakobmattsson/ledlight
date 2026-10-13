@@ -12,7 +12,7 @@ type Usage = { accounts: Set<string>; commodities: Set<string>; tags: Set<string
 type Warning = { code: string; message: string; source: string; line: number; column: number; startLine: number; endLine: number };
 type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: string; size: number }>;
   entries: LedgerEntry[]; warnings?: Warning[] };
-type Core = ReturnType<typeof import('../../core')>;
+type Numeric = ReturnType<typeof import('../../numeric')>;
 type Accounting = ReturnType<typeof import('../../accounting')>;
 type DatabaseFacade = ReturnType<typeof import('../index')>;
 type SqlFunctions = ReturnType<typeof import('./decimal-sql-functions')>;
@@ -20,7 +20,7 @@ type BalanceMaterializer = ReturnType<typeof import('./posting-balance-materiali
 type PriceMaterializer = ReturnType<typeof import('./valuation-price-materializer')>;
 type Migration = ReturnType<typeof import('./database-migration')>;
 type Dependencies = {
-  core: Pick<Core, 'decimal'>;
+  numeric: Pick<Numeric, 'decimal'>;
   accounting: Accounting;
   decimalSqlFunctions: SqlFunctions;
   postingBalanceMaterializer: BalanceMaterializer;
@@ -32,7 +32,7 @@ type DatabaseSummary = ReturnType<DatabaseFacade['writeJournalDatabase']>;
 type Result = { writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary };
 
 export = ({
-  core: {
+  numeric: {
     decimal: { compareDecimals, parseDecimal },
   },
   accounting: {

@@ -5,15 +5,17 @@ type ReportRow = { commodity: string; quantity: string; valuationValue?: string 
 type TotalRow = ReportRow & { account: 'Total'; isTotal: true };
 type Total = { quantity: Decimal; valuationValue?: Decimal };
 type Dependencies = {
-  decimal: {
-    addDecimals(left: Decimal, right: Decimal): Decimal;
-    formatDecimal(value: Decimal): string;
-    parseDecimal(value: string): Decimal;
+  numeric: {
+    decimal: {
+      addDecimals(left: Decimal, right: Decimal): Decimal;
+      formatDecimal(value: Decimal): string;
+      parseDecimal(value: string): Decimal;
+    };
   };
 };
 type ReportTotals = { appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow> };
 
-export = ({ decimal: { addDecimals, formatDecimal, parseDecimal } }: Dependencies): ReportTotals => {
+export = ({ numeric: { decimal: { addDecimals, formatDecimal, parseDecimal } } }: Dependencies): ReportTotals => {
   function appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow> {
     const totals = new Map<string, Total>();
     for (const row of rows) {

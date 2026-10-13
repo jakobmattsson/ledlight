@@ -1,20 +1,23 @@
 ubiquitous:
   - core
+  - numeric
   - fs
   - path
   - zod
 
 allowed-modules:
-  core: []
+  numeric: []
+  core: [numeric]
   journal: [core]
-  accounting: [core, journal]
-  database: [core, journal, accounting]
-  queries: [core, accounting, database]
+  accounting: [numeric, journal]
+  database: [core, numeric, journal, accounting]
+  queries: [core, numeric, accounting, database]
   commands: []
   project: [core, journal, database, queries]
-  cli: [core, commands, project]
+  cli: [core, numeric, commands, project]
 
 allowed-external:
+  numeric: []
   core:
     - crypto
     - currentWorkingDirectory

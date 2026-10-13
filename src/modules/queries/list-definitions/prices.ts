@@ -2,7 +2,7 @@
 
 module.exports = ({
   apiOptions: { parseOptions },
-  core: {
+  numeric: {
     decimal: { divideDecimals, formatDecimal, parseDecimal },
   },
   external: {

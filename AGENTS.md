@@ -41,8 +41,8 @@ uses a standalone capability, define it in that module instead of exposing it
 from another module. Keep a capability with a coherent group of related
 operations even if only one other module currently uses that particular
 operation. For example, decimal formatting and division belong with the other
-decimal operations; database-specific registration of SQL decimal functions
-belongs in `database`.
+decimal operations in `numeric`; database-specific registration of SQL decimal
+functions belongs in `database`.
 
 Judge ownership by responsibility and logical grouping, not by counting
 consumers alone. A domain module may remain separate when it has one consumer.

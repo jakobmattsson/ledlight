@@ -6,7 +6,7 @@ type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type Declarations = { accounts: Set<string>; commodities: Set<string>; tags: Set<string> };
 type LocatedTag = LedgerTag & { location?: SourceLocation };
 type ResolvedPosting = LedgerPosting & { amount: LedgerAmount; original: LedgerPosting };
-type Core = ReturnType<typeof import('../../core')>;
+type Numeric = ReturnType<typeof import('../../numeric')>;
 type Journal = ReturnType<typeof import('../../journal')>;
 type Movements = ReturnType<typeof import('./commodity-movements')>;
 type Valuation = ReturnType<typeof import('./journal-valuation-commodity')>;
@@ -19,14 +19,14 @@ type Result = {
     defaultCommodity: string | null | undefined, warnings: unknown[]): void;
 };
 type Dependencies = {
-  core: Pick<Core, 'decimal' | 'rational'>;
+  numeric: Pick<Numeric, 'decimal' | 'rational'>;
   commodityMovements: Movements;
   journal: Pick<Journal, 'ingestionWarning'>;
   journalValuationCommodity: Valuation;
 };
 
 export = ({
-  core: {
+  numeric: {
     decimal: { compareDecimals, parseDecimal },
     rational: { zero, parse: parseRational, add, cmp },
   },

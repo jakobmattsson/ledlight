@@ -7,13 +7,15 @@ type Resolver = (commodity: string, throughDate: string) => string;
 
 module.exports = ({
   core: {
+    publicErrors: { createError, errorCodes },
+    createLedgerValuationRateResolver,
+  },
+  numeric: {
     decimal: {
       formatDecimal,
       multiplyDecimals,
       parseDecimal,
     },
-    publicErrors: { createError, errorCodes },
-    createLedgerValuationRateResolver,
   },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
 }: any) => {

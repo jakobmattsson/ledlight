@@ -8,6 +8,8 @@ type TextColumn = { heading: string; value: (row: unknown) => unknown; align?: '
 module.exports = ({
   core: {
     appendTotal,
+  },
+  numeric: {
     decimal: {
       addDecimals,
       formatDecimal,

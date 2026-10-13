@@ -13,13 +13,15 @@ type Cache = Map<symbol, (commodity: string, throughDate: string) => string>;
 module.exports = ({
   apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
   core: {
+    appendTotal,
+  },
+  numeric: {
     decimal: {
       formatDecimal,
       multiplyDecimals,
       negateDecimal,
       parseDecimal,
     },
-    appendTotal,
   },
   accountFilter: { accountFilter },
   costValuation: { validateCostValuation, costValueSql },

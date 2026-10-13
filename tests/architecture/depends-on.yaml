@@ -1,8 +1,8 @@
 accounting:
   external: []
   modules:
-    - core
     - journal
+    - numeric
 
 cli:
   external:
@@ -14,6 +14,7 @@ cli:
   modules:
     - commands
     - core
+    - numeric
     - project
 
 commands:
@@ -30,7 +31,8 @@ core:
     - path
     - processEnvironment
     - zod
-  modules: []
+  modules:
+    - numeric
 
 database:
   external:
@@ -44,6 +46,7 @@ database:
     - accounting
     - core
     - journal
+    - numeric
 
 journal:
   external:
@@ -54,6 +57,10 @@ journal:
     - zod
   modules:
     - core
+
+numeric:
+  external: []
+  modules: []
 
 project:
   external:
@@ -73,3 +80,4 @@ queries:
     - accounting
     - core
     - database
+    - numeric

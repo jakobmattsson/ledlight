@@ -7,7 +7,7 @@ type PrintedPosting = MetadataOwner & { account: string; postingDate: string; am
 type PrintedTransaction = MetadataOwner & { date: string; description: string; postings: PrintedPosting[] };
 
 module.exports = ({
-  core: {
+  numeric: {
     decimal: { formatDecimal, parseDecimal },
   },
 }: any) => {

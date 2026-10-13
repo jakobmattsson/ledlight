@@ -7,8 +7,8 @@ type Optimization = { status: 'optimal'; value: Fraction; solution: Fraction[] }
   { status: 'infeasible' | 'unbounded' };
 type Result = { maximize(variableCount: number, constraints: ReadonlyArray<Constraint>, objective: IndexedFraction): Optimization };
 
-export = ({ core: { rational: { zero, one, neg, sub, mul, div, cmp } } }: {
-  core: {
+export = ({ numeric: { rational: { zero, one, neg, sub, mul, div, cmp } } }: {
+  numeric: {
     rational: {
       zero: Fraction;
       one: Fraction;

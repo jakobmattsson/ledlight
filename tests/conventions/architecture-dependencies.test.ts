@@ -40,7 +40,7 @@ test('architecture.svg matches the generated dependency view', async () => {
 
 test('ubiquitous modules retain outgoing arrows and hide incoming ordinary arrows', () => {
   const graphOptions = loadGraphOptions(modulesRoot);
-  assert.deepEqual(graphOptions.ubiquitousModules, ['core']);
+  assert.deepEqual(graphOptions.ubiquitousModules, ['core', 'numeric']);
   assert.deepEqual(graphOptions.ubiquitousExternal, ['fs', 'path', 'zod']);
   const yaml = fs.readFileSync(path.join(architectureRoot, 'depends-on.yaml'), 'utf8');
   const document = YAML.parse(yaml);

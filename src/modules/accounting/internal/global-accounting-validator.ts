@@ -5,13 +5,13 @@ import type { LedgerAmount, LedgerEntry, LedgerPosting, SourceLocation } from '.
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type CommodityDeclaration = Extract<LedgerEntry, { type: 'commodity' }>;
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
-type Core = ReturnType<typeof import('../../core')>;
+type Numeric = ReturnType<typeof import('../../numeric')>;
 type Journal = ReturnType<typeof import('../../journal')>;
 type Movements = ReturnType<typeof import('./commodity-movements')>;
 type History = ReturnType<typeof import('./allocation-history')>;
 type SaleProceeds = ReturnType<typeof import('./sale-proceeds-validator')>;
 type Dependencies = {
-  core: Pick<Core, 'rational'>;
+  numeric: Pick<Numeric, 'rational'>;
   commodityMovements: Pick<Movements, 'annotatedTotal' | 'carriedMovements'>;
   allocationHistory: History;
   saleProceedsValidator: SaleProceeds;
@@ -24,7 +24,7 @@ type Result = { validateGlobalAccounting(
 
 
 export = ({
-  core: {
+  numeric: {
     rational: { zero, parse, add, neg, format },
   },
   commodityMovements: { annotatedTotal, carriedMovements },

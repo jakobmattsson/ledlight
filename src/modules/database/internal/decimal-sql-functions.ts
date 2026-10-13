@@ -11,8 +11,8 @@ type DecimalDatabase = {
   function(name: string, options: { deterministic: boolean }, callback: (left: SqlDecimal, right: SqlDecimal) => string | number | null): void;
 };
 
-export = ({ core: { decimal: { addDecimals, compareDecimals, formatDecimal, multiplyDecimals, parseDecimal } } }: {
-  core: { decimal: {
+export = ({ numeric: { decimal: { addDecimals, compareDecimals, formatDecimal, multiplyDecimals, parseDecimal } } }: {
+  numeric: { decimal: {
     addDecimals(left: Decimal, right: Decimal): Decimal;
     compareDecimals(left: Decimal, right: Decimal): number;
     formatDecimal(value: Decimal): string;

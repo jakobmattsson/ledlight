@@ -5,8 +5,8 @@ import type { LedgerCost, LedgerEntry, LedgerPosting } from '../../../public-api
 type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
-type Core = ReturnType<typeof import('../../core')>;
-type Dependencies = { core: Pick<Core, 'rational'> };
+type Numeric = ReturnType<typeof import('../../numeric')>;
+type Dependencies = { numeric: Pick<Numeric, 'rational'> };
 type Result = {
   annotatedTotal(annotation: LedgerCost | null, quantity: Fraction): Fraction | null;
   carriedMovements(transaction: Transaction, valuationCommodity: string | null | undefined): Movement[];
@@ -14,7 +14,7 @@ type Result = {
 };
 
 export = ({
-  core: {
+  numeric: {
     rational: { zero, parse, mul, neg, add, cmp },
   },
 }: Dependencies): Result => {

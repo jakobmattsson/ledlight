@@ -4,15 +4,15 @@ import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../..
 
 type Decimal = { coefficient: bigint; scale: number };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
-type Core = ReturnType<typeof import('../../core')>;
+type Numeric = ReturnType<typeof import('../../numeric')>;
 type Journal = ReturnType<typeof import('../../journal')>;
-type Dependencies = { core: Pick<Core, 'decimal'>; journal: Pick<Journal, 'ingestionWarning'> };
+type Dependencies = { numeric: Pick<Numeric, 'decimal'>; journal: Pick<Journal, 'ingestionWarning'> };
 type Result = { PostingResolver: new (warnings: unknown[]) => {
   resolve(transaction: Transaction): LedgerAmount[][] | null;
 } };
 
 export = ({
-  core: {
+  numeric: {
     decimal: {
       addDecimals,
       compareDecimals,

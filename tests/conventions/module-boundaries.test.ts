@@ -64,10 +64,12 @@ test('resolves index factories as facades and hides internal factories', () => {
   assert.equal(Object.hasOwn(container.resolve('project'), '$$private'), false);
   assert.equal(Object.hasOwn(container.resolve('database'), 'readModelContract'), false);
   assert.equal(Object.hasOwn(container.resolve('accounting').commodityMovements, 'unpricedReplacement'), false);
-  assert.equal(Object.hasOwn(container.resolve('core').rational, 'fraction'), false);
+  assert.equal(Object.hasOwn(container.resolve('numeric').rational, 'fraction'), false);
   assert.equal(Object.hasOwn(container.resolve('core'), 'apiOptions'), false);
   assert.equal(Object.hasOwn(container.resolve('core'), 'maximize'), false);
-  assert.equal(Object.hasOwn(container.resolve('core').decimal, 'registerDecimalFunctions'), false);
+  assert.equal(Object.hasOwn(container.resolve('numeric').decimal, 'registerDecimalFunctions'), false);
+  assert.equal(Object.hasOwn(container.resolve('core'), 'decimal'), false);
+  assert.equal(Object.hasOwn(container.resolve('core'), 'rational'), false);
   assert.equal(Object.hasOwn(container.resolve('journal'), 'parse'), false);
   for (const [moduleName, member, formerGroup] of [
     ['accounting', 'inferEffectivePostingCosts', 'effectivePostingCosts'],

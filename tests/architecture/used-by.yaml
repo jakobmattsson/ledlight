@@ -52,7 +52,6 @@ modules:
   commands:
     - cli
   core:
-    - accounting
     - cli
     - database
     - journal
@@ -65,6 +64,12 @@ modules:
     - accounting
     - database
     - project
+  numeric:
+    - accounting
+    - cli
+    - core
+    - database
+    - queries
   project:
     - cli
   queries:
