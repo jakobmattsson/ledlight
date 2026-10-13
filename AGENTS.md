@@ -21,7 +21,7 @@ would be its only child; retain subdirectories for meaningful groups.
 Each `src/modules/interfaces/<module>.ts` defines the public facade of its
 module. Keep every type used by that facade explicit and readable in the facade
 file itself;
-`src/public-api.ts` is the only permitted source for imported facade types.
+`src/public-api.d.ts` is the only permitted source for imported facade types.
 Prefer a local definition over a type inferred from an internal implementation,
 even when that means duplicating a definition.
 
