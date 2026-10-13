@@ -8,7 +8,7 @@ type DatabaseSummary = ReturnType<Writer['writeJournalDatabase']>;
 type DatabaseStatus = ReturnType<Freshness['checkDatabaseSync']>;
 type JournalSource =
   | { kind: 'file'; path: string }
-  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
+  | { kind: 'stdin'; content: string; baseDirectory: string };
 type Result = {
   prepareDatabase(databasePath: string, source: JournalSource): {
     rebuilt: boolean; status: DatabaseStatus; summary?: DatabaseSummary;
@@ -53,25 +53,27 @@ export = ({
   }
 
   function prepareDatabase(databasePath: string, source: JournalSource): ReturnType<Result['prepareDatabase']> {
-    if (source.kind === 'text' && fs.existsSync(databasePath)) {
-      throw databaseError(new Error('A text source requires a new database path'));
-    }
-    const normalizedSource = source.kind === 'file' ? { kind: 'file' as const, path: path.resolve(source.path) } : source;
-    const status: DatabaseStatus = normalizedSource.kind === 'file'
-      ? checkDatabaseSync(databasePath, normalizedSource.path)
-      : {
-        databasePath: path.resolve(databasePath), journalPath: normalizedSource.sourceName,
+    if (source.kind === 'stdin') {
+      if (fs.existsSync(databasePath)) {
+        throw databaseError(new Error('A stdin source requires a new database path'));
+      }
+      const summary = buildDatabase(databasePath, source);
+      const status: DatabaseStatus = {
+        databasePath: path.resolve(databasePath), journalPath: summary.journalPath,
         inSync: false, reason: 'database_missing', added: [], removed: [], changed: [],
       };
+      return { rebuilt: true, status, summary };
+    }
+    const normalizedSource = { kind: 'file' as const, path: path.resolve(source.path) };
+    const status = checkDatabaseSync(databasePath, normalizedSource.path);
     if (status.inSync) return { rebuilt: false, status };
     const rebuild = (): ReturnType<Result['prepareDatabase']> => {
-      const lockedStatus = normalizedSource.kind === 'file'
-        ? checkDatabaseSync(databasePath, normalizedSource.path) : status;
+      const lockedStatus = checkDatabaseSync(databasePath, normalizedSource.path);
       if (lockedStatus.inSync) return { rebuilt: false, status: lockedStatus };
       const summary = buildDatabase(databasePath, normalizedSource);
       return { rebuilt: true, status: lockedStatus, summary };
     };
-    return normalizedSource.kind === 'file' ? withRebuildLock(databasePath, rebuild) : rebuild();
+    return withRebuildLock(databasePath, rebuild);
   }
 
   return {

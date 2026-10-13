@@ -2,7 +2,7 @@
 
 type JournalSource =
   | { kind: 'file'; path: string }
-  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
+  | { kind: 'stdin'; content: string; baseDirectory: string };
 type Warning = {
   code: string; message: string; source: string; line: number; column: number;
   startLine: number; endLine: number;

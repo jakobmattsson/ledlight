@@ -70,8 +70,8 @@ export = ({
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-stdin-'));
     try {
       const databasePath = path.join(directory, 'journal.sqlite');
-      prepareDatabase(databasePath, { kind: 'text', content, baseDirectory, sourceName: '<stdin>' });
-      return operation(journalFromDatabase({ databasePath, journalPath: '<stdin>' }));
+      const { status } = prepareDatabase(databasePath, { kind: 'stdin', content, baseDirectory });
+      return operation(journalFromDatabase({ databasePath, journalPath: status.journalPath }));
     } finally {
       fs.rmSync(directory, { recursive: true, force: true });
     }

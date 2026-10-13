@@ -354,7 +354,7 @@ The `queries` and `commands` facades each expose a frozen `definitions` array.
 The project builds journal operations and API input definitions from the query
 definitions. The CLI uses the command definitions and invokes the corresponding
 public journal operation. The database module prepares both persistent file
-caches and temporary databases from text sources through one operation. It
+caches and temporary databases from stdin text through one operation. It
 checks freshness and takes a rebuild lock for file caches, then loads and writes
 the journal only when needed. The project's `withJournalText` capability owns
 the temporary database lifetime for CLI stdin input.

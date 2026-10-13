@@ -3,9 +3,10 @@
 type RootSource = { content: string; baseDirectory: string };
 type JournalSource =
   | { kind: 'file'; path: string }
-  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
+  | { kind: 'stdin'; content: string; baseDirectory: string };
 type JournalFile = { path: string; sha256: string; size: number };
 type TraversedFile = { content: string; path: string; include(path: string, line?: number): void };
+const STDIN_SOURCE_NAME = '<stdin>';
 
 module.exports = ({
   includePattern: { expandIncludePattern },
@@ -18,8 +19,8 @@ module.exports = ({
 }: any) => {
 
   function traverseJournal(source: JournalSource, processFile: (file: TraversedFile) => void) {
-    const resolvedJournalPath = source.kind === 'file' ? path.resolve(source.path) : source.sourceName;
-    const rootSource: RootSource | undefined = source.kind === 'text'
+    const resolvedJournalPath = source.kind === 'file' ? path.resolve(source.path) : STDIN_SOURCE_NAME;
+    const rootSource: RootSource | undefined = source.kind === 'stdin'
       ? { content: source.content, baseDirectory: source.baseDirectory }
       : undefined;
     const filesByPath = new Map<string, JournalFile>();

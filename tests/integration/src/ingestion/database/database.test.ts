@@ -40,16 +40,16 @@ test('preserves filesystem errors from rebuilds', (t: TestContext) => {
   });
 });
 
-test('does not overwrite an existing database with a text source', (t: TestContext) => {
+test('does not overwrite an existing database with stdin', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(databasePath, 'existing database');
 
   assert.throws(() => prepareDatabase(databasePath, {
-    kind: 'text', content: '', baseDirectory: directory, sourceName: '<stdin>',
+    kind: 'stdin', content: '', baseDirectory: directory,
   }), {
     code: 'LEDLIGHT_DATABASE',
-    message: 'A text source requires a new database path',
+    message: 'A stdin source requires a new database path',
   });
   assert.equal(fs.readFileSync(databasePath, 'utf8'), 'existing database');
 });

@@ -4,7 +4,7 @@ import type { LedgerEntry, WarningGroup } from '../../../../public-api';
 
 type JournalSource =
   | { kind: 'file'; path: string }
-  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
+  | { kind: 'stdin'; content: string; baseDirectory: string };
 
 module.exports = ({
   journalTraversal: { traverseJournal },

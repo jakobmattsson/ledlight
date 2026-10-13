@@ -25,7 +25,7 @@ type JournalManifest = { journalPath: string; files: JournalFile[] };
 type LoadedJournal = JournalManifest & { entries: LedgerEntry[]; warnings: Warning[] };
 type JournalSource =
   | { kind: 'file'; path: string }
-  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
+  | { kind: 'stdin'; content: string; baseDirectory: string };
 
 type Facade = {
   ingestionWarning: {
