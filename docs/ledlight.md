@@ -87,7 +87,8 @@ such as totals.
 
 The source is divided into sibling modules under `src/modules`. Query definitions,
 CLI command definitions, the database schema, and the Ledger grammar live in their
-owning modules. Each module's `index.js` selects the values visible to other modules.
+owning modules. Each module's file in `interfaces` selects the values visible to
+other modules.
 
 The CLI is a thin adapter over that public module. It parses command-line
 arguments, maps semantic inputs to public API options, and invokes a journal
@@ -270,27 +271,28 @@ formatter or presentation; they are never passed to a journal operation.
 
 ## Architecture
 
-The eight modules and their dependency direction are:
+The nine modules and their dependency direction are:
 
 | Module | Owns | May use |
 | --- | --- | --- |
-| `core` | Arithmetic, API options, errors, configuration, and valuation helpers | None |
+| `numeric` | Decimal and rational operations | None |
+| `core` | Errors, configuration, and valuation helpers | `numeric` |
 | `journal` | Parsing, includes, warnings, and `ledger.ohm` | `core` |
-| `accounting` | Posting resolution, costs, validation, and allocation | `core`, `journal` |
-| `database` | SQLite schema, rebuilds, readers, and materialization | `core`, `journal`, `accounting` |
-| `queries` | Query definitions, SQL, and report calculations | `core`, `accounting`, `database` |
-| `commands` | CLI command definitions and option builders | None |
+| `accounting` | Posting resolution, costs, validation, and allocation | `journal`, `numeric` |
+| `database` | SQLite schema, rebuilds, readers, and materialization | `accounting`, `core`, `journal`, `numeric` |
+| `queries` | Query definitions, SQL, and report calculations | `accounting`, `core`, `database`, `numeric` |
+| `commands` | CLI command definitions and option builders | `core`, `numeric` |
 | `project` | Public journal operations and temporary stdin journals | `core`, `journal`, `database`, `queries` |
-| `cli` | Argument parsing, execution, and output formatting | `core`, `commands`, `project` |
+| `cli` | Argument parsing, execution, and output formatting | `commands`, `core`, `numeric`, `project` |
 
 `src/modules/dependencies.yaml` is the source of truth for these edges
 and for the external services permitted to each module. The `allowed-modules`
 and `allowed-external` mappings define the composition policy. The repository
-container discovers the module directories, checks that they match both
-policies, rejects cycles, and builds module-local factory containers. Runtime
-adapters are created by `src/modules/external.js`, a file outside the domain
-module graph. Each domain module's `index.js` is registered as a factory and
-receives its local dependencies through injection.
+container discovers the interface and implementation directories, checks that
+they match both policies, rejects cycles, and builds module-local factory
+containers. Runtime adapters are created by `src/modules/external.ts`, a file outside the domain
+module graph. The compiled `interfaces/<module>.js` for each domain module
+is registered as a factory and receives its local dependencies through injection.
 
 The optional `ubiquitous` list in `dependencies.yaml` affects only diagram
 rendering. Entries may name modules or external services; they remain ordinary
@@ -315,42 +317,61 @@ as path segments and reads `dependencies.yaml` and `external.js` from that
 module directory. The composition code has no Ledlight module names or paths;
 another module tree can use the same API with its own policy and external
 services. The CLI entry point passes `__dirname, 'modules'` before resolving
-`cli`. All composition logic lives in `src/composition/repository-container.js`.
+`cli`. The composition source lives in `src/composition/repository-container.ts`.
 
 Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as
-`core: { rational, linearProgram }`. Other module internals are
-unavailable. Each module root contains its `index.js` facade. The database
-schema (`schema.sql`) and journal grammar (`ledger.ohm`) sit beside their
-module facades; implementation files live in subdirectories. Factories have
-unique kebab-case file names within their module. The local Awilix subset lives in
-`lib/awilix.js`.
+`numeric: { rational }`. The `numeric` module owns decimal and rational
+operations; `core` provides configuration, errors, and report helpers.
+An implementation factory does not return another module's injected capability
+unchanged. Consumers request that capability from its owner. ESLint checks
+direct forwarding in implementation factory returns.
 
-A directory named `list-<name>` directly under a module root registers an
+`project` owns the cache path derived from a journal file. Database migration
+resolves its schema file from `spec`. An internal registration
+in the same module can be requested by name, such as
+`linearProgram: { maximize }`. A facade exposes a
+sole capability directly, without a one-member wrapper copied from the
+internal registration. Other module internals are unavailable. Facades live
+together in `src/modules/interfaces/<module>.ts` and compile to
+`dist/src/modules/interfaces/<module>.js`. The database schema
+(`schema.sql`) and journal grammar (`ledger.ohm`) live in `src/modules/spec`.
+Factory implementations live under `src/modules/implementations/<module>`;
+files sit directly in the module directory when no further grouping is needed.
+Factories have unique kebab-case file names within their module. The local Awilix subset lives in
+`lib/awilix.ts`, compiled to `dist/lib/awilix.js`.
+
+A directory named `list-<name>` directly under a module's implementation root registers an
 array dependency called `<name>`. Composition resolves every JavaScript factory
 in that directory and its subdirectories, sorted by relative path, and injects
-entries with `name`, `relativePath`, and `value`. The module's `index.js` can
+entries with `name`, `relativePath`, and `value`. The module's facade can
 interpret those entries without embedding module-specific list rules in
-composition. `queries` and `commands` use `list-definitions`; their index
+composition. `queries` and `commands` use `list-definitions`; their facade
 factories validate and shape query and command metadata, respectively.
 
 The `queries` and `commands` facades each expose a frozen `definitions` array.
 The project builds journal operations and API input definitions from the query
 definitions. The CLI uses the command definitions and invokes the corresponding
-public journal operation. The project's `withJournalText` capability
-builds and removes a temporary database for CLI stdin input.
+public journal operation. The database module prepares both persistent file
+caches and temporary databases from stdin text through one operation. It
+checks freshness and takes a rebuild lock for file caches, then loads and writes
+the journal only when needed. `prepareDatabase` returns only the journal path; rebuild
+diagnostics and writer summaries stay inside the database module. The project's
+`withJournalText` capability owns the temporary database lifetime for CLI stdin
+input.
 
 Queries receive a read-only database handle through the project and may run SQL
-against the tables and columns in `database/internal/read-model-contract.js`. That file
+against the tables and columns in `implementations/database/read-model-contract.ts`. That file
 is the explicit read-model contract; a convention test checks its complete column
-lists against `database/schema.sql` and checks that it covers every schema table
+lists against `spec/schema.sql` and checks that it covers every schema table
 referenced by query SQL. Changing these columns requires a coordinated query
 update. Moving all query SQL behind database functions is outside this module
 reorganization.
 
-`src/index.js` and `src/run.js` compose the public Node.js API and CLI. ESLint
-rejects ambient runtime globals and direct imports in `src/modules/**/*.js`;
+`src/index.ts` and `src/run.ts` compose the public Node.js API and CLI; their
+runtime files are `dist/src/index.js` and `dist/src/run.js`. ESLint
+rejects ambient runtime globals and direct imports in `src/modules/**/*.ts`;
 composition injects runtime adapters, including `processRuntime`, paths, and
 `Buffer`.
 
@@ -498,9 +519,9 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/modules/journal/ledger.ohm` is the normative description of the
+`src/modules/spec/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `tests/support/reference/reference-parser.js`. The fixtures in
+semantics in `tests/support/reference/reference-parser.ts`. The fixtures in
 `tests/api/parser` define expected syntax trees, a shared error contract for
 invalid documents, and expected warnings when parsing recovers from malformed
 top-level blocks. Each fixture runs through both Ohm and the optimized runtime
@@ -520,9 +541,9 @@ operating system's application cache directory as
 derived from the canonical absolute journal path. Set `--cache-home PATH` in
 `.ledlightrc` to choose a cache root for a project. `LEDLIGHT_CACHE_HOME` takes
 precedence over this setting. Rebuilding the database replaces its contents
-in one transaction. Because the database is a reproducible cache, an older
-supported schema version is recreated from the journal instead of preserving
-and transforming cached rows in place.
+in one transaction. Because the database is a reproducible cache, any schema
+version other than the current one, or a missing version, is recreated from
+the journal instead of preserving and transforming cached rows in place.
 
 `database_metadata` stores the schema version, root journal path, build time,
 and selected valuation commodity. It is database bookkeeping and is unrelated

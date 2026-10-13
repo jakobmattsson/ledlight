@@ -19,23 +19,35 @@
     "sqlite"
   ],
   "type": "commonjs",
-  "main": "src/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "require": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    }
   },
   "files": [
-    "lib",
+    "dist/lib/**/*.js",
+    "dist/lib/**/*.d.ts",
     "docs/api.md",
     "docs/ledger-cli-equivalence.md",
     "docs/ledlight.md",
     "docs/package.md",
     "docs/why-ledlight.md",
-    "scripts",
-    "src"
+    "dist/scripts/ledger-compatibility/**/*.js",
+    "dist/scripts/ledger-compatibility/**/*.d.ts",
+    "dist/scripts/ledger-compatibility/**/*.yaml",
+    "dist/src/**/*.js",
+    "dist/src/**/*.d.ts",
+    "dist/src/**/*.yaml",
+    "dist/src/**/*.sql",
+    "dist/src/**/*.ohm"
   ],
   "bin": {
-    "ledlight": "src/run.js",
-    "ledlight-cmp": "scripts/ledger-compatibility/compare-ledger.js"
+    "ledlight": "dist/src/run.js",
+    "ledlight-cmp": "dist/scripts/ledger-compatibility/compare-ledger.js"
   },
   "engines": {
     "node": "^22.14.0"
@@ -44,21 +56,35 @@
     "access": "public"
   },
   "scripts": {
-    "architecture:generate": "node scripts/architecture/generate.js",
-    "benchmark": "node scripts/benchmarks/run.js",
+    "build": "tsc --project tsconfig.json && node dist/scripts/build/copy-assets.js",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "pretest": "npm run build",
+    "prelint": "npm run build",
+    "prelint:fix": "npm run build",
+    "prepack": "npm run build",
+    "prebenchmark": "npm run build",
+    "prearchitecture:generate": "npm run build",
+    "pretest:package": "npm run build",
+    "pretest:conventions": "npm run build",
+    "pretest:unit": "npm run build",
+    "pretest:integration": "npm run build",
+    "pretest:ledger": "npm run build",
+    "prerelease": "npm run build",
+    "architecture:generate": "node dist/scripts/architecture/generate.js",
+    "benchmark": "node dist/scripts/benchmarks/run.js",
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "release": "node scripts/release/cli.js",
+    "release": "node dist/scripts/release/cli.js",
     "report:allure": "allure awesome allure-results --output allure-report --report-name 'Ledlight tests'",
     "test": "worktree-keeper run-tests",
-    "test:coverage": "c8 --all --src=src --include='src/**/*.js' --reporter=text-summary --reporter=lcov --reporter=json-summary --reporter=html npm test -- rerun",
-    "test:ledger": "node --test tests/integration/src/cases.test.js tests/integration/src/cli/compare-ledger-script.test.js",
-    "test:package": "node --test tests/package/package.test.js",
-    "test:conventions": "node --test 'tests/conventions/*.test.js'",
-    "test:unit": "node --test 'tests/unit/**/*.test.js'",
-    "test:integration": "node --test 'tests/integration/**/*.test.js'"
+    "test:coverage": "c8 --all --src=dist/src --include='dist/src/**/*.js' --reporter=text-summary --reporter=lcov --reporter=json-summary --reporter=html npm test -- rerun",
+    "test:ledger": "node --test dist/tests/integration/src/cases.test.js dist/tests/integration/src/cli/compare-ledger-script.test.js",
+    "test:package": "node --test dist/tests/package/package.test.js",
+    "test:conventions": "node --test 'dist/tests/conventions/*.test.js'",
+    "test:unit": "node --test 'dist/tests/unit/**/*.test.js'",
+    "test:integration": "node --test 'dist/tests/integration/**/*.test.js'"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",
@@ -70,6 +96,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.5",
     "@viz-js/viz": "3.29.0",
     "allure": "3.20.1",
     "allure-js-commons": "3.13.0",
@@ -79,6 +106,8 @@
     "espree": "^10.4.0",
     "globals": "^17.12.0",
     "ohm-js": "17.5.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
     "worktree-keeper": "0.7.2"
   }
 }

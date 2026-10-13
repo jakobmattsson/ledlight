@@ -1,8 +1,8 @@
 accounting:
   external: []
   modules:
-    - core
     - journal
+    - numeric
 
 cli:
   external:
@@ -14,36 +14,39 @@ cli:
   modules:
     - commands
     - core
+    - numeric
     - project
 
 commands:
   external:
     - commander
-  modules: []
+  modules:
+    - core
+    - numeric
 
 core:
   external:
-    - crypto
     - currentWorkingDirectory
-    - envPaths
     - fs
     - path
     - processEnvironment
     - zod
-  modules: []
+  modules:
+    - numeric
 
 database:
   external:
     - fs
+    - modulesDirectory
     - path
     - processRuntime
-    - schemaPath
     - sqlite
     - systemClock
   modules:
     - accounting
     - core
     - journal
+    - numeric
 
 journal:
   external:
@@ -55,11 +58,18 @@ journal:
   modules:
     - core
 
+numeric:
+  external: []
+  modules: []
+
 project:
   external:
+    - crypto
+    - envPaths
     - fs
     - os
     - path
+    - processEnvironment
   modules:
     - core
     - database
@@ -73,3 +83,4 @@ queries:
     - accounting
     - core
     - database
+    - numeric

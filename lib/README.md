@@ -1,6 +1,6 @@
 # Local Awilix replacement
 
-`awilix.js` is a local drop-in implementation of the Awilix API used by
+`awilix.ts` is a local drop-in implementation of the Awilix API used by
 Ledlight. It supports value and function registrations, proxy injection,
 singleton lifetime, and the module discovery patterns used by the repository.
 It does not implement the full Awilix package.
@@ -13,4 +13,4 @@ lets the composition code retain its Awilix-style calls without pulling in that
 dependency chain.
 
 When composition code needs another Awilix feature, add only the required
-behavior here and cover it with a test in `tests/conventions/awilix.test.js`.
+behavior here and cover it with a test in `tests/conventions/awilix.test.ts`.

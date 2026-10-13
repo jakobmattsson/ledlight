@@ -1,0 +1,46 @@
+'use strict';
+
+type Database = { prepare(sql: string): { get(...parameters: unknown[]): unknown } };
+type Filter = { sql: string; parameters: unknown[] };
+
+
+module.exports = ({
+  core: {
+    publicErrors: { createError, errorCodes },
+  },
+  databaseValuationCommodity: { valuationCommodityFromDatabase },
+}: any) => {
+  function validateCostValuation(database: Database, filter: Filter) {
+    const valuationCommodity = valuationCommodityFromDatabase(database);
+    const missing = database.prepare(`
+      SELECT p.account, r.amount_commodity AS commodity
+      FROM resolved_posting_amounts AS r
+      JOIN postings AS p ON p.id = r.posting_id
+      JOIN transactions AS t ON t.entry_id = p.transaction_id
+      ${filter.sql}
+        ${filter.sql ? 'AND' : 'WHERE'} r.amount_commodity != ?
+        AND (p.lot_cost_quantity IS NULL OR p.lot_cost_commodity != ?)
+      LIMIT 1
+    `).get(...filter.parameters, valuationCommodity, valuationCommodity) as { commodity: string; account: string } | undefined;
+    if (missing) {
+      throw createError(
+        errorCodes.MISSING_VALUATION_DATA,
+        `Cannot value ${missing.commodity} at cost for ${missing.account}: ` +
+          `a lot cost in ${valuationCommodity} is required`,
+      );
+    }
+  }
+
+  const costValueSql = `CASE
+    WHEN r.amount_commodity = (SELECT value FROM database_metadata WHERE key = 'valuation_commodity')
+      THEN r.amount_quantity
+    WHEN p.lot_cost_is_total = 1 THEN CASE
+      WHEN decimal_cmp(r.amount_quantity, '0') < 0 AND decimal_cmp(p.lot_cost_quantity, '0') > 0
+        THEN decimal_mul(p.lot_cost_quantity, '-1')
+      ELSE p.lot_cost_quantity
+    END
+    ELSE decimal_mul(r.amount_quantity, p.lot_cost_quantity)
+  END`;
+
+  return { validateCostValuation, costValueSql };
+};

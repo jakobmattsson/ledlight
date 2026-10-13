@@ -1,0 +1,49 @@
+'use strict';
+
+import type { TestContext } from 'node:test';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const test = require('node:test');
+const Database = require('better-sqlite3');
+const { resolveRepositoryModule } = require('../../../../support/repository-container');
+const { prepareDatabase, $$private: { buildDatabase } } =
+  resolveRepositoryModule('src/modules/implementations/database/database.js');
+
+test('rebuilds cached diagnostics for a non-nominal reporting-currency cost', (t: TestContext) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-self-commodity-cost-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const journalPath = path.join(directory, 'journal.ledger');
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(journalPath, `commodity SEK
+  default
+  format 1,000.00 SEK
+account Assets:Cash
+account Equity:Opening
+
+2024-01-01 Invalid price on reporting currency
+  Assets:Cash  100 SEK {2 SEK}
+  Equity:Opening  -200 SEK
+`);
+  const { warnings } = buildDatabase(databasePath, { kind: 'file', path: journalPath });
+  const database = new Database(databasePath);
+  try {
+    database.prepare("UPDATE database_metadata SET value = '25' WHERE key = 'schema_version'").run();
+    database.exec('DELETE FROM ingestion_warnings');
+  } finally {
+    database.close();
+  }
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const rebuilt = new Database(databasePath, { readonly: true });
+  try {
+    assert.deepEqual(rebuilt.prepare(`
+      SELECT code, message, source, line, column,
+        start_line AS startLine, end_line AS endLine
+      FROM ingestion_warnings ORDER BY position
+    `).all(), warnings);
+  } finally {
+    rebuilt.close();
+  }
+});

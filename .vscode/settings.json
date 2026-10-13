@@ -28,5 +28,31 @@
     "titleBar.inactiveBackground": "#87893499",
     "titleBar.inactiveForeground": "#e7e7e799"
   },
-  "peacock.color": "#878934"
+  "peacock.color": "#878934",
+  "[typescript]": {
+    "editor.semanticHighlighting.enabled": true
+  },
+  "editor.semanticTokenColorCustomizations": {
+    "rules": {
+      "type:typescript": "#4EC9B0",
+      "class:typescript": "#4EC9B0",
+      "interface:typescript": "#4EC9B0",
+      "typeParameter:typescript": "#4EC9B0",
+      "variable:typescript": "#9CDCFE",
+      "parameter:typescript": "#E5C07B",
+      "property:typescript": "#9CDCFE",
+      "function:typescript": "#DCDCAA",
+      "method:typescript": "#DCDCAA"
+    }
+  },
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+      {
+        "scope": "support.type.primitive.ts",
+        "settings": {
+          "foreground": "#4EC9B0"
+        }
+      }
+    ]
+  }
 }
