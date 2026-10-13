@@ -1,7 +1,11 @@
 'use strict';
 
-import type { LedgerEntry, WarningGroup } from '../../../../public-api';
+import type { LedgerEntry } from '../../../../public-api';
 
+type Warning = {
+  code: string; message: string; source: string; line: number; column: number;
+  startLine: number; endLine: number;
+};
 type JournalSource =
   | { kind: 'file'; path: string }
   | { kind: 'stdin'; content: string; baseDirectory: string };
@@ -13,7 +17,7 @@ module.exports = ({
   function createJournalLoader(parseSource: any) {
     return function loadJournal(source: JournalSource) {
       const entries: LedgerEntry[] = [];
-      const warnings: WarningGroup[] = [];
+      const warnings: Warning[] = [];
       const traversal = traverseJournal(source, ({ content, path, include }: any) => {
         const document = parseSource(content, { source: path });
         warnings.push(...(document.warnings || []));
