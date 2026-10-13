@@ -4,10 +4,10 @@ const assert = require('node:assert/strict');
 const withExternal = require('../../../support/external-dependencies.js');
 const path = require('node:path');
 const test = require('node:test');
-const createProject = withExternal(require('../../../../src/modules/project/internal/project'), ['fs', 'os', 'path']);
+const createProject = withExternal(require('../../../../src/modules/implementations/project/internal/project'), ['fs', 'os', 'path']);
 const { resolveRepositoryModule } = require('../../../support/repository-container');
 
-const publicErrors = resolveRepositoryModule('src/modules/core/internal/public-errors.js');
+const publicErrors = resolveRepositoryModule('src/modules/implementations/core/internal/public-errors.js');
 
 test('reports an unexpected cache directory failure as a database error', () => {
   const project = createProject({

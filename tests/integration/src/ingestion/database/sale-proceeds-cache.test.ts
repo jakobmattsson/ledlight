@@ -10,7 +10,7 @@ const test = require('node:test');
 const Database = require('better-sqlite3');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
-  resolveRepositoryModule('src/modules/database/internal/database.js');
+  resolveRepositoryModule('src/modules/implementations/database/internal/database.js');
 
 function fixture(t: TestContext, sale: any, extra?: any) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-proceeds-'));

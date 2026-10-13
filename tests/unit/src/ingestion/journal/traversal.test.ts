@@ -9,8 +9,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { loadJournal } = resolveRepositoryModule("src/modules/journal/journal/journal.js");
-const { loadJournalManifest } = resolveRepositoryModule("src/modules/journal/journal/journal-manifest.js");
+const { loadJournal } = resolveRepositoryModule("src/modules/implementations/journal/journal/journal.js");
+const { loadJournalManifest } = resolveRepositoryModule("src/modules/implementations/journal/journal/journal-manifest.js");
 
 function temporaryDirectory(t: TestContext) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-journal-loader-'));

@@ -11,7 +11,7 @@ module.exports = ({
   topLevelBlocks: { splitTopLevelBlocks },
 }: any) => {
 
-  const grammarSource = fs.readFileSync(path.join(__dirname, '../../../src/modules/journal/ledger.ohm'), 'utf8');
+  const grammarSource = fs.readFileSync(path.join(__dirname, '../../../src/modules/interfaces/journal/ledger.ohm'), 'utf8');
   const grammar = ohm.grammar(grammarSource);
 
   function location(node: Node, source: string) {

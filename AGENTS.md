@@ -11,8 +11,16 @@ data-facing literals when those values are part of the behavior under test.
 
 ## Module Facades
 
-Each `src/modules/**/index.ts` defines the public facade of its module. Keep
-every type used by that facade explicit and readable in the index file itself;
+Keep the module entry points together under
+`src/modules/interfaces/<module>/index.ts`.
+The database schema and journal grammar also live under their respective
+`interfaces/<module>` directories. Keep factory implementations under
+`src/modules/implementations/<module>` with their existing internal grouping.
+`dependencies.yaml` and `external.ts` remain at the `src/modules` root.
+
+Each `src/modules/interfaces/*/index.ts` defines the public facade of its
+module. Keep every type used by that facade explicit and readable in the index
+file itself;
 `src/public-api.ts` is the only permitted source for imported facade types.
 Prefer a local definition over a type inferred from an internal implementation,
 even when that means duplicating a definition.

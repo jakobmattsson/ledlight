@@ -8,12 +8,12 @@ const assert = require('node:assert/strict');
 const withExternal = require('../../../support/external-dependencies.js');
 const test = require('node:test');
 const commander = require('commander');
-const createCommand = withExternal(require('../../../../src/modules/cli/internal/cli-command'), ['packageMetadata']);
-const createArguments = withExternal(require('../../../../src/modules/cli/internal/cli-arguments'), ['commander']);
+const createCommand = withExternal(require('../../../../src/modules/implementations/cli/internal/cli-command'), ['packageMetadata']);
+const createArguments = withExternal(require('../../../../src/modules/implementations/cli/internal/cli-arguments'), ['commander']);
 const commands = resolveCommands();
-const cliArguments = resolveRepositoryModule('src/modules/cli/internal/cli-arguments.js');
-const cliFormat = resolveRepositoryModule('src/modules/cli/internal/cli-format.js');
-const coreProject = resolveRepositoryModule('src/modules/project/internal/project.js');
+const cliArguments = resolveRepositoryModule('src/modules/implementations/cli/internal/cli-arguments.js');
+const cliFormat = resolveRepositoryModule('src/modules/implementations/cli/internal/cli-format.js');
+const coreProject = resolveRepositoryModule('src/modules/implementations/project/internal/project.js');
 
 const commandNames = [...new Set(Object.values(cliArguments.apiCommands))];
 

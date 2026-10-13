@@ -64,7 +64,7 @@ function dependencyOrder(modules: string[], policy: Policy): string[] {
   return order;
 }
 
-function createLocalContainer(directory: string, dependencies: Record<string, unknown>): LocalModule {
+function createLocalContainer(directory: string, dependencies: Record<string, unknown>, facadeFile?: string): LocalModule {
   const container = createContainer({ injectionMode: InjectionMode.PROXY });
   const locations = new Map<string, string>();
   for (const { path: fileName } of listModules('**/*.js', { cwd: directory })) {
@@ -76,6 +76,13 @@ function createLocalContainer(directory: string, dependencies: Record<string, un
     const factory = require(fileName);
     if (typeof factory !== 'function') throw new TypeError(`${fileName} must export a factory`);
     container.register(name, asFunction(() => factory(dependencies), { lifetime: Lifetime.SINGLETON }));
+  }
+  if (facadeFile) {
+    if (locations.has('index')) throw new Error(`Duplicate module registration index: ${locations.get('index')} and ${facadeFile}`);
+    locations.set('index', facadeFile);
+    const factory = require(facadeFile);
+    if (typeof factory !== 'function') throw new TypeError(`${facadeFile} must export a factory`);
+    container.register('index', asFunction(() => factory(dependencies), { lifetime: Lifetime.SINGLETON }));
   }
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     if (!entry.isDirectory() || !entry.name.startsWith('list-')) continue;
@@ -119,7 +126,12 @@ function loadDependencyPolicy(...modulesPathParts: string[]) {
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
   const allowedModules = Object.freeze(policy['allowed-modules']);
   const allowedExternal = Object.freeze(policy['allowed-external']);
-  const modules = discoverModules(modulesRoot);
+  const modules = discoverModules(path.join(modulesRoot, 'interfaces'));
+  const implementationRoot = path.join(modulesRoot, 'implementations');
+  const implementations = fs.readdirSync(implementationRoot, { withFileTypes: true })
+    .filter((entry: import('node:fs').Dirent) => entry.isDirectory())
+    .map((entry: import('node:fs').Dirent) => entry.name).sort();
+  assertPolicyKeys(modules, Object.fromEntries(implementations.map((name: string) => [name, []])), 'Implementation');
   const order = dependencyOrder(modules, allowedModules);
   assertPolicyKeys(modules, allowedExternal, 'External');
   return { modulesRoot, modules, order, allowedModules, allowedExternal };
@@ -220,7 +232,8 @@ function createRepositoryContainer(...modulesPathParts: string[]) {
 
   function build(moduleName: string) {
     if (built.has(moduleName)) return built.get(moduleName);
-    const directory = path.join(modulesRoot, moduleName);
+    const directory = path.join(modulesRoot, 'implementations', moduleName);
+    const facadeFile = path.join(modulesRoot, 'interfaces', moduleName, 'index.js');
     const externals = Object.freeze(Object.fromEntries(allowedExternal[moduleName].map((name: string) => {
       if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
       return [name, services[name]];
@@ -228,7 +241,7 @@ function createRepositoryContainer(...modulesPathParts: string[]) {
     let local: LocalModule | undefined;
     const dependencies = scopedDependencies(moduleName, () => local?.container,
       allowedModules[moduleName], (provider: string) => build(provider).facade, externals);
-    local = createLocalContainer(directory, dependencies);
+    local = createLocalContainer(directory, dependencies, facadeFile);
     for (const [name, registration] of internalOverrides.get(moduleName) ?? []) {
       local.container.register(name, registration);
     }

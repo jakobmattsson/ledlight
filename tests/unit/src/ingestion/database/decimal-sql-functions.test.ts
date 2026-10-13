@@ -3,7 +3,7 @@
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { registerDecimalFunctions } = resolveRepositoryModule('src/modules/database/internal/decimal-sql-functions.js');
+const { registerDecimalFunctions } = resolveRepositoryModule('src/modules/implementations/database/internal/decimal-sql-functions.js');
 
 test('retains parsed decimal state until a database sum completes', () => {
   type Decimal = { coefficient: bigint; scale: number };

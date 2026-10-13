@@ -7,7 +7,7 @@ const test = require('node:test');
 const { parseCase } = require('../support/case');
 const { resolveRepositoryModule } = require('../support/repository-container');
 
-const { warningCodes } = resolveRepositoryModule('src/modules/journal/warnings/ingestion-warning.js');
+const { warningCodes } = resolveRepositoryModule('src/modules/implementations/journal/warnings/ingestion-warning.js');
 const directory = path.resolve(__dirname, '../../../tests/api/queries/warnings');
 const exampleFiles = fs.readdirSync(directory).filter((name: string) => name.endsWith('.case'));
 

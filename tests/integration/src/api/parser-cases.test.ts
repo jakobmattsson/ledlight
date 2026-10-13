@@ -12,7 +12,7 @@ const textHeader = '\n\n========== TEXT ==========\n\n';
 const jsonHeader = '\n========== JSON ==========\n\n';
 const errorHeader = '\n========== ERROR ==========\n\n';
 const warningsHeader = '\n========== WARNINGS ==========\n\n';
-const runtimeParser = resolveRepositoryModule('src/modules/journal/syntax/ledger-parser.js');
+const runtimeParser = resolveRepositoryModule('src/modules/implementations/journal/syntax/ledger-parser.js');
 const referenceParser = resolveReferenceParser().$$private;
 
 function warningContract({ code, source, line, startLine, endLine }: any) {

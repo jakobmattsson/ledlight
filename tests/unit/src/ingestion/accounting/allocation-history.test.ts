@@ -3,16 +3,16 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
-const { AllocationHistory } = resolveRepositoryModule('src/modules/accounting/internal/allocation-history.js');
-const { maximize } = resolveRepositoryModule('src/modules/accounting/internal/linear-program.js');
-const { parse, format } = resolveRepositoryModule('src/modules/numeric/internal/rational.js');
+const { AllocationHistory } = resolveRepositoryModule('src/modules/implementations/accounting/internal/allocation-history.js');
+const { maximize } = resolveRepositoryModule('src/modules/implementations/accounting/internal/linear-program.js');
+const { parse, format } = resolveRepositoryModule('src/modules/implementations/numeric/internal/rational.js');
 
 function measuredHistory(roundingUnit: string) {
   let optimizations = 0;
   const { AllocationHistory: MeasuredHistory } =
-    require('../../../../../src/modules/accounting/internal/allocation-history.js')({
+    require('../../../../../src/modules/implementations/accounting/internal/allocation-history.js')({
       numeric: {
-        rational: resolveRepositoryModule('src/modules/numeric/internal/rational.js'),
+        rational: resolveRepositoryModule('src/modules/implementations/numeric/internal/rational.js'),
       },
       linearProgram: {
         maximize(...args: unknown[]) {
