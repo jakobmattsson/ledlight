@@ -35,17 +35,17 @@ type Facade = {
   };
   loadJournal(source: JournalSource): LoadedJournal;
   scanJournalSources(journalPath: string): JournalManifest;
-  parseStrict(sourceText: string, options?: ParseLedgerOptions, lineOffset?: number): LedgerSyntaxTree;
+  parseLedgerText(sourceText: string, options?: ParseLedgerOptions): LedgerSyntaxTree;
 };
 type Registrations = Pick<Facade, 'ingestionWarning'> & {
   journal: Pick<Facade, 'loadJournal'>;
   journalSourceScanner: Pick<Facade, 'scanJournalSources'>;
-  ledgerParser: Pick<Facade, 'parseStrict'>;
+  ledgerParser: { parseStrict: Facade['parseLedgerText'] };
 };
 
 export = ({
   ingestionWarning, journal: { loadJournal }, journalSourceScanner: { scanJournalSources },
   ledgerParser: { parseStrict },
 }: Registrations): Facade => ({
-  ingestionWarning, loadJournal, scanJournalSources, parseStrict,
+  ingestionWarning, loadJournal, scanJournalSources, parseLedgerText: parseStrict,
 });

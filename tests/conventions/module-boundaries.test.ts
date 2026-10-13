@@ -95,7 +95,7 @@ test('resolves interface factories as facades and hides internal factories', () 
     ['database', 'readDatabase', 'databaseReader'],
     ['journal', 'loadJournal', 'journal'],
     ['journal', 'scanJournalSources', 'journalSourceScanner'],
-    ['journal', 'parseStrict', 'ledgerParser'],
+    ['journal', 'parseLedgerText', 'ledgerParser'],
   ]) {
     const facade = container.resolve(moduleName);
     assert.equal(typeof facade[member], 'function', `${moduleName}.${member}`);
