@@ -1,18 +1,20 @@
 'use strict';
 import type { SqliteDatabase } from './sqlite-contracts';
 
-type Dependencies = { external: { fs: Pick<typeof import('node:fs'), 'readFileSync'>; schemaPath: string } };
+type Dependencies = { external: { fs: Pick<typeof import('node:fs'), 'readFileSync'>; modulesDirectory: string;
+  path: Pick<typeof import('node:path'), 'join'> } };
 type Result = { SCHEMA_VERSION: string; migrateDatabase(database: SqliteDatabase): void };
 
 export = ({
   external: {
     fs,
-    schemaPath
+    modulesDirectory,
+    path
   },
 }: Dependencies): Result => {
 
   const SCHEMA_VERSION = '39';
-  const schema = fs.readFileSync(schemaPath, 'utf8');
+  const schema = fs.readFileSync(path.join(modulesDirectory, 'database/schema.sql'), 'utf8');
 
   function tableExists(database: SqliteDatabase, name: string): boolean {
     return database.prepare(

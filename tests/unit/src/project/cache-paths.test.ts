@@ -5,10 +5,11 @@ const withExternal = require('../../../support/external-dependencies.js');
 const crypto = require('node:crypto');
 const path = require('node:path');
 const test = require('node:test');
-const createCachePaths = withExternal(require('../../../../src/modules/core/internal/cache-paths'), ['crypto', 'envPaths', 'fs', 'path', 'processEnvironment']);
+const createCachePaths = withExternal(require('../../../../src/modules/project/internal/cache-paths'), ['crypto', 'envPaths', 'fs', 'path', 'processEnvironment']);
 
-function cachePaths(settings_?: { canonicalPath?: string; environment?: NodeJS.ProcessEnv; generatedCachePath?: string; pathModule?: typeof import('node:path').posix }) {
+function cachePaths(settings_?: { cacheHome?: string; canonicalPath?: string; environment?: NodeJS.ProcessEnv; generatedCachePath?: string; pathModule?: typeof import('node:path').posix }) {
   const {
+    cacheHome,
     canonicalPath = '/books/main.ledger',
     environment = {},
     generatedCachePath = '/system/cache/ledlight',
@@ -27,7 +28,7 @@ function cachePaths(settings_?: { canonicalPath?: string; environment?: NodeJS.P
       realpathSync,
       statSync: () => ({ isFile: () => true }),
     },
-    configuration: { read: () => ({}) },
+    core: { readConfiguration: () => ({ cacheHome }) },
     path: pathModule,
     processEnvironment: environment,
   });
@@ -42,6 +43,10 @@ test('honors the explicit cache override', () => {
     cachePaths({ environment: { LEDLIGHT_CACHE_HOME: '/tmp/custom-cache' } }).$$private.cacheRoot(),
     '/tmp/custom-cache',
   );
+});
+
+test('uses the configured cache home when no environment override exists', () => {
+  assert.equal(cachePaths({ cacheHome: '/configured/cache' }).$$private.cacheRoot(), '/configured/cache');
 });
 
 test('derives a deterministic database path from the canonical journal path', () => {
@@ -71,7 +76,7 @@ test('rejects missing journal paths and paths that do not name files', () => {
       realpathSync,
       statSync: () => ({ isFile: () => false }),
     },
-    configuration: { read: () => ({}) },
+    core: { readConfiguration: () => ({}) },
     path: path.posix,
     processEnvironment: {},
   });

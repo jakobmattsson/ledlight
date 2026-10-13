@@ -103,8 +103,8 @@ test('ubiquitous metadata is optional and rejects unknown names', (t: TestContex
 test('dependency validators identify changed values, malformed YAML, and stale formatting', () => {
   const dependsOn = fs.readFileSync(path.join(architectureRoot, 'depends-on.yaml'), 'utf8');
   const usedBy = fs.readFileSync(path.join(architectureRoot, 'used-by.yaml'), 'utf8');
-  assert.throws(() => validateDependsOnYaml(dependsOn.replace('    - crypto\n', ''), modulesRoot),
-    /depends-on\.yaml: core\.external\[0\]: expected "crypto", got "currentWorkingDirectory"/u);
+  assert.throws(() => validateDependsOnYaml(dependsOn.replace('core:\n  external:\n    - currentWorkingDirectory\n', 'core:\n  external:\n'), modulesRoot),
+    /depends-on\.yaml: core\.external\[0\]: expected "currentWorkingDirectory", got "fs"/u);
   assert.throws(() => validateUsedByYaml('external: [\n', modulesRoot),
     /used-by\.yaml: invalid YAML/u);
   assert.throws(() => validateUsedByYaml(usedBy.replace('\n\nmodules:', '\nmodules:'), modulesRoot),

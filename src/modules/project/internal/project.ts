@@ -8,9 +8,9 @@ type CurrentJournal = { databasePath: string; journalPath: string };
 
 export = ({
   core: {
-    pathsForJournal,
     publicErrors: { createError, databaseError, errorCodes },
   },
+  cachePaths: { pathsForJournal },
   queries: { definitions: queries },
   journal: {
     loadJournal,

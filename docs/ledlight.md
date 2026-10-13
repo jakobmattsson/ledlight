@@ -321,9 +321,11 @@ Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as
 `numeric: { rational }`. The `numeric` module owns decimal and rational
-operations; `core` provides configuration, cache paths, errors, and report
-helpers. An internal registration in the same module can be
-requested by name, such as `linearProgram: { maximize }`. A facade exposes a
+operations; `core` provides configuration, errors, and report helpers.
+`project` owns the cache path derived from a journal file. Database migration
+resolves its schema file beside the database module. An internal registration
+in the same module can be requested by name, such as
+`linearProgram: { maximize }`. A facade exposes a
 sole capability directly, without a one-member wrapper copied from the
 internal registration. Other module internals are unavailable. Each source
 module root contains its `index.ts` facade, compiled to

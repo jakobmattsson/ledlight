@@ -7,7 +7,7 @@ type CachePaths = {
 };
 
 export = ({
-  configuration,
+  core: { readConfiguration },
   external: {
     crypto,
     envPaths,
@@ -16,7 +16,7 @@ export = ({
     processEnvironment
   },
 }: {
-  configuration: { read(): { cacheHome?: string } };
+  core: { readConfiguration(): { cacheHome?: string } };
   external: {
     crypto: Pick<typeof import('node:crypto'), 'createHash'>;
     envPaths: (name: string, options: { suffix: string }) => { cache: string };
@@ -30,7 +30,7 @@ export = ({
     if (processEnvironment.LEDLIGHT_CACHE_HOME) {
       return path.resolve(processEnvironment.LEDLIGHT_CACHE_HOME);
     }
-    const { cacheHome } = configuration.read();
+    const { cacheHome } = readConfiguration();
     if (cacheHome) return cacheHome;
     return envPaths('ledlight', { suffix: '' }).cache;
   }

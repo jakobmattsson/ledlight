@@ -19,9 +19,7 @@ allowed-modules:
 allowed-external:
   numeric: []
   core:
-    - crypto
     - currentWorkingDirectory
-    - envPaths
     - fs
     - path
     - processEnvironment
@@ -30,14 +28,14 @@ allowed-external:
   accounting: []
   database:
     - fs
+    - modulesDirectory
     - path
     - processRuntime
-    - schemaPath
     - sqlite
     - systemClock
   queries: [zod]
   commands: [commander]
-  project: [fs, os, path]
+  project: [crypto, envPaths, fs, os, path, processEnvironment]
   cli:
     - commander
     - currentWorkingDirectory

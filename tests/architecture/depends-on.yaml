@@ -24,9 +24,7 @@ commands:
 
 core:
   external:
-    - crypto
     - currentWorkingDirectory
-    - envPaths
     - fs
     - path
     - processEnvironment
@@ -37,9 +35,9 @@ core:
 database:
   external:
     - fs
+    - modulesDirectory
     - path
     - processRuntime
-    - schemaPath
     - sqlite
     - systemClock
   modules:
@@ -64,9 +62,12 @@ numeric:
 
 project:
   external:
+    - crypto
+    - envPaths
     - fs
     - os
     - path
+    - processEnvironment
   modules:
     - core
     - database

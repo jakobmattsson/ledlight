@@ -5,18 +5,20 @@ external:
     - cli
     - commands
   crypto:
-    - core
     - journal
+    - project
   currentWorkingDirectory:
     - cli
     - core
   envPaths:
-    - core
+    - project
   fs:
     - core
     - database
     - journal
     - project
+  modulesDirectory:
+    - database
   os:
     - project
   packageMetadata:
@@ -28,10 +30,9 @@ external:
     - project
   processEnvironment:
     - core
+    - project
   processRuntime:
     - cli
-    - database
-  schemaPath:
     - database
   sqlite:
     - database

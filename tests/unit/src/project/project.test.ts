@@ -12,9 +12,9 @@ const publicErrors = resolveRepositoryModule('src/modules/core/internal/public-e
 test('reports an unexpected cache directory failure as a database error', () => {
   const project = createProject({
     core: {
-      pathsForJournal: () => ({ databasePath: '/fixture/cache.sqlite' }),
       publicErrors,
     },
+    cachePaths: { pathsForJournal: () => ({ databasePath: '/fixture/cache.sqlite' }) },
     fs: { mkdirSync: () => { throw new Error('cache directory is unavailable'); } },
     path,
     queries: { definitions: [] },

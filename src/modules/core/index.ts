@@ -5,7 +5,6 @@ type ReportRow = { commodity: string; quantity: string; valuationValue?: string 
 type TotalRow = ReportRow & { account: 'Total'; isTotal: true };
 type PriceRow = { date: string; base_commodity: string; quote_commodity: string; quote_quantity: string };
 type Facade = {
-  pathsForJournal(journalPath: string): { journalPath: string; databasePath: string };
   readConfiguration(): { journalPath?: string; cacheHome?: string };
   publicErrors: {
     createError(code: string, message: string, ErrorType?: new (message: string) => CodedError): CodedError;
@@ -23,17 +22,16 @@ type Facade = {
   createLedgerValuationRateResolver(priceRows: PriceRow[], valuationCommodity: string): (commodity: unknown, throughDate: unknown) => string;
 };
 type Registrations = Pick<Facade, 'publicErrors'> & {
-  cachePaths: { pathsForJournal: Facade['pathsForJournal'] };
   configuration: { read: Facade['readConfiguration'] };
   reportTotals: { appendTotal: Facade['appendTotal'] };
   valuationRateResolver: { createLedgerValuationRateResolver: Facade['createLedgerValuationRateResolver'] };
 };
 
 export = ({
-  cachePaths: { pathsForJournal }, configuration: { read: readConfiguration },
+  configuration: { read: readConfiguration },
   publicErrors,
   reportTotals: { appendTotal }, valuationRateResolver: { createLedgerValuationRateResolver },
 }: Registrations): Facade => ({
-  pathsForJournal, readConfiguration, publicErrors,
+  readConfiguration, publicErrors,
   appendTotal, createLedgerValuationRateResolver,
 });

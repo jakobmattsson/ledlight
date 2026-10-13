@@ -70,6 +70,8 @@ test('resolves index factories as facades and hides internal factories', () => {
   assert.equal(Object.hasOwn(container.resolve('numeric').decimal, 'registerDecimalFunctions'), false);
   assert.equal(Object.hasOwn(container.resolve('core'), 'decimal'), false);
   assert.equal(Object.hasOwn(container.resolve('core'), 'rational'), false);
+  assert.equal(Object.hasOwn(container.resolve('core'), 'pathsForJournal'), false);
+  assert.equal(Object.hasOwn(container.resolve('project'), 'pathsForJournal'), false);
   assert.equal(Object.hasOwn(container.resolve('journal'), 'parse'), false);
   for (const [moduleName, member, formerGroup] of [
     ['accounting', 'inferEffectivePostingCosts', 'effectivePostingCosts'],
@@ -77,7 +79,6 @@ test('resolves index factories as facades and hides internal factories', () => {
     ['accounting', 'valuationCommodityFromJournal', 'journalValuationCommodity'],
     ['accounting', 'PostingResolver', 'postingResolver'],
     ['cli', 'run', 'runCli'],
-    ['core', 'pathsForJournal', 'cachePaths'],
     ['core', 'readConfiguration', 'configuration'],
     ['core', 'appendTotal', 'reportTotals'],
     ['core', 'createLedgerValuationRateResolver', 'valuationRateResolver'],

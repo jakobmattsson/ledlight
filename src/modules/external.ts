@@ -9,6 +9,7 @@ module.exports = () => ({
   currentWorkingDirectory: () => process.cwd(),
   envPaths: require('env-paths'),
   fs: require('node:fs'),
+  modulesDirectory: __dirname,
   os: require('node:os'),
   packageMetadata: require('../../../package.json'),
   path,
@@ -21,7 +22,6 @@ module.exports = () => ({
     standardOutput: process.stdout,
     standardError: process.stderr,
   },
-  schemaPath: path.join(__dirname, 'database/schema.sql'),
   standardInput: {
     isTTY: () => Boolean(process.stdin.isTTY),
     read: () => require('node:fs').readFileSync(0, 'utf8'),

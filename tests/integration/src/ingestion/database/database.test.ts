@@ -12,7 +12,7 @@ const test = require('node:test');
 const { asValue } = require('../../../../../lib/awilix');
 const Database = require('better-sqlite3');
 const { createRepositoryContainer } = require('../../../../../src/composition/repository-container');
-const { pathsForJournal } = resolveRepositoryModule("src/modules/core/internal/cache-paths.js");
+const { pathsForJournal } = resolveRepositoryModule("src/modules/project/internal/cache-paths.js");
 const {
   ensureDatabaseCurrent,
 } = resolveRepositoryModule("src/modules/database/internal/database.js");
