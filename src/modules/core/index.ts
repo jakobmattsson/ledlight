@@ -41,9 +41,7 @@ type Facade = {
     stringList: OptionSchema<string[]>;
     usage: OptionSchema<'all' | 'used' | 'unused'>;
     valuation: OptionSchema<'cost' | 'market'>;
-    validateDateRange(input: { from?: string; to?: string }, context: {
-      addIssue(issue: { code: 'custom'; message: string; path: string[] }): void;
-    }): void;
+    validateDateRange(input: { from?: string; to?: string }, context: { addIssue(issue: { code: 'custom'; message: string; path: string[] }): void; }): void;
     parseOptions<Options>(schema: ValidationSchema<Options>, value: unknown, operationName: string): Options;
   };
   cachePaths: {
@@ -92,10 +90,11 @@ type Facade = {
     parse(value: string): Fraction;
     format(value: Fraction): string;
   };
-  reportTotals: { appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow> };
+  reportTotals: {
+    appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow>
+  };
   valuationRateResolver: {
-    createLedgerValuationRateResolver(priceRows: PriceRow[], valuationCommodity: string):
-      (commodity: unknown, throughDate: unknown) => string;
+    createLedgerValuationRateResolver(priceRows: PriceRow[], valuationCommodity: string): (commodity: unknown, throughDate: unknown) => string;
   };
 };
 

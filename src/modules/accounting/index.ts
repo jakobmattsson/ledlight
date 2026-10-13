@@ -33,20 +33,14 @@ type Facade = {
     inferEffectivePostingCosts(entries: LedgerEntry[], valuationCommodity: string, warnings: Warning[]): void;
   };
   globalAccountingValidator: {
-    validateGlobalAccounting(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>,
-      valuationCommodity: string, warnings: Warning[]): void;
+    validateGlobalAccounting(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: Warning[]): void;
   };
   journalValidator: {
-    validateJournal(journal: { entries: LedgerEntry[] }, defaultCommodity: string | null | undefined,
-      initialWarnings?: Warning[]): JournalValidation;
-    validateResolvedCommodityTrades(transaction: Transaction, resolved: LedgerAmount[][],
-      defaultCommodity: string | null | undefined, warnings: Warning[]): void;
+    validateJournal(journal: { entries: LedgerEntry[] }, defaultCommodity: string | null | undefined, initialWarnings?: Warning[]): JournalValidation;
+    validateResolvedCommodityTrades(transaction: Transaction, resolved: LedgerAmount[][], defaultCommodity: string | null | undefined, warnings: Warning[]): void;
   };
   journalValuationCommodity: {
-    valuationCommodityFromJournal(journal: LedgerSyntaxTree & { journalPath?: string },
-      suppliedWarnings: Warning[], ignoredProperties?: Set<{ name: string; location: {
-        source: string; line: number; column: number;
-      } }>): string | null;
+    valuationCommodityFromJournal(journal: LedgerSyntaxTree & { journalPath?: string }, suppliedWarnings: Warning[], ignoredProperties?: Set<{ name: string; location: { source: string; line: number; column: number; } }>): string | null;
   };
   postingResolver: { PostingResolver: new (warnings: Warning[]) => PostingResolverInstance };
 };
