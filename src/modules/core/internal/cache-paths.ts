@@ -1,5 +1,11 @@
 'use strict';
 
+type JournalPaths = { journalPath: string; databasePath: string };
+type CachePaths = {
+  pathsForJournal(journalPath: string): JournalPaths;
+  $$private: { cacheRoot(): string; canonicalJournalPath(journalPath: string): string };
+};
+
 export = ({
   configuration,
   external: {
@@ -18,9 +24,9 @@ export = ({
     path: Pick<typeof import('node:path'), 'resolve' | 'join'>;
     processEnvironment: NodeJS.ProcessEnv;
   };
-}) => {
+}): CachePaths => {
 
-  function cacheRoot() {
+  function cacheRoot(): string {
     if (processEnvironment.LEDLIGHT_CACHE_HOME) {
       return path.resolve(processEnvironment.LEDLIGHT_CACHE_HOME);
     }
@@ -40,7 +46,7 @@ export = ({
     return resolvedPath;
   }
 
-  function pathsForJournal(journalPath: string) {
+  function pathsForJournal(journalPath: string): JournalPaths {
     const canonicalPath = canonicalJournalPath(journalPath);
     const identity = crypto.createHash('sha256').update(canonicalPath, 'utf8').digest('hex');
     return {

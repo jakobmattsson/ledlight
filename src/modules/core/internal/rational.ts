@@ -2,6 +2,19 @@
 
 type Decimal = { coefficient: bigint; scale: number };
 type Fraction = { n: bigint; d: bigint };
+type RationalOperations = {
+  zero: Fraction;
+  one: Fraction;
+  fraction(n: bigint, d: bigint): Fraction;
+  neg(value: Fraction): Fraction;
+  add(left: Fraction, right: Fraction): Fraction;
+  sub(left: Fraction, right: Fraction): Fraction;
+  mul(left: Fraction, right: Fraction): Fraction;
+  div(left: Fraction, right: Fraction): Fraction;
+  cmp(left: Fraction, right: Fraction): number;
+  parse(value: string): Fraction;
+  format(value: Fraction): string;
+};
 
 export = ({ decimal: { parseDecimal, divideDecimals, formatDecimal } }: {
   decimal: {
@@ -9,7 +22,7 @@ export = ({ decimal: { parseDecimal, divideDecimals, formatDecimal } }: {
     divideDecimals(left: Decimal, right: Decimal, scale: number): Decimal;
     formatDecimal(value: Decimal): string;
   };
-}) => {
+}): RationalOperations => {
   function gcd(a: bigint, b: bigint): bigint {
     while (b) [a, b] = [b, a % b];
     return a < 0n ? -a : a;
@@ -23,11 +36,11 @@ export = ({ decimal: { parseDecimal, divideDecimals, formatDecimal } }: {
   const zero = fraction(0n, 1n);
   const one = fraction(1n, 1n);
   const neg = (a: Fraction): Fraction => ({ n: -a.n, d: a.d });
-  const add = (a: Fraction, b: Fraction) => fraction(a.n * b.d + b.n * a.d, a.d * b.d);
-  const sub = (a: Fraction, b: Fraction) => add(a, neg(b));
-  const mul = (a: Fraction, b: Fraction) => fraction(a.n * b.n, a.d * b.d);
-  const div = (a: Fraction, b: Fraction) => fraction(a.n * b.d, a.d * b.n);
-  const cmp = (a: Fraction, b: Fraction) => {
+  const add = (a: Fraction, b: Fraction): Fraction => fraction(a.n * b.d + b.n * a.d, a.d * b.d);
+  const sub = (a: Fraction, b: Fraction): Fraction => add(a, neg(b));
+  const mul = (a: Fraction, b: Fraction): Fraction => fraction(a.n * b.n, a.d * b.d);
+  const div = (a: Fraction, b: Fraction): Fraction => fraction(a.n * b.d, a.d * b.n);
+  const cmp = (a: Fraction, b: Fraction): number => {
     const difference = a.n * b.d - b.n * a.d;
     return difference < 0n ? -1 : Number(difference > 0n);
   };

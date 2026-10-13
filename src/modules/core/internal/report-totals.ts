@@ -1,8 +1,21 @@
 'use strict';
 
-export = ({ decimal: { addDecimals, formatDecimal, parseDecimal } }: any) => {
-  function appendTotal(rows: any) {
-    const totals = new Map();
+type Decimal = { coefficient: bigint; scale: number };
+type ReportRow = { commodity: string; quantity: string; valuationValue?: string };
+type TotalRow = ReportRow & { account: 'Total'; isTotal: true };
+type Total = { quantity: Decimal; valuationValue?: Decimal };
+type Dependencies = {
+  decimal: {
+    addDecimals(left: Decimal, right: Decimal): Decimal;
+    formatDecimal(value: Decimal): string;
+    parseDecimal(value: string): Decimal;
+  };
+};
+type ReportTotals = { appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow> };
+
+export = ({ decimal: { addDecimals, formatDecimal, parseDecimal } }: Dependencies): ReportTotals => {
+  function appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow> {
+    const totals = new Map<string, Total>();
     for (const row of rows) {
       let total = totals.get(row.commodity);
       if (!total) {
@@ -17,8 +30,8 @@ export = ({ decimal: { addDecimals, formatDecimal, parseDecimal } }: any) => {
         );
       }
     }
-    return [...rows, ...[...totals.keys()].sort().map((commodity) => {
-      const total = totals.get(commodity);
+    return [...rows, ...[...totals.keys()].sort().map((commodity): TotalRow => {
+      const total = totals.get(commodity)!;
       return {
         account: 'Total',
         commodity,

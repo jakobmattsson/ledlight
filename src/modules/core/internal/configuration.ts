@@ -1,5 +1,7 @@
 'use strict';
 
+type Configuration = { journalPath?: string; cacheHome?: string };
+
 export = ({
   external: {
     fs,
@@ -14,8 +16,8 @@ export = ({
     processEnvironment: NodeJS.ProcessEnv;
     currentWorkingDirectory: () => string;
   };
-}) => {
-  function configurationPaths() {
+}): { read(): Configuration } => {
+  function configurationPaths(): string[] {
     const candidates: string[] = [];
     let directory = path.resolve(currentWorkingDirectory());
     while (true) {
@@ -46,7 +48,7 @@ export = ({
     return path.resolve(path.dirname(configurationPath), setting);
   }
 
-  function read() {
+  function read(): Configuration {
     const configurationPath = configurationPaths().find((candidate) => fs.existsSync(candidate));
     if (!configurationPath) return {};
 

@@ -1,11 +1,24 @@
 'use strict';
 
 type Decimal = { coefficient: bigint; scale: number };
-export = () => {
+type DecimalOperations = {
+  addDecimals(left: Decimal, right: Decimal): Decimal;
+  compareDecimals(left: Decimal, right: Decimal): number;
+  divideDecimals(left: Decimal, right: Decimal, scale: number): Decimal;
+  divideDecimalsHalfEven(left: Decimal, right: Decimal, scale: number): Decimal;
+  formatDecimal(decimal: Decimal): string;
+  formatDecimalFixed(decimal: Decimal, scale: number): string;
+  multiplyDecimals(left: Decimal, right: Decimal): Decimal;
+  negateDecimal(decimal: Decimal): Decimal;
+  parseDecimal(value: string): Decimal;
+  subtractDecimals(left: Decimal, right: Decimal): Decimal;
+};
+
+export = (): DecimalOperations => {
 
   const POWERS_OF_TEN = [1n];
 
-  function powerOfTen(exponent: number) {
+  function powerOfTen(exponent: number): bigint {
     while (POWERS_OF_TEN.length <= exponent) {
       POWERS_OF_TEN.push(POWERS_OF_TEN[POWERS_OF_TEN.length - 1] * 10n);
     }
@@ -32,7 +45,7 @@ export = () => {
     return { coefficient, scale };
   }
 
-  function alignDecimals(left: Decimal, right: Decimal) {
+  function alignDecimals(left: Decimal, right: Decimal): { left: bigint; right: bigint; scale: number; } {
     const scale = Math.max(left.scale, right.scale);
     return {
       left: left.coefficient * powerOfTen(scale - left.scale),
@@ -77,8 +90,8 @@ export = () => {
     return normalizeDecimal({ coefficient: negative ? -coefficient : coefficient, scale });
   }
 
-  const divideDecimals = (left: Decimal, right: Decimal, scale: number) => divideRoundedDecimals(left, right, scale, false);
-  const divideDecimalsHalfEven = (left: Decimal, right: Decimal, scale: number) => divideRoundedDecimals(left, right, scale, true);
+  const divideDecimals = (left: Decimal, right: Decimal, scale: number): Decimal => divideRoundedDecimals(left, right, scale, false);
+  const divideDecimalsHalfEven = (left: Decimal, right: Decimal, scale: number): Decimal => divideRoundedDecimals(left, right, scale, true);
 
   function negateDecimal(decimal: Decimal): Decimal {
     return { coefficient: -decimal.coefficient, scale: decimal.scale };

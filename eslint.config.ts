@@ -66,6 +66,13 @@ module.exports = [
     },
   },
   {
+    files: ["src/modules/core/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/explicit-function-return-type": "error",
+    },
+  },
+  {
     files: ["src/modules/external.ts"],
     rules: {
       "no-restricted-globals": "off",

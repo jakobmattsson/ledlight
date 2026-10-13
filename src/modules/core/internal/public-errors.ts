@@ -1,8 +1,20 @@
 'use strict';
 
 type CodedError = Error & { code?: string; sqliteCode?: string };
+type PublicErrors = {
+  createError(code: string, message: string, ErrorType?: new (message: string) => CodedError): CodedError;
+  databaseError(error: CodedError): CodedError;
+  errorCodes: Readonly<{
+    SYNTAX: 'LEDLIGHT_SYNTAX';
+    INVALID_API_INPUT: 'LEDLIGHT_INVALID_API_INPUT';
+    PROJECT_CONFIGURATION: 'LEDLIGHT_PROJECT_CONFIGURATION';
+    MISSING_VALUATION_DATA: 'LEDLIGHT_MISSING_VALUATION_DATA';
+    DATABASE: 'LEDLIGHT_DATABASE';
+  }>;
+  withCode(error: CodedError, code: string): CodedError;
+};
 
-export = () => {
+export = (): PublicErrors => {
 
   const errorCodes = Object.freeze({
     SYNTAX: 'LEDLIGHT_SYNTAX',
@@ -12,17 +24,17 @@ export = () => {
     DATABASE: 'LEDLIGHT_DATABASE',
   });
 
-  function withCode(error: CodedError, code: string) {
+  function withCode(error: CodedError, code: string): CodedError {
     if (error.code === undefined) error.code = code;
     return error;
   }
 
-  function createError(code: string, message: string, ErrorType?: new (message: string) => CodedError) {
+  function createError(code: string, message: string, ErrorType?: new (message: string) => CodedError): CodedError {
     const Constructor = ErrorType ?? Error;
     return withCode(new Constructor(message), code);
   }
 
-  function databaseError(error: CodedError) {
+  function databaseError(error: CodedError): CodedError {
     if (error.code && !String(error.code).startsWith('SQLITE_')) return error;
     if (String(error.code).startsWith('SQLITE_')) error.sqliteCode = error.code;
     error.code = errorCodes.DATABASE;
