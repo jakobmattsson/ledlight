@@ -15,7 +15,7 @@ type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: 
 
 export = ({
   core: {
-    decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
+    decimal: { compareDecimals, parseDecimal },
   },
   accounting: {
     PostingResolver,
@@ -24,6 +24,7 @@ export = ({
     valuationCommodityFromJournal,
     inferEffectivePostingCosts,
   },
+  decimalSqlFunctions: { registerDecimalFunctions },
   postingBalanceMaterializer: { materializePostingBalances },
   valuationPriceMaterializer: { materializeValuationPrices },
   databaseMigration: { SCHEMA_VERSION, migrateDatabase },

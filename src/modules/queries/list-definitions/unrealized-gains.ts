@@ -10,6 +10,7 @@ type Cache = Map<symbol, (commodity: string, throughDate: string) => string>;
 
 
 module.exports = ({
+  apiOptions: { accounts, dateBasis, dateOption, parseOptions },
   core: {
     decimal: {
       addDecimals,
@@ -19,7 +20,6 @@ module.exports = ({
       parseDecimal,
       subtractDecimals,
     },
-    apiOptions: { accounts, dateBasis, dateOption, parseOptions },
   },
   accountFilter: { accountFilter },
   valuationRates: { queryValuationRates },

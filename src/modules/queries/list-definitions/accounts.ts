@@ -4,10 +4,8 @@ type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown
 type Row = { account: string; comment: string | null; used: number; transactionCount: number };
 
 module.exports = ({
+  apiOptions: { accounts, usage, parseOptions },
   accountFilter: { accountFilter },
-  core: {
-    apiOptions: { accounts, usage, parseOptions },
-  },
   external: {
     zod: { z }
   },

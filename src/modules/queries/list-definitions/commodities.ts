@@ -4,9 +4,7 @@ type Database = { prepare(sql: string): { all(...parameters: unknown[]): unknown
 type Row = { commodity: string; comment: string | null; format: string | null; isDefault: number; used: number };
 
 module.exports = ({
-  core: {
-    apiOptions: { usage, parseOptions },
-  },
+  apiOptions: { usage, parseOptions },
   external: {
     zod: { z }
   },

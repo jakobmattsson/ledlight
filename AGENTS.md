@@ -27,6 +27,22 @@ Do not copy the internal registration hierarchy into the facade when it adds
 no meaning. Expose a sole public function or property directly on the facade;
 group related members only when the group contains multiple public members.
 
+## Module Ownership
+
+Place a capability in the module that owns and uses it. When only one module
+uses a standalone capability, define it in that module instead of exposing it
+from another module. Keep a capability with a coherent group of related
+operations even if only one other module currently uses that particular
+operation. For example, decimal formatting and division belong with the other
+decimal operations; database-specific registration of SQL decimal functions
+belongs in `database`.
+
+Judge ownership by responsibility and logical grouping, not by counting
+consumers alone. A domain module may remain separate when it has one consumer.
+Move a capability across a module boundary only when its responsibility is
+clear. When ownership is unclear, keep the current boundary until the
+responsibility is settled.
+
 ## Verification
 
 Always run `npm test` after making code, configuration, fixture, or script

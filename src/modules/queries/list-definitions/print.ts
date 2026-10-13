@@ -1,9 +1,7 @@
 'use strict';
 
 module.exports = ({
-  core: {
-    apiOptions: { parseOptions },
-  },
+  apiOptions: { parseOptions },
   journalPrinter: { printJournal },
   external: {
     zod: { z }

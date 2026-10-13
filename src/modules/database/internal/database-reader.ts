@@ -1,9 +1,7 @@
 'use strict';
 
 export = ({
-  core: {
-    decimal: { registerDecimalFunctions },
-  },
+  decimalSqlFunctions: { registerDecimalFunctions },
   external: {
     path,
     sqlite: Database

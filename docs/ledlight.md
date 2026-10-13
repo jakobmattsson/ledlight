@@ -320,10 +320,12 @@ services. The CLI entry point passes `__dirname, 'modules'` before resolving
 Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as
-`core: { rational, maximize }`. A facade exposes a sole capability directly,
-without a one-member wrapper copied from the internal registration. Other
-module internals are unavailable. Each source module root contains its
-`index.ts` facade, compiled to `dist/src/modules/<module>/index.js`. The
+`core: { rational }`. An internal registration in the same module can be
+requested by name, such as `linearProgram: { maximize }`. A facade exposes a
+sole capability directly, without a one-member wrapper copied from the
+internal registration. Other module internals are unavailable. Each source
+module root contains its `index.ts` facade, compiled to
+`dist/src/modules/<module>/index.js`. The
 database schema (`schema.sql`) and journal grammar (`ledger.ohm`) sit beside their
 module facades; implementation files live in subdirectories. Factories have
 unique kebab-case file names within their module. The local Awilix subset lives in

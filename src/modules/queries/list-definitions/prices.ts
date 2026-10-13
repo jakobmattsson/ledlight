@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = ({
+  apiOptions: { parseOptions },
   core: {
-    apiOptions: { parseOptions },
     decimal: { divideDecimals, formatDecimal, parseDecimal },
   },
   external: {

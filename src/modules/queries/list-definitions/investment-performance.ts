@@ -13,10 +13,10 @@ type FlowRow = {
 
 
 module.exports = ({
+  apiOptions: { accounts, dateRange, stringList, validateDateRange, parseOptions },
   accountFilter: { accountFilter, accountMatches },
   core: {
     publicErrors: { createError, errorCodes },
-    apiOptions: { accounts, dateRange, stringList, validateDateRange, parseOptions },
   },
   investmentReturns: { calculatePerformance },
   investmentFlows: { calculateFlows },

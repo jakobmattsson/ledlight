@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
 const { AllocationHistory } = resolveRepositoryModule('src/modules/accounting/internal/allocation-history.js');
-const { maximize } = resolveRepositoryModule('src/modules/core/internal/linear-program.js');
+const { maximize } = resolveRepositoryModule('src/modules/accounting/internal/linear-program.js');
 const { parse, format } = resolveRepositoryModule('src/modules/core/internal/rational.js');
 
 function measuredHistory(roundingUnit: string) {
@@ -13,6 +13,8 @@ function measuredHistory(roundingUnit: string) {
     require('../../../../../src/modules/accounting/internal/allocation-history.js')({
       core: {
         rational: resolveRepositoryModule('src/modules/core/internal/rational.js'),
+      },
+      linearProgram: {
         maximize(...args: unknown[]) {
           optimizations += 1;
           return maximize(...args);

@@ -1,10 +1,8 @@
 'use strict';
 
 module.exports = ({
+  apiOptions: { accounts, dateRange, validateDateRange, parseOptions },
   accountFilter: { accountFilter },
-  core: {
-    apiOptions: { accounts, dateRange, validateDateRange, parseOptions },
-  },
   external: {
     zod: { z }
   },

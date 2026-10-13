@@ -19,12 +19,10 @@ function createReader(events: unknown[]) {
   const { readDatabase } = createDatabaseReader({
     path,
     sqlite: Database,
-    core: {
-      decimal: {
-        registerDecimalFunctions(receivedDatabase: unknown) {
-          assert.equal(receivedDatabase, database);
-          events.push('register');
-        },
+    decimalSqlFunctions: {
+      registerDecimalFunctions(receivedDatabase: unknown) {
+        assert.equal(receivedDatabase, database);
+        events.push('register');
       },
     },
   });

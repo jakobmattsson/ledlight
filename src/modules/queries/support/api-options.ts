@@ -1,7 +1,7 @@
 'use strict';
 
 export = ({
-  publicErrors: { createError, errorCodes },
+  core: { publicErrors: { createError, errorCodes } },
   external: {
     zod: { z }
   },

@@ -10,7 +10,6 @@ const {
   formatDecimal,
   formatDecimalFixed,
   parseDecimal,
-  registerDecimalFunctions,
 } = resolveRepositoryModule("src/modules/core/internal/decimal.js");
 
 test('rounds exact decimal values to a fixed number of places', () => {
@@ -47,32 +46,4 @@ test('rounds exact division ties to even for Ledger price presentation', () => {
     assert.equal(formatDecimal(divideDecimalsHalfEven(parseDecimal(numerator), parseDecimal('128'), 6)), expected);
   }
   assert.equal(formatDecimal(divideDecimals(parseDecimal('1'), parseDecimal('128'), 6)), '0.007813');
-});
-
-test('retains parsed decimal state until a database sum completes', () => {
-  type Decimal = { coefficient: bigint; scale: number };
-  type Aggregate = {
-    start(): Decimal;
-    step(total: Decimal, value: string | null): Decimal;
-    result(total: Decimal): string;
-  };
-  let aggregate: Aggregate | undefined;
-  const database = {
-    aggregate(name: string, options: Aggregate) {
-      if (name === 'decimal_sum') aggregate = options;
-    },
-    function() {},
-  };
-  registerDecimalFunctions(database);
-
-  assert.ok(aggregate);
-  const configured = aggregate as Aggregate;
-  let total = configured.start();
-  total = configured.step(total, '1.25');
-  total = configured.step(total, null);
-  total = configured.step(total, '2.5');
-
-  assert.deepEqual(total, { coefficient: 375n, scale: 2 });
-  assert.equal(configured.result(total), '3.75');
-  assert.equal(configured.result(configured.start()), '0');
 });

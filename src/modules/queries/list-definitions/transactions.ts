@@ -16,10 +16,8 @@ type TagRow = { transactionId?: number; postingId?: number; name: string; value:
 
 
 module.exports = ({
+  apiOptions: { accounts, parseOptions },
   accountFilter: { accountFilter },
-  core: {
-    apiOptions: { accounts, parseOptions },
-  },
   external: {
     zod: { z }
   },

@@ -4,15 +4,17 @@ type Fraction = { n: bigint; d: bigint };
 type IndexedFraction = ReadonlyArray<readonly [number, Fraction]>;
 type Constraint = { coefficients: IndexedFraction; bound: Fraction };
 
-export = ({ rational: { zero, one, neg, sub, mul, div, cmp } }: {
-  rational: {
-    zero: Fraction;
-    one: Fraction;
-    neg(value: Fraction): Fraction;
-    sub(left: Fraction, right: Fraction): Fraction;
-    mul(left: Fraction, right: Fraction): Fraction;
-    div(left: Fraction, right: Fraction): Fraction;
-    cmp(left: Fraction, right: Fraction): number;
+export = ({ core: { rational: { zero, one, neg, sub, mul, div, cmp } } }: {
+  core: {
+    rational: {
+      zero: Fraction;
+      one: Fraction;
+      neg(value: Fraction): Fraction;
+      sub(left: Fraction, right: Fraction): Fraction;
+      mul(left: Fraction, right: Fraction): Fraction;
+      div(left: Fraction, right: Fraction): Fraction;
+      cmp(left: Fraction, right: Fraction): number;
+    };
   };
 }) => {
   // Two-phase simplex over exact rational numbers. Variables are nonnegative;

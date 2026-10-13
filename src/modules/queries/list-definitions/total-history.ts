@@ -8,6 +8,7 @@ type Row = { date: string; amount: string; missing_commodity: string | null };
 
 
 module.exports = ({
+  apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
   core: {
     decimal: {
       formatDecimal,
@@ -15,7 +16,6 @@ module.exports = ({
       parseDecimal,
     },
     publicErrors: { createError, errorCodes },
-    apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
   },
   accountFilter: { accountFilter },
   costValuation: { validateCostValuation, costValueSql },
