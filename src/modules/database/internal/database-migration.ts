@@ -14,10 +14,6 @@ export = ({
   const SCHEMA_VERSION = '39';
   const schema = fs.readFileSync(schemaPath, 'utf8');
 
-  const supportedVersions = new Set([
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', SCHEMA_VERSION,
-  ]);
-
   function tableExists(database: SqliteDatabase, name: string): boolean {
     return database.prepare(
       'SELECT 1 FROM sqlite_schema WHERE type = \'table\' AND name = ?',
@@ -72,13 +68,10 @@ export = ({
 
   function migrateDatabase(database: SqliteDatabase): void {
     const existingVersion = storedSchemaVersion(database);
-    if (existingVersion !== undefined && !supportedVersions.has(existingVersion)) {
-      throw new Error(`Unsupported Ledlight database schema version: ${existingVersion}`);
-    }
-    if (existingVersion !== undefined && existingVersion !== SCHEMA_VERSION) {
-      recreateDatabase(database);
-    } else {
+    if (existingVersion === SCHEMA_VERSION) {
       database.exec(schema);
+    } else {
+      recreateDatabase(database);
     }
   }
 

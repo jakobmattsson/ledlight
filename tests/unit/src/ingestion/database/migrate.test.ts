@@ -172,7 +172,7 @@ test('enforces unique account, commodity, and tag declaration names', (t: TestCo
   );
 });
 
-test('recreates a supported legacy cache with the current schema', (t: TestContext) => {
+test('recreates a legacy cache with the current schema', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
@@ -348,15 +348,27 @@ test('removes stored print text when rebuilding a version 29 cache', (t: TestCon
   assert.equal(database.prepare('SELECT COUNT(*) FROM journal_entries').pluck().get(), 0);
 });
 
-test('rejects unsupported schema versions', (t: TestContext) => {
+test('recreates a cache with an unrecognized schema version', (t: TestContext) => {
   const database = temporaryDatabase(t);
   database.exec(`
     CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID;
     INSERT INTO metadata (key, value) VALUES ('schema_version', '99');
+    CREATE TABLE transactions (entry_id INTEGER PRIMARY KEY, legacy_data TEXT);
   `);
 
-  assert.throws(
-    () => migrateDatabase(database),
-    /Unsupported Ledlight database schema version: 99/u,
-  );
+  migrateDatabase(database);
+
+  assert.ok(!database.pragma('table_info(transactions)').some((column: Column) => column.name === 'legacy_data'));
+  assert.ok(database.prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name = 'database_metadata'").get());
+  assert.equal(database.prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name = 'metadata'").get(), undefined);
+});
+
+test('recreates an existing cache without a schema version', (t: TestContext) => {
+  const database = temporaryDatabase(t);
+  database.exec('CREATE TABLE transactions (entry_id INTEGER PRIMARY KEY, legacy_data TEXT);');
+
+  migrateDatabase(database);
+
+  assert.ok(!database.pragma('table_info(transactions)').some((column: Column) => column.name === 'legacy_data'));
+  assert.ok(database.pragma('table_info(transactions)').some((column: Column) => column.name === 'description'));
 });

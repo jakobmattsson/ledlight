@@ -525,9 +525,9 @@ operating system's application cache directory as
 derived from the canonical absolute journal path. Set `--cache-home PATH` in
 `.ledlightrc` to choose a cache root for a project. `LEDLIGHT_CACHE_HOME` takes
 precedence over this setting. Rebuilding the database replaces its contents
-in one transaction. Because the database is a reproducible cache, an older
-supported schema version is recreated from the journal instead of preserving
-and transforming cached rows in place.
+in one transaction. Because the database is a reproducible cache, any schema
+version other than the current one, or a missing version, is recreated from
+the journal instead of preserving and transforming cached rows in place.
 
 `database_metadata` stores the schema version, root journal path, build time,
 and selected valuation commodity. It is database bookkeeping and is unrelated
