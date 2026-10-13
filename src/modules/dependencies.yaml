@@ -1,20 +1,40 @@
 ubiquitous:
   - core
-  - numeric
   - fs
+  - numeric
   - path
   - zod
 
 allowed-modules:
   numeric: []
-  core: [numeric]
-  journal: [core]
-  accounting: [numeric, journal]
-  database: [core, numeric, journal, accounting]
-  queries: [core, numeric, accounting, database]
+  core:
+    - numeric
+  journal:
+    - core
+  accounting:
+    - journal
+    - numeric
+  database:
+    - accounting
+    - core
+    - journal
+    - numeric
+  queries:
+    - accounting
+    - core
+    - database
+    - numeric
   commands: []
-  project: [core, journal, database, queries]
-  cli: [core, numeric, commands, project]
+  project:
+    - core
+    - database
+    - journal
+    - queries
+  cli:
+    - commands
+    - core
+    - numeric
+    - project
 
 allowed-external:
   numeric: []
@@ -24,7 +44,12 @@ allowed-external:
     - path
     - processEnvironment
     - zod
-  journal: [buffer, crypto, fs, path, zod]
+  journal:
+    - buffer
+    - crypto
+    - fs
+    - path
+    - zod
   accounting: []
   database:
     - fs
@@ -33,9 +58,17 @@ allowed-external:
     - processRuntime
     - sqlite
     - systemClock
-  queries: [zod]
-  commands: [commander]
-  project: [crypto, envPaths, fs, os, path, processEnvironment]
+  queries:
+    - zod
+  commands:
+    - commander
+  project:
+    - crypto
+    - envPaths
+    - fs
+    - os
+    - path
+    - processEnvironment
   cli:
     - commander
     - currentWorkingDirectory

@@ -18,6 +18,16 @@ const modulesRoot = path.resolve(__dirname, '../../src/modules');
 const architectureRoot = path.resolve(__dirname, '../../../tests/architecture');
 const diagramPath = path.resolve(__dirname, '../../../architecture.svg');
 
+test('dependency policy lists are alphabetical', () => {
+  const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
+  for (const [section, entries] of Object.entries(policy)) {
+    const lists = Array.isArray(entries) ? [[section, entries]] : Object.entries(entries as Record<string, string[]>);
+    for (const [name, values] of lists) {
+      assert.deepEqual(values, [...values].sort(), `${section}.${name} must be alphabetical`);
+    }
+  }
+});
+
 for (const [fileName, validate] of [
   ['depends-on.yaml', validateDependsOnYaml],
   ['used-by.yaml', validateUsedByYaml],
