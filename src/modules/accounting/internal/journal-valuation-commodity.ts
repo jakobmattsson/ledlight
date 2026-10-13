@@ -1,14 +1,20 @@
 'use strict';
 
 import type { LedgerSyntaxTree } from '../../../public-api';
+type Journal = ReturnType<typeof import('../../journal')>;
+type Dependencies = { journal: Pick<Journal, 'ingestionWarning'> };
+type Result = { valuationCommodityFromJournal(
+  journal: { entries: LedgerSyntaxTree['entries']; source?: string; journalPath?: string }, suppliedWarnings: unknown[],
+  ignoredProperties?: Set<{ name: string; location: { source: string; line: number; column: number } }>,
+): string | null };
 
 export = ({
   journal: {
     ingestionWarning: { createWarning, warningCodes },
   },
-}: any) => {
+}: Dependencies): Result => {
 
-  function valuationCommodityFromJournal(journal: LedgerSyntaxTree & { journalPath?: string }, suppliedWarnings: unknown[], ignoredProperties?: Set<{ name: string; location: { source: string; line: number; column: number } }>) {
+  function valuationCommodityFromJournal(journal: { entries: LedgerSyntaxTree['entries']; source?: string; journalPath?: string }, suppliedWarnings: unknown[], ignoredProperties?: Set<{ name: string; location: { source: string; line: number; column: number } }>): string | null {
     const warnings = suppliedWarnings || [];
     let valuationCommodity = null;
     let defaultLocation = null;

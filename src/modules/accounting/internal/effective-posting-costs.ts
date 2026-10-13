@@ -6,6 +6,17 @@ type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type HoldingGroup = { price: Fraction; remaining: { constant: Fraction; coefficients: Map<number, Fraction> } };
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
+type Core = ReturnType<typeof import('../../core')>;
+type Journal = ReturnType<typeof import('../../journal')>;
+type Movements = ReturnType<typeof import('./commodity-movements')>;
+type History = ReturnType<typeof import('./allocation-history')>;
+type Dependencies = {
+  core: Pick<Core, 'rational'>;
+  commodityMovements: Movements;
+  allocationHistory: History;
+  journal: Pick<Journal, 'ingestionWarning'>;
+};
+type Result = { inferEffectivePostingCosts(entries: LedgerEntry[], valuationCommodity: string | null, warnings: unknown[]): void };
 
 
 export = ({
@@ -17,12 +28,12 @@ export = ({
   journal: {
     ingestionWarning: { createWarning, warningCodes },
   },
-}: any) => {
-  const absolute = (value: Fraction) => value.n < 0n ? neg(value) : value;
-  const quantityOf = (posting: LedgerPosting) => parse(posting.amount!.quantity);
-  const totalOf = (posting: LedgerPosting, annotation: LedgerCost) => annotatedTotal(annotation, quantityOf(posting));
+}: Dependencies): Result => {
+  const absolute = (value: Fraction): Fraction => value.n < 0n ? neg(value) : value;
+  const quantityOf = (posting: LedgerPosting): Fraction => parse(posting.amount!.quantity);
+  const totalOf = (posting: LedgerPosting, annotation: LedgerCost): Fraction => annotatedTotal(annotation, quantityOf(posting))!;
 
-  function annotation(total: Fraction, quantity: Fraction, commodity: string, preferTotal?: boolean) {
+  function annotation(total: Fraction, quantity: Fraction, commodity: string, preferTotal?: boolean): LedgerCost | null {
     if (!quantity.n) return null;
     const unit = format(div(total, quantity));
     if (!preferTotal && !unit.includes('/')) {
@@ -32,14 +43,14 @@ export = ({
     return text.includes('/') ? null : { total: true, amount: { quantity: text, commodity } };
   }
 
-  function assign(posting: LedgerPosting, field: 'lotCost' | 'cost', total: Fraction, commodity: string, preferTotal?: boolean) {
+  function assign(posting: LedgerPosting, field: 'lotCost' | 'cost', total: Fraction, commodity: string, preferTotal?: boolean): void {
     if (!posting[field]) posting[field] = annotation(total, quantityOf(posting), commodity, preferTotal);
   }
 
-  function inferEffectivePostingCosts(entries: LedgerEntry[], valuationCommodity: string, warnings: unknown[]) {
+  function inferEffectivePostingCosts(entries: LedgerEntry[], valuationCommodity: string | null, warnings: unknown[]): void {
     if (!valuationCommodity) return;
     const histories = new Map();
-    const historyFor = (account: string, commodity: string) => {
+    const historyFor = (account: string, commodity: string): InstanceType<History['AllocationHistory']> => {
       const key = JSON.stringify([account, commodity]);
       if (!histories.has(key)) histories.set(key, new AllocationHistory(zero));
       return histories.get(key);
@@ -66,13 +77,13 @@ export = ({
         }
       }
 
-      const foreign = transaction.postings.filter((posting: LedgerPosting) => posting.amount &&
+      const foreign: LedgerPosting[] = transaction.postings.filter((posting: LedgerPosting) => posting.amount &&
         posting.amount.commodity !== valuationCommodity && quantityOf(posting).n);
       const monetary = transaction.postings.filter((posting: LedgerPosting) =>
         posting.amount?.commodity === valuationCommodity);
       if (foreign.length === 2 && monetary.length === 0 && transaction.postings.length === 2) {
-        const outgoing = foreign.find((posting: LedgerPosting) => quantityOf(posting).n < 0n);
-        const incoming = foreign.find((posting: LedgerPosting) => quantityOf(posting).n > 0n);
+        const outgoing: LedgerPosting | undefined = foreign.find((posting: LedgerPosting) => quantityOf(posting).n < 0n);
+        const incoming: LedgerPosting | undefined = foreign.find((posting: LedgerPosting) => quantityOf(posting).n > 0n);
         if (outgoing && incoming && outgoing.amount!.commodity === incoming.amount!.commodity &&
             !outgoing.cost && !incoming.cost && outgoing.lotCost && !incoming.lotCost &&
             (outgoing.account === incoming.account ||

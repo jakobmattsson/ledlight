@@ -7,8 +7,24 @@ type Constraint = { coefficients: Coefficients; bound: Fraction; strict?: boolea
 type HoldingGroup = { price: Fraction; remaining: LinearExpression };
 type AccountTotal = { quantity: Fraction; cost: Fraction };
 type Optimization = { status: 'optimal'; value: Fraction; solution: Fraction[] } | { status: 'infeasible' | 'unbounded' };
+type DisposalFailure = { insufficient: true; minimum?: never; maximum?: never } |
+  { minimum: Fraction; maximum: Fraction; insufficient?: never };
+type AllocationHistoryContract = {
+  constraints: Constraint[]; groups: Map<string, HoldingGroup[]>; invalid: boolean;
+  roundingUnit: Fraction; totals: Map<string, AccountTotal>; variables: number; witness: Fraction[];
+  merge(other: AllocationHistoryContract): void;
+  holdings(account: string): HoldingGroup[];
+  total(account: string): AccountTotal;
+  changeTotal(account: string, quantity: Fraction, cost: Fraction): void;
+  acquire(account: string, quantity: Fraction, cost: Fraction): void;
+  equality(coefficients: Coefficients, bound: Fraction): void;
+  findWitness(constraints: Constraint[]): Fraction[] | null;
+  dispose(account: string, quantity: Fraction, cost: Fraction, destination: string | null | undefined,
+    destinationQuantity: Fraction | undefined): DisposalFailure | null;
+};
+type Result = { AllocationHistory: new (roundingUnit: Fraction) => AllocationHistoryContract };
 
-module.exports = ({
+export = ({
   core: {
     rational: { zero, one, add, sub, mul, div, neg, cmp },
   },
@@ -26,7 +42,7 @@ module.exports = ({
     };
   };
   linearProgram: { maximize(count: number, constraints: Constraint[], objective: Coefficients): Optimization };
-}) => {
+}): Result => {
   const expression = (constant: Fraction, coefficients?: Coefficients): LinearExpression => ({ constant, coefficients: coefficients || new Map() });
   function scale(value: LinearExpression, factor: Fraction): LinearExpression {
     return expression(mul(value.constant, factor), new Map(
@@ -63,7 +79,7 @@ module.exports = ({
       this.totals = new Map<string, AccountTotal>();
       this.invalid = false;
     }
-    merge(other: AllocationHistory): void {
+    merge(other: AllocationHistoryContract): void {
       if (other === this) return;
       const offset = this.variables;
       const remap = (coefficients: Coefficients): Coefficients => new Map([...coefficients]
@@ -131,7 +147,7 @@ module.exports = ({
       return result.status === 'optimal' && result.value.n > 0n
         ? result.solution.slice(0, this.variables) : null;
     }
-    dispose(account: string, quantity: Fraction, cost: Fraction, destination: string | null | undefined, destinationQuantity: Fraction | undefined) {
+    dispose(account: string, quantity: Fraction, cost: Fraction, destination: string | null | undefined, destinationQuantity: Fraction | undefined): DisposalFailure | null {
       if (this.invalid) return null;
       const groups = this.holdings(account);
       const total = this.total(account);
@@ -160,13 +176,13 @@ module.exports = ({
       const rounded = this.roundingUnit.n > 0n && div(cost, this.roundingUnit).d === 1n;
       const lowerCost = rounded ? sub(cost, this.roundingUnit) : cost;
       const upperCost = rounded ? add(cost, this.roundingUnit) : cost;
-      const outside = (minimum: Fraction, maximum: Fraction) => rounded
+      const outside = (minimum: Fraction, maximum: Fraction): boolean => rounded
         ? cmp(upperCost, minimum) <= 0 || cmp(lowerCost, maximum) >= 0
         : cmp(cost, minimum) < 0 || cmp(cost, maximum) > 0;
       // Greedy bounds avoid the solver while remaining quantities are fixed.
       // With rounding, even a booked endpoint can admit other allocations.
       if (groups.every((group) => group.remaining.coefficients.size === 0)) {
-        const consume = (descending: number) => {
+        const consume = (descending: number): { needed: Fraction; value: Fraction; taken: Map<HoldingGroup, Fraction> } => {
           let needed = quantity;
           let value = zero;
           const taken = new Map<HoldingGroup, Fraction>();

@@ -4,6 +4,12 @@ import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../..
 
 type Decimal = { coefficient: bigint; scale: number };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+type Core = ReturnType<typeof import('../../core')>;
+type Journal = ReturnType<typeof import('../../journal')>;
+type Dependencies = { core: Pick<Core, 'decimal'>; journal: Pick<Journal, 'ingestionWarning'> };
+type Result = { PostingResolver: new (warnings: unknown[]) => {
+  resolve(transaction: Transaction): LedgerAmount[][] | null;
+} };
 
 export = ({
   core: {
@@ -20,7 +26,7 @@ export = ({
   journal: {
     ingestionWarning: { createWarning, warningCodes },
   },
-}: any) => {
+}: Dependencies): Result => {
 
   const ZERO = parseDecimal('0');
 

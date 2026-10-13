@@ -1,14 +1,21 @@
 'use strict';
+import type { SqliteDatabase } from '../../../types/sqlite-contracts';
 
-module.exports = ({
+type Core = ReturnType<typeof import('../../core')>;
+type Dependencies = { core: Pick<Core, 'createLedgerValuationRateResolver'> };
+type Introduction = { commodity: string; start_date: string };
+type PriceRow = { date: string; base_commodity: string; quote_quantity: string; quote_commodity: string };
+type Result = { materializeValuationPrices(database: SqliteDatabase, valuationCommodity: string | null): number };
+
+export = ({
   core: {
     createLedgerValuationRateResolver,
   },
-}: any) => {
+}: Dependencies): Result => {
 
-  function materializeValuationPrices(database: any, valuationCommodity: string) {
+  function materializeValuationPrices(database: SqliteDatabase, valuationCommodity: string | null): number {
     if (!valuationCommodity) return 0;
-    const introductions = database.prepare(`
+    const introductions = database.prepare<Introduction>(`
       WITH commodity_introductions AS (
         SELECT r.amount_commodity AS commodity, MIN(p.posting_date) AS date
         FROM resolved_posting_amounts AS r
@@ -32,7 +39,7 @@ module.exports = ({
       GROUP BY commodity
       ORDER BY commodity
     `).all();
-    const latestDate = database.prepare(`
+    const latestDate = database.prepare<string | null>(`
       SELECT MAX(date) FROM (
         SELECT MAX(posting_date) AS date FROM postings
         UNION ALL
@@ -42,7 +49,7 @@ module.exports = ({
       )
     `).pluck().get();
     if (!latestDate) return 0;
-    const priceRows = database.prepare(`
+    const priceRows = database.prepare<PriceRow>(`
       SELECT p.date, p.base_commodity, p.quote_quantity, p.quote_commodity
       FROM prices AS p
       ORDER BY p.base_commodity, p.date, p.entry_id
@@ -51,16 +58,17 @@ module.exports = ({
     const insert = database.prepare(
       'INSERT INTO valuation_prices (commodity, date, rate) VALUES (?, ?, ?)',
     );
-    const nextDate = database.prepare("SELECT date(?, '+1 day')").pluck();
+    const nextDate = database.prepare<string | null>("SELECT date(?, '+1 day')").pluck();
     let changes = 0;
     for (const { commodity, start_date: startDate } of introductions) {
-      for (let date = startDate; date <= latestDate; date = nextDate.get(date)) {
+      for (let date: string | null | undefined = startDate; date && date <= latestDate; date = nextDate.get(date)) {
         try {
           insert.run(commodity, date, resolve(commodity, date));
           changes += 1;
-        } catch (error: any) {
-          if (!error.message.startsWith('No price for ') &&
-              !error.message.startsWith('Circular price chain ')) throw error;
+        } catch (error: unknown) {
+          if (!(error instanceof Error) ||
+              (!error.message.startsWith('No price for ') &&
+               !error.message.startsWith('Circular price chain '))) throw error;
         }
       }
     }

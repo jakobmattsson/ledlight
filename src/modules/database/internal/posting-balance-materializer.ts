@@ -1,13 +1,19 @@
 'use strict';
+import type { SqliteDatabase } from '../../../types/sqlite-contracts';
 
-module.exports = ({
+type Core = ReturnType<typeof import('../../core')>;
+type Dependencies = { core: Pick<Core, 'decimal'> };
+type BalanceRow = { id: number; account: string; quantity: string; commodity: string };
+type Result = { materializePostingBalances(database: SqliteDatabase): number };
+
+export = ({
   core: {
     decimal: { addDecimals, formatDecimal, parseDecimal },
   },
-}: any) => {
+}: Dependencies): Result => {
 
-  function materializePostingBalances(database: any) {
-    const rows = database.prepare(`
+  function materializePostingBalances(database: SqliteDatabase): number {
+    const rows = database.prepare<BalanceRow>(`
       SELECT
         amounts.id,
         postings.account,
@@ -23,7 +29,7 @@ module.exports = ({
       SET balance_quantity = ?
       WHERE id = ?
     `);
-    const balancesByAccount = new Map();
+    const balancesByAccount = new Map<string, Map<string, ReturnType<typeof parseDecimal>>>();
     for (const row of rows) {
       let balances = balancesByAccount.get(row.account);
       if (!balances) {

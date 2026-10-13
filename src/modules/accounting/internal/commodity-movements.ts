@@ -4,12 +4,20 @@ import type { LedgerCost, LedgerEntry, LedgerPosting } from '../../../public-api
 
 type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
+type Core = ReturnType<typeof import('../../core')>;
+type Dependencies = { core: Pick<Core, 'rational'> };
+type Result = {
+  annotatedTotal(annotation: LedgerCost | null, quantity: Fraction): Fraction | null;
+  carriedMovements(transaction: Transaction, valuationCommodity: string | null | undefined): Movement[];
+  unpricedReplacement(transaction: Transaction, valuationCommodity: string | null | undefined): Movement | null;
+};
 
 export = ({
   core: {
     rational: { zero, parse, mul, neg, add, cmp },
   },
-}: any) => {
+}: Dependencies): Result => {
   function annotatedTotal(annotation: LedgerCost | null, quantity: Fraction): Fraction | null {
     if (!annotation) return null;
     const cost = parse(annotation.amount.quantity);
@@ -19,7 +27,7 @@ export = ({
 
   // A paired movement carries basis without a sale price. Different accounts
   // require equal units; a same-account pair may change the unit scale.
-  function carriedMovements(transaction: Transaction, valuationCommodity: string) {
+  function carriedMovements(transaction: Transaction, valuationCommodity: string | null | undefined): Movement[] {
     const candidates = new Map<string, LedgerPosting[]>();
     for (const posting of transaction.postings) {
       if (!posting.amount || posting.cost || !posting.lotCost ||
@@ -40,7 +48,7 @@ export = ({
           const units = parse(candidate.amount!.quantity);
           return units.n > 0n &&
             (candidate.account === outgoing.account || cmp(units, neg(quantity)) === 0) &&
-            cmp(add(basis, annotatedTotal(candidate.lotCost, units)), zero) === 0;
+            cmp(add(basis!, annotatedTotal(candidate.lotCost, units)!), zero) === 0;
         });
         if (incoming) {
           unused.delete(outgoing);
@@ -52,7 +60,7 @@ export = ({
     return pairs;
   }
 
-  function unpricedReplacement(transaction: Transaction, valuationCommodity: string) {
+  function unpricedReplacement(transaction: Transaction, valuationCommodity: string | null | undefined): Movement | null {
     const postings = transaction.postings.filter((posting) => posting.amount &&
       posting.amount.commodity !== valuationCommodity && parse(posting.amount.quantity).n);
     if (postings.length !== 2 || transaction.postings.length !== 2 ||

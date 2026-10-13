@@ -1,9 +1,26 @@
 'use strict';
+import type { SqliteConstructor } from '../../../types/sqlite-contracts';
 
 type ManifestFile = { path: string; sha256: string; size: number };
 type JournalManifest = { journalPath: string; files: ManifestFile[] };
+type DatabaseStatus = {
+  databasePath: string; journalPath: string; inSync: boolean; reason: string;
+  added: string[]; removed: string[]; changed: string[];
+};
+type Journal = ReturnType<typeof import('../../journal')>;
+type Migration = ReturnType<typeof import('./database-migration')>;
+type Dependencies = {
+  journal: Pick<Journal, 'loadJournalManifest'>;
+  databaseMigration: Pick<Migration, 'SCHEMA_VERSION'>;
+  external: { fs: Pick<typeof import('node:fs'), 'existsSync'>;
+    path: Pick<typeof import('node:path'), 'resolve'>; sqlite: SqliteConstructor };
+};
+type Result = {
+  checkDatabaseSync(databasePath: string, journalPath: string): DatabaseStatus;
+  databaseJournalPath(databasePath: string): string | null;
+};
 
-module.exports = ({
+export = ({
   journal: {
     loadJournalManifest,
   },
@@ -13,9 +30,9 @@ module.exports = ({
     path,
     sqlite: Database
   },
-}: any) => {
+}: Dependencies): Result => {
 
-  function databaseWithoutSchema(databasePath: string, journalPath: string, reason: string) {
+  function databaseWithoutSchema(databasePath: string, journalPath: string, reason: string): DatabaseStatus {
     return {
       databasePath: path.resolve(databasePath),
       journalPath: path.resolve(journalPath),
@@ -27,7 +44,7 @@ module.exports = ({
     };
   }
 
-  function checkDatabaseSync(databasePath: string, journalPath: string) {
+  function checkDatabaseSync(databasePath: string, journalPath: string): DatabaseStatus {
     const resolvedDatabasePath = path.resolve(databasePath);
     if (!fs.existsSync(resolvedDatabasePath)) {
       return databaseWithoutSchema(databasePath, journalPath, 'database_missing');
@@ -49,7 +66,7 @@ module.exports = ({
       }
 
       const metadataTable = hasDatabaseMetadata ? 'database_metadata' : 'metadata';
-      const metadata = new Map(database.prepare(
+      const metadata = new Map(database.prepare<[string, string]>(
         `SELECT key, value FROM ${metadataTable}`,
       ).raw().all());
       if (metadata.get('schema_version') !== SCHEMA_VERSION) {
@@ -100,7 +117,7 @@ module.exports = ({
     `).pluck().get();
       if (!hasDatabaseMetadata && !hasLegacyMetadata) return null;
       const metadataTable = hasDatabaseMetadata ? 'database_metadata' : 'metadata';
-      return database.prepare(
+      return database.prepare<string>(
         `SELECT value FROM ${metadataTable} WHERE key = 'root_path'`,
       ).pluck().get() || null;
     } finally {

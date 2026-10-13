@@ -6,6 +6,24 @@ type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type Declarations = { accounts: Set<string>; commodities: Set<string>; tags: Set<string> };
 type LocatedTag = LedgerTag & { location?: SourceLocation };
 type ResolvedPosting = LedgerPosting & { amount: LedgerAmount; original: LedgerPosting };
+type Core = ReturnType<typeof import('../../core')>;
+type Journal = ReturnType<typeof import('../../journal')>;
+type Movements = ReturnType<typeof import('./commodity-movements')>;
+type Valuation = ReturnType<typeof import('./journal-valuation-commodity')>;
+type Warning = ReturnType<Journal['ingestionWarning']['createWarning']>;
+type JournalValidation = { invalidEntries: Set<LedgerEntry>; journal: { entries: LedgerEntry[] }; warnings: Warning[] };
+type Result = {
+  validateJournal(journal: { entries: LedgerEntry[] }, defaultCommodity: string | null | undefined,
+    initialWarnings?: Warning[]): JournalValidation;
+  validateResolvedCommodityTrades(transaction: Transaction, resolved: LedgerAmount[][],
+    defaultCommodity: string | null | undefined, warnings: unknown[]): void;
+};
+type Dependencies = {
+  core: Pick<Core, 'decimal' | 'rational'>;
+  commodityMovements: Movements;
+  journal: Pick<Journal, 'ingestionWarning'>;
+  journalValuationCommodity: Valuation;
+};
 
 export = ({
   core: {
@@ -17,25 +35,25 @@ export = ({
     ingestionWarning: { createWarning, warningCodes },
   },
   journalValuationCommodity: { valuationCommodityFromJournal },
-}: any) => {
+}: Dependencies): Result => {
 
   const ZERO = parseDecimal('0');
 
-  function warnUnlessDeclared(kind: 'account' | 'commodity' | 'tag', name: string | null | undefined, declarations: Set<string>, location: SourceLocation, warnings: unknown[]) {
+  function warnUnlessDeclared(kind: 'account' | 'commodity' | 'tag', name: string | null | undefined, declarations: Set<string>, location: SourceLocation, warnings: unknown[]): void {
     if (name === null || name === undefined || declarations.has(name)) return;
     const label = kind[0].toUpperCase() + kind.slice(1);
     warnings.push(createWarning(
-      warningCodes[`UNDECLARED_${kind.toUpperCase()}`],
+      warningCodes[`UNDECLARED_${kind.toUpperCase()}` as keyof typeof warningCodes],
       `${label} ${name} must be declared before use`,
       location,
     ));
   }
 
-  function declare(kind: 'account' | 'commodity' | 'tag', name: string, declarations: Set<string>, location: SourceLocation, warnings: unknown[]) {
+  function declare(kind: 'account' | 'commodity' | 'tag', name: string, declarations: Set<string>, location: SourceLocation, warnings: unknown[]): boolean {
     const label = kind[0].toUpperCase() + kind.slice(1);
     if (declarations.has(name)) {
       warnings.push(createWarning(
-        warningCodes[`DUPLICATE_${kind.toUpperCase()}_DECLARATION`],
+        warningCodes[`DUPLICATE_${kind.toUpperCase()}_DECLARATION` as keyof typeof warningCodes],
         `${label} ${name} has already been declared`,
         location,
       ));
@@ -45,7 +63,7 @@ export = ({
     return true;
   }
 
-  function validatePostingDeclarations(posting: LedgerPosting, declarations: Declarations, warnings: unknown[]) {
+  function validatePostingDeclarations(posting: LedgerPosting, declarations: Declarations, warnings: unknown[]): void {
     warnUnlessDeclared(
       'account', posting.account, declarations.accounts, posting.location, warnings,
     );
@@ -65,7 +83,7 @@ export = ({
     }
   }
 
-  function validateTransactionDeclarations(transaction: Transaction, declarations: Declarations, warnings: unknown[]) {
+  function validateTransactionDeclarations(transaction: Transaction, declarations: Declarations, warnings: unknown[]): void {
     for (const tag of (transaction.tags || []) as LocatedTag[]) {
       warnUnlessDeclared('tag', tag.name, declarations.tags, tag.location || transaction.location, warnings);
     }
@@ -74,7 +92,7 @@ export = ({
     }
   }
 
-  function validatePostingDates(transaction: Transaction, warnings: unknown[]) {
+  function validatePostingDates(transaction: Transaction, warnings: unknown[]): void {
     for (const posting of transaction.postings) {
       if (posting.postingDate && posting.postingDate < transaction.date) {
         warnings.push(createWarning(
@@ -86,7 +104,7 @@ export = ({
     }
   }
 
-  function validateCommodityTrade(posting: LedgerPosting, defaultCommodity: string | null | undefined, warnings: unknown[]) {
+  function validateCommodityTrade(posting: LedgerPosting, defaultCommodity: string | null | undefined, warnings: unknown[]): void {
     if (!posting.amount || !defaultCommodity) return;
     if (posting.amount.commodity === defaultCommodity) {
       for (const [label, annotation] of ([
@@ -122,7 +140,7 @@ export = ({
     }
   }
 
-  function validateSelfCommodityCosts(posting: LedgerPosting, warnings: unknown[]) {
+  function validateSelfCommodityCosts(posting: LedgerPosting, warnings: unknown[]): void {
     if (!posting.amount?.commodity) return;
     const { commodity, quantity } = posting.amount;
     for (const [label, annotation] of ([
@@ -133,7 +151,7 @@ export = ({
       const actual = annotation.total
         ? annotatedTotal(annotation, expected)
         : parseRational(annotation.amount.quantity);
-      if (cmp(actual, expected) !== 0) {
+      if (cmp(actual!, expected) !== 0) {
         warnings.push(createWarning(
           warningCodes.INVALID_COMMODITY_TRADE,
           `${label} expressed in the posting commodity ${commodity} ` +
@@ -144,7 +162,7 @@ export = ({
     }
   }
 
-  function validatePosting(posting: LedgerPosting, defaultCommodity: string | null | undefined, warnings: unknown[], carried: Set<LedgerPosting>) {
+  function validatePosting(posting: LedgerPosting, defaultCommodity: string | null | undefined, warnings: unknown[], carried: Set<LedgerPosting>): void {
     if (posting.lotCost) {
       const costCommodity = posting.lotCost.amount.commodity;
       if (defaultCommodity && costCommodity && costCommodity !== defaultCommodity &&
@@ -162,7 +180,7 @@ export = ({
     if (!carried.has(posting)) validateCommodityTrade(posting, defaultCommodity, warnings);
   }
 
-  function validateResolvedCommodityTrades(transaction: Transaction, resolved: LedgerAmount[][], defaultCommodity: string | null | undefined, warnings: unknown[]) {
+  function validateResolvedCommodityTrades(transaction: Transaction, resolved: LedgerAmount[][], defaultCommodity: string | null | undefined, warnings: unknown[]): void {
     const postings: ResolvedPosting[] = transaction.postings.flatMap((posting, index) =>
       resolved[index].map((amount) => ({ ...posting, amount, original: posting })));
     const carried = new Set<LedgerPosting>(carriedMovements({ ...transaction, postings }, defaultCommodity)
@@ -184,7 +202,7 @@ export = ({
     }
   }
 
-  function validateJournal(journal: { entries: LedgerEntry[] }, defaultCommodity: string | null | undefined, initialWarnings?: unknown[]) {
+  function validateJournal(journal: { entries: LedgerEntry[] }, defaultCommodity: string | null | undefined, initialWarnings?: Warning[]): JournalValidation {
     const warnings = [...(initialWarnings || [])];
     const invalidEntries = new Set<LedgerEntry>();
     const effectiveDefaultCommodity = defaultCommodity === undefined

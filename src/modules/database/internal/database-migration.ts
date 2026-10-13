@@ -1,18 +1,15 @@
 'use strict';
+import type { SqliteDatabase } from '../../../types/sqlite-contracts';
 
-type Database = {
-  prepare(sql: string): { pluck(): { get(...parameters: unknown[]): unknown } };
-  pragma(sql: string, options?: { simple: boolean }): unknown;
-  transaction(callback: () => void): () => void;
-  exec(sql: string): unknown;
-};
+type Dependencies = { external: { fs: Pick<typeof import('node:fs'), 'readFileSync'>; schemaPath: string } };
+type Result = { SCHEMA_VERSION: string; migrateDatabase(database: SqliteDatabase): void };
 
-module.exports = ({
+export = ({
   external: {
     fs,
     schemaPath
   },
-}: any) => {
+}: Dependencies): Result => {
 
   const SCHEMA_VERSION = '39';
   const schema = fs.readFileSync(schemaPath, 'utf8');
@@ -21,13 +18,13 @@ module.exports = ({
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', SCHEMA_VERSION,
   ]);
 
-  function tableExists(database: Database, name: string) {
+  function tableExists(database: SqliteDatabase, name: string): boolean {
     return database.prepare(
       'SELECT 1 FROM sqlite_schema WHERE type = \'table\' AND name = ?',
     ).pluck().get(name) !== undefined;
   }
 
-  function storedSchemaVersion(database: Database) {
+  function storedSchemaVersion(database: SqliteDatabase): string | undefined {
     const table = tableExists(database, 'database_metadata')
       ? 'database_metadata'
       : (tableExists(database, 'metadata') ? 'metadata' : null);
@@ -37,7 +34,7 @@ module.exports = ({
     ).pluck().get() as string | undefined;
   }
 
-  function recreateDatabase(database: Database) {
+  function recreateDatabase(database: SqliteDatabase): void {
     const foreignKeys = database.pragma('foreign_keys', { simple: true });
     database.pragma('foreign_keys = OFF');
     try {
@@ -73,7 +70,7 @@ module.exports = ({
     }
   }
 
-  function migrateDatabase(database: Database) {
+  function migrateDatabase(database: SqliteDatabase): void {
     const existingVersion = storedSchemaVersion(database);
     if (existingVersion !== undefined && !supportedVersions.has(existingVersion)) {
       throw new Error(`Unsupported Ledlight database schema version: ${existingVersion}`);

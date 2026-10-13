@@ -19,8 +19,8 @@ export = ({ core: { decimal: { addDecimals, compareDecimals, formatDecimal, mult
     multiplyDecimals(left: Decimal, right: Decimal): Decimal;
     parseDecimal(value: string): Decimal;
   } };
-}) => {
-  function registerDecimalFunctions(database: DecimalDatabase) {
+}): { registerDecimalFunctions(database: DecimalDatabase): void } => {
+  function registerDecimalFunctions(database: DecimalDatabase): void {
     database.aggregate('decimal_sum', {
       start: () => ({ coefficient: 0n, scale: 0 }),
       step: (total: Decimal, value: SqlDecimal) => value === null

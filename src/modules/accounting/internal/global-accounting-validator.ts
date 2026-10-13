@@ -1,10 +1,26 @@
 'use strict';
 
-import type { LedgerAmount, LedgerEntry, LedgerPosting } from '../../../public-api';
+import type { LedgerAmount, LedgerEntry, LedgerPosting, SourceLocation } from '../../../public-api';
 
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type CommodityDeclaration = Extract<LedgerEntry, { type: 'commodity' }>;
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
+type Core = ReturnType<typeof import('../../core')>;
+type Journal = ReturnType<typeof import('../../journal')>;
+type Movements = ReturnType<typeof import('./commodity-movements')>;
+type History = ReturnType<typeof import('./allocation-history')>;
+type SaleProceeds = ReturnType<typeof import('./sale-proceeds-validator')>;
+type Dependencies = {
+  core: Pick<Core, 'rational'>;
+  commodityMovements: Pick<Movements, 'annotatedTotal' | 'carriedMovements'>;
+  allocationHistory: History;
+  saleProceedsValidator: SaleProceeds;
+  journal: Pick<Journal, 'ingestionWarning'>;
+};
+type Result = { validateGlobalAccounting(
+  entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>,
+  valuationCommodity: string | null, warnings: unknown[],
+): void };
 
 
 export = ({
@@ -17,8 +33,8 @@ export = ({
   journal: {
     ingestionWarning: { createWarning, warningCodes },
   },
-}: any) => {
-  function validatePostingDateHoldings(resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: unknown[]) {
+}: Dependencies): Result => {
+  function validatePostingDateHoldings(resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: unknown[]): void {
     const positions = new Map();
     for (const [transaction, resolved] of resolvedTransactions) {
       transaction.postings.forEach((posting: LedgerPosting, index: number) => {
@@ -51,7 +67,7 @@ export = ({
     }
   }
 
-  function validateGlobalAccounting(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: unknown[]) {
+  function validateGlobalAccounting(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string | null, warnings: unknown[]): void {
     if (!valuationCommodity) return;
     validatePostingDateHoldings(resolvedTransactions, valuationCommodity, warnings);
     const declaration = entries.find((entry): entry is CommodityDeclaration =>
@@ -63,14 +79,14 @@ export = ({
     const histories = new Map();
     const positions = new Map();
     const impossible: Array<{
-      transaction: { description: string }; posting: { account: string; location: unknown };
+      transaction: { description: string }; posting: { account: string; location: SourceLocation };
       key: string; commodity: string; quantity: { n: bigint; d: bigint };
       cost: { n: bigint; d: bigint }; closed: boolean; insufficient?: boolean;
       minimum?: { n: bigint; d: bigint }; maximum?: { n: bigint; d: bigint };
     }> = [];
     const transactions = entries.filter((entry): entry is Transaction => entry.type === 'transaction' && resolvedTransactions.has(entry))
       .sort((left: Transaction, right: Transaction) => left.date.localeCompare(right.date));
-    const historyFor = (account: string, commodity: string) => {
+    const historyFor = (account: string, commodity: string): InstanceType<History['AllocationHistory']> => {
       const key = JSON.stringify([account, commodity]);
       if (!histories.has(key)) histories.set(key, new AllocationHistory(roundingUnit));
       return histories.get(key);
@@ -146,7 +162,7 @@ export = ({
       const { transaction, posting, commodity, quantity, cost, minimum, maximum } = failure;
       const range = failure.insufficient
         ? 'insufficient acquired units are available'
-        : `allowed range is ${format(minimum)} to ${format(maximum)} ${valuationCommodity}`;
+        : `allowed range is ${format(minimum!)} to ${format(maximum!)} ${valuationCommodity}`;
       warnings.push(createWarning(warningCodes.IMPOSSIBLE_COST_BASIS,
         `${transaction.description}: ${posting.account} sold ${format(quantity)} ${commodity} ` +
         `with cost ${format(cost)} ${valuationCommodity}; ${range}`, posting.location));

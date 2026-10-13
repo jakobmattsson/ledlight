@@ -3,6 +3,9 @@
 type Fraction = { n: bigint; d: bigint };
 type IndexedFraction = ReadonlyArray<readonly [number, Fraction]>;
 type Constraint = { coefficients: IndexedFraction; bound: Fraction };
+type Optimization = { status: 'optimal'; value: Fraction; solution: Fraction[] } |
+  { status: 'infeasible' | 'unbounded' };
+type Result = { maximize(variableCount: number, constraints: ReadonlyArray<Constraint>, objective: IndexedFraction): Optimization };
 
 export = ({ core: { rational: { zero, one, neg, sub, mul, div, cmp } } }: {
   core: {
@@ -16,10 +19,10 @@ export = ({ core: { rational: { zero, one, neg, sub, mul, div, cmp } } }: {
       cmp(left: Fraction, right: Fraction): number;
     };
   };
-}) => {
+}): Result => {
   // Two-phase simplex over exact rational numbers. Variables are nonnegative;
   // each constraint is coefficients * x <= bound. Bland's rule prevents cycling.
-  function maximize(variableCount: number, constraints: ReadonlyArray<Constraint>, objective: IndexedFraction) {
+  function maximize(variableCount: number, constraints: ReadonlyArray<Constraint>, objective: IndexedFraction): Optimization {
     const m = constraints.length;
     const n = variableCount;
     const basic = Array.from({ length: m }, (_, i) => n + i);
@@ -33,7 +36,7 @@ export = ({ core: { rational: { zero, one, neg, sub, mul, div, cmp } } }: {
     for (const [j, value] of objective) table[m][j] = neg(value);
     table[m + 1][n] = one;
 
-    function pivot(row: number, column: number) {
+    function pivot(row: number, column: number): void {
       const inverse = div(one, table[row][column]);
       for (let i = 0; i < m + 2; i++) {
         if (i === row || !table[i][column].n) continue;

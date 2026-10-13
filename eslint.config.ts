@@ -66,7 +66,7 @@ module.exports = [
     },
   },
   {
-    files: ["src/modules/core/**/*.ts"],
+    files: ["src/modules/core/**/*.ts", "src/modules/accounting/**/*.ts", "src/modules/database/**/*.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/explicit-function-return-type": "error",

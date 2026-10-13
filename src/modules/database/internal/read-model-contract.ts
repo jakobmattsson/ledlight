@@ -1,7 +1,7 @@
 'use strict';
 
 // Queries may read these tables and columns from the derived SQLite database.
-export = () => {
+export = (): Readonly<Record<string, ReadonlyArray<string>>> => {
   const columns = {
     database_metadata: ['key', 'value'],
     source_files: ['id', 'path', 'sha256', 'size'],

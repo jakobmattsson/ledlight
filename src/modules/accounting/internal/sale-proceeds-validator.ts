@@ -4,8 +4,20 @@ import type { LedgerAmount, LedgerEntry, LedgerPosting } from '../../../public-a
 
 type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
+type Core = ReturnType<typeof import('../../core')>;
+type Journal = ReturnType<typeof import('../../journal')>;
+type Movements = ReturnType<typeof import('./commodity-movements')>;
+type Dependencies = {
+  core: Pick<Core, 'rational'>;
+  commodityMovements: Pick<Movements, 'annotatedTotal'>;
+  journal: Pick<Journal, 'ingestionWarning'>;
+};
+type Result = { validateSaleProceeds(
+  transaction: Transaction, resolved: LedgerAmount[][], valuationCommodity: string,
+  carried: Set<LedgerPosting>, roundingUnit: Fraction, warnings: unknown[],
+): void };
 
-module.exports = ({
+export = ({
   core: {
     rational: { zero, parse, add, sub, neg, cmp, div, format },
   },
@@ -13,7 +25,7 @@ module.exports = ({
   journal: {
     ingestionWarning: { createWarning, warningCodes },
   },
-}: any) => {
+}: Dependencies): Result => {
   // Account names do not identify settlement, fees, or realized results. Check
   // whether any partition of the monetary postings can explain the trade value.
   // A bounded search may be inconclusive; it must never manufacture a warning.
@@ -61,7 +73,7 @@ module.exports = ({
         }
         const annotation = quantity.n < 0n ? posting.cost : posting.lotCost;
         if (annotation?.amount.commodity !== valuationCommodity) return;
-        tradeValue = add(tradeValue, annotatedTotal(annotation, quantity));
+        tradeValue = add(tradeValue, annotatedTotal(annotation, quantity)!);
         hasSale ||= quantity.n < 0n;
       }
     }

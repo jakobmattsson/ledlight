@@ -1,4 +1,28 @@
 'use strict';
+type Core = ReturnType<typeof import('../../core')>;
+type Journal = ReturnType<typeof import('../../journal')>;
+type Freshness = ReturnType<typeof import('./database-freshness')>;
+type Lock = ReturnType<typeof import('./database-rebuild-lock')>;
+type Writer = ReturnType<typeof import('./journal-writer')>;
+type DatabaseSummary = ReturnType<Writer['writeJournalDatabase']>;
+type DatabaseStatus = ReturnType<Freshness['checkDatabaseSync']>;
+type Result = {
+  ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string): {
+    rebuilt: boolean; status: DatabaseStatus; summary?: DatabaseSummary;
+  };
+  $$private: {
+    buildDatabase(databasePath: string, journalPath: string): DatabaseSummary;
+    checkDatabaseSync: Freshness['checkDatabaseSync'];
+  };
+};
+type Dependencies = {
+  journal: Pick<Journal, 'loadJournal'>;
+  databaseFreshness: Freshness;
+  databaseRebuildLock: Pick<Lock, 'withRebuildLock'>;
+  journalWriter: Writer;
+  core: Pick<Core, 'publicErrors'>;
+  external: { path: Pick<typeof import('node:path'), 'resolve'> };
+};
 
 export = ({
   journal: {
@@ -13,17 +37,17 @@ export = ({
   external: {
     path
   },
-}: any) => {
+}: Dependencies): Result => {
 
-  function buildDatabase(databasePath: string, journalPath: string) {
+  function buildDatabase(databasePath: string, journalPath: string): DatabaseSummary {
     try {
       return writeJournalDatabase(databasePath, loadJournal(journalPath));
-    } catch (error: any) {
-      throw databaseError(error);
+    } catch (error: unknown) {
+      throw databaseError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
-  function ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string) {
+  function ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string): ReturnType<Result['ensureDatabaseCurrent']> {
     const journalPath = sourceJournalPath ? path.resolve(sourceJournalPath) : databaseJournalPath(databasePath);
     if (!journalPath) {
       throw databaseError(new Error('Cannot update the database without a journal path'));

@@ -1,17 +1,35 @@
 'use strict';
 
 import type { LedgerAmount, LedgerComment, LedgerEntry } from '../../../public-api';
+import type { SqliteConstructor, SqliteDatabase, Statement } from '../../../types/sqlite-contracts';
 
-type Statement = { run(...values: unknown[]): unknown };
 type Statements = Record<string, Statement>;
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type CommodityProperty = Extract<LedgerEntry, { type: 'commodity' }>['properties'][number];
 type LocatedTag = { name: string; value: string | null; location: { line: number } };
-type Counters = { posting: number; resolvedAmount: number; postingBalance?: number; valuationPrice?: number };
+type Counters = { posting: number; resolvedAmount: number; postingBalance: number; valuationPrice: number };
 type Usage = { accounts: Set<string>; commodities: Set<string>; tags: Set<string> };
 type Warning = { code: string; message: string; source: string; line: number; column: number; startLine: number; endLine: number };
 type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: string; size: number }>;
   entries: LedgerEntry[]; warnings?: Warning[] };
+type Core = ReturnType<typeof import('../../core')>;
+type Accounting = ReturnType<typeof import('../../accounting')>;
+type DatabaseFacade = ReturnType<typeof import('../index')>;
+type SqlFunctions = ReturnType<typeof import('./decimal-sql-functions')>;
+type BalanceMaterializer = ReturnType<typeof import('./posting-balance-materializer')>;
+type PriceMaterializer = ReturnType<typeof import('./valuation-price-materializer')>;
+type Migration = ReturnType<typeof import('./database-migration')>;
+type Dependencies = {
+  core: Pick<Core, 'decimal'>;
+  accounting: Accounting;
+  decimalSqlFunctions: SqlFunctions;
+  postingBalanceMaterializer: BalanceMaterializer;
+  valuationPriceMaterializer: PriceMaterializer;
+  databaseMigration: Migration;
+  external: { path: Pick<typeof import('node:path'), 'resolve'>; sqlite: SqliteConstructor };
+};
+type DatabaseSummary = ReturnType<DatabaseFacade['writeJournalDatabase']>;
+type Result = { writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary };
 
 export = ({
   core: {
@@ -32,16 +50,16 @@ export = ({
     path,
     sqlite: Database
   },
-}: any) => {
+}: Dependencies): Result => {
 
-  function amountFields(amount: LedgerAmount | null | undefined) {
+  function amountFields(amount: LedgerAmount | null | undefined): { quantity: string | null; commodity: string | null } {
     return {
       quantity: amount ? amount.quantity : null,
       commodity: amount ? amount.commodity : null,
     };
   }
 
-  function prepareStatements(database: { prepare(sql: string): Statement }): Statements {
+  function prepareStatements(database: SqliteDatabase): Statements {
     return {
       databaseMetadata: database.prepare('INSERT INTO database_metadata (key, value) VALUES (?, ?)'),
       sourceFile: database.prepare(`
@@ -225,7 +243,7 @@ export = ({
     return usage;
   }
 
-  function writeJournalDatabase(databasePath: string, journal: JournalInput) {
+  function writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary {
     const warnings = [...(journal.warnings || [])];
     const ignoredProperties = new Set<CommodityProperty>();
     const valuationCommodity = valuationCommodityFromJournal(
@@ -281,7 +299,7 @@ export = ({
           statements.databaseMetadata.run('valuation_commodity', valuationCommodity);
         }
 
-        const sourceIds = new Map();
+        const sourceIds = new Map<string, number>();
         journal.files.forEach((file, index) => {
           const fileId = index + 1;
           statements.sourceFile.run(fileId, file.path, file.sha256, file.size);
@@ -291,6 +309,8 @@ export = ({
         const counters: Counters = {
           posting: 0,
           resolvedAmount: 0,
+          postingBalance: 0,
+          valuationPrice: 0,
         };
         storableEntries.forEach((entry, index) => {
           const sourceFileId = sourceIds.get(entry.location.source);
