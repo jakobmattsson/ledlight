@@ -3,7 +3,6 @@
 import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting, LedgerSyntaxTree } from '../../public-api';
 
 type Fraction = { n: bigint; d: bigint };
-type Decimal = { coefficient: bigint; scale: number };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
 type Warning = {
@@ -16,10 +15,6 @@ type JournalValidation = {
   warnings: Warning[];
 };
 type PostingResolverInstance = {
-  balances: Map<string, Decimal>;
-  warnings: Warning[];
-  accountBalance(account: string, commodity: string): Decimal;
-  apply(account: string, amount: LedgerAmount): void;
   resolve(transaction: Transaction): LedgerAmount[][] | null;
 };
 

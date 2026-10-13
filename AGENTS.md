@@ -23,6 +23,13 @@ access internal registrations directly when necessary. A runtime object may
 retain members under `$$private`, but those members need not appear in the
 facade type and should not be treated as part of the module interface.
 
+Apply the same rule to objects and class instances returned through a facade:
+their facade types should include only members used by production consumers
+outside the owning module. Keep implementation state and helper methods out of
+the facade type even when the concrete runtime object has those members. A
+stateful capability can remain in its logical owner when another module is its
+only consumer; consumer count alone does not make it part of that module.
+
 Do not copy the internal registration hierarchy into the facade when it adds
 no meaning. Expose a sole public function or property directly on the facade;
 group related members only when the group contains multiple public members.
