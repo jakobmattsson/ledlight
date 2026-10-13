@@ -13,9 +13,9 @@ test('benchmark command loads its synthetic journal and writes action results', 
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-benchmark-test-'));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const outputPath = path.join(directory, 'results.json');
-  const repositoryRoot = path.resolve(__dirname, '../../..');
+  const repositoryRoot = path.resolve(__dirname, '../../../..');
 
-  execFileSync(process.execPath, [path.join(repositoryRoot, 'scripts/benchmarks/run.js'), outputPath], {
+  execFileSync(process.execPath, [path.join(repositoryRoot, 'dist/scripts/benchmarks/run.js'), outputPath], {
     cwd: repositoryRoot,
     stdio: 'pipe',
   });

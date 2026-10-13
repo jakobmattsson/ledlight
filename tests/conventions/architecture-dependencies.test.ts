@@ -15,8 +15,8 @@ const {
 const { generateGraphDot, loadGraphOptions } = require('../../scripts/architecture/graph');
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
-const architectureRoot = path.resolve(__dirname, '../architecture');
-const diagramPath = path.resolve(__dirname, '../../architecture.svg');
+const architectureRoot = path.resolve(__dirname, '../../../tests/architecture');
+const diagramPath = path.resolve(__dirname, '../../../architecture.svg');
 
 for (const [fileName, validate] of [
   ['depends-on.yaml', validateDependsOnYaml],

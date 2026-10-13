@@ -7,8 +7,8 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const repositoryRoot = path.resolve(__dirname, '../..');
-const packageMetadata = require('../../package.json');
+const repositoryRoot = path.resolve(__dirname, '../../..');
+const packageMetadata = require('../../../package.json');
 
 function run(command: string, arguments_: string[], options: { cwd?: string; env?: NodeJS.ProcessEnv }) {
   try {
@@ -34,6 +34,7 @@ test('the published archive installs and exposes the module and CLI', () => {
   try {
     const archiveDirectory = path.join(temporaryDirectory, 'archive');
     const consumerDirectory = path.join(temporaryDirectory, 'consumer');
+    const npmEnvironment = { ...process.env, npm_config_cache: path.join(temporaryDirectory, 'npm-cache') };
     fs.mkdirSync(archiveDirectory);
     fs.mkdirSync(consumerDirectory);
 
@@ -41,7 +42,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       'pack',
       '--json',
       '--pack-destination', archiveDirectory,
-    ], { cwd: repositoryRoot }))[0];
+    ], { cwd: repositoryRoot, env: npmEnvironment }))[0];
     const packagedPaths = new Set<string>(packResult.files.map(({ path: packagedPath }: { path: string }) => packagedPath));
     for (const requiredPath of [
       'LICENSE',
@@ -50,20 +51,20 @@ test('the published archive installs and exposes the module and CLI', () => {
       'docs/ledger-cli-equivalence.md',
       'docs/ledlight.md',
       'docs/package.md',
-      'src/index.js',
-      'src/index.d.ts',
-      'src/public-api.d.ts',
+      'dist/src/index.js',
+      'dist/src/index.d.ts',
+      'dist/src/public-api.d.ts',
       'package.json',
-      'scripts/ledger-compatibility/compare-ledger.js',
-      'scripts/ledger-compatibility/ledger-compatibility-matrix.yaml',
-      'src/run.js',
-      'lib/awilix.js',
-      'src/modules/dependencies.yaml',
-      'src/modules/external.js',
-      'src/modules/commands/index.js',
-      'src/modules/queries/index.js',
-      'src/modules/database/schema.sql',
-      'src/modules/journal/ledger.ohm',
+      'dist/scripts/ledger-compatibility/compare-ledger.js',
+      'dist/scripts/ledger-compatibility/ledger-compatibility-matrix.yaml',
+      'dist/src/run.js',
+      'dist/lib/awilix.js',
+      'dist/src/modules/dependencies.yaml',
+      'dist/src/modules/external.js',
+      'dist/src/modules/commands/index.js',
+      'dist/src/modules/queries/index.js',
+      'dist/src/modules/database/schema.sql',
+      'dist/src/modules/journal/ledger.ohm',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);
     }
@@ -88,7 +89,7 @@ test('the published archive installs and exposes the module and CLI', () => {
       '--no-package-lock',
       '--prefer-online',
       archivePath,
-    ], { cwd: consumerDirectory });
+    ], { cwd: consumerDirectory, env: npmEnvironment });
 
     const projectDirectory = path.join(consumerDirectory, 'project');
     fs.mkdirSync(projectDirectory);

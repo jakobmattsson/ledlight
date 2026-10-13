@@ -23,7 +23,7 @@ const runtimeGlobals = [...new Set([
 
 module.exports = [
   {
-    ignores: ["**/*.js", "**/*.d.ts", "node_modules/**", "tmp/**", "coverage/**", "allure-results/**", "allure-report/**"],
+    ignores: ["dist/**", "**/*.js", "**/*.d.ts", "node_modules/**", "tmp/**", "coverage/**", "allure-results/**", "allure-report/**"],
   },
   ...tseslint.configs.recommended,
   {
@@ -31,6 +31,7 @@ module.exports = [
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "commonjs",
+      parserOptions: { tsconfigRootDir: __dirname },
       globals: {
         ...globals.node,
         ...globals.browser,

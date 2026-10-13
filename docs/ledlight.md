@@ -87,7 +87,7 @@ such as totals.
 
 The source is divided into sibling modules under `src/modules`. Query definitions,
 CLI command definitions, the database schema, and the Ledger grammar live in their
-owning modules. Each module's `index.js` selects the values visible to other modules.
+owning modules. Each module's `index.ts` selects the values visible to other modules.
 
 The CLI is a thin adapter over that public module. It parses command-line
 arguments, maps semantic inputs to public API options, and invokes a journal
@@ -288,8 +288,8 @@ and for the external services permitted to each module. The `allowed-modules`
 and `allowed-external` mappings define the composition policy. The repository
 container discovers the module directories, checks that they match both
 policies, rejects cycles, and builds module-local factory containers. Runtime
-adapters are created by `src/modules/external.js`, a file outside the domain
-module graph. Each domain module's `index.js` is registered as a factory and
+adapters are created by `src/modules/external.ts`, a file outside the domain
+module graph. The compiled `index.js` for each domain module is registered as a factory and
 receives its local dependencies through injection.
 
 The optional `ubiquitous` list in `dependencies.yaml` affects only diagram
@@ -315,17 +315,18 @@ as path segments and reads `dependencies.yaml` and `external.js` from that
 module directory. The composition code has no Ledlight module names or paths;
 another module tree can use the same API with its own policy and external
 services. The CLI entry point passes `__dirname, 'modules'` before resolving
-`cli`. All composition logic lives in `src/composition/repository-container.js`.
+`cli`. The composition source lives in `src/composition/repository-container.ts`.
 
 Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as
 `core: { rational, linearProgram }`. Other module internals are
-unavailable. Each module root contains its `index.js` facade. The database
+unavailable. Each source module root contains its `index.ts` facade, compiled to
+`dist/src/modules/<module>/index.js`. The database
 schema (`schema.sql`) and journal grammar (`ledger.ohm`) sit beside their
 module facades; implementation files live in subdirectories. Factories have
 unique kebab-case file names within their module. The local Awilix subset lives in
-`lib/awilix.js`.
+`lib/awilix.ts`, compiled to `dist/lib/awilix.js`.
 
 A directory named `list-<name>` directly under a module root registers an
 array dependency called `<name>`. Composition resolves every JavaScript factory
@@ -342,15 +343,16 @@ public journal operation. The project's `withJournalText` capability
 builds and removes a temporary database for CLI stdin input.
 
 Queries receive a read-only database handle through the project and may run SQL
-against the tables and columns in `database/internal/read-model-contract.js`. That file
+against the tables and columns in `database/internal/read-model-contract.ts`. That file
 is the explicit read-model contract; a convention test checks its complete column
 lists against `database/schema.sql` and checks that it covers every schema table
 referenced by query SQL. Changing these columns requires a coordinated query
 update. Moving all query SQL behind database functions is outside this module
 reorganization.
 
-`src/index.js` and `src/run.js` compose the public Node.js API and CLI. ESLint
-rejects ambient runtime globals and direct imports in `src/modules/**/*.js`;
+`src/index.ts` and `src/run.ts` compose the public Node.js API and CLI; their
+runtime files are `dist/src/index.js` and `dist/src/run.js`. ESLint
+rejects ambient runtime globals and direct imports in `src/modules/**/*.ts`;
 composition injects runtime adapters, including `processRuntime`, paths, and
 `Buffer`.
 
@@ -500,7 +502,7 @@ other times; valuation remains the responsibility of price data.
 
 `src/modules/journal/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
-semantics in `tests/support/reference/reference-parser.js`. The fixtures in
+semantics in `tests/support/reference/reference-parser.ts`. The fixtures in
 `tests/api/parser` define expected syntax trees, a shared error contract for
 invalid documents, and expected warnings when parsing recovers from malformed
 top-level blocks. Each fixture runs through both Ohm and the optimized runtime

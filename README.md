@@ -35,9 +35,9 @@ npm test
 ```
 
 The maintained source is TypeScript. Run `npm run build` after editing source to
-generate the CommonJS files and declarations used by the tests, CLI, and npm
-package. `npm test` builds automatically and includes strict type checking and
-linting. Generated files are ignored by Git.
+generate CommonJS files and declarations under `dist/` for the tests, CLI, and
+npm package. `npm test` builds automatically and includes strict type checking
+and linting. The generated `dist/` directory is ignored by Git.
 
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.

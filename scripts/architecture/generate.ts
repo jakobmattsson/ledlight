@@ -9,8 +9,8 @@ const {
 } = require('../../src/composition/repository-container');
 const { generateGraphDot, loadGraphOptions } = require('./graph');
 
-const repositoryRoot = path.resolve(__dirname, '../..');
-const modulesRoot = path.join(repositoryRoot, 'src/modules');
+const repositoryRoot = path.resolve(__dirname, '../../..');
+const modulesRoot = path.join(repositoryRoot, 'dist/src/modules');
 const outputRoot = path.join(repositoryRoot, 'tests/architecture');
 
 async function generate() {

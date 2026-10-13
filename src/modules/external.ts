@@ -10,7 +10,7 @@ module.exports = () => ({
   envPaths: require('env-paths'),
   fs: require('node:fs'),
   os: require('node:os'),
-  packageMetadata: require('../../package.json'),
+  packageMetadata: require('../../../package.json'),
   path,
   processEnvironment: process.env,
   processRuntime: {

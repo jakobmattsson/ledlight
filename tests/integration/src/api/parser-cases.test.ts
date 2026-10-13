@@ -4,10 +4,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { parseLedgerText } = require('../../../..');
+const { parseLedgerText } = require('../../../../..');
 const { resolveReferenceParser, resolveRepositoryModule } = require('../../../support/repository-container');
 
-const casesDirectory = path.resolve(__dirname, '../../../api/parser');
+const casesDirectory = path.resolve(__dirname, '../../../../../tests/api/parser');
 const textHeader = '\n\n========== TEXT ==========\n\n';
 const jsonHeader = '\n========== JSON ==========\n\n';
 const errorHeader = '\n========== ERROR ==========\n\n';

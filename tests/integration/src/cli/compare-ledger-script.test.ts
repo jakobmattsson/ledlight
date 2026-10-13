@@ -10,8 +10,8 @@ const path = require('node:path');
 const test = require('node:test');
 const { parseCase } = require('../../../support/case');
 
-const root = path.resolve(__dirname, '../../../..');
-const script = path.join(root, 'scripts/ledger-compatibility/compare-ledger.js');
+const root = path.resolve(__dirname, '../../../../..');
+const script = path.join(root, 'dist/scripts/ledger-compatibility/compare-ledger.js');
 const fixture = path.join(root, 'tests/api/queries/compatibility/ledger/ledger-basic-accounts.case');
 const ledgerBinary = process.env.LEDGER_BIN ?? 'ledger';
 

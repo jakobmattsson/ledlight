@@ -239,11 +239,11 @@ test('direct CLI usage shows the node invocation despite inherited npm test vari
   const script = path.resolve(__dirname, '../../../scripts/release/cli.js');
   const result = spawnSync(process.execPath, [script], {
     encoding: 'utf8',
-    cwd: path.resolve(__dirname, '../../..'),
+    cwd: path.resolve(__dirname, '../../../..'),
     env: { ...process.env, npm_lifecycle_event: 'test', npm_lifecycle_script: 'worktree-keeper run-tests' },
   });
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /Usage: node scripts\/release\/cli\.js <major\|minor\|patch>/u);
+  assert.match(result.stderr, /Usage: node dist\/scripts\/release\/cli\.js <major\|minor\|patch>/u);
 });
 
 test('npm CLI usage shows the npm script that launched the release', () => {
@@ -253,7 +253,7 @@ test('npm CLI usage shows the npm script that launched the release', () => {
   const npmCommand = process.env.npm_execpath ? process.execPath : 'npm';
   const result = spawnSync(npmCommand, npmArgs, {
     encoding: 'utf8',
-    cwd: path.resolve(__dirname, '../../..'),
+    cwd: path.resolve(__dirname, '../../../..'),
   });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Usage: npm run release -- <major\|minor\|patch>/u);
@@ -263,11 +263,11 @@ test('usage follows a differently named npm script when it invokes the release C
   const script = path.resolve(__dirname, '../../../scripts/release/cli.js');
   const result = spawnSync(process.execPath, [script], {
     encoding: 'utf8',
-    cwd: path.resolve(__dirname, '../../..'),
+    cwd: path.resolve(__dirname, '../../../..'),
     env: {
       ...process.env,
       npm_lifecycle_event: 'publish:version',
-      npm_lifecycle_script: 'node scripts/release/cli.js',
+      npm_lifecycle_script: 'node dist/scripts/release/cli.js',
     },
   });
   assert.equal(result.status, 1);

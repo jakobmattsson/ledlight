@@ -16,6 +16,7 @@ const {
 } = require('../../src/composition/repository-container');
 
 const root = path.resolve(__dirname, '../../src/modules');
+const sourceRoot = path.resolve(__dirname, '../../../src/modules');
 const policy = YAML.parse(fs.readFileSync(path.join(root, 'dependencies.yaml'), 'utf8'));
 const allowedModules = policy['allowed-modules'];
 const allowedExternal = policy['allowed-external'];
@@ -24,12 +25,12 @@ test('discovers exactly the modules declared in the dependency policy', () => {
   const directories = fs.readdirSync(root, { withFileTypes: true })
     .filter((entry: Dirent) => entry.isDirectory()).map((entry: Dirent) => entry.name).sort();
   assert.deepEqual(discoverModules(root), directories);
-  assert.ok(fs.statSync(path.join(root, 'external.ts')).isFile());
+  assert.ok(fs.statSync(path.join(sourceRoot, 'external.ts')).isFile());
   assert.deepEqual(Object.keys(allowedModules).sort(), directories);
   assert.deepEqual(Object.keys(allowedExternal).sort(), directories);
   const rootAssets = { database: ['schema.sql'], journal: ['ledger.ohm'] };
   for (const name of directories) {
-    const rootFiles = fs.readdirSync(path.join(root, name), { withFileTypes: true })
+    const rootFiles = fs.readdirSync(path.join(sourceRoot, name), { withFileTypes: true })
       .filter((entry: Dirent) => entry.isFile() && !/\.(?:js|d\.ts|js\.map)$/u.test(entry.name))
       .map((entry: Dirent) => entry.name).sort();
     assert.deepEqual(rootFiles, ['index.ts', ...(rootAssets[name as keyof typeof rootAssets] ?? [])].sort(),

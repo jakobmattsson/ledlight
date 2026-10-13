@@ -7,7 +7,7 @@
   "tests": {
     "commands": [
       "npm run lint",
-      "node scripts/ci/test-suite.js"
+      "node dist/scripts/ci/test-suite.js"
     ],
     "receiptMaxAgeMinutes": 60,
     "npmTestUsesRunner": true

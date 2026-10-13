@@ -53,8 +53,8 @@ package path; source files and package metadata are implementation details and
 cannot be imported through package subpaths.
 
 The package publishes TypeScript declarations for the package root. Its
-maintained source is TypeScript, compiled to CommonJS before packing or
-publishing. Consumers can type-check calls to `openJournal`, `parseLedgerText`,
+maintained source is TypeScript, compiled to CommonJS in `dist/` before packing
+or publishing. Consumers can type-check calls to `openJournal`, `parseLedgerText`,
 and the journal methods without a separate `@types` package. The Node.js API
 reference remains the detailed description of runtime behavior and validation.
 

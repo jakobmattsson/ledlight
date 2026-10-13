@@ -32,7 +32,7 @@ test('defines exactly one CLI command for every public journal operation', (t: T
   });
   const journalPath = path.join(directory, 'journal.ledger');
   fs.writeFileSync(journalPath, 'commodity SEK\n  default\naccount Assets:Cash\n');
-  const { openJournal } = require('../..');
+  const { openJournal } = require('../../..');
   const journal = openJournal(journalPath);
   const journalOperations = Object.entries(journal)
     .filter(([, value]) => typeof value === 'function')

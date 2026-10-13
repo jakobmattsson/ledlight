@@ -4,9 +4,9 @@
 const { spawnSync } = require('node:child_process');
 
 const tests = [
-  'tests/unit/**/*.test.js',
-  'tests/integration/**/*.test.js',
-  'tests/conventions/*.test.js',
+  'dist/tests/unit/**/*.test.js',
+  'dist/tests/integration/**/*.test.js',
+  'dist/tests/conventions/*.test.js',
 ];
 const reporters = process.env.ALLURE_RESULTS_DIR
   ? [

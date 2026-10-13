@@ -9,7 +9,7 @@ runCli({
   argv: process.argv,
   environment: process.env,
   invocationDirectory: process.cwd(),
-  repositoryDirectory: path.resolve(__dirname, '../..'),
+  repositoryDirectory: path.resolve(__dirname, '../../..'),
   spawnSync,
   now: () => Date.now(),
   sleep: (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),

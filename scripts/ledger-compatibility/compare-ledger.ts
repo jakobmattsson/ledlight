@@ -14,8 +14,8 @@ type MatrixCase = [id: string, ledlightCommand: string, ledgerCommand: string];
 type Options = { cases: string[]; help?: boolean; list?: boolean; file?: string; ledgerBin?: string };
 type RunOptions = { journal: string; ledgerBin: string; environment: NodeJS.ProcessEnv };
 
-const repositoryRoot = path.resolve(__dirname, '../..');
-const ledlightCli = path.join(repositoryRoot, 'src/run.js');
+const repositoryRoot = path.resolve(__dirname, '../../..');
+const ledlightCli = path.join(repositoryRoot, 'dist/src/run.js');
 const matrixPath = path.join(__dirname, 'ledger-compatibility-matrix.yaml');
 
 function loadMatrix(): MatrixCase[] {

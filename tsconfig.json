@@ -8,10 +8,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
+    "rootDir": ".",
+    "outDir": "dist",
     "types": ["node"],
     "skipLibCheck": true,
     "noEmitOnError": true
   },
   "include": ["eslint.config.ts", "lib/**/*.ts", "scripts/**/*.ts", "src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
