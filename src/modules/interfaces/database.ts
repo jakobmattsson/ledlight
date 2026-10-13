@@ -59,5 +59,10 @@ export = ({
   databaseReader: { readDatabase },
   journalWriter: { writeJournalDatabase },
 }: Registrations): Facade => ({
-  ensureDatabaseCurrent, readDatabase, writeJournalDatabase,
+  // Rebuild a journal file's database only when its cached contents are stale.
+  ensureDatabaseCurrent,
+  // Run a query against an existing database through a read-only connection.
+  readDatabase,
+  // Write an already loaded journal, such as stdin input, to a new database.
+  writeJournalDatabase,
 });
