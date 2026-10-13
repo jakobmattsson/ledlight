@@ -2,7 +2,7 @@
 
 module.exports = ({
   core: {
-    valuationRateResolver: { createLedgerValuationRateResolver },
+    createLedgerValuationRateResolver,
   },
 }: any) => {
 

@@ -28,26 +28,33 @@ type Facade = {
     annotatedTotal(annotation: LedgerCost | null, quantity: Fraction): Fraction | null;
     carriedMovements(transaction: Transaction, valuationCommodity: string): Movement[];
   };
-  effectivePostingCosts: {
-    inferEffectivePostingCosts(entries: LedgerEntry[], valuationCommodity: string, warnings: Warning[]): void;
-  };
-  globalAccountingValidator: {
-    validateGlobalAccounting(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: Warning[]): void;
-  };
+  inferEffectivePostingCosts(entries: LedgerEntry[], valuationCommodity: string, warnings: Warning[]): void;
+  validateGlobalAccounting(entries: LedgerEntry[], resolvedTransactions: Map<Transaction, LedgerAmount[][]>, valuationCommodity: string, warnings: Warning[]): void;
   journalValidator: {
     validateJournal(journal: { entries: LedgerEntry[] }, defaultCommodity: string | null | undefined, initialWarnings?: Warning[]): JournalValidation;
     validateResolvedCommodityTrades(transaction: Transaction, resolved: LedgerAmount[][], defaultCommodity: string | null | undefined, warnings: Warning[]): void;
   };
-  journalValuationCommodity: {
-    valuationCommodityFromJournal(journal: LedgerSyntaxTree & { journalPath?: string }, suppliedWarnings: Warning[], ignoredProperties?: Set<{ name: string; location: { source: string; line: number; column: number; } }>): string | null;
-  };
-  postingResolver: { PostingResolver: new (warnings: Warning[]) => PostingResolverInstance };
+  valuationCommodityFromJournal(journal: LedgerSyntaxTree & { journalPath?: string }, suppliedWarnings: Warning[], ignoredProperties?: Set<{ name: string; location: { source: string; line: number; column: number; } }>): string | null;
+  PostingResolver: new (warnings: Warning[]) => PostingResolverInstance;
+};
+type Registrations = {
+  commodityMovements: Facade['commodityMovements'];
+  effectivePostingCosts: Pick<Facade, 'inferEffectivePostingCosts'>;
+  globalAccountingValidator: Pick<Facade, 'validateGlobalAccounting'>;
+  journalValidator: Facade['journalValidator'];
+  journalValuationCommodity: Pick<Facade, 'valuationCommodityFromJournal'>;
+  postingResolver: Pick<Facade, 'PostingResolver'>;
 };
 
 export = ({
   commodityMovements: { annotatedTotal, carriedMovements },
-  effectivePostingCosts, globalAccountingValidator, journalValidator, journalValuationCommodity, postingResolver,
-}: Facade): Facade => ({
+  effectivePostingCosts: { inferEffectivePostingCosts },
+  globalAccountingValidator: { validateGlobalAccounting },
+  journalValidator,
+  journalValuationCommodity: { valuationCommodityFromJournal },
+  postingResolver: { PostingResolver },
+}: Registrations): Facade => ({
   commodityMovements: { annotatedTotal, carriedMovements },
-  effectivePostingCosts, globalAccountingValidator, journalValidator, journalValuationCommodity, postingResolver,
+  inferEffectivePostingCosts, validateGlobalAccounting, journalValidator,
+  valuationCommodityFromJournal, PostingResolver,
 });

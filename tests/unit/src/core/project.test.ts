@@ -12,20 +12,20 @@ const publicErrors = resolveRepositoryModule('src/modules/core/internal/public-e
 test('reports an unexpected cache directory failure as a database error', () => {
   const project = createProject({
     core: {
-      cachePaths: { pathsForJournal: () => ({ databasePath: '/fixture/cache.sqlite' }) },
+      pathsForJournal: () => ({ databasePath: '/fixture/cache.sqlite' }),
       publicErrors,
     },
     fs: { mkdirSync: () => { throw new Error('cache directory is unavailable'); } },
     path,
     queries: { definitions: [] },
     journal: {
-      journal: { loadJournal: () => assert.fail('must not load a journal') },
+      loadJournal: () => assert.fail('must not load a journal'),
       ingestionWarning: { groupWarnings: () => [] },
     },
     database: {
-      journalWriter: { writeJournalDatabase: () => assert.fail('must not write a journal') },
-      database: { ensureDatabaseCurrent: () => { throw new Error('must not rebuild'); } },
-      databaseReader: { readDatabase: () => { throw new Error('must not read'); } },
+      writeJournalDatabase: () => assert.fail('must not write a journal'),
+      ensureDatabaseCurrent: () => { throw new Error('must not rebuild'); },
+      readDatabase: () => { throw new Error('must not read'); },
     },
   });
 

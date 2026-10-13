@@ -65,13 +65,35 @@ test('resolves index factories as facades and hides internal factories', () => {
   assert.equal(Object.hasOwn(container.resolve('database'), 'readModelContract'), false);
   assert.equal(Object.hasOwn(container.resolve('accounting').commodityMovements, 'unpricedReplacement'), false);
   assert.equal(Object.hasOwn(container.resolve('core').rational, 'fraction'), false);
-  assert.equal(Object.hasOwn(container.resolve('journal').ledgerParser, 'parse'), false);
+  assert.equal(Object.hasOwn(container.resolve('journal'), 'parse'), false);
+  for (const [moduleName, member, formerGroup] of [
+    ['accounting', 'inferEffectivePostingCosts', 'effectivePostingCosts'],
+    ['accounting', 'validateGlobalAccounting', 'globalAccountingValidator'],
+    ['accounting', 'valuationCommodityFromJournal', 'journalValuationCommodity'],
+    ['accounting', 'PostingResolver', 'postingResolver'],
+    ['cli', 'run', 'runCli'],
+    ['core', 'pathsForJournal', 'cachePaths'],
+    ['core', 'readConfiguration', 'configuration'],
+    ['core', 'maximize', 'linearProgram'],
+    ['core', 'appendTotal', 'reportTotals'],
+    ['core', 'createLedgerValuationRateResolver', 'valuationRateResolver'],
+    ['database', 'ensureDatabaseCurrent', 'database'],
+    ['database', 'readDatabase', 'databaseReader'],
+    ['database', 'writeJournalDatabase', 'journalWriter'],
+    ['journal', 'loadJournal', 'journal'],
+    ['journal', 'loadJournalManifest', 'journalManifest'],
+    ['journal', 'parseStrict', 'ledgerParser'],
+  ]) {
+    const facade = container.resolve(moduleName);
+    assert.equal(typeof facade[member], 'function', `${moduleName}.${member}`);
+    assert.equal(Object.hasOwn(facade, formerGroup), false, `${moduleName}.${formerGroup}`);
+  }
 });
 
 test('external overrides remain scoped to their permitted modules', () => {
   const container = createRepositoryContainer(__dirname, '../../src/modules');
   container.register({ currentWorkingDirectory: asValue(() => '/test-journal') });
-  assert.equal(container.resolve('core').configuration !== undefined, true);
+  assert.equal(typeof container.resolve('core').readConfiguration, 'function');
   assert.equal(container.resolve('project'), container.resolve('project'));
 });
 

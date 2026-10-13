@@ -13,9 +13,7 @@ module.exports = ({
       parseDecimal,
     },
     publicErrors: { createError, errorCodes },
-    valuationRateResolver: {
-      createLedgerValuationRateResolver,
-    },
+    createLedgerValuationRateResolver,
   },
   databaseValuationCommodity: { valuationCommodityFromDatabase },
 }: any) => {

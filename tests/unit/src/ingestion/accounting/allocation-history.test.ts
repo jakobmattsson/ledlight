@@ -13,11 +13,9 @@ function measuredHistory(roundingUnit: string) {
     require('../../../../../src/modules/accounting/internal/allocation-history.js')({
       core: {
         rational: resolveRepositoryModule('src/modules/core/internal/rational.js'),
-        linearProgram: {
-          maximize(...args: unknown[]) {
-            optimizations += 1;
-            return maximize(...args);
-          },
+        maximize(...args: unknown[]) {
+          optimizations += 1;
+          return maximize(...args);
         },
       },
     });

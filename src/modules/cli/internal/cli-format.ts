@@ -7,7 +7,7 @@ type TextColumn = { heading: string; value: (row: unknown) => unknown; align?: '
 
 module.exports = ({
   core: {
-    reportTotals: { appendTotal },
+    appendTotal,
     decimal: {
       addDecimals,
       formatDecimal,

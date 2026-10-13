@@ -5,7 +5,7 @@ type JournalManifest = { journalPath: string; files: ManifestFile[] };
 
 module.exports = ({
   journal: {
-    journalManifest: { loadJournalManifest },
+    loadJournalManifest,
   },
   databaseMigration: { SCHEMA_VERSION },
   external: {

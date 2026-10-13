@@ -3,4 +3,4 @@
 
 const { createRepositoryContainer } = require('./composition/repository-container');
 
-createRepositoryContainer(__dirname, 'modules').resolve('cli').runCli.run();
+createRepositoryContainer(__dirname, 'modules').resolve('cli').run();

@@ -22,12 +22,12 @@ function temporaryDirectories(t: TestContext) {
 }
 
 function configuration(home: any, workingDirectory: any) {
-  return createConfiguration({ core: { configuration: createProjectConfiguration({
+  return createConfiguration({ core: { readConfiguration: createProjectConfiguration({
     fs,
     path,
     processEnvironment: { HOME: home },
     currentWorkingDirectory: () => workingDirectory,
-  }) } });
+  }).read } });
 }
 
 test('supplies --file from the project .ledlightrc', (t: TestContext) => {

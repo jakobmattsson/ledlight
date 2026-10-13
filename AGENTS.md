@@ -23,6 +23,10 @@ access internal registrations directly when necessary. A runtime object may
 retain members under `$$private`, but those members need not appear in the
 facade type and should not be treated as part of the module interface.
 
+Do not copy the internal registration hierarchy into the facade when it adds
+no meaning. Expose a sole public function or property directly on the facade;
+group related members only when the group contains multiple public members.
+
 ## Verification
 
 Always run `npm test` after making code, configuration, fixture, or script

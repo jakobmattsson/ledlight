@@ -79,7 +79,7 @@ test('rechecks freshness after acquiring the rebuild lock', () => {
   let checks = 0;
   const database = createDatabase({
     path,
-    journal: { journal: { loadJournal: () => assert.fail('must not reload a current database') } },
+    journal: { loadJournal: () => assert.fail('must not reload a current database') },
     databaseFreshness: {
       checkDatabaseSync() {
         const status = statuses[checks];

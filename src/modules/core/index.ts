@@ -44,10 +44,8 @@ type Facade = {
     validateDateRange(input: { from?: string; to?: string }, context: { addIssue(issue: { code: 'custom'; message: string; path: string[] }): void; }): void;
     parseOptions<Options>(schema: ValidationSchema<Options>, value: unknown, operationName: string): Options;
   };
-  cachePaths: {
-    pathsForJournal(journalPath: string): { journalPath: string; databasePath: string };
-  };
-  configuration: { read(): { journalPath?: string; cacheHome?: string } };
+  pathsForJournal(journalPath: string): { journalPath: string; databasePath: string };
+  readConfiguration(): { journalPath?: string; cacheHome?: string };
   decimal: {
     addDecimals(left: Decimal, right: Decimal): Decimal;
     compareDecimals(left: Decimal, right: Decimal): number;
@@ -61,9 +59,7 @@ type Facade = {
     registerDecimalFunctions(database: DecimalDatabase): void;
     subtractDecimals(left: Decimal, right: Decimal): Decimal;
   };
-  linearProgram: {
-    maximize(variableCount: number, constraints: ReadonlyArray<Constraint>, objective: IndexedFraction): Optimization;
-  };
+  maximize(variableCount: number, constraints: ReadonlyArray<Constraint>, objective: IndexedFraction): Optimization;
   publicErrors: {
     createError(code: string, message: string, ErrorType?: new (message: string) => CodedError): CodedError;
     databaseError(error: CodedError): CodedError;
@@ -88,20 +84,24 @@ type Facade = {
     parse(value: string): Fraction;
     format(value: Fraction): string;
   };
-  reportTotals: {
-    appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow>
-  };
-  valuationRateResolver: {
-    createLedgerValuationRateResolver(priceRows: PriceRow[], valuationCommodity: string): (commodity: unknown, throughDate: unknown) => string;
-  };
+  appendTotal<Row extends ReportRow>(rows: Row[]): Array<Row | TotalRow>;
+  createLedgerValuationRateResolver(priceRows: PriceRow[], valuationCommodity: string): (commodity: unknown, throughDate: unknown) => string;
+};
+type Registrations = Pick<Facade, 'apiOptions' | 'decimal' | 'publicErrors' | 'rational'> & {
+  cachePaths: { pathsForJournal: Facade['pathsForJournal'] };
+  configuration: { read: Facade['readConfiguration'] };
+  linearProgram: { maximize: Facade['maximize'] };
+  reportTotals: { appendTotal: Facade['appendTotal'] };
+  valuationRateResolver: { createLedgerValuationRateResolver: Facade['createLedgerValuationRateResolver'] };
 };
 
 export = ({
-  apiOptions, cachePaths, configuration, decimal, linearProgram, publicErrors,
+  apiOptions, cachePaths: { pathsForJournal }, configuration: { read: readConfiguration },
+  decimal, linearProgram: { maximize }, publicErrors,
   rational: { zero, one, neg, add, sub, mul, div, cmp, parse, format },
-  reportTotals, valuationRateResolver,
-}: Facade): Facade => ({
-  apiOptions, cachePaths, configuration, decimal, linearProgram, publicErrors,
+  reportTotals: { appendTotal }, valuationRateResolver: { createLedgerValuationRateResolver },
+}: Registrations): Facade => ({
+  apiOptions, pathsForJournal, readConfiguration, decimal, maximize, publicErrors,
   rational: { zero, one, neg, add, sub, mul, div, cmp, parse, format },
-  reportTotals, valuationRateResolver,
+  appendTotal, createLedgerValuationRateResolver,
 });

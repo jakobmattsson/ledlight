@@ -1,11 +1,11 @@
 'use strict';
 
 type Facade = {
-  runCli: { run(): void };
+  run(): void;
 };
 
 export = ({
-  runCli,
-}: Facade): Facade => ({
-  runCli,
+  runCli: { run },
+}: { runCli: Facade }): Facade => ({
+  run,
 });

@@ -8,18 +8,18 @@ type CurrentJournal = { databasePath: string; journalPath: string };
 
 export = ({
   core: {
-    cachePaths: { pathsForJournal },
+    pathsForJournal,
     publicErrors: { createError, databaseError, errorCodes },
   },
   queries: { definitions: queries },
   journal: {
-    journal: { loadJournal },
+    loadJournal,
     ingestionWarning: { groupWarnings },
   },
   database: {
-    journalWriter: { writeJournalDatabase },
-    database: { ensureDatabaseCurrent },
-    databaseReader: { readDatabase },
+    writeJournalDatabase,
+    ensureDatabaseCurrent,
+    readDatabase,
   },
   external: {
     fs,

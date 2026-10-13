@@ -2,7 +2,7 @@
 
 export = ({
   journal: {
-    journal: { loadJournal },
+    loadJournal,
   },
   databaseFreshness: { checkDatabaseSync, databaseJournalPath },
   databaseRebuildLock: { withRebuildLock },

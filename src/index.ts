@@ -4,7 +4,7 @@ const { createRepositoryContainer } = require('./composition/repository-containe
 
 const container = createRepositoryContainer(__dirname, 'modules');
 const { openJournal } = container.resolve('project');
-const { parseStrict } = container.resolve('journal').ledgerParser;
+const { parseStrict } = container.resolve('journal');
 
 type PublicApi = {
   openJournal: (journalPath: string) => Journal;

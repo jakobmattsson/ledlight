@@ -42,18 +42,22 @@ type ReadableDatabase = {
   };
 };
 type Facade = {
-  database: {
-    ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string): {
-      rebuilt: boolean; status: DatabaseStatus; summary?: DatabaseSummary;
-    };
+  ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string): {
+    rebuilt: boolean; status: DatabaseStatus; summary?: DatabaseSummary;
   };
-  databaseReader: { readDatabase<Result>(databasePath: string,
-    query: (database: ReadableDatabase) => Result): Result };
-  journalWriter: { writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary };
+  readDatabase<Result>(databasePath: string, query: (database: ReadableDatabase) => Result): Result;
+  writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary;
+};
+type Registrations = {
+  database: Pick<Facade, 'ensureDatabaseCurrent'>;
+  databaseReader: Pick<Facade, 'readDatabase'>;
+  journalWriter: Pick<Facade, 'writeJournalDatabase'>;
 };
 
 export = ({
-  database, databaseReader, journalWriter,
-}: Facade): Facade => ({
-  database, databaseReader, journalWriter,
+  database: { ensureDatabaseCurrent },
+  databaseReader: { readDatabase },
+  journalWriter: { writeJournalDatabase },
+}: Registrations): Facade => ({
+  ensureDatabaseCurrent, readDatabase, writeJournalDatabase,
 });

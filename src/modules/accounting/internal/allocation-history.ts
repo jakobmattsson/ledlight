@@ -11,7 +11,7 @@ type Optimization = { status: 'optimal'; value: Fraction; solution: Fraction[] }
 module.exports = ({
   core: {
     rational: { zero, one, add, sub, mul, div, neg, cmp },
-    linearProgram: { maximize },
+    maximize,
   },
 }: {
   core: {
@@ -24,7 +24,7 @@ module.exports = ({
       neg(value: Fraction): Fraction;
       cmp(left: Fraction, right: Fraction): number;
     };
-    linearProgram: { maximize(count: number, constraints: Constraint[], objective: Coefficients): Optimization };
+    maximize(count: number, constraints: Constraint[], objective: Coefficients): Optimization;
   };
 }) => {
   const expression = (constant: Fraction, coefficients?: Coefficients): LinearExpression => ({ constant, coefficients: coefficients || new Map() });

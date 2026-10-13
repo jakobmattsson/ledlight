@@ -18,7 +18,7 @@ module.exports = ({
       negateDecimal,
       parseDecimal,
     },
-    reportTotals: { appendTotal },
+    appendTotal,
     apiOptions: { accounts, booleanOption, dateBasis, dateRange, valuation, validateDateRange, parseOptions },
   },
   accountFilter: { accountFilter },
