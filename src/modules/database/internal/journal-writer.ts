@@ -1,7 +1,7 @@
 'use strict';
 
 import type { LedgerAmount, LedgerComment, LedgerEntry } from '../../../public-api';
-import type { SqliteConstructor, SqliteDatabase, Statement } from '../../../types/sqlite-contracts';
+import type { SqliteConstructor, SqliteDatabase, Statement } from './sqlite-contracts';
 
 type Statements = Record<string, Statement>;
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;

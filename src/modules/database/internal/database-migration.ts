@@ -1,5 +1,5 @@
 'use strict';
-import type { SqliteDatabase } from '../../../types/sqlite-contracts';
+import type { SqliteDatabase } from './sqlite-contracts';
 
 type Dependencies = { external: { fs: Pick<typeof import('node:fs'), 'readFileSync'>; schemaPath: string } };
 type Result = { SCHEMA_VERSION: string; migrateDatabase(database: SqliteDatabase): void };

@@ -16,3 +16,18 @@ for (const asset of assets) {
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.copyFileSync(path.join(repositoryRoot, asset), destination);
 }
+
+function copyDeclarationFiles(directory: string): void {
+  for (const entry of fs.readdirSync(path.join(repositoryRoot, directory), { withFileTypes: true })) {
+    const relativePath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      copyDeclarationFiles(relativePath);
+    } else if (entry.isFile() && entry.name.endsWith('.d.ts')) {
+      const destination = path.join(repositoryRoot, 'dist', relativePath);
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      fs.copyFileSync(path.join(repositoryRoot, relativePath), destination);
+    }
+  }
+}
+
+for (const directory of ['src', 'lib', 'scripts', 'tests']) copyDeclarationFiles(directory);

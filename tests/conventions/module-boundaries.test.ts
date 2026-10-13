@@ -169,6 +169,17 @@ test('list dependency names cannot collide with a file registration', (context: 
   assert.throws(() => createLocalContainer(directory, {}), /Duplicate module registration items/u);
 });
 
+test('runtime files still require factories alongside type declarations', (context: TestContext) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-type-declaration-'));
+  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(directory, 'internal'));
+  fs.writeFileSync(path.join(directory, 'index.js'), 'module.exports = () => ({});\n');
+  fs.writeFileSync(path.join(directory, 'internal', 'contracts.d.ts'), 'export type Value = string;\n');
+  assert.doesNotThrow(() => createLocalContainer(directory, {}));
+  fs.writeFileSync(path.join(directory, 'internal', 'broken.js'), 'module.exports = {};\n');
+  assert.throws(() => createLocalContainer(directory, {}), /must export a factory/u);
+});
+
 test('module scope exposes local factories and allowed facades by module name only', () => {
   const local = { hasRegistration: (name: string) => name === 'privateHelper',
     resolve: () => 'local value' };

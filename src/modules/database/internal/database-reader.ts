@@ -1,5 +1,5 @@
 'use strict';
-import type { SqliteConstructor, SqliteDatabase } from '../../../types/sqlite-contracts';
+import type { SqliteConstructor, SqliteDatabase } from './sqlite-contracts';
 
 type DecimalFunctions = ReturnType<typeof import('./decimal-sql-functions')>;
 type Dependencies = {

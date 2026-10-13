@@ -1,5 +1,5 @@
 'use strict';
-import type { SqliteDatabase } from '../../../types/sqlite-contracts';
+import type { SqliteDatabase } from './sqlite-contracts';
 
 type Core = ReturnType<typeof import('../../core')>;
 type Dependencies = { core: Pick<Core, 'decimal'> };

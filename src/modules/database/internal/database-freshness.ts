@@ -1,5 +1,5 @@
 'use strict';
-import type { SqliteConstructor } from '../../../types/sqlite-contracts';
+import type { SqliteConstructor } from './sqlite-contracts';
 
 type ManifestFile = { path: string; sha256: string; size: number };
 type JournalManifest = { journalPath: string; files: ManifestFile[] };

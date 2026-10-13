@@ -50,6 +50,13 @@ Move a capability across a module boundary only when its responsibility is
 clear. When ownership is unclear, keep the current boundary until the
 responsibility is settled.
 
+Keep module-owned type declarations inside their owning module. Use `.d.ts`
+files for type-only contracts that are shared by implementations; they produce
+no runtime JavaScript and are exempt from the factory registration rule.
+Implementation files may use `import type` to reference these contracts or
+types in other modules. Runtime JavaScript files under a module must still
+export factories. Facade index files retain the self-contained type rule above.
+
 ## Verification
 
 Always run `npm test` after making code, configuration, fixture, or script
