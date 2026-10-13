@@ -17,7 +17,8 @@ const {
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
 const root = path.join(modulesRoot, 'interfaces');
-const sourceRoot = path.resolve(__dirname, '../../../src/modules/interfaces');
+const sourceModulesRoot = path.resolve(__dirname, '../../../src/modules');
+const sourceRoot = path.join(sourceModulesRoot, 'interfaces');
 const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
 const allowedModules = policy['allowed-modules'];
 const allowedExternal = policy['allowed-external'];
@@ -35,7 +36,15 @@ test('discovers exactly the modules declared in the dependency policy', () => {
   assert.deepEqual(sourceEntries.filter((entry: Dirent) => entry.isDirectory()), []);
   assert.deepEqual(sourceEntries.filter((entry: Dirent) => entry.isFile())
     .map((entry: Dirent) => entry.name).sort(),
-  [...modules.map((name: string) => `${name}.ts`), 'schema.sql', 'ledger.ohm'].sort());
+  modules.map((name: string) => `${name}.ts`).sort());
+  assert.deepEqual(fs.readdirSync(path.join(sourceModulesRoot, 'spec')).sort(),
+    ['ledger.ohm', 'schema.sql']);
+  for (const name of modules) {
+    const entries = fs.readdirSync(path.join(sourceModulesRoot, 'implementations', name),
+      { withFileTypes: true });
+    assert.ok(!(entries.length === 1 && entries[0].isDirectory() && entries[0].name === 'internal'),
+      `${name} must not have an internal directory as its only child`);
+  }
 });
 
 test('rejects nested interface directories', (context: TestContext) => {

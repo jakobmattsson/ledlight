@@ -1,5 +1,5 @@
 'use strict';
-type Core = ReturnType<typeof import('../../../interfaces/core')>;
+type Core = ReturnType<typeof import('../../interfaces/core')>;
 type Dependencies = {
   core: Pick<Core, 'publicErrors'>;
   external: {

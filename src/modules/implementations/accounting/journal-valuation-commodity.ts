@@ -1,7 +1,7 @@
 'use strict';
 
-import type { LedgerSyntaxTree } from '../../../../public-api';
-type Journal = ReturnType<typeof import('../../../interfaces/journal')>;
+import type { LedgerSyntaxTree } from '../../../public-api';
+type Journal = ReturnType<typeof import('../../interfaces/journal')>;
 type Dependencies = { journal: Pick<Journal, 'ingestionWarning'> };
 type Result = { valuationCommodityFromJournal(
   journal: { entries: LedgerSyntaxTree['entries']; source?: string; journalPath?: string }, suppliedWarnings: unknown[],

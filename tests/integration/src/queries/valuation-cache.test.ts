@@ -9,8 +9,8 @@ const path = require('node:path');
 const test = require('node:test');
 const { resolveQuery, resolveRepositoryModule } = require('../../../support/repository-container');
 
-const { buildDatabase } = resolveRepositoryModule('src/modules/implementations/database/internal/database.js').$$private;
-const { readDatabase } = resolveRepositoryModule('src/modules/implementations/database/internal/database-reader.js');
+const { buildDatabase } = resolveRepositoryModule('src/modules/implementations/database/database.js').$$private;
+const { readDatabase } = resolveRepositoryModule('src/modules/implementations/database/database-reader.js');
 const { execute } = resolveQuery('aggregate');
 
 test('aggregate uses materialized valuation rates without filling the raw price cache', (t: TestContext) => {

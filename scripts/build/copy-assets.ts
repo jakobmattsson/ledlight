@@ -6,8 +6,8 @@ const path = require('node:path');
 const repositoryRoot = path.resolve(__dirname, '../../..');
 const assets = [
   'src/modules/dependencies.yaml',
-  'src/modules/interfaces/schema.sql',
-  'src/modules/interfaces/ledger.ohm',
+  'src/modules/spec/schema.sql',
+  'src/modules/spec/ledger.ohm',
   'scripts/ledger-compatibility/ledger-compatibility-matrix.yaml',
 ];
 

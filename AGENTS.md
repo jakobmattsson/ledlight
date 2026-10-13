@@ -12,9 +12,10 @@ data-facing literals when those values are part of the behavior under test.
 ## Module Facades
 
 Keep the module entry points together as `src/modules/interfaces/<module>.ts`.
-The database schema and journal grammar also live directly in `interfaces`.
-Keep factory implementations under
-`src/modules/implementations/<module>` with their existing internal grouping.
+Keep the database schema and journal grammar under `src/modules/spec`.
+Keep factory implementations under `src/modules/implementations/<module>`.
+Place implementation files directly in the module directory when `internal`
+would be its only child; retain subdirectories for meaningful groups.
 `dependencies.yaml` and `external.ts` remain at the `src/modules` root.
 
 Each `src/modules/interfaces/<module>.ts` defines the public facade of its

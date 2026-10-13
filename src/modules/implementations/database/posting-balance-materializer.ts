@@ -1,7 +1,7 @@
 'use strict';
 import type { SqliteDatabase } from './sqlite-contracts';
 
-type Numeric = ReturnType<typeof import('../../../interfaces/numeric')>;
+type Numeric = ReturnType<typeof import('../../interfaces/numeric')>;
 type Dependencies = { numeric: Pick<Numeric, 'decimal'> };
 type BalanceRow = { id: number; account: string; quantity: string; commodity: string };
 type Result = { materializePostingBalances(database: SqliteDatabase): number };

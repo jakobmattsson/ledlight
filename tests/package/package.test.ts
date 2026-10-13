@@ -63,8 +63,8 @@ test('the published archive installs and exposes the module and CLI', () => {
       'dist/src/modules/external.js',
       'dist/src/modules/interfaces/commands.js',
       'dist/src/modules/interfaces/queries.js',
-      'dist/src/modules/interfaces/schema.sql',
-      'dist/src/modules/interfaces/ledger.ohm',
+      'dist/src/modules/spec/schema.sql',
+      'dist/src/modules/spec/ledger.ohm',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);
     }

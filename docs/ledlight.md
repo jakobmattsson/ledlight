@@ -325,15 +325,16 @@ permitted modules must be requested under the provider's name, such as
 `numeric: { rational }`. The `numeric` module owns decimal and rational
 operations; `core` provides configuration, errors, and report helpers.
 `project` owns the cache path derived from a journal file. Database migration
-resolves its schema file beside the database facade. An internal registration
+resolves its schema file from `spec`. An internal registration
 in the same module can be requested by name, such as
 `linearProgram: { maximize }`. A facade exposes a
 sole capability directly, without a one-member wrapper copied from the
 internal registration. Other module internals are unavailable. Facades live
 together in `src/modules/interfaces/<module>.ts` and compile to
 `dist/src/modules/interfaces/<module>.js`. The database schema
-(`schema.sql`) and journal grammar (`ledger.ohm`) also sit in `interfaces`.
-Factory implementations live under `src/modules/implementations/<module>`.
+(`schema.sql`) and journal grammar (`ledger.ohm`) live in `src/modules/spec`.
+Factory implementations live under `src/modules/implementations/<module>`;
+files sit directly in the module directory when no further grouping is needed.
 Factories have unique kebab-case file names within their module. The local Awilix subset lives in
 `lib/awilix.ts`, compiled to `dist/lib/awilix.js`.
 
@@ -342,7 +343,7 @@ array dependency called `<name>`. Composition resolves every JavaScript factory
 in that directory and its subdirectories, sorted by relative path, and injects
 entries with `name`, `relativePath`, and `value`. The module's facade can
 interpret those entries without embedding module-specific list rules in
-composition. `queries` and `commands` use `list-definitions`; their index
+composition. `queries` and `commands` use `list-definitions`; their facade
 factories validate and shape query and command metadata, respectively.
 
 The `queries` and `commands` facades each expose a frozen `definitions` array.
@@ -352,9 +353,9 @@ public journal operation. The project's `withJournalText` capability
 builds and removes a temporary database for CLI stdin input.
 
 Queries receive a read-only database handle through the project and may run SQL
-against the tables and columns in `implementations/database/internal/read-model-contract.ts`. That file
+against the tables and columns in `implementations/database/read-model-contract.ts`. That file
 is the explicit read-model contract; a convention test checks its complete column
-lists against `interfaces/schema.sql` and checks that it covers every schema table
+lists against `spec/schema.sql` and checks that it covers every schema table
 referenced by query SQL. Changing these columns requires a coordinated query
 update. Moving all query SQL behind database functions is outside this module
 reorganization.
@@ -509,7 +510,7 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/modules/interfaces/ledger.ohm` is the normative description of the
+`src/modules/spec/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
 semantics in `tests/support/reference/reference-parser.ts`. The fixtures in
 `tests/api/parser` define expected syntax trees, a shared error contract for

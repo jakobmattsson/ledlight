@@ -1,6 +1,6 @@
 'use strict';
 
-import type { LedgerAmount, LedgerComment, LedgerEntry } from '../../../../public-api';
+import type { LedgerAmount, LedgerComment, LedgerEntry } from '../../../public-api';
 import type { SqliteConstructor, SqliteDatabase, Statement } from './sqlite-contracts';
 
 type Statements = Record<string, Statement>;
@@ -12,9 +12,9 @@ type Usage = { accounts: Set<string>; commodities: Set<string>; tags: Set<string
 type Warning = { code: string; message: string; source: string; line: number; column: number; startLine: number; endLine: number };
 type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: string; size: number }>;
   entries: LedgerEntry[]; warnings?: Warning[] };
-type Numeric = ReturnType<typeof import('../../../interfaces/numeric')>;
-type Accounting = ReturnType<typeof import('../../../interfaces/accounting')>;
-type DatabaseFacade = ReturnType<typeof import('../../../interfaces/database')>;
+type Numeric = ReturnType<typeof import('../../interfaces/numeric')>;
+type Accounting = ReturnType<typeof import('../../interfaces/accounting')>;
+type DatabaseFacade = ReturnType<typeof import('../../interfaces/database')>;
 type SqlFunctions = ReturnType<typeof import('./decimal-sql-functions')>;
 type BalanceMaterializer = ReturnType<typeof import('./posting-balance-materializer')>;
 type PriceMaterializer = ReturnType<typeof import('./valuation-price-materializer')>;

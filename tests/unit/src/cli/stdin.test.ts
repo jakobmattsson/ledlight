@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const withExternal = require('../../../support/external-dependencies.js');
 const test = require('node:test');
-const createReportCommand = withExternal(require('../../../../src/modules/implementations/cli/internal/report-command'), ['standardInput']);
+const createReportCommand = withExternal(require('../../../../src/modules/implementations/cli/report-command'), ['standardInput']);
 
 function command(standardInput: any) {
   return createReportCommand({

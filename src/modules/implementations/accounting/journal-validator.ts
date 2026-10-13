@@ -1,13 +1,13 @@
 'use strict';
 
-import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting, LedgerTag, SourceLocation } from '../../../../public-api';
+import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting, LedgerTag, SourceLocation } from '../../../public-api';
 
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type Declarations = { accounts: Set<string>; commodities: Set<string>; tags: Set<string> };
 type LocatedTag = LedgerTag & { location?: SourceLocation };
 type ResolvedPosting = LedgerPosting & { amount: LedgerAmount; original: LedgerPosting };
-type Numeric = ReturnType<typeof import('../../../interfaces/numeric')>;
-type Journal = ReturnType<typeof import('../../../interfaces/journal')>;
+type Numeric = ReturnType<typeof import('../../interfaces/numeric')>;
+type Journal = ReturnType<typeof import('../../interfaces/journal')>;
 type Movements = ReturnType<typeof import('./commodity-movements')>;
 type Valuation = ReturnType<typeof import('./journal-valuation-commodity')>;
 type Warning = ReturnType<Journal['ingestionWarning']['createWarning']>;

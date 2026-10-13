@@ -10,7 +10,7 @@ const test = require('node:test');
 const Database = require('better-sqlite3');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
 const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
-  resolveRepositoryModule('src/modules/implementations/database/internal/database.js');
+  resolveRepositoryModule('src/modules/implementations/database/database.js');
 
 function fixture(t: TestContext, options: any) {
   const { secondDate, totalCosts }: any = { secondDate: '2024-01-02', totalCosts: false, ...options };

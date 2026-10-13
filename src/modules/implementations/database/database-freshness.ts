@@ -7,7 +7,7 @@ type DatabaseStatus = {
   databasePath: string; journalPath: string; inSync: boolean; reason: string;
   added: string[]; removed: string[]; changed: string[];
 };
-type Journal = ReturnType<typeof import('../../../interfaces/journal')>;
+type Journal = ReturnType<typeof import('../../interfaces/journal')>;
 type Migration = ReturnType<typeof import('./database-migration')>;
 type Dependencies = {
   journal: Pick<Journal, 'loadJournalManifest'>;

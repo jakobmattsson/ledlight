@@ -1,11 +1,11 @@
 'use strict';
 
-import type { LedgerCost, LedgerEntry, LedgerPosting } from '../../../../public-api';
+import type { LedgerCost, LedgerEntry, LedgerPosting } from '../../../public-api';
 
 type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
-type Numeric = ReturnType<typeof import('../../../interfaces/numeric')>;
+type Numeric = ReturnType<typeof import('../../interfaces/numeric')>;
 type Dependencies = { numeric: Pick<Numeric, 'rational'> };
 type Result = {
   annotatedTotal(annotation: LedgerCost | null, quantity: Fraction): Fraction | null;

@@ -7,9 +7,9 @@ const withExternal = require('../../../support/external-dependencies.js');
 const test = require('node:test');
 const commander = require('commander');
 const { Command } = commander;
-const createArguments = withExternal(require('../../../../src/modules/implementations/cli/internal/cli-arguments'), ['commander']);
+const createArguments = withExternal(require('../../../../src/modules/implementations/cli/cli-arguments'), ['commander']);
 const commands = resolveCommands();
-const project = resolveRepositoryModule('src/modules/implementations/project/internal/project.js');
+const project = resolveRepositoryModule('src/modules/implementations/project/project.js');
 const argumentsModule = createArguments({
   commander,
   commands: { definitions: commands },

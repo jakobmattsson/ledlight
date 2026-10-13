@@ -1,7 +1,7 @@
 'use strict';
 import type { SqliteDatabase } from './sqlite-contracts';
 
-type Core = ReturnType<typeof import('../../../interfaces/core')>;
+type Core = ReturnType<typeof import('../../interfaces/core')>;
 type Dependencies = { core: Pick<Core, 'createLedgerValuationRateResolver'> };
 type Introduction = { commodity: string; start_date: string };
 type PriceRow = { date: string; base_commodity: string; quote_quantity: string; quote_commodity: string };

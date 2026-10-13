@@ -1,11 +1,11 @@
 'use strict';
 
-import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../../../../public-api';
+import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../../../public-api';
 
 type Decimal = { coefficient: bigint; scale: number };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
-type Numeric = ReturnType<typeof import('../../../interfaces/numeric')>;
-type Journal = ReturnType<typeof import('../../../interfaces/journal')>;
+type Numeric = ReturnType<typeof import('../../interfaces/numeric')>;
+type Journal = ReturnType<typeof import('../../interfaces/journal')>;
 type Dependencies = { numeric: Pick<Numeric, 'decimal'>; journal: Pick<Journal, 'ingestionWarning'> };
 type Result = { PostingResolver: new (warnings: unknown[]) => {
   resolve(transaction: Transaction): LedgerAmount[][] | null;

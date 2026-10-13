@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const withExternal = require('../../../../support/external-dependencies.js');
 const path = require('node:path');
 const test = require('node:test');
-const createDatabaseReader = withExternal(require('../../../../../src/modules/implementations/database/internal/database-reader'), ['path', 'sqlite']);
+const createDatabaseReader = withExternal(require('../../../../../src/modules/implementations/database/database-reader'), ['path', 'sqlite']);
 
 function createReader(events: unknown[]) {
   const database = {

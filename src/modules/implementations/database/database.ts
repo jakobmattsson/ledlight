@@ -1,6 +1,6 @@
 'use strict';
-type Core = ReturnType<typeof import('../../../interfaces/core')>;
-type Journal = ReturnType<typeof import('../../../interfaces/journal')>;
+type Core = ReturnType<typeof import('../../interfaces/core')>;
+type Journal = ReturnType<typeof import('../../interfaces/journal')>;
 type Freshness = ReturnType<typeof import('./database-freshness')>;
 type Lock = ReturnType<typeof import('./database-rebuild-lock')>;
 type Writer = ReturnType<typeof import('./journal-writer')>;

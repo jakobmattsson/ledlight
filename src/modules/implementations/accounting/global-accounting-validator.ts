@@ -1,12 +1,12 @@
 'use strict';
 
-import type { LedgerAmount, LedgerEntry, LedgerPosting, SourceLocation } from '../../../../public-api';
+import type { LedgerAmount, LedgerEntry, LedgerPosting, SourceLocation } from '../../../public-api';
 
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 type CommodityDeclaration = Extract<LedgerEntry, { type: 'commodity' }>;
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
-type Numeric = ReturnType<typeof import('../../../interfaces/numeric')>;
-type Journal = ReturnType<typeof import('../../../interfaces/journal')>;
+type Numeric = ReturnType<typeof import('../../interfaces/numeric')>;
+type Journal = ReturnType<typeof import('../../interfaces/journal')>;
 type Movements = ReturnType<typeof import('./commodity-movements')>;
 type History = ReturnType<typeof import('./allocation-history')>;
 type SaleProceeds = ReturnType<typeof import('./sale-proceeds-validator')>;
