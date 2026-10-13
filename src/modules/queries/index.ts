@@ -2,14 +2,16 @@
 
 type QuerySchema = {
   shape: Record<string, unknown>;
-  safeParse(input: unknown): unknown;
 };
 type QueryDefinition = {
   inputSchema: QuerySchema;
   execute(database: unknown, options: unknown, caches: unknown): unknown;
 };
 type QueryCandidate = {
-  inputSchema?: Partial<QuerySchema>;
+  inputSchema?: {
+    shape?: Record<string, unknown>;
+    safeParse?(input: unknown): unknown;
+  };
   execute?: (...args: never[]) => unknown;
 };
 type Definition = { name: string; relativePath: string; value: QueryCandidate };

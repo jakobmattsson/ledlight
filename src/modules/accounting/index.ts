@@ -11,7 +11,6 @@ type Warning = {
 };
 type JournalValidation = {
   invalidEntries: Set<LedgerEntry>;
-  journal: { entries: LedgerEntry[] };
   warnings: Warning[];
 };
 type PostingResolverInstance = {
