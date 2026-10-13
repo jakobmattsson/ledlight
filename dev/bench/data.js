@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791838067867,
+  "lastUpdate": 1791922354542,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -1169,6 +1169,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 14.45059,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f681ef8b598bd4f30aba70a6775a10db8e9a546b",
+          "message": "Merge pull request #123 from jakobmattsson/codex/typescript-migration\n\nMigrate Ledlight to strict TypeScript and refine module interfaces",
+          "timestamp": "2026-10-13T22:11:57+02:00",
+          "tree_id": "1c2cff3b9a8b01ffff58a0da485d5b9d758195df",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/f681ef8b598bd4f30aba70a6775a10db8e9a546b"
+        },
+        "date": 1791922351462,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1919.698437,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 11.294449,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 12.743003,
             "unit": "ms"
           }
         ]
