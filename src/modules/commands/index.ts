@@ -1,18 +1,38 @@
 'use strict';
 
-type Definition<T extends object> = { name: string; relativePath: string; value: T };
-type NamedCommand<T extends object> = Readonly<T & { name: string; operation: string; group: string }>;
-type CommandIndex<T extends object> = { definitions: ReadonlyArray<NamedCommand<T>> };
+type CommandDefinition = {
+  description: string;
+  helpDetails?: string;
+  examples: string[];
+  configure(command: unknown): void;
+  prepareOutput?(result: unknown, options: unknown, format: unknown): unknown;
+  loadFormatData?(journal: unknown): unknown;
+  formatCsv?(result: unknown, options: unknown, format: unknown): string;
+  formatText(result: unknown, options: unknown, format: unknown, descriptions?: unknown): string;
+};
+type Definition = { name: string; relativePath: string; value: CommandDefinition };
+type NamedCommand = Readonly<CommandDefinition & { name: string; operation: string; group: string }>;
+type CommandIndex = { definitions: ReadonlyArray<NamedCommand> };
 
-export = <T extends object>({ definitions }: { definitions: Definition<T>[] }): CommandIndex<T> => {
-  const commands = definitions.map((definition: Definition<T>): NamedCommand<T> => {
+export = ({ definitions }: { definitions: Definition[] }): CommandIndex => {
+  const commands = definitions.map((definition: Definition): NamedCommand => {
     const command = definition.value;
     const match = /^([a-z]+(?:-[a-z]+)*)\/([a-z]+(?:-[a-z]+)*)\.js$/u.exec(definition.relativePath);
     if (!match) {
       throw new TypeError(`Command definition must be in one group directory: ${definition.relativePath}`);
     }
     const [, group, commandName] = match;
-    return Object.freeze({ ...command, name: commandName, operation: definition.name, group });
-  }).sort((left: NamedCommand<T>, right: NamedCommand<T>) => left.name.localeCompare(right.name, 'en'));
+    return Object.freeze({
+      description: command.description,
+      examples: command.examples,
+      configure: command.configure,
+      formatText: command.formatText,
+      ...(command.helpDetails === undefined ? {} : { helpDetails: command.helpDetails }),
+      ...(command.prepareOutput === undefined ? {} : { prepareOutput: command.prepareOutput }),
+      ...(command.loadFormatData === undefined ? {} : { loadFormatData: command.loadFormatData }),
+      ...(command.formatCsv === undefined ? {} : { formatCsv: command.formatCsv }),
+      name: commandName, operation: definition.name, group,
+    });
+  }).sort((left: NamedCommand, right: NamedCommand) => left.name.localeCompare(right.name, 'en'));
   return { definitions: Object.freeze(commands) };
 };

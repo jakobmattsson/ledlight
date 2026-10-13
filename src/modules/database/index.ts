@@ -41,30 +41,19 @@ type ReadableDatabase = {
     get(...parameters: unknown[]): unknown;
   };
 };
-type ReadModelTable =
-  | 'database_metadata' | 'source_files' | 'journal_entries' | 'file_comments'
-  | 'prices' | 'account_declarations' | 'tag_declarations' | 'commodity_declarations'
-  | 'transactions' | 'postings' | 'comments' | 'tags'
-  | 'resolved_posting_amounts' | 'valuation_prices';
-
 type Facade = {
   database: {
     ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string): {
       rebuilt: boolean; status: DatabaseStatus; summary?: DatabaseSummary;
     };
-    $$private: {
-      buildDatabase(databasePath: string, journalPath: string): DatabaseSummary;
-      checkDatabaseSync(databasePath: string, journalPath: string): DatabaseStatus;
-    };
   };
   databaseReader: { readDatabase<Result>(databasePath: string,
     query: (database: ReadableDatabase) => Result): Result };
   journalWriter: { writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary };
-  readModelContract: Readonly<Record<ReadModelTable, readonly string[]>>;
 };
 
 export = ({
-  database, databaseReader, journalWriter, readModelContract,
+  database, databaseReader, journalWriter,
 }: Facade): Facade => ({
-  database, databaseReader, journalWriter, readModelContract,
+  database, databaseReader, journalWriter,
 });

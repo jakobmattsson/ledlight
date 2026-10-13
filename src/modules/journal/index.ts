@@ -35,15 +35,12 @@ type Facade = {
   };
   journalManifest: { loadJournalManifest(journalPath: string): JournalManifest };
   ledgerParser: {
-    parse(sourceText: string, options?: ParseLedgerOptions): LedgerSyntaxTree & { warnings?: Warning[] };
     parseStrict(sourceText: string, options?: ParseLedgerOptions, lineOffset?: number): LedgerSyntaxTree;
-    $$private: { parseStrict(sourceText: string, options?: ParseLedgerOptions,
-      lineOffset?: number): LedgerSyntaxTree };
   };
 };
 
 export = ({
-  ingestionWarning, journal, journalManifest, ledgerParser,
+  ingestionWarning, journal, journalManifest, ledgerParser: { parseStrict },
 }: Facade): Facade => ({
-  ingestionWarning, journal, journalManifest, ledgerParser,
+  ingestionWarning, journal, journalManifest, ledgerParser: { parseStrict },
 });

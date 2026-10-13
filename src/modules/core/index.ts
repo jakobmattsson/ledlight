@@ -46,7 +46,6 @@ type Facade = {
   };
   cachePaths: {
     pathsForJournal(journalPath: string): { journalPath: string; databasePath: string };
-    $$private: { cacheRoot(): string; canonicalJournalPath(journalPath: string): string };
   };
   configuration: { read(): { journalPath?: string; cacheHome?: string } };
   decimal: {
@@ -80,7 +79,6 @@ type Facade = {
   rational: {
     zero: Fraction;
     one: Fraction;
-    fraction(n: bigint, d: bigint): Fraction;
     neg(value: Fraction): Fraction;
     add(left: Fraction, right: Fraction): Fraction;
     sub(left: Fraction, right: Fraction): Fraction;
@@ -99,7 +97,11 @@ type Facade = {
 };
 
 export = ({
-  apiOptions, cachePaths, configuration, decimal, linearProgram, publicErrors, rational, reportTotals, valuationRateResolver,
+  apiOptions, cachePaths, configuration, decimal, linearProgram, publicErrors,
+  rational: { zero, one, neg, add, sub, mul, div, cmp, parse, format },
+  reportTotals, valuationRateResolver,
 }: Facade): Facade => ({
-  apiOptions, cachePaths, configuration, decimal, linearProgram, publicErrors, rational, reportTotals, valuationRateResolver,
+  apiOptions, cachePaths, configuration, decimal, linearProgram, publicErrors,
+  rational: { zero, one, neg, add, sub, mul, div, cmp, parse, format },
+  reportTotals, valuationRateResolver,
 });

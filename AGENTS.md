@@ -9,6 +9,20 @@ configuration labels, and technical documentation.
 Ledger fixtures may preserve source-language account names and other exact
 data-facing literals when those values are part of the behavior under test.
 
+## Module Facades
+
+Each `src/modules/**/index.ts` defines the public facade of its module. Keep
+every type used by that facade explicit and readable in the index file itself;
+`src/public-api.ts` is the only permitted source for imported facade types.
+Prefer a local definition over a type inferred from an internal implementation,
+even when that means duplicating a definition.
+
+Expose only capabilities used by production code outside the module. Do not
+expose unused capabilities or capabilities needed only by tests; tests can
+access internal registrations directly when necessary. A runtime object may
+retain members under `$$private`, but those members need not appear in the
+facade type and should not be treated as part of the module interface.
+
 ## Verification
 
 Always run `npm test` after making code, configuration, fixture, or script

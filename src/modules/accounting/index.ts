@@ -27,7 +27,6 @@ type Facade = {
   commodityMovements: {
     annotatedTotal(annotation: LedgerCost | null, quantity: Fraction): Fraction | null;
     carriedMovements(transaction: Transaction, valuationCommodity: string): Movement[];
-    unpricedReplacement(transaction: Transaction, valuationCommodity: string): Movement | null;
   };
   effectivePostingCosts: {
     inferEffectivePostingCosts(entries: LedgerEntry[], valuationCommodity: string, warnings: Warning[]): void;
@@ -46,7 +45,9 @@ type Facade = {
 };
 
 export = ({
-  commodityMovements, effectivePostingCosts, globalAccountingValidator, journalValidator, journalValuationCommodity, postingResolver,
+  commodityMovements: { annotatedTotal, carriedMovements },
+  effectivePostingCosts, globalAccountingValidator, journalValidator, journalValuationCommodity, postingResolver,
 }: Facade): Facade => ({
-  commodityMovements, effectivePostingCosts, globalAccountingValidator, journalValidator, journalValuationCommodity, postingResolver,
+  commodityMovements: { annotatedTotal, carriedMovements },
+  effectivePostingCosts, globalAccountingValidator, journalValidator, journalValuationCommodity, postingResolver,
 });

@@ -62,6 +62,10 @@ test('resolves index factories as facades and hides internal factories', () => {
   assert.equal(Object.hasOwn(container.resolve('queries'), 'accountFilter'), false);
   assert.equal(Object.hasOwn(container.resolve('commands'), 'cliOptions'), false);
   assert.equal(Object.hasOwn(container.resolve('project'), '$$private'), false);
+  assert.equal(Object.hasOwn(container.resolve('database'), 'readModelContract'), false);
+  assert.equal(Object.hasOwn(container.resolve('accounting').commodityMovements, 'unpricedReplacement'), false);
+  assert.equal(Object.hasOwn(container.resolve('core').rational, 'fraction'), false);
+  assert.equal(Object.hasOwn(container.resolve('journal').ledgerParser, 'parse'), false);
 });
 
 test('external overrides remain scoped to their permitted modules', () => {
