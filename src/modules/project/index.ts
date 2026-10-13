@@ -1,7 +1,13 @@
 'use strict';
 
-type ProjectModule = ReturnType<typeof import('./internal/project')>;
-type ProjectFacade = Pick<ProjectModule, 'apiDefinitions' | 'openJournal' | 'withJournalText'>;
+import type { Journal } from '../../public-api';
 
-export = ({ project: { apiDefinitions, openJournal, withJournalText } }: { project: ProjectModule }): ProjectFacade =>
+type ProjectFacade = {
+  apiDefinitions: Readonly<Record<string, { inputs: string[] }>>;
+  openJournal(journalPath: string): Journal;
+  withJournalText<Result>(content: string, baseDirectory: string,
+    operation: (journal: Journal) => Result): Result;
+};
+
+export = ({ project: { apiDefinitions, openJournal, withJournalText } }: { project: ProjectFacade }): ProjectFacade =>
   ({ apiDefinitions, openJournal, withJournalText });

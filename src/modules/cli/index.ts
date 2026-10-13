@@ -1,7 +1,7 @@
 'use strict';
 
 type Facade = {
-  runCli: ReturnType<typeof import('./internal/run-cli')>;
+  runCli: { run(): void };
 };
 
 export = ({
