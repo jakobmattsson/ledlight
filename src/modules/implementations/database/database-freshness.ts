@@ -10,7 +10,7 @@ type DatabaseStatus = {
 type Journal = ReturnType<typeof import('../../interfaces/journal')>;
 type Migration = ReturnType<typeof import('./database-migration')>;
 type Dependencies = {
-  journal: Pick<Journal, 'loadJournalManifest'>;
+  journal: Pick<Journal, 'scanJournalSources'>;
   databaseMigration: Pick<Migration, 'SCHEMA_VERSION'>;
   external: { fs: Pick<typeof import('node:fs'), 'existsSync'>;
     path: Pick<typeof import('node:path'), 'resolve'>; sqlite: SqliteConstructor };
@@ -21,7 +21,7 @@ type Result = {
 
 export = ({
   journal: {
-    loadJournalManifest,
+    scanJournalSources,
   },
   databaseMigration: { SCHEMA_VERSION },
   external: {
@@ -72,7 +72,7 @@ export = ({
         return databaseWithoutSchema(databasePath, journalPath, 'schema_version_mismatch');
       }
 
-      const journal: JournalManifest = loadJournalManifest(journalPath);
+      const journal: JournalManifest = scanJournalSources(journalPath);
       const storedFiles = database.prepare(
         'SELECT path, sha256, size FROM source_files ORDER BY id',
       ).all() as ManifestFile[];

@@ -27,11 +27,11 @@ export = ({
     return includes;
   }
 
-  function loadJournalManifest(journalPath: string) {
+  function scanJournalSources(journalPath: string) {
     return traverseJournal({ kind: 'file', path: journalPath }, ({ content, include }: any) => {
       for (const includePath of includePaths(content)) include(includePath);
     });
   }
 
-  return { loadJournalManifest };
+  return { scanJournalSources };
 };

@@ -10,7 +10,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { loadJournal } = resolveRepositoryModule("src/modules/implementations/journal/journal/journal.js");
-const { loadJournalManifest } = resolveRepositoryModule("src/modules/implementations/journal/journal/journal-manifest.js");
+const { scanJournalSources } = resolveRepositoryModule("src/modules/implementations/journal/journal/journal-source-scanner.js");
 
 function temporaryDirectory(t: TestContext) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-journal-loader-'));
@@ -32,13 +32,13 @@ test('expands include globs in deterministic path order', (t: TestContext) => {
   const journal = loadJournal({ kind: 'file', path: journalPath });
   assert.deepEqual(journal.entries.map((entry: any) => entry.name), ['Assets:First', 'Assets:Second']);
   assert.deepEqual(journal.files.map((file: { path: string }) => file.path), [journalPath, firstPath, secondPath]);
-  assert.deepEqual(loadJournalManifest(journalPath), {
+  assert.deepEqual(scanJournalSources(journalPath), {
     journalPath,
     files: journal.files,
   });
 });
 
-test('rejects circular includes in full and manifest-only loading', (t: TestContext) => {
+test('rejects circular includes in full loading and source scanning', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const firstPath = path.join(directory, 'first.ledger');
   const secondPath = path.join(directory, 'second.ledger');
@@ -46,7 +46,7 @@ test('rejects circular includes in full and manifest-only loading', (t: TestCont
   fs.writeFileSync(secondPath, 'include first.ledger\n');
 
   assert.throws(() => loadJournal({ kind: 'file', path: firstPath }), /Circular include detected/u);
-  assert.throws(() => loadJournalManifest(firstPath), /Circular include detected/u);
+  assert.throws(() => scanJournalSources(firstPath), /Circular include detected/u);
 });
 
 test('rejects include patterns that match no files', (t: TestContext) => {
@@ -56,7 +56,7 @@ test('rejects include patterns that match no files', (t: TestContext) => {
   fs.writeFileSync(journalPath, 'include missing/*.ledger\n');
 
   assert.throws(() => loadJournal({ kind: 'file', path: journalPath }), /include matched no files/u);
-  assert.throws(() => loadJournalManifest(journalPath), /include matched no files/u);
+  assert.throws(() => scanJournalSources(journalPath), /include matched no files/u);
 });
 
 test('reports missing include directories as unmatched patterns', (t: TestContext) => {
@@ -69,7 +69,7 @@ test('reports missing include directories as unmatched patterns', (t: TestContex
     new RegExp(`${journalPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:1: include matched no files`, 'u'),
   );
   assert.throws(
-    () => loadJournalManifest(journalPath),
+    () => scanJournalSources(journalPath),
     new RegExp(`${journalPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}: include matched no files`, 'u'),
   );
 });
@@ -80,7 +80,7 @@ test('rejects wildcards in include directory components', (t: TestContext) => {
   fs.writeFileSync(journalPath, 'include parts*/item?.ledger\n');
 
   assert.throws(() => loadJournal({ kind: 'file', path: journalPath }), /Wildcards in include directories are not supported/u);
-  assert.throws(() => loadJournalManifest(journalPath), /Wildcards in include directories are not supported/u);
+  assert.throws(() => scanJournalSources(journalPath), /Wildcards in include directories are not supported/u);
 });
 
 test('loads a file once when multiple include branches reach it', (t: TestContext) => {
@@ -104,7 +104,7 @@ test('loads a file once when multiple include branches reach it', (t: TestContex
     [journalPath, firstBranchPath, sharedPath, secondBranchPath],
   );
   assert.deepEqual(
-    loadJournalManifest(journalPath).files.map((file: { path: string }) => file.path),
+    scanJournalSources(journalPath).files.map((file: { path: string }) => file.path),
     [journalPath, firstBranchPath, sharedPath, secondBranchPath],
   );
 });
