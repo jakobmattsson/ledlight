@@ -61,10 +61,10 @@ test('the published archive installs and exposes the module and CLI', () => {
       'dist/lib/awilix.js',
       'dist/src/modules/dependencies.yaml',
       'dist/src/modules/external.js',
-      'dist/src/modules/interfaces/commands/index.js',
-      'dist/src/modules/interfaces/queries/index.js',
-      'dist/src/modules/interfaces/database/schema.sql',
-      'dist/src/modules/interfaces/journal/ledger.ohm',
+      'dist/src/modules/interfaces/commands.js',
+      'dist/src/modules/interfaces/queries.js',
+      'dist/src/modules/interfaces/schema.sql',
+      'dist/src/modules/interfaces/ledger.ohm',
     ]) {
       assert.ok(packagedPaths.has(requiredPath), `${requiredPath} must be published`);
     }

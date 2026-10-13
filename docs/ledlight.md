@@ -87,7 +87,8 @@ such as totals.
 
 The source is divided into sibling modules under `src/modules`. Query definitions,
 CLI command definitions, the database schema, and the Ledger grammar live in their
-owning modules. Each module's `index.ts` selects the values visible to other modules.
+owning modules. Each module's file in `interfaces` selects the values visible to
+other modules.
 
 The CLI is a thin adapter over that public module. It parses command-line
 arguments, maps semantic inputs to public API options, and invokes a journal
@@ -290,7 +291,7 @@ and `allowed-external` mappings define the composition policy. The repository
 container discovers the interface and implementation directories, checks that
 they match both policies, rejects cycles, and builds module-local factory
 containers. Runtime adapters are created by `src/modules/external.ts`, a file outside the domain
-module graph. The compiled `interfaces/<module>/index.js` for each domain module
+module graph. The compiled `interfaces/<module>.js` for each domain module
 is registered as a factory and receives its local dependencies through injection.
 
 The optional `ubiquitous` list in `dependencies.yaml` affects only diagram
@@ -329,9 +330,9 @@ in the same module can be requested by name, such as
 `linearProgram: { maximize }`. A facade exposes a
 sole capability directly, without a one-member wrapper copied from the
 internal registration. Other module internals are unavailable. Facades live
-together in `src/modules/interfaces/<module>/index.ts` and compile to
-`dist/src/modules/interfaces/<module>/index.js`. The database schema
-(`schema.sql`) and journal grammar (`ledger.ohm`) sit beside their facades.
+together in `src/modules/interfaces/<module>.ts` and compile to
+`dist/src/modules/interfaces/<module>.js`. The database schema
+(`schema.sql`) and journal grammar (`ledger.ohm`) also sit in `interfaces`.
 Factory implementations live under `src/modules/implementations/<module>`.
 Factories have unique kebab-case file names within their module. The local Awilix subset lives in
 `lib/awilix.ts`, compiled to `dist/lib/awilix.js`.
@@ -339,7 +340,7 @@ Factories have unique kebab-case file names within their module. The local Awili
 A directory named `list-<name>` directly under a module's implementation root registers an
 array dependency called `<name>`. Composition resolves every JavaScript factory
 in that directory and its subdirectories, sorted by relative path, and injects
-entries with `name`, `relativePath`, and `value`. The module's `index.js` can
+entries with `name`, `relativePath`, and `value`. The module's facade can
 interpret those entries without embedding module-specific list rules in
 composition. `queries` and `commands` use `list-definitions`; their index
 factories validate and shape query and command metadata, respectively.
@@ -353,7 +354,7 @@ builds and removes a temporary database for CLI stdin input.
 Queries receive a read-only database handle through the project and may run SQL
 against the tables and columns in `implementations/database/internal/read-model-contract.ts`. That file
 is the explicit read-model contract; a convention test checks its complete column
-lists against `interfaces/database/schema.sql` and checks that it covers every schema table
+lists against `interfaces/schema.sql` and checks that it covers every schema table
 referenced by query SQL. Changing these columns requires a coordinated query
 update. Moving all query SQL behind database functions is outside this module
 reorganization.
@@ -508,7 +509,7 @@ This syntax records a zero basis and zero value for this transaction. It does
 not assert that the acquired instrument has no economic or market value at
 other times; valuation remains the responsibility of price data.
 
-`src/modules/interfaces/journal/ledger.ohm` is the normative description of the
+`src/modules/interfaces/ledger.ohm` is the normative description of the
 supported language. Ohm keeps this pure grammar separate from the AST-building
 semantics in `tests/support/reference/reference-parser.ts`. The fixtures in
 `tests/api/parser` define expected syntax trees, a shared error contract for

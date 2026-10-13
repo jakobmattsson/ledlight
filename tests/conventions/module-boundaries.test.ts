@@ -23,32 +23,26 @@ const allowedModules = policy['allowed-modules'];
 const allowedExternal = policy['allowed-external'];
 
 test('discovers exactly the modules declared in the dependency policy', () => {
-  const directories = fs.readdirSync(root, { withFileTypes: true })
-    .filter((entry: Dirent) => entry.isDirectory()).map((entry: Dirent) => entry.name).sort();
-  assert.deepEqual(discoverModules(root), directories);
+  const modules = discoverModules(root);
+  assert.deepEqual(fs.readdirSync(root, { withFileTypes: true })
+    .filter((entry: Dirent) => entry.isDirectory()), []);
   assert.ok(fs.statSync(path.join(sourceRoot, '..', 'external.ts')).isFile());
-  assert.deepEqual(Object.keys(allowedModules).sort(), directories);
-  assert.deepEqual(Object.keys(allowedExternal).sort(), directories);
+  assert.deepEqual(Object.keys(allowedModules).sort(), modules);
+  assert.deepEqual(Object.keys(allowedExternal).sort(), modules);
   assert.deepEqual(fs.readdirSync(path.join(modulesRoot, 'implementations'), { withFileTypes: true })
-    .filter((entry: Dirent) => entry.isDirectory()).map((entry: Dirent) => entry.name).sort(), directories);
-  const rootAssets = { database: ['schema.sql'], journal: ['ledger.ohm'] };
-  for (const name of directories) {
-    const entries = fs.readdirSync(path.join(sourceRoot, name), { withFileTypes: true });
-    assert.deepEqual(entries.filter((entry: Dirent) => entry.isDirectory()), [],
-      `${name} interface must not contain implementation directories`);
-    const rootFiles = entries
-      .filter((entry: Dirent) => entry.isFile() && !/\.(?:js|d\.ts|js\.map)$/u.test(entry.name))
-      .map((entry: Dirent) => entry.name).sort();
-    assert.deepEqual(rootFiles, ['index.ts', ...(rootAssets[name as keyof typeof rootAssets] ?? [])].sort(),
-      `${name} must expose only its facade and declared assets at its root`);
-  }
+    .filter((entry: Dirent) => entry.isDirectory()).map((entry: Dirent) => entry.name).sort(), modules);
+  const sourceEntries = fs.readdirSync(sourceRoot, { withFileTypes: true });
+  assert.deepEqual(sourceEntries.filter((entry: Dirent) => entry.isDirectory()), []);
+  assert.deepEqual(sourceEntries.filter((entry: Dirent) => entry.isFile())
+    .map((entry: Dirent) => entry.name).sort(),
+  [...modules.map((name: string) => `${name}.ts`), 'schema.sql', 'ledger.ohm'].sort());
 });
 
-test('rejects a discovered module without an index facade', (context: TestContext) => {
+test('rejects nested interface directories', (context: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-module-scope-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   fs.mkdirSync(path.join(directory, 'incomplete'));
-  assert.throws(() => discoverModules(directory), /must contain index.js/u);
+  assert.throws(() => discoverModules(directory), /Interface directory must be flat/u);
 });
 
 test('rejects missing, unknown, and cyclic module edges', () => {
@@ -58,7 +52,7 @@ test('rejects missing, unknown, and cyclic module edges', () => {
   assert.throws(() => dependencyOrder(['a', 'b'], { a: ['b'], b: ['a'] }), /cycle/u);
 });
 
-test('resolves index factories as facades and hides internal factories', () => {
+test('resolves interface factories as facades and hides internal factories', () => {
   const container = createRepositoryContainer(__dirname, '../../src/modules');
   for (const name of discoverModules(root)) {
     assert.equal(container.resolve(name), container.$$private.resolveInternal(name, 'index'));
@@ -111,8 +105,7 @@ test('external overrides remain scoped to their permitted modules', () => {
 test('composes an independent module tree from the supplied path', (context: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'module-composition-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  fs.mkdirSync(path.join(directory, 'interfaces', 'source'), { recursive: true });
-  fs.mkdirSync(path.join(directory, 'interfaces', 'consumer'));
+  fs.mkdirSync(path.join(directory, 'interfaces'));
   fs.mkdirSync(path.join(directory, 'implementations', 'source'), { recursive: true });
   fs.mkdirSync(path.join(directory, 'implementations', 'consumer'));
   fs.writeFileSync(path.join(directory, 'dependencies.yaml'), `allowed-modules:
@@ -124,9 +117,9 @@ allowed-external:
 `);
   fs.writeFileSync(path.join(directory, 'external.js'),
     "module.exports = () => ({ greeting: 'hello' });\n");
-  fs.writeFileSync(path.join(directory, 'interfaces', 'source', 'index.js'),
+  fs.writeFileSync(path.join(directory, 'interfaces', 'source.js'),
     'module.exports = ({ external: { greeting } }) => ({ greeting });\n');
-  fs.writeFileSync(path.join(directory, 'interfaces', 'consumer', 'index.js'),
+  fs.writeFileSync(path.join(directory, 'interfaces', 'consumer.js'),
     'module.exports = ({ source: { greeting } }) => ({ message: `${greeting}, world` });\n');
 
   const container = createRepositoryContainer(path.dirname(directory), path.basename(directory));

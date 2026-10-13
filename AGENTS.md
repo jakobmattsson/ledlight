@@ -11,15 +11,14 @@ data-facing literals when those values are part of the behavior under test.
 
 ## Module Facades
 
-Keep the module entry points together under
-`src/modules/interfaces/<module>/index.ts`.
-The database schema and journal grammar also live under their respective
-`interfaces/<module>` directories. Keep factory implementations under
+Keep the module entry points together as `src/modules/interfaces/<module>.ts`.
+The database schema and journal grammar also live directly in `interfaces`.
+Keep factory implementations under
 `src/modules/implementations/<module>` with their existing internal grouping.
 `dependencies.yaml` and `external.ts` remain at the `src/modules` root.
 
-Each `src/modules/interfaces/*/index.ts` defines the public facade of its
-module. Keep every type used by that facade explicit and readable in the index
+Each `src/modules/interfaces/<module>.ts` defines the public facade of its
+module. Keep every type used by that facade explicit and readable in the facade
 file itself;
 `src/public-api.ts` is the only permitted source for imported facade types.
 Prefer a local definition over a type inferred from an internal implementation,
@@ -63,7 +62,7 @@ files for type-only contracts that are shared by implementations; they produce
 no runtime JavaScript and are exempt from the factory registration rule.
 Implementation files may use `import type` to reference these contracts or
 types in other modules. Runtime JavaScript files under a module must still
-export factories. Facade index files retain the self-contained type rule above.
+export factories. Facade files retain the self-contained type rule above.
 
 ## Verification
 

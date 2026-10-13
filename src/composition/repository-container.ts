@@ -18,16 +18,12 @@ function moduleName(fileName: string): string {
 }
 
 function discoverModules(directory: string): string[] {
-  const modules = fs.readdirSync(directory, { withFileTypes: true })
-    .filter((entry: import('node:fs').Dirent) => entry.isDirectory())
-    .map((entry: import('node:fs').Dirent) => entry.name)
-    .sort();
-  for (const name of modules) {
-    if (!fs.statSync(path.join(directory, name, 'index.js'), { throwIfNoEntry: false })?.isFile()) {
-      throw new Error(`Module ${name} must contain index.js`);
-    }
+  const entries = fs.readdirSync(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) throw new Error(`Interface directory must be flat: ${entry.name}`);
   }
-  return modules;
+  return entries.filter((entry: import('node:fs').Dirent) => entry.isFile() && entry.name.endsWith('.js'))
+    .map((entry: import('node:fs').Dirent) => moduleName(entry.name)).sort();
 }
 
 function assertPolicyKeys(modules: string[], policy: Policy, label: string): void {
@@ -233,7 +229,7 @@ function createRepositoryContainer(...modulesPathParts: string[]) {
   function build(moduleName: string) {
     if (built.has(moduleName)) return built.get(moduleName);
     const directory = path.join(modulesRoot, 'implementations', moduleName);
-    const facadeFile = path.join(modulesRoot, 'interfaces', moduleName, 'index.js');
+    const facadeFile = path.join(modulesRoot, 'interfaces', `${moduleName}.js`);
     const externals = Object.freeze(Object.fromEntries(allowedExternal[moduleName].map((name: string) => {
       if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
       return [name, services[name]];
@@ -247,7 +243,7 @@ function createRepositoryContainer(...modulesPathParts: string[]) {
     }
     const facade = local.container.resolve('index');
     if (!facade || typeof facade !== 'object') {
-      throw new TypeError(`${moduleName}/index.js must return a facade`);
+      throw new TypeError(`interfaces/${moduleName}.js must return a facade`);
     }
     Object.freeze(facade);
     const module = { ...local, facade };

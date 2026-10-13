@@ -14,7 +14,7 @@ type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: 
   entries: LedgerEntry[]; warnings?: Warning[] };
 type Numeric = ReturnType<typeof import('../../../interfaces/numeric')>;
 type Accounting = ReturnType<typeof import('../../../interfaces/accounting')>;
-type DatabaseFacade = ReturnType<typeof import('../../../interfaces/database/index')>;
+type DatabaseFacade = ReturnType<typeof import('../../../interfaces/database')>;
 type SqlFunctions = ReturnType<typeof import('./decimal-sql-functions')>;
 type BalanceMaterializer = ReturnType<typeof import('./posting-balance-materializer')>;
 type PriceMaterializer = ReturnType<typeof import('./valuation-price-materializer')>;

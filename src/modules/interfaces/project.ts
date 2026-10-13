@@ -1,6 +1,6 @@
 'use strict';
 
-import type { Journal } from '../../../public-api';
+import type { Journal } from '../../public-api';
 
 type ProjectFacade = {
   apiDefinitions: Readonly<Record<string, { inputs: string[] }>>;

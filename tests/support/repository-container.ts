@@ -17,10 +17,11 @@ function resolveRepositoryModule(fileName: string) {
     ? path.join(repositoryFileName, 'index.js')
     : repositoryFileName;
   const relative = path.relative(path.join(REPOSITORY_ROOT, 'src/modules'), resolvedFileName);
-  const [group, owner] = relative.split(path.sep);
+  const [group, member] = relative.split(path.sep);
   if (group !== 'implementations' && group !== 'interfaces') {
     throw new Error(`Module file must be in interfaces or implementations: ${fileName}`);
   }
+  const owner = group === 'interfaces' ? moduleName(member) : member;
   return container.$$private.resolveInternal(owner, moduleName(resolvedFileName));
 }
 

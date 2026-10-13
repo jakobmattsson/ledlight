@@ -1,6 +1,6 @@
 'use strict';
 
-import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../../../public-api';
+import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../../public-api';
 
 type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;

@@ -1,6 +1,6 @@
 'use strict';
 
-import type { LedgerEntry } from '../../../public-api';
+import type { LedgerEntry } from '../../public-api';
 
 type Warning = {
   code: string; message: string; source: string; line: number; column: number;

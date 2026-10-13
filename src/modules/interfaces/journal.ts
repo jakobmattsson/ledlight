@@ -1,6 +1,6 @@
 'use strict';
 
-import type { LedgerEntry, LedgerSyntaxTree, ParseLedgerOptions } from '../../../public-api';
+import type { LedgerEntry, LedgerSyntaxTree, ParseLedgerOptions } from '../../public-api';
 
 type WarningLocation = {
   source: string; line: number; column: number; startLine?: number; endLine?: number;

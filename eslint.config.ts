@@ -66,7 +66,10 @@ module.exports = [
     },
   },
   {
-    files: ["src/modules/{interfaces,implementations}/{core,numeric,accounting,database}/**/*.ts"],
+    files: [
+      "src/modules/interfaces/{core,numeric,accounting,database}.ts",
+      "src/modules/implementations/{core,numeric,accounting,database}/**/*.ts",
+    ],
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/explicit-function-return-type": "error",

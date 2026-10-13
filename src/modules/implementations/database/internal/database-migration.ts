@@ -14,7 +14,7 @@ export = ({
 }: Dependencies): Result => {
 
   const SCHEMA_VERSION = '39';
-  const schema = fs.readFileSync(path.join(modulesDirectory, 'interfaces/database/schema.sql'), 'utf8');
+  const schema = fs.readFileSync(path.join(modulesDirectory, 'interfaces/schema.sql'), 'utf8');
 
   function tableExists(database: SqliteDatabase, name: string): boolean {
     return database.prepare(

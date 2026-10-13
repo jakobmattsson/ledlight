@@ -15,7 +15,7 @@ module.exports = () => [
 
 test('repository modules reject ambient runtime dependencies', async () => {
   const eslint = new ESLint({ cwd: root });
-  for (const directory of ['modules/interfaces/core', 'modules/implementations/queries']) {
+  for (const directory of ['modules/interfaces', 'modules/implementations/queries']) {
     const [result] = await eslint.lintText(source, {
       filePath: path.join(root, 'src', directory, 'runtime-boundary-example.ts'),
     });
