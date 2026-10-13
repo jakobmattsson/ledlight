@@ -1,16 +1,11 @@
 'use strict';
 
-import type { LedgerEntry } from '../../public-api';
-
+type JournalSource =
+  | { kind: 'file'; path: string }
+  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
 type Warning = {
   code: string; message: string; source: string; line: number; column: number;
   startLine: number; endLine: number;
-};
-type JournalInput = {
-  journalPath: string;
-  files: Array<{ path: string; sha256: string; size: number }>;
-  entries: LedgerEntry[];
-  warnings?: Warning[];
 };
 type DatabaseSummary = {
   databasePath: string;
@@ -42,27 +37,22 @@ type ReadableDatabase = {
   };
 };
 type Facade = {
-  ensureDatabaseCurrent(databasePath: string, sourceJournalPath: string): {
+  prepareDatabase(databasePath: string, source: JournalSource): {
     rebuilt: boolean; status: DatabaseStatus; summary?: DatabaseSummary;
   };
   readDatabase<Result>(databasePath: string, query: (database: ReadableDatabase) => Result): Result;
-  writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary;
 };
 type Registrations = {
-  database: Pick<Facade, 'ensureDatabaseCurrent'>;
+  database: Pick<Facade, 'prepareDatabase'>;
   databaseReader: Pick<Facade, 'readDatabase'>;
-  journalWriter: Pick<Facade, 'writeJournalDatabase'>;
 };
 
 export = ({
-  database: { ensureDatabaseCurrent },
+  database: { prepareDatabase },
   databaseReader: { readDatabase },
-  journalWriter: { writeJournalDatabase },
 }: Registrations): Facade => ({
-  // Rebuild a journal file's database only when its cached contents are stale.
-  ensureDatabaseCurrent,
+  // Reuse a current file cache or build a database from a file or text source.
+  prepareDatabase,
   // Run a query against an existing database through a read-only connection.
   readDatabase,
-  // Write an already loaded journal, such as stdin input, to a new database.
-  writeJournalDatabase,
 });

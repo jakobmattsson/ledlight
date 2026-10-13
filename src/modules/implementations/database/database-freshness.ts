@@ -17,7 +17,6 @@ type Dependencies = {
 };
 type Result = {
   checkDatabaseSync(databasePath: string, journalPath: string): DatabaseStatus;
-  databaseJournalPath(databasePath: string): string | null;
 };
 
 export = ({
@@ -104,26 +103,5 @@ export = ({
     }
   }
 
-  function databaseJournalPath(databasePath: string): string | null {
-    const resolvedDatabasePath = path.resolve(databasePath);
-    if (!fs.existsSync(resolvedDatabasePath)) return null;
-    const database = new Database(resolvedDatabasePath, { readonly: true, fileMustExist: true });
-    try {
-      const hasDatabaseMetadata = database.prepare(`
-      SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'database_metadata'
-    `).pluck().get();
-      const hasLegacyMetadata = database.prepare(`
-      SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'metadata'
-    `).pluck().get();
-      if (!hasDatabaseMetadata && !hasLegacyMetadata) return null;
-      const metadataTable = hasDatabaseMetadata ? 'database_metadata' : 'metadata';
-      return database.prepare<string>(
-        `SELECT value FROM ${metadataTable} WHERE key = 'root_path'`,
-      ).pluck().get() || null;
-    } finally {
-      database.close();
-    }
-  }
-
-  return { checkDatabaseSync, databaseJournalPath };
+  return { checkDatabaseSync };
 };

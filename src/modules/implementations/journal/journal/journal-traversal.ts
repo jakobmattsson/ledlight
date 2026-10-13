@@ -1,6 +1,9 @@
 'use strict';
 
 type RootSource = { content: string; baseDirectory: string };
+type JournalSource =
+  | { kind: 'file'; path: string }
+  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
 type JournalFile = { path: string; sha256: string; size: number };
 type TraversedFile = { content: string; path: string; include(path: string, line?: number): void };
 
@@ -14,8 +17,11 @@ module.exports = ({
   },
 }: any) => {
 
-  function traverseJournal(journalPath: string, processFile: (file: TraversedFile) => void, rootSource?: RootSource) {
-    const resolvedJournalPath = rootSource ? journalPath : path.resolve(journalPath);
+  function traverseJournal(source: JournalSource, processFile: (file: TraversedFile) => void) {
+    const resolvedJournalPath = source.kind === 'file' ? path.resolve(source.path) : source.sourceName;
+    const rootSource: RootSource | undefined = source.kind === 'text'
+      ? { content: source.content, baseDirectory: source.baseDirectory }
+      : undefined;
     const filesByPath = new Map<string, JournalFile>();
     const active = new Set<string>();
 

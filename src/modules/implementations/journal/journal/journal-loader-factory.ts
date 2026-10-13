@@ -2,22 +2,26 @@
 
 import type { LedgerEntry, WarningGroup } from '../../../../public-api';
 
+type JournalSource =
+  | { kind: 'file'; path: string }
+  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
+
 module.exports = ({
   journalTraversal: { traverseJournal },
 }: any) => {
 
   function createJournalLoader(parseSource: any) {
-    return function loadJournal(journalPath: string, rootSource: string | undefined) {
+    return function loadJournal(source: JournalSource) {
       const entries: LedgerEntry[] = [];
       const warnings: WarningGroup[] = [];
-      const traversal = traverseJournal(journalPath, ({ content, path, include }: any) => {
+      const traversal = traverseJournal(source, ({ content, path, include }: any) => {
         const document = parseSource(content, { source: path });
         warnings.push(...(document.warnings || []));
         for (const entry of document.entries) {
           if (entry.type === 'include') include(entry.path, entry.location.line);
           else entries.push(entry);
         }
-      }, rootSource);
+      });
       return { ...traversal, entries, warnings };
     };
   }

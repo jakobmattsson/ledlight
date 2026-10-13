@@ -9,7 +9,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const createPublicErrors = require('../../../../../src/modules/implementations/core/public-errors');
-const createDatabase = withExternal(require('../../../../../src/modules/implementations/database/database'), ['path']);
+const createDatabase = withExternal(require('../../../../../src/modules/implementations/database/database'), ['fs', 'path']);
 const createRebuildLock = withExternal(require('../../../../../src/modules/implementations/database/database-rebuild-lock'), ['fs', 'processRuntime', 'systemClock']);
 
 function temporaryDatabasePath(t: TestContext) {
@@ -78,6 +78,7 @@ test('rechecks freshness after acquiring the rebuild lock', () => {
   ];
   let checks = 0;
   const database = createDatabase({
+    fs,
     path,
     journal: { loadJournal: () => assert.fail('must not reload a current database') },
     databaseFreshness: {
@@ -86,14 +87,13 @@ test('rechecks freshness after acquiring the rebuild lock', () => {
         checks += 1;
         return status;
       },
-      databaseJournalPath: () => assert.fail('the journal path was supplied'),
     },
     databaseRebuildLock: { withRebuildLock: (_databasePath: string, operation: () => unknown) => operation() },
     journalWriter: { writeJournalDatabase: () => assert.fail('must not rebuild a current database') },
     core: { publicErrors: createPublicErrors() },
   });
 
-  assert.deepEqual(database.ensureDatabaseCurrent('journal.sqlite', 'journal.ledger'), {
+  assert.deepEqual(database.prepareDatabase('journal.sqlite', { kind: 'file', path: 'journal.ledger' }), {
     rebuilt: false,
     status: statuses[1],
   });

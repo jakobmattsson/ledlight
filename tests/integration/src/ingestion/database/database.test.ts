@@ -14,7 +14,7 @@ const Database = require('better-sqlite3');
 const { createRepositoryContainer } = require('../../../../../src/composition/repository-container');
 const { pathsForJournal } = resolveRepositoryModule("src/modules/implementations/project/cache-paths.js");
 const {
-  ensureDatabaseCurrent,
+  prepareDatabase,
 } = resolveRepositoryModule("src/modules/implementations/database/database.js");
 const {
   buildDatabase,
@@ -30,18 +30,28 @@ function temporaryDirectory(t: TestContext) {
   return directory;
 }
 
-test('requires a source journal and preserves filesystem errors from rebuilds', (t: TestContext) => {
+test('preserves filesystem errors from rebuilds', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const databasePath = path.join(directory, 'journal.sqlite');
   const journalPath = path.join(directory, 'missing.ledger');
 
-  assert.throws(() => ensureDatabaseCurrent(databasePath), {
-    code: 'LEDLIGHT_DATABASE',
-    message: 'Cannot update the database without a journal path',
-  });
-  assert.throws(() => buildDatabase(databasePath, journalPath), {
+  assert.throws(() => buildDatabase(databasePath, { kind: 'file', path: journalPath }), {
     code: 'ENOENT',
   });
+});
+
+test('does not overwrite an existing database with a text source', (t: TestContext) => {
+  const directory = temporaryDirectory(t);
+  const databasePath = path.join(directory, 'journal.sqlite');
+  fs.writeFileSync(databasePath, 'existing database');
+
+  assert.throws(() => prepareDatabase(databasePath, {
+    kind: 'text', content: '', baseDirectory: directory, sourceName: '<stdin>',
+  }), {
+    code: 'LEDLIGHT_DATABASE',
+    message: 'A text source requires a new database path',
+  });
+  assert.equal(fs.readFileSync(databasePath, 'utf8'), 'existing database');
 });
 
 test('stores a journal as normalized, queryable SQLite data', (t: TestContext) => {
@@ -65,7 +75,7 @@ P 2024-01-01 FUND 123.45 SEK
 ; Included file comment
 `);
 
-  const result = buildDatabase(databasePath, journalPath);
+  const result = buildDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.deepEqual(
     {
       files: result.files,
@@ -199,7 +209,7 @@ test('stores assignments and assertions in the same balance columns', (t: TestCo
   Equity:Opening
 `);
 
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
@@ -237,7 +247,7 @@ test('stores posting dates separately from comment text', (t: TestContext) => {
   Equity:Opening  -10 SEK ; [2024-01-03]
 `);
 
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
@@ -263,7 +273,7 @@ test('stores lot costs separately from transaction costs', (t: TestContext) => {
   Income:Capital Gains  -200 USD
 `);
 
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(
@@ -305,7 +315,7 @@ test('materializes exact account and commodity balances in posting-date order', 
   Equity:Opening  -2 FUND
 `);
 
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(database.prepare(`
@@ -339,7 +349,7 @@ P 2024-02-01 FUND 2 NOK
   Equity:Opening  -30 USD
 `);
 
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(
@@ -366,7 +376,7 @@ test('detects when source files and database contents differ', (t: TestContext) 
   fs.writeFileSync(transactionsPath, '2024-01-01 Opening\n  Assets:Cash  1 SEK\n  Equity:Opening\n');
 
   assert.equal(checkDatabaseSync(databasePath, journalPath).reason, 'database_missing');
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.deepEqual(checkDatabaseSync(databasePath, journalPath), {
     databasePath,
     journalPath,
@@ -394,7 +404,7 @@ test('detects source files added to and removed from an include glob', (t: TestC
   const databasePath = path.join(directory, 'journal.sqlite');
   fs.writeFileSync(journalPath, 'include entries/*.ledger\n');
   fs.writeFileSync(firstPath, 'account Assets:First\n');
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
 
   fs.writeFileSync(secondPath, 'account Assets:Second\n');
   let status = checkDatabaseSync(databasePath, journalPath);
@@ -421,7 +431,7 @@ commodity SEK
   default
 `);
 
-  const result = buildDatabase(databasePath, journalPath);
+  const result = buildDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.equal(result.transactions, 0);
   assert.equal(result.warnings.length, 1);
   assert.deepEqual(
@@ -443,7 +453,7 @@ test('rebuilds an older cache to persist the missing default warning', (t: TestC
   fs.writeFileSync(journalPath, `commodity SEK
   format 1,000.00 SEK
 `);
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const database = new Database(databasePath);
   try {
     database.prepare("UPDATE database_metadata SET value = '37' WHERE key = 'schema_version'").run();
@@ -452,7 +462,7 @@ test('rebuilds an older cache to persist the missing default warning', (t: TestC
     database.close();
   }
 
-  const result = ensureDatabaseCurrent(databasePath, journalPath);
+  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.equal(result.rebuilt, true);
   assert.deepEqual(result.summary.warnings.map(({ code }: any) => code), ['MISSING_DEFAULT_COMMODITY']);
 });
@@ -473,7 +483,7 @@ account Assets:Cash
   Assets:Cash
 `);
 
-  const result = buildDatabase(databasePath, journalPath);
+  const result = buildDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.equal(result.transactions, 1);
   assert.equal(result.warnings.length, 1);
   assert.equal(result.warnings[0].code, 'INVALID_COMMODITY_TRADE');
@@ -492,7 +502,7 @@ test('stores a zero-value non-default commodity acquisition', (t: TestContext) =
   Assets:Rights  420 RIGHT {0 SEK} @ 0 SEK
 `);
 
-  assert.doesNotThrow(() => buildDatabase(databasePath, journalPath));
+  assert.doesNotThrow(() => buildDatabase(databasePath, { kind: 'file', path: journalPath }));
   const database = new Database(databasePath, { readonly: true });
   t.after(() => database.close());
   assert.deepEqual(
@@ -525,7 +535,7 @@ commodity EUR
   default
 `);
 
-  const result = buildDatabase(databasePath, journalPath);
+  const result = buildDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.equal(result.valuationCommodity, 'USD');
   assert.deepEqual(result.warnings, [{
     code: 'MULTIPLE_DEFAULT_COMMODITIES',
@@ -555,7 +565,7 @@ account Equity:Opening
   Assets:Cash,Main  1 SEK
   Equity:Opening
 `);
-  const { databasePath } = pathsForJournal(journalPath);
+  const { databasePath, journalPath: canonicalJournalPath } = pathsForJournal(journalPath);
   let stdout = '';
   let stderr = '';
   const container = createRepositoryContainer(__dirname, '../../../../../src/modules');
@@ -584,7 +594,7 @@ account Equity:Opening
 
   const first = runAggregate();
   assert.equal(first, '1 SEK  Assets:Cash,Main\n');
-  assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
+  assert.equal(prepareDatabase(databasePath, { kind: 'file', path: canonicalJournalPath }).rebuilt, false);
 
   fs.writeFileSync(journalPath, `commodity SEK
   default
@@ -598,5 +608,5 @@ account Equity:Opening
 `);
   const second = runAggregate();
   assert.equal(second, '     2.005 SEK  Assets:Cash,Main\n10,000     SEK  Assets:LongAccount\n');
-  assert.equal(ensureDatabaseCurrent(databasePath).rebuilt, false);
+  assert.equal(prepareDatabase(databasePath, { kind: 'file', path: canonicalJournalPath }).rebuilt, false);
 });

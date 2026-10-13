@@ -31,7 +31,7 @@ P 2024-01-01 FUND 10 SEK
   Assets:Fund  2 FUND {10 SEK}
   Equity:Opening  -20 SEK
 `);
-  buildDatabase(databasePath, journalPath);
+  buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const valuationPriceCache = new Map();
   const rows = readDatabase(databasePath, (database: any) => execute(database, {
     to: '2024-01-01', accounts: ['Assets:Fund'], denominate: true,

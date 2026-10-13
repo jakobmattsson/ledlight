@@ -353,8 +353,11 @@ factories validate and shape query and command metadata, respectively.
 The `queries` and `commands` facades each expose a frozen `definitions` array.
 The project builds journal operations and API input definitions from the query
 definitions. The CLI uses the command definitions and invokes the corresponding
-public journal operation. The project's `withJournalText` capability
-builds and removes a temporary database for CLI stdin input.
+public journal operation. The database module prepares both persistent file
+caches and temporary databases from text sources through one operation. It
+checks freshness and takes a rebuild lock for file caches, then loads and writes
+the journal only when needed. The project's `withJournalText` capability owns
+the temporary database lifetime for CLI stdin input.
 
 Queries receive a read-only database handle through the project and may run SQL
 against the tables and columns in `implementations/database/read-model-contract.ts`. That file

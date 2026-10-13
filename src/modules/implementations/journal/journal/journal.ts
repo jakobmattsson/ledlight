@@ -1,5 +1,9 @@
 'use strict';
 
+type JournalSource =
+  | { kind: 'file'; path: string }
+  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
+
 export = ({
   journalLoaderFactory: { createJournalLoader },
   ledgerParser: { parse },
@@ -14,9 +18,9 @@ export = ({
  */
   const load = createJournalLoader(parse);
 
-  function loadJournal(journalPath: string, rootSource: string | undefined) {
+  function loadJournal(source: JournalSource) {
     try {
-      return load(journalPath, rootSource);
+      return load(source);
     } catch (error: any) {
       throw withCode(error, errorCodes.PROJECT_CONFIGURATION);
     }

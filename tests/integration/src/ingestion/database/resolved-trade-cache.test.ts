@@ -9,7 +9,7 @@ const path = require('node:path');
 const test = require('node:test');
 const Database = require('better-sqlite3');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
-const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
+const { prepareDatabase, $$private: { buildDatabase } } =
   resolveRepositoryModule('src/modules/implementations/database/database.js');
 
 function fixture(t: TestContext, transactions: any) {
@@ -27,7 +27,7 @@ account Bank
 account Opening
 P 2024-01-01 FUND 100 USD
 ${transactions}`);
-  return { journalPath, databasePath, warnings: buildDatabase(databasePath, journalPath).warnings };
+  return { journalPath, databasePath, warnings: buildDatabase(databasePath, { kind: 'file', path: journalPath }).warnings };
 }
 
 function tradeWarnings(warnings: any) {
@@ -46,7 +46,7 @@ test('rebuilds cached diagnostics from before resolved trade validation', (t: Te
   } finally {
     database.close();
   }
-  const result = ensureDatabaseCurrent(databasePath, journalPath);
+  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.equal(result.rebuilt, true);
   assert.equal(tradeWarnings(result.summary.warnings).length, 2);
 });

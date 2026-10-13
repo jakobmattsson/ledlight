@@ -13,12 +13,10 @@ export = ({
   cachePaths: { pathsForJournal },
   queries: { definitions: queries },
   journal: {
-    loadJournal,
     ingestionWarning: { groupWarnings },
   },
   database: {
-    writeJournalDatabase,
-    ensureDatabaseCurrent,
+    prepareDatabase,
     readDatabase,
   },
   external: {
@@ -55,7 +53,7 @@ export = ({
     const paths = journalPaths(journalPath);
     try {
       fs.mkdirSync(path.dirname(paths.databasePath), { recursive: true, mode: 0o700 });
-      const current = { ...paths, ...ensureDatabaseCurrent(paths.databasePath, paths.journalPath) };
+      const current = { ...paths, ...prepareDatabase(paths.databasePath, { kind: 'file', path: paths.journalPath }) };
       fs.chmodSync(paths.databasePath, 0o600);
       return current;
     } catch (error: any) {
@@ -72,8 +70,7 @@ export = ({
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-stdin-'));
     try {
       const databasePath = path.join(directory, 'journal.sqlite');
-      const journal = loadJournal('<stdin>', { content, baseDirectory });
-      writeJournalDatabase(databasePath, journal);
+      prepareDatabase(databasePath, { kind: 'text', content, baseDirectory, sourceName: '<stdin>' });
       return operation(journalFromDatabase({ databasePath, journalPath: '<stdin>' }));
     } finally {
       fs.rmSync(directory, { recursive: true, force: true });

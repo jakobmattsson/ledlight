@@ -84,6 +84,15 @@ test('the CLI entrypoint reads piped stdin', (t: TestContext) => {
   assert.equal(JSON.parse(result.stdout).at(-1).quantity, '20');
 });
 
+test('stdin resolves included files from the working directory', (t: TestContext) => {
+  const { directory, run } = fixture(t);
+  fs.writeFileSync(path.join(directory, 'included.ledger'), source);
+  const result = run(['aggregate', '--denominate', '--include-total', '--format', 'json'],
+    'include included.ledger\n');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).at(-1).quantity, '20');
+});
+
 test('path-bearing reports identify stdin instead of the file path', (t: TestContext) => {
   const { run, journalPath } = fixture(t);
   for (const command of ['transactions', 'postings']) {

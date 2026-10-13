@@ -19,12 +19,10 @@ test('reports an unexpected cache directory failure as a database error', () => 
     path,
     queries: { definitions: [] },
     journal: {
-      loadJournal: () => assert.fail('must not load a journal'),
       ingestionWarning: { groupWarnings: () => [] },
     },
     database: {
-      writeJournalDatabase: () => assert.fail('must not write a journal'),
-      ensureDatabaseCurrent: () => { throw new Error('must not rebuild'); },
+      prepareDatabase: () => { throw new Error('must not rebuild'); },
       readDatabase: () => { throw new Error('must not read'); },
     },
   });

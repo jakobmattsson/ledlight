@@ -28,7 +28,7 @@ export = ({
   }
 
   function loadJournalManifest(journalPath: string) {
-    return traverseJournal(journalPath, ({ content, include }: any) => {
+    return traverseJournal({ kind: 'file', path: journalPath }, ({ content, include }: any) => {
       for (const includePath of includePaths(content)) include(includePath);
     });
   }

@@ -14,7 +14,6 @@ type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: 
   entries: LedgerEntry[]; warnings?: Warning[] };
 type Numeric = ReturnType<typeof import('../../interfaces/numeric')>;
 type Accounting = ReturnType<typeof import('../../interfaces/accounting')>;
-type DatabaseFacade = ReturnType<typeof import('../../interfaces/database')>;
 type SqlFunctions = ReturnType<typeof import('./decimal-sql-functions')>;
 type BalanceMaterializer = ReturnType<typeof import('./posting-balance-materializer')>;
 type PriceMaterializer = ReturnType<typeof import('./valuation-price-materializer')>;
@@ -28,7 +27,12 @@ type Dependencies = {
   databaseMigration: Migration;
   external: { path: Pick<typeof import('node:path'), 'resolve'>; sqlite: SqliteConstructor };
 };
-type DatabaseSummary = ReturnType<DatabaseFacade['writeJournalDatabase']>;
+type DatabaseSummary = {
+  databasePath: string; journalPath: string; files: number; entries: number;
+  transactions: number; postings: number; postingAmounts: number;
+  postingBalances: number; prices: number; valuationCommodity: string | null;
+  valuationPrices: number; warnings: Warning[];
+};
 type Result = { writeJournalDatabase(databasePath: string, journal: JournalInput): DatabaseSummary };
 
 export = ({

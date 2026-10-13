@@ -23,6 +23,9 @@ type WarningCode =
 type JournalFile = { path: string; sha256: string; size: number };
 type JournalManifest = { journalPath: string; files: JournalFile[] };
 type LoadedJournal = JournalManifest & { entries: LedgerEntry[]; warnings: Warning[] };
+type JournalSource =
+  | { kind: 'file'; path: string }
+  | { kind: 'text'; content: string; baseDirectory: string; sourceName: string };
 
 type Facade = {
   ingestionWarning: {
@@ -30,7 +33,7 @@ type Facade = {
     groupWarnings(warnings: Warning[]): ReadonlyArray<WarningGroup>;
     warningCodes: Readonly<{ [Code in WarningCode]: Code }>;
   };
-  loadJournal(journalPath: string, rootSource?: { content: string; baseDirectory: string }): LoadedJournal;
+  loadJournal(source: JournalSource): LoadedJournal;
   loadJournalManifest(journalPath: string): JournalManifest;
   parseStrict(sourceText: string, options?: ParseLedgerOptions, lineOffset?: number): LedgerSyntaxTree;
 };

@@ -9,7 +9,7 @@ const path = require('node:path');
 const test = require('node:test');
 const Database = require('better-sqlite3');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
-const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
+const { prepareDatabase, $$private: { buildDatabase } } =
   resolveRepositoryModule('src/modules/implementations/database/database.js');
 
 test('rebuilds cached diagnostics for a non-nominal reporting-currency cost', (t: TestContext) => {
@@ -27,7 +27,7 @@ account Equity:Opening
   Assets:Cash  100 SEK {2 SEK}
   Equity:Opening  -200 SEK
 `);
-  const { warnings } = buildDatabase(databasePath, journalPath);
+  const { warnings } = buildDatabase(databasePath, { kind: 'file', path: journalPath });
   const database = new Database(databasePath);
   try {
     database.prepare("UPDATE database_metadata SET value = '25' WHERE key = 'schema_version'").run();
@@ -35,7 +35,7 @@ account Equity:Opening
   } finally {
     database.close();
   }
-  const result = ensureDatabaseCurrent(databasePath, journalPath);
+  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.equal(result.rebuilt, true);
   assert.deepEqual(result.summary.warnings, warnings);
 });

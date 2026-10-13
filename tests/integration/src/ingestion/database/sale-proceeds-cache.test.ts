@@ -9,7 +9,7 @@ const path = require('node:path');
 const test = require('node:test');
 const Database = require('better-sqlite3');
 const { resolveRepositoryModule } = require('../../../../support/repository-container');
-const { ensureDatabaseCurrent, $$private: { buildDatabase } } =
+const { prepareDatabase, $$private: { buildDatabase } } =
   resolveRepositoryModule('src/modules/implementations/database/database.js');
 
 function fixture(t: TestContext, sale: any, extra?: any) {
@@ -34,7 +34,7 @@ P 2024-01-01 FUND 100 USD
 2024-01-02 Sale
 ${sale}
 ${extra || ''}`);
-  return { journalPath, databasePath, warnings: buildDatabase(databasePath, journalPath).warnings };
+  return { journalPath, databasePath, warnings: buildDatabase(databasePath, { kind: 'file', path: journalPath }).warnings };
 }
 
 test('rebuilds cached diagnostics from before sale proceeds validation', (t: TestContext) => {
@@ -48,7 +48,7 @@ test('rebuilds cached diagnostics from before sale proceeds validation', (t: Tes
   } finally {
     database.close();
   }
-  const result = ensureDatabaseCurrent(databasePath, journalPath);
+  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
   assert.equal(result.rebuilt, true);
   assert.deepEqual(result.summary.warnings.map(({ code }: any) => code), ['SALE_PROCEEDS_MISMATCH']);
 });
