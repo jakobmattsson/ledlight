@@ -1,0 +1,1 @@
+{"id":"13cb69fa05774c273fce85529ec7ee02.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:dist/tests/unit/src/project/cache-paths.test.js#rejects missing journal paths and paths that do not name files","name":"rejects missing journal paths and paths that do not name files","status":"passed","testResultsByEnv":{"default":"f5e147278968f31574488173015bd7cd"}}

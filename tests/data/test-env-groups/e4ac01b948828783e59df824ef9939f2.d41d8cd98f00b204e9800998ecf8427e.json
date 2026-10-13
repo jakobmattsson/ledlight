@@ -1,0 +1,1 @@
+{"id":"e4ac01b948828783e59df824ef9939f2.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:dist/tests/unit/src/ingestion/database/read.test.js#closes the database when a query fails","name":"closes the database when a query fails","status":"passed","testResultsByEnv":{"default":"d0d48b9c69fbb56b7c9e0795e8ebb198"}}

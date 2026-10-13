@@ -1,0 +1,1 @@
+{"id":"97446f80d46cb2c85f855dae7d408884.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:dist/tests/integration/src/ingestion/database/database.test.js#skips syntax-invalid transactions before database insertion","name":"skips syntax-invalid transactions before database insertion","status":"passed","testResultsByEnv":{"default":"2264aa380bebb9fef122b495d02a2456"}}

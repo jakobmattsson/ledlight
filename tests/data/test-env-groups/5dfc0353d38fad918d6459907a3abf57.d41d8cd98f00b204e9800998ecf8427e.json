@@ -1,1 +1,0 @@
-{"id":"5dfc0353d38fad918d6459907a3abf57.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/ingestion/database/migrate.test.js#replaces version 31 posting balances with shared balance columns","name":"replaces version 31 posting balances with shared balance columns","status":"passed","testResultsByEnv":{"default":"1c2f2a24b685ba9d1f863476382d148e"}}

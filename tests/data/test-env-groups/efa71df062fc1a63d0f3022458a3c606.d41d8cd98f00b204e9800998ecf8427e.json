@@ -1,1 +1,0 @@
-{"id":"efa71df062fc1a63d0f3022458a3c606.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/conventions/module-boundaries.test.js#resolves index factories as facades and hides internal factories","name":"resolves index factories as facades and hides internal factories","status":"passed","testResultsByEnv":{"default":"402baddd283edd5ee59f65c91f9262d4"}}

@@ -1,1 +1,0 @@
-{"id":"69216c475a7acc9ad24604cdf4c7bba4.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:tests/unit/src/core/options.test.js#accepts ISO calendar dates but rejects Date objects and timestamps","name":"accepts ISO calendar dates but rejects Date objects and timestamps","status":"passed","testResultsByEnv":{"default":"1a2865f700cabc79c446c656b77960f2"}}

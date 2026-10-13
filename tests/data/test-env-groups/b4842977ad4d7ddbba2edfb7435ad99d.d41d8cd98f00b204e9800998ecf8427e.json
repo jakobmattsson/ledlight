@@ -1,0 +1,1 @@
+{"id":"b4842977ad4d7ddbba2edfb7435ad99d.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:dist/tests/unit/src/ingestion/database/migrate.test.js#enforces unique account, commodity, and tag declaration names","name":"enforces unique account, commodity, and tag declaration names","status":"passed","testResultsByEnv":{"default":"7b2e04e76a409bcb479ef178fc7b81c5"}}

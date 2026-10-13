@@ -1,0 +1,1 @@
+{"id":"392cd3f0c48349f09e3329b41ee42477.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:dist/tests/conventions/module-boundaries.test.js#rejects missing, unknown, and cyclic module edges","name":"rejects missing, unknown, and cyclic module edges","status":"passed","testResultsByEnv":{"default":"d872514a584d65c1982bd04549931f16"}}
