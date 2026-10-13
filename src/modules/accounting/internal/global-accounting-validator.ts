@@ -7,7 +7,7 @@ type CommodityDeclaration = Extract<LedgerEntry, { type: 'commodity' }>;
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
 
 
-module.exports = ({
+export = ({
   core: {
     rational: { zero, parse, add, neg, format },
   },

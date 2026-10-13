@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = ({
+export = ({
   journalLoaderFactory: { createJournalLoader },
   ledgerParser: { parse },
   core: {

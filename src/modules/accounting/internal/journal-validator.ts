@@ -7,7 +7,7 @@ type Declarations = { accounts: Set<string>; commodities: Set<string>; tags: Set
 type LocatedTag = LedgerTag & { location?: SourceLocation };
 type ResolvedPosting = LedgerPosting & { amount: LedgerAmount; original: LedgerPosting };
 
-module.exports = ({
+export = ({
   core: {
     decimal: { compareDecimals, parseDecimal },
     rational: { zero, parse: parseRational, add, cmp },

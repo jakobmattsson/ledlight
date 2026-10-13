@@ -3,7 +3,7 @@
 type Decimal = { coefficient: bigint; scale: number };
 type Fraction = { n: bigint; d: bigint };
 
-module.exports = ({ decimal: { parseDecimal, divideDecimals, formatDecimal } }: {
+export = ({ decimal: { parseDecimal, divideDecimals, formatDecimal } }: {
   decimal: {
     parseDecimal(value: string): Decimal;
     divideDecimals(left: Decimal, right: Decimal, scale: number): Decimal;

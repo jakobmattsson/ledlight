@@ -1,7 +1,15 @@
 'use strict';
 
-module.exports = ({ definitions }: any) => {
-  const queries = definitions.map(({ name, relativePath, value: query }: any) => {
+type QueryCandidate = {
+  inputSchema?: { safeParse?: (...args: never[]) => unknown };
+  execute?: (...args: never[]) => unknown;
+};
+type Definition<T extends QueryCandidate> = { name: string; relativePath: string; value: T };
+type NamedQuery<T extends QueryCandidate> = Readonly<T & { name: string }>;
+type QueryIndex<T extends QueryCandidate> = { definitions: ReadonlyArray<NamedQuery<T>> };
+
+export = <T extends QueryCandidate>({ definitions }: { definitions: Definition<T>[] }): QueryIndex<T> => {
+  const queries = definitions.map(({ name, relativePath, value: query }: Definition<T>): NamedQuery<T> => {
     if (!/^[a-z]+(?:-[a-z]+)*\.js$/u.test(relativePath)) {
       throw new TypeError(`Query definition must be directly inside list-definitions: ${relativePath}`);
     }

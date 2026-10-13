@@ -8,7 +8,7 @@ type HoldingGroup = { price: Fraction; remaining: { constant: Fraction; coeffici
 type Movement = { outgoing: LedgerPosting; incoming: LedgerPosting };
 
 
-module.exports = ({
+export = ({
   core: {
     rational: { zero, parse, neg, div, mul, cmp, format },
   },

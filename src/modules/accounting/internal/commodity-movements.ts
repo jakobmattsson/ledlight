@@ -5,7 +5,7 @@ import type { LedgerCost, LedgerEntry, LedgerPosting } from '../../../public-api
 type Fraction = { n: bigint; d: bigint };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 
-module.exports = ({
+export = ({
   core: {
     rational: { zero, parse, mul, neg, add, cmp },
   },

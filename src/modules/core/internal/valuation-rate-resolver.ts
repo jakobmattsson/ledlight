@@ -2,7 +2,7 @@
 
 type PriceRow = { date: string; base_commodity: string; quote_commodity: string; quote_quantity: string };
 
-module.exports = ({
+export = ({
   decimal: {
     formatDecimal,
     multiplyDecimals,

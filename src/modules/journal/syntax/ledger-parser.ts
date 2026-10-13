@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = ({
+export = ({
   amountParser: { parseAmountExpression },
   ingestionWarning: { createWarning, warningCodes },
   syntaxErrors: { syntaxError },

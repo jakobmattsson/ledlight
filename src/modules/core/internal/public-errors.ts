@@ -2,7 +2,7 @@
 
 type CodedError = Error & { code?: string; sqliteCode?: string };
 
-module.exports = () => {
+export = () => {
 
   const errorCodes = Object.freeze({
     SYNTAX: 'LEDLIGHT_SYNTAX',

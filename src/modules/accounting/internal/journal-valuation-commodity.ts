@@ -2,7 +2,7 @@
 
 import type { LedgerSyntaxTree } from '../../../public-api';
 
-module.exports = ({
+export = ({
   journal: {
     ingestionWarning: { createWarning, warningCodes },
   },

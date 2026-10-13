@@ -11,7 +11,7 @@ type DecimalDatabase = {
   function(name: string, options: { deterministic: boolean }, callback: (left: SqlDecimal, right: SqlDecimal) => string | number | null): void;
 };
 
-module.exports = () => {
+export = () => {
 
   const POWERS_OF_TEN = [1n];
 

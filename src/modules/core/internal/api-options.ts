@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = ({
+export = ({
   publicErrors: { createError, errorCodes },
   external: {
     zod: { z }

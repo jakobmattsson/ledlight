@@ -13,7 +13,7 @@ type Warning = { code: string; message: string; source: string; line: number; co
 type JournalInput = { journalPath: string; files: Array<{ path: string; sha256: string; size: number }>;
   entries: LedgerEntry[]; warnings?: Warning[] };
 
-module.exports = ({
+export = ({
   core: {
     decimal: { compareDecimals, parseDecimal, registerDecimalFunctions },
   },

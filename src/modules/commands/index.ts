@@ -1,11 +1,11 @@
 'use strict';
 
-type Definition = { name: string; relativePath: string; value: object };
-type CommandDefinition = { name: string };
+type Definition<T extends object> = { name: string; relativePath: string; value: T };
+type NamedCommand<T extends object> = Readonly<T & { name: string; operation: string; group: string }>;
+type CommandIndex<T extends object> = { definitions: ReadonlyArray<NamedCommand<T>> };
 
-
-module.exports = ({ definitions }: { definitions: Definition[] }) => {
-  const commands = definitions.map((definition: Definition) => {
+export = <T extends object>({ definitions }: { definitions: Definition<T>[] }): CommandIndex<T> => {
+  const commands = definitions.map((definition: Definition<T>): NamedCommand<T> => {
     const command = definition.value;
     const match = /^([a-z]+(?:-[a-z]+)*)\/([a-z]+(?:-[a-z]+)*)\.js$/u.exec(definition.relativePath);
     if (!match) {
@@ -13,6 +13,6 @@ module.exports = ({ definitions }: { definitions: Definition[] }) => {
     }
     const [, group, commandName] = match;
     return Object.freeze({ ...command, name: commandName, operation: definition.name, group });
-  }).sort((left: CommandDefinition, right: CommandDefinition) => left.name.localeCompare(right.name, 'en'));
+  }).sort((left: NamedCommand<T>, right: NamedCommand<T>) => left.name.localeCompare(right.name, 'en'));
   return { definitions: Object.freeze(commands) };
 };

@@ -6,7 +6,7 @@ type QueryDefinition = { name: string; inputSchema: { shape: Record<string, unkn
 type CurrentJournal = { databasePath: string; journalPath: string };
 
 
-module.exports = ({
+export = ({
   core: {
     cachePaths: { pathsForJournal },
     publicErrors: { createError, databaseError, errorCodes },

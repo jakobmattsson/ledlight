@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = ({ decimal: { addDecimals, formatDecimal, parseDecimal } }: any) => {
+export = ({ decimal: { addDecimals, formatDecimal, parseDecimal } }: any) => {
   function appendTotal(rows: any) {
     const totals = new Map();
     for (const row of rows) {

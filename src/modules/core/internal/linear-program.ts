@@ -4,7 +4,7 @@ type Fraction = { n: bigint; d: bigint };
 type IndexedFraction = ReadonlyArray<readonly [number, Fraction]>;
 type Constraint = { coefficients: IndexedFraction; bound: Fraction };
 
-module.exports = ({ rational: { zero, one, neg, sub, mul, div, cmp } }: {
+export = ({ rational: { zero, one, neg, sub, mul, div, cmp } }: {
   rational: {
     zero: Fraction;
     one: Fraction;

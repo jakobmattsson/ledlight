@@ -5,7 +5,7 @@ import type { LedgerAmount, LedgerCost, LedgerEntry, LedgerPosting } from '../..
 type Decimal = { coefficient: bigint; scale: number };
 type Transaction = Extract<LedgerEntry, { type: 'transaction' }>;
 
-module.exports = ({
+export = ({
   core: {
     decimal: {
       addDecimals,

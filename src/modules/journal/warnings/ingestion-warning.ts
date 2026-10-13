@@ -4,7 +4,7 @@ type WarningLocation = { source: string; line: number; column: number; startLine
 type Warning = { code: string; message: string; source: string; line: number; column: number; startLine: number; endLine: number };
 type WarningGroup = { code: string; message: string; instances: ReadonlyArray<WarningLocation> };
 
-module.exports = () => {
+export = () => {
 
   const maximumWarningInstances = 10;
 
