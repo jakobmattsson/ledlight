@@ -3,7 +3,7 @@
 import type { TotalHistoryRow, CommodityRow } from '../../../../../public-api';
 import type { Command } from 'commander';
 
-module.exports = ({ cliOptions: options }: any) => ({
+module.exports = ({ cliOptions: options, numeric: { decimal: { formatDecimalFixed, parseDecimal } } }: any) => ({
   description: 'show daily closing totals',
   examples: [
     'ledlight total-history --file main.ledger',
@@ -25,7 +25,7 @@ module.exports = ({ cliOptions: options }: any) => ({
     options.addBoolean(command, '--invert', 'negate reported daily totals');
     options.format(command);
   },
-  formatCsv(rows: TotalHistoryRow[], _cliOptions: unknown, { csvField, formatDecimalFixed, parseDecimal }: any) {
+  formatCsv(rows: TotalHistoryRow[], _cliOptions: unknown, { csvField }: any) {
     const lines = ['date,amount'];
     for (const row of rows) {
       const fields = [row.date, formatDecimalFixed(parseDecimal(row.amount), 2)];

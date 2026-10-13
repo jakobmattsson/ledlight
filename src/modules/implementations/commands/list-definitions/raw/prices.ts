@@ -7,7 +7,7 @@ type DisplayPrice = PriceRow & { ledgerPrice?: { totalQuantity: string; baseQuan
   hasTransactionCost: boolean; baseScale: number; quoteScale: number } };
 
 
-module.exports = ({ cliOptions: options }: any) => ({
+module.exports = ({ cliOptions: options, numeric: { decimal: { divideDecimalsHalfEven, formatDecimal, parseDecimal } } }: any) => ({
   description: 'show prices',
   examples: [
     'ledlight prices --file main.ledger',
@@ -38,7 +38,7 @@ module.exports = ({ cliOptions: options }: any) => ({
     return `${lines.join('\n')}\n`;
   },
   formatText(rows: DisplayPrice[], _cliOptions: unknown, format: any, descriptions: CommodityRow[]) {
-    const { commodityFormats, decimalScale, divideDecimalsHalfEven, formatDecimal, formatPriceQuantity, parseCommodityFormat, parseDecimal } = format;
+    const { commodityFormats, decimalScale, formatPriceQuantity, parseCommodityFormat } = format;
 
     function ledgerPriceQuantity(row: DisplayPrice, formats: Map<string, string | null>) {
       if (!row.ledgerPrice) return row.quoteQuantity;

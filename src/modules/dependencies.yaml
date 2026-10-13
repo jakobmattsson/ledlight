@@ -24,7 +24,9 @@ allowed-modules:
     - core
     - database
     - numeric
-  commands: []
+  commands:
+    - core
+    - numeric
   project:
     - core
     - database

@@ -281,7 +281,7 @@ The nine modules and their dependency direction are:
 | `accounting` | Posting resolution, costs, validation, and allocation | `journal`, `numeric` |
 | `database` | SQLite schema, rebuilds, readers, and materialization | `accounting`, `core`, `journal`, `numeric` |
 | `queries` | Query definitions, SQL, and report calculations | `accounting`, `core`, `database`, `numeric` |
-| `commands` | CLI command definitions and option builders | None |
+| `commands` | CLI command definitions and option builders | `core`, `numeric` |
 | `project` | Public journal operations and temporary stdin journals | `core`, `journal`, `database`, `queries` |
 | `cli` | Argument parsing, execution, and output formatting | `commands`, `core`, `numeric`, `project` |
 
@@ -324,6 +324,10 @@ A factory can use its own private registrations directly. Dependencies from
 permitted modules must be requested under the provider's name, such as
 `numeric: { rational }`. The `numeric` module owns decimal and rational
 operations; `core` provides configuration, errors, and report helpers.
+An implementation factory does not return another module's injected capability
+unchanged. Consumers request that capability from its owner. ESLint checks
+direct forwarding in implementation factory returns.
+
 `project` owns the cache path derived from a journal file. Database migration
 resolves its schema file from `spec`. An internal registration
 in the same module can be requested by name, such as

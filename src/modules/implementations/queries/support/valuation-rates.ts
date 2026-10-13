@@ -123,7 +123,6 @@ module.exports = ({
   }
 
   return {
-    createLedgerValuationRateResolver,
     queryValuationRates,
     $$private: {
       resolveValuationRates,

@@ -3,7 +3,7 @@
 import type { AggregateRow, CommodityRow } from '../../../../../public-api';
 import type { Command } from 'commander';
 
-module.exports = ({ cliOptions: options }: any) => ({
+module.exports = ({ cliOptions: options, core: { appendTotal }, numeric: { decimal: { formatDecimalFixed, parseDecimal } } }: any) => ({
   description: 'show unrealized investment gains',
   examples: [
     'ledlight unrealized-gains --file main.ledger',
@@ -20,10 +20,10 @@ module.exports = ({ cliOptions: options }: any) => ({
     options.format(command);
     options.addBoolean(command, '--include-total', 'append a total gain row to the output', { outputInput: true });
   },
-  prepareOutput(rows: AggregateRow[], { includeTotal }: { includeTotal?: boolean }, { appendTotal }: any) {
+  prepareOutput(rows: AggregateRow[], { includeTotal }: { includeTotal?: boolean }, _format: unknown) {
     return includeTotal ? appendTotal(rows) : rows;
   },
-  formatCsv(rows: AggregateRow[], _cliOptions: unknown, { formatCsvTable, formatDecimalFixed, parseDecimal }: any) {
+  formatCsv(rows: AggregateRow[], _cliOptions: unknown, { formatCsvTable }: any) {
     return formatCsvTable(['account', 'amount', 'commodity'], rows.map((row: AggregateRow) => [
       row.account,
       formatDecimalFixed(parseDecimal(row.quantity), 2),

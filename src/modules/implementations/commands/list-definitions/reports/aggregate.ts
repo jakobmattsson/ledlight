@@ -3,7 +3,7 @@
 import type { AggregateRow, CommodityRow } from '../../../../../public-api';
 import type { Command } from 'commander';
 
-module.exports = ({ cliOptions: options }: any) => ({
+module.exports = ({ cliOptions: options, numeric: { decimal: { formatDecimalFixed, parseDecimal } } }: any) => ({
   description: 'aggregate postings',
   examples: [
     'ledlight aggregate --file main.ledger',
@@ -33,7 +33,7 @@ module.exports = ({ cliOptions: options }: any) => ({
     options.format(command);
   },
   formatCsv(rows: AggregateRow[], { denominate, groupBy }: { denominate?: boolean; groupBy?: string }, format: any) {
-    const { formatCsvTable, formatDecimalFixed, parseDecimal } = format;
+    const { formatCsvTable } = format;
     const showAccounts = groupBy !== 'commodity';
     const headings = showAccounts ? ['account', 'amount', 'commodity'] : ['amount', 'commodity'];
     return formatCsvTable(headings, rows.map((row: AggregateRow) => {
@@ -45,7 +45,7 @@ module.exports = ({ cliOptions: options }: any) => ({
   },
   formatText(rows: AggregateRow[], { denominate, groupBy }: { denominate?: boolean; groupBy?: string }, format: any, descriptions: CommodityRow[]) {
     const {
-      commodityFormats, displayQuantity, formatAlignedAmounts, parseCommodityFormat, parseDecimal,
+      commodityFormats, displayQuantity, formatAlignedAmounts, parseCommodityFormat,
     } = format;
     if (!denominate || groupBy === 'commodity') {
       const formats = commodityFormats(descriptions);

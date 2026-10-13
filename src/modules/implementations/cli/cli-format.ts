@@ -6,18 +6,10 @@ type Warning = { code: string; message: string; instances: Array<{ source: strin
 type TextColumn = { heading: string; value: (row: unknown) => unknown; align?: 'left' | 'right' };
 
 module.exports = ({
-  core: {
-    appendTotal,
-  },
   numeric: {
     decimal: {
-      addDecimals,
-      formatDecimal,
       formatDecimalFixed,
       parseDecimal,
-      compareDecimals,
-      divideDecimals,
-      divideDecimalsHalfEven,
     },
   },
 }: any) => {
@@ -173,15 +165,10 @@ module.exports = ({
     return point < 0 ? 0 : quantity.length - point - 1;
   }
 
-  const shared = {
-    addDecimals, commodityFormats, compareDecimals, csvField, decimalScale, formatCsvTable,
-    displayQuantity, divideDecimals, divideDecimalsHalfEven, formatDecimal,
-    formatDecimalFixed, formatAlignedAmounts, formatJson,
-    formatPriceQuantity, formatTextTable, parseCommodityFormat, parseDecimal,
-  };
   return {
-    ...shared,
-    appendTotal,
+    commodityFormats, csvField, decimalScale, formatCsvTable,
+    displayQuantity, formatAlignedAmounts, formatJson,
+    formatPriceQuantity, formatTextTable, parseCommodityFormat,
     formatWarnings,
     $$private: { parseCommodityFormat },
   };

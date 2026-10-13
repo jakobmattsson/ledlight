@@ -5,10 +5,7 @@ const { resolveCommands, resolveRepositoryModule } = require('../../../support/r
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const cliFormat = resolveRepositoryModule('src/modules/implementations/cli/cli-format.js');
-const {
-  appendTotal,
-  formatWarnings,
-} = cliFormat;
+const { formatWarnings } = cliFormat;
 type FormatCommand = {
   name: string;
   prepareOutput?: (...args: unknown[]) => unknown;
@@ -137,19 +134,6 @@ test('puts aligned amounts before left-aligned accounts', () => {
     formatCsv([{ quantity: '1234.5', commodity: 'SEK' }], false, 'commodity'),
     'amount,commodity\n1234.5,SEK\n',
   );
-});
-
-test('appends an exact total without mutating report rows', () => {
-  const input = [
-    { account: 'Assets:A', quantity: '0.1', commodity: 'SEK' },
-    { account: 'Assets:B', quantity: '0.2', commodity: 'SEK' },
-  ];
-  assert.deepEqual(appendTotal(input), [
-    ...input,
-    { account: 'Total', quantity: '0.3', commodity: 'SEK', isTotal: true },
-  ]);
-  assert.equal(input.length, 2);
-  assert.deepEqual(appendTotal([]), []);
 });
 
 test('writes one investment performance CSV row with nested API fields', () => {

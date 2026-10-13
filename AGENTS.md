@@ -42,6 +42,13 @@ Do not copy the internal registration hierarchy into the facade when it adds
 no meaning. Expose a sole public function or property directly on the facade;
 group related members only when the group contains multiple public members.
 
+Do not return a capability injected from another module unchanged as part of
+an implementation factory's interface. Consumers and tests should access that
+capability through the module that owns it. A facade may expose registrations
+owned by its own module, and an implementation may expose an adapter when it
+defines a distinct contract or behavior. Do not add a pass-through solely to
+make a dependency available to tests.
+
 ## Module Ownership
 
 Place a capability in the module that owns and uses it. When only one module

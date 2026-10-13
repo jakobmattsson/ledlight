@@ -3,7 +3,7 @@
 import type { CommodityRow, LedgerAmount, LedgerTag, TransactionCollection, TransactionPosting } from '../../../../../public-api';
 import type { Command } from 'commander';
 
-module.exports = ({ cliOptions: options }: any) => ({
+module.exports = ({ cliOptions: options, numeric: { decimal: { addDecimals, compareDecimals, divideDecimals, formatDecimal, parseDecimal } } }: any) => ({
   description: 'show transactions',
   examples: [
     'ledlight transactions --file main.ledger',
@@ -58,7 +58,7 @@ module.exports = ({ cliOptions: options }: any) => ({
     return formatTransactionsCsv(report);
   },
   formatText(report: TransactionCollection, _cliOptions: unknown, format: any, descriptions: CommodityRow[]) {
-    const { addDecimals, commodityFormats, compareDecimals, decimalScale, displayQuantity, divideDecimals, formatDecimal, formatPriceQuantity, parseDecimal } = format;
+    const { commodityFormats, decimalScale, displayQuantity, formatPriceQuantity } = format;
 
     function formatPostingAmount(amount: LedgerAmount, formats: Map<string, string | null>) {
       const quantity = formats.has(amount.commodity)

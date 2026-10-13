@@ -20,7 +20,9 @@ cli:
 commands:
   external:
     - commander
-  modules: []
+  modules:
+    - core
+    - numeric
 
 core:
   external:

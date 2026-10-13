@@ -40,3 +40,17 @@ test('composition and the external service factory can provide runtime dependenc
     assert.deepEqual(result.messages, [], filePath);
   }
 });
+
+test('implementation factories cannot forward another module\'s injected capability', async () => {
+  const eslint = new ESLint({ cwd: root });
+  const filePath = path.join(root, 'src/modules/implementations/queries/support/forwarded-example.ts');
+  const [result] = await eslint.lintText(`module.exports = ({ core: { borrowed }, localHelper }) => {
+  const alias = { borrowed };
+  return { ...alias, localHelper, own: () => borrowed(), $$private: { borrowed } };
+};
+`, { filePath });
+  const errors = result.messages.filter(({ ruleId }: { ruleId: string | null }) =>
+    ruleId === 'architecture/no-forwarded-module-dependencies');
+  assert.equal(errors.length, 1);
+  assert.match(errors[0].message, /forwarding borrowed/u);
+});
