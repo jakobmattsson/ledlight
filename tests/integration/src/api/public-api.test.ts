@@ -180,8 +180,8 @@ P 2024-01-01 USD 2 SEK
     previousCache.close();
   }
   const rebuilt = openJournal(journalPath);
-  assert.equal(rebuilt.rebuilt, true);
   assert.deepEqual(rebuilt.warnings, journal.warnings);
+  assert.deepEqual(['rebuilt', 'status', 'summary'].filter((key) => Object.hasOwn(rebuilt, key)), []);
   fs.writeFileSync(journalPath, fs.readFileSync(journalPath, 'utf8').replace(
     '1 STOCK {10 USD}\n  Assets:USD\n',
     '1 STOCK {20 SEK}\n  Assets:Cash  -20 SEK\n',

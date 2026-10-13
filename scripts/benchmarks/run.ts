@@ -73,11 +73,23 @@ try {
   for (let iteration = 0; iteration < 3; iteration += 1) {
     fs.rmSync(cacheDirectory, { recursive: true, force: true });
     const cold = elapsedMilliseconds(() => openJournal(journalPath));
-    assert.equal(cold.value.rebuilt, true);
+    assert.equal(fs.existsSync(cold.value.databasePath), true);
     samples.cold.push(cold.milliseconds);
 
+    const cache = new Database(cold.value.databasePath);
+    try {
+      cache.prepare("INSERT INTO database_metadata (key, value) VALUES ('benchmark_marker', 'retained')").run();
+    } finally {
+      cache.close();
+    }
+
     const warm = elapsedMilliseconds(() => openJournal(journalPath));
-    assert.equal(warm.value.rebuilt, false);
+    const reused = new Database(warm.value.databasePath, { readonly: true });
+    try {
+      assert.equal(reused.prepare("SELECT value FROM database_metadata WHERE key = 'benchmark_marker'").pluck().get(), 'retained');
+    } finally {
+      reused.close();
+    }
     samples.warm.push(warm.milliseconds);
 
     const aggregate = elapsedMilliseconds(() => warm.value.aggregate({}));

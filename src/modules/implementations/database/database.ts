@@ -5,14 +5,11 @@ type Freshness = ReturnType<typeof import('./database-freshness')>;
 type Lock = ReturnType<typeof import('./database-rebuild-lock')>;
 type Writer = ReturnType<typeof import('./journal-writer')>;
 type DatabaseSummary = ReturnType<Writer['writeJournalDatabase']>;
-type DatabaseStatus = ReturnType<Freshness['checkDatabaseSync']>;
 type JournalSource =
   | { kind: 'file'; path: string }
   | { kind: 'stdin'; content: string; baseDirectory: string };
 type Result = {
-  prepareDatabase(databasePath: string, source: JournalSource): {
-    rebuilt: boolean; status: DatabaseStatus; summary?: DatabaseSummary;
-  };
+  prepareDatabase(databasePath: string, source: JournalSource): { journalPath: string };
   $$private: {
     buildDatabase(databasePath: string, source: JournalSource): DatabaseSummary;
     checkDatabaseSync: Freshness['checkDatabaseSync'];
@@ -58,20 +55,16 @@ export = ({
         throw databaseError(new Error('A stdin source requires a new database path'));
       }
       const summary = buildDatabase(databasePath, source);
-      const status: DatabaseStatus = {
-        databasePath: path.resolve(databasePath), journalPath: summary.journalPath,
-        inSync: false, reason: 'database_missing', added: [], removed: [], changed: [],
-      };
-      return { rebuilt: true, status, summary };
+      return { journalPath: summary.journalPath };
     }
     const normalizedSource = { kind: 'file' as const, path: path.resolve(source.path) };
     const status = checkDatabaseSync(databasePath, normalizedSource.path);
-    if (status.inSync) return { rebuilt: false, status };
+    if (status.inSync) return { journalPath: status.journalPath };
     const rebuild = (): ReturnType<Result['prepareDatabase']> => {
       const lockedStatus = checkDatabaseSync(databasePath, normalizedSource.path);
-      if (lockedStatus.inSync) return { rebuilt: false, status: lockedStatus };
+      if (lockedStatus.inSync) return { journalPath: lockedStatus.journalPath };
       const summary = buildDatabase(databasePath, normalizedSource);
-      return { rebuilt: true, status: lockedStatus, summary };
+      return { journalPath: summary.journalPath };
     };
     return withRebuildLock(databasePath, rebuild);
   }

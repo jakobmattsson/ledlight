@@ -46,8 +46,23 @@ test('rebuilds cached diagnostics that previously tolerated cancelling cost resi
   } finally {
     database.close();
   }
-  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
-  assert.equal(result.rebuilt, true);
-  assert.deepEqual(result.summary.warnings, warnings);
-  assert.equal(prepareDatabase(databasePath, { kind: 'file', path: journalPath }).rebuilt, false);
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const rebuilt = new Database(databasePath);
+  try {
+    assert.deepEqual(rebuilt.prepare(`
+      SELECT code, message, source, line, column,
+        start_line AS startLine, end_line AS endLine
+      FROM ingestion_warnings ORDER BY position
+    `).all(), warnings);
+    rebuilt.prepare("INSERT INTO database_metadata (key, value) VALUES ('test_marker', 'retained')").run();
+  } finally {
+    rebuilt.close();
+  }
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const reused = new Database(databasePath, { readonly: true });
+  try {
+    assert.equal(reused.prepare("SELECT value FROM database_metadata WHERE key = 'test_marker'").pluck().get(), 'retained');
+  } finally {
+    reused.close();
+  }
 });

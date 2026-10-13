@@ -31,6 +31,15 @@ access internal registrations directly when necessary. A runtime object may
 retain members under `$$private`, but those members need not appear in the
 facade type and should not be treated as part of the module interface.
 
+Shape every facade method's parameters and return value around what its
+production callers need to provide or consume. Keep diagnostics, counters,
+freshness reasons, intermediate results, and test-only observations inside the
+owning module unless a production caller actually needs them. Do not return a
+whole internal result merely because it is already available. Do not spread an
+internal result into a public object; select the fields that belong to that
+object's contract. Keep input registration types and the output facade type
+separate when they describe different structures.
+
 Apply the same rule to objects and class instances returned through a facade:
 their facade types should include only members used by production consumers
 outside the owning module. Keep implementation state and helper methods out of

@@ -356,8 +356,10 @@ definitions. The CLI uses the command definitions and invokes the corresponding
 public journal operation. The database module prepares both persistent file
 caches and temporary databases from stdin text through one operation. It
 checks freshness and takes a rebuild lock for file caches, then loads and writes
-the journal only when needed. The project's `withJournalText` capability owns
-the temporary database lifetime for CLI stdin input.
+the journal only when needed. `prepareDatabase` returns only the journal path; rebuild
+diagnostics and writer summaries stay inside the database module. The project's
+`withJournalText` capability owns the temporary database lifetime for CLI stdin
+input.
 
 Queries receive a read-only database handle through the project and may run SQL
 against the tables and columns in `implementations/database/read-model-contract.ts`. That file

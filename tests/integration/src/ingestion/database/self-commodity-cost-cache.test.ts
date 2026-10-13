@@ -35,7 +35,15 @@ account Equity:Opening
   } finally {
     database.close();
   }
-  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
-  assert.equal(result.rebuilt, true);
-  assert.deepEqual(result.summary.warnings, warnings);
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const rebuilt = new Database(databasePath, { readonly: true });
+  try {
+    assert.deepEqual(rebuilt.prepare(`
+      SELECT code, message, source, line, column,
+        start_line AS startLine, end_line AS endLine
+      FROM ingestion_warnings ORDER BY position
+    `).all(), warnings);
+  } finally {
+    rebuilt.close();
+  }
 });

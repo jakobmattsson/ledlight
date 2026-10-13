@@ -73,8 +73,8 @@ test('fails with a database code when the rebuild lock times out', (t: TestConte
 
 test('rechecks freshness after acquiring the rebuild lock', () => {
   const statuses = [
-    { inSync: false, reason: 'source_files_changed' },
-    { inSync: true, reason: 'in_sync' },
+    { inSync: false, reason: 'source_files_changed', journalPath: 'journal.ledger' },
+    { inSync: true, reason: 'in_sync', journalPath: 'journal.ledger' },
   ];
   let checks = 0;
   const database = createDatabase({
@@ -93,9 +93,7 @@ test('rechecks freshness after acquiring the rebuild lock', () => {
     core: { publicErrors: createPublicErrors() },
   });
 
-  assert.deepEqual(database.prepareDatabase('journal.sqlite', { kind: 'file', path: 'journal.ledger' }), {
-    rebuilt: false,
-    status: statuses[1],
-  });
+  assert.deepEqual(database.prepareDatabase('journal.sqlite', { kind: 'file', path: 'journal.ledger' }),
+    { journalPath: 'journal.ledger' });
   assert.equal(checks, 2);
 });

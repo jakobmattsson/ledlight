@@ -30,6 +30,22 @@ function temporaryDirectory(t: TestContext) {
   return directory;
 }
 
+function assertCacheReused(databasePath: string, journalPath: string): void {
+  const database = new Database(databasePath);
+  try {
+    database.prepare("INSERT OR REPLACE INTO database_metadata (key, value) VALUES ('test_marker', 'retained')").run();
+  } finally {
+    database.close();
+  }
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const reused = new Database(databasePath, { readonly: true });
+  try {
+    assert.equal(reused.prepare("SELECT value FROM database_metadata WHERE key = 'test_marker'").pluck().get(), 'retained');
+  } finally {
+    reused.close();
+  }
+}
+
 test('preserves filesystem errors from rebuilds', (t: TestContext) => {
   const directory = temporaryDirectory(t);
   const databasePath = path.join(directory, 'journal.sqlite');
@@ -462,9 +478,14 @@ test('rebuilds an older cache to persist the missing default warning', (t: TestC
     database.close();
   }
 
-  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
-  assert.equal(result.rebuilt, true);
-  assert.deepEqual(result.summary.warnings.map(({ code }: any) => code), ['MISSING_DEFAULT_COMMODITY']);
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const rebuilt = new Database(databasePath, { readonly: true });
+  try {
+    assert.deepEqual(rebuilt.prepare('SELECT code FROM ingestion_warnings ORDER BY position').all(),
+      [{ code: 'MISSING_DEFAULT_COMMODITY' }]);
+  } finally {
+    rebuilt.close();
+  }
 });
 
 test('stores non-default commodity trades and reports invalid annotations as warnings', (t: TestContext) => {
@@ -594,7 +615,7 @@ account Equity:Opening
 
   const first = runAggregate();
   assert.equal(first, '1 SEK  Assets:Cash,Main\n');
-  assert.equal(prepareDatabase(databasePath, { kind: 'file', path: canonicalJournalPath }).rebuilt, false);
+  assertCacheReused(databasePath, canonicalJournalPath);
 
   fs.writeFileSync(journalPath, `commodity SEK
   default
@@ -608,5 +629,5 @@ account Equity:Opening
 `);
   const second = runAggregate();
   assert.equal(second, '     2.005 SEK  Assets:Cash,Main\n10,000     SEK  Assets:LongAccount\n');
-  assert.equal(prepareDatabase(databasePath, { kind: 'file', path: canonicalJournalPath }).rebuilt, false);
+  assertCacheReused(databasePath, canonicalJournalPath);
 });

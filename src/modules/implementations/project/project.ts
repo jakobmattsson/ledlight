@@ -53,9 +53,9 @@ export = ({
     const paths = journalPaths(journalPath);
     try {
       fs.mkdirSync(path.dirname(paths.databasePath), { recursive: true, mode: 0o700 });
-      const current = { ...paths, ...prepareDatabase(paths.databasePath, { kind: 'file', path: paths.journalPath }) };
+      prepareDatabase(paths.databasePath, { kind: 'file', path: paths.journalPath });
       fs.chmodSync(paths.databasePath, 0o600);
-      return current;
+      return paths;
     } catch (error: any) {
       if (Object.values(errorCodes).includes(error.code)) throw error;
       throw createError(errorCodes.DATABASE, error.message);
@@ -70,8 +70,8 @@ export = ({
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-stdin-'));
     try {
       const databasePath = path.join(directory, 'journal.sqlite');
-      const { status } = prepareDatabase(databasePath, { kind: 'stdin', content, baseDirectory });
-      return operation(journalFromDatabase({ databasePath, journalPath: status.journalPath }));
+      const { journalPath } = prepareDatabase(databasePath, { kind: 'stdin', content, baseDirectory });
+      return operation(journalFromDatabase({ databasePath, journalPath }));
     } finally {
       fs.rmSync(directory, { recursive: true, force: true });
     }

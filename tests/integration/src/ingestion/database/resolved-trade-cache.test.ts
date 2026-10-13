@@ -46,7 +46,11 @@ test('rebuilds cached diagnostics from before resolved trade validation', (t: Te
   } finally {
     database.close();
   }
-  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
-  assert.equal(result.rebuilt, true);
-  assert.equal(tradeWarnings(result.summary.warnings).length, 2);
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const rebuilt = new Database(databasePath, { readonly: true });
+  try {
+    assert.equal(tradeWarnings(rebuilt.prepare('SELECT code FROM ingestion_warnings').all()).length, 2);
+  } finally {
+    rebuilt.close();
+  }
 });

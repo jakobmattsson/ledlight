@@ -48,7 +48,12 @@ test('rebuilds cached diagnostics from before sale proceeds validation', (t: Tes
   } finally {
     database.close();
   }
-  const result = prepareDatabase(databasePath, { kind: 'file', path: journalPath });
-  assert.equal(result.rebuilt, true);
-  assert.deepEqual(result.summary.warnings.map(({ code }: any) => code), ['SALE_PROCEEDS_MISMATCH']);
+  prepareDatabase(databasePath, { kind: 'file', path: journalPath });
+  const rebuilt = new Database(databasePath, { readonly: true });
+  try {
+    assert.deepEqual(rebuilt.prepare('SELECT code FROM ingestion_warnings ORDER BY position').all(),
+      [{ code: 'SALE_PROCEEDS_MISMATCH' }]);
+  } finally {
+    rebuilt.close();
+  }
 });
