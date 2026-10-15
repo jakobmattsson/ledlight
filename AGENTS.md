@@ -94,9 +94,9 @@ Unit tests must be independent of any configured accounting instance. Create
 the smallest representative fixture inside a test-owned temporary directory
 when a test needs configuration or Ledger data.
 
-Put tests for test support code under `tests/support`. A unit test may use other
-modules as controlled dependencies, but its assertions should target the
-behavior owned by its matching source file.
+Put tests for test support code under `tests/support`. In `tests/unit`, use
+controlled injected dependencies when needed, and target assertions at the
+behavior owned by the matching source file.
 
 Automated tests must not wait for real time to pass. Inject a clock or timer,
 use fake timers, or advance the condition directly when testing timestamps,
