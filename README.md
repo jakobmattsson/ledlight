@@ -103,7 +103,8 @@ strengths, and limits. See [the Ledlight documentation](docs/ledlight.md) for
 the supported syntax, reports, and CLI, and the [Node.js API
 reference](docs/api.md) for the complete consumer surface. The
 [architecture diagram](architecture.svg) shows the repository's module
-dependencies. Supported runtimes, module formats, native platforms, and
+dependencies. The [module system contract](docs/module-system-contract.md)
+defines the planned standalone interface. Supported runtimes, module formats, native platforms, and
 compatibility guarantees are defined in the
 [package support policy](docs/package.md). The
 [Ledger CLI equivalence matrix](docs/ledger-cli-equivalence.md) shows which

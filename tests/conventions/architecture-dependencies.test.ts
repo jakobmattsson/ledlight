@@ -12,11 +12,35 @@ const YAML = require('yaml');
 const {
   validateDependsOnYaml, validateUsedByYaml,
 } = require('../../src/composition/repository-container');
-const { generateGraphDot, loadGraphOptions } = require('../../scripts/architecture/graph');
+const { generateGraphDot, loadGraphOptions } = require('../../src/composition/architecture-graph');
+const { generateArchitecture } = require('../../src/composition');
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
 const architectureRoot = path.resolve(__dirname, '../../../tests/architecture');
 const diagramPath = path.resolve(__dirname, '../../../architecture.svg');
+
+test('generates architecture files at caller-supplied paths', async (context: TestContext) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'module-architecture-'));
+  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const modulesRoot = path.join(directory, 'modules');
+  fs.mkdirSync(path.join(modulesRoot, 'interfaces'), { recursive: true });
+  fs.mkdirSync(path.join(modulesRoot, 'implementations', 'example'), { recursive: true });
+  fs.writeFileSync(path.join(modulesRoot, 'interfaces', 'example.js'), 'module.exports = () => ({});\n');
+  fs.writeFileSync(path.join(modulesRoot, 'dependencies.yaml'),
+    'allowed-modules:\n  example: []\nallowed-external:\n  example: []\n');
+  const dependsOnPath = path.join(directory, 'views', 'forward.yaml');
+  const usedByPath = path.join(directory, 'views', 'reverse.yaml');
+  const outputDiagramPath = path.join(directory, 'images', 'modules.svg');
+
+  await generateArchitecture({ modulesRoot, dependsOnPath, usedByPath,
+    diagramPath: outputDiagramPath });
+
+  assert.deepEqual(YAML.parse(fs.readFileSync(dependsOnPath, 'utf8')),
+    { example: { external: [], modules: [] } });
+  assert.deepEqual(YAML.parse(fs.readFileSync(usedByPath, 'utf8')),
+    { external: {}, modules: { example: [] } });
+  assert.match(fs.readFileSync(outputDiagramPath, 'utf8'), /<svg\b/u);
+});
 
 test('dependency policy lists are alphabetical', () => {
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { createRepositoryContainer } = require('./composition/repository-container');
+const path = require('node:path');
+const { createRepositoryContainer } = require('./composition');
 
-createRepositoryContainer(__dirname, 'modules').resolve('cli').run();
+createRepositoryContainer(path.join(__dirname, 'modules')).resolve('cli').run();

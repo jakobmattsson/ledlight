@@ -6,13 +6,13 @@ const path = require('node:path');
 const test = require('node:test');
 const Database = require('better-sqlite3');
 const { listModules } = require('../../lib/awilix');
-const { createRepositoryContainer } = require('../../src/composition/repository-container');
+const { createTestRepositoryContainer } = require('../../src/composition/testing');
 
 const root = path.resolve(__dirname, '../..');
 
 test('the query read model matches the schema and every referenced table', () => {
-  const contract = createRepositoryContainer(__dirname, '../../src/modules')
-    .$$private.resolveInternal('database', 'readModelContract');
+  const contract = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'))
+    .resolveInternal('database', 'readModelContract');
   const database = new Database(':memory:');
   try {
     database.exec(fs.readFileSync(path.join(root, 'src/modules/spec/schema.sql'), 'utf8'));

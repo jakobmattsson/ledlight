@@ -219,7 +219,7 @@ function validateUsedByYaml(source: string, ...modulesPathParts: string[]) {
   validateGeneratedYaml(source, generateUsedByYaml(...modulesPathParts), 'used-by.yaml');
 }
 
-function createRepositoryContainer(...modulesPathParts: string[]) {
+function createRepositoryContainerRuntime(...modulesPathParts: string[]) {
   const { modulesRoot, modules, order, allowedModules, allowedExternal } =
     loadDependencyPolicy(...modulesPathParts);
   const services = require(path.join(modulesRoot, 'external.js'))();
@@ -256,7 +256,7 @@ function createRepositoryContainer(...modulesPathParts: string[]) {
       if (!modules.includes(name)) throw new Error(`Unknown module: ${name}`);
       return build(name).facade;
     },
-    register(registrations: Record<string, unknown>) {
+    registerExternals(registrations: Record<string, unknown>) {
       for (const [name, registration] of Object.entries(registrations)) {
         if (!Object.hasOwn(services, name)) throw new Error(`Unknown external dependency: ${name}`);
         if ((registration as any)?.kind !== 'value') throw new TypeError(`Expected value registration: ${name}`);
@@ -264,24 +264,28 @@ function createRepositoryContainer(...modulesPathParts: string[]) {
       }
       built.clear();
     },
-    $$private: {
-      order,
-      registerInternal(moduleName: string, name: string, registration: unknown) {
-        if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
-        if (!internalOverrides.has(moduleName)) internalOverrides.set(moduleName, new Map());
-        internalOverrides.get(moduleName).set(name, registration);
-        built.clear();
-      },
-      resolveInternal(moduleName: string, name: string) {
-        if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
-        return build(moduleName).container.resolve(name);
-      },
+    order,
+    registerInternal(moduleName: string, name: string, registration: unknown) {
+      if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
+      if (!internalOverrides.has(moduleName)) internalOverrides.set(moduleName, new Map());
+      internalOverrides.get(moduleName).set(name, registration);
+      built.clear();
+    },
+    resolveInternal(moduleName: string, name: string) {
+      if (!modules.includes(moduleName)) throw new Error(`Unknown module: ${moduleName}`);
+      return build(moduleName).container.resolve(name);
     },
   };
 }
 
+function createRepositoryContainer(...modulesPathParts: string[]) {
+  const runtime = createRepositoryContainerRuntime(...modulesPathParts);
+  return Object.freeze({ resolve: runtime.resolve });
+}
+
 module.exports = {
-  assertPolicyKeys, createLocalContainer, createRepositoryContainer, dependencyOrder,
+  assertPolicyKeys, createLocalContainer, createRepositoryContainer, createRepositoryContainerRuntime,
+  dependencyOrder,
   discoverModules, generateDependsOnYaml, generateUsedByYaml, moduleName, scopedDependencies,
   validateDependsOnYaml, validateUsedByYaml,
 };

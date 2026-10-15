@@ -7,9 +7,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('../../../../lib/awilix');
 const packageMetadata = require('../../../../../package.json');
-const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
+const { createTestRepositoryContainer } = require('../../../../src/composition/testing');
 const sqliteModulePath = require.resolve('better-sqlite3');
 const ledlightPath = path.resolve(__dirname, '../../../../..');
 const cacheDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-api-cache-'));
@@ -191,19 +190,19 @@ P 2024-01-01 USD 2 SEK
 });
 
 test('renders CLI help and the public package version without opening a project', () => {
-  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
+  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../../../src/modules'));
   const project = container.resolve('project');
   let stdout = '';
   let stderr = '';
-  container.$$private.registerInternal('project', 'project', asValue({
+  container.overrideInternal('project', 'project', ({
     ...project,
     openJournal: () => assert.fail('help and version must not open a project'),
   }));
-  container.$$private.registerInternal('cli', 'output', asValue({
+  container.overrideInternal('cli', 'output', ({
     writeError(value: string) { stderr += value; },
     writeOutput(value: string) { stdout += value; },
   }));
-  const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
+  const executeCli = container.resolveInternal('cli', 'executeCli');
   function run(arguments_: string[]) {
     stdout = '';
     stderr = '';

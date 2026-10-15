@@ -9,11 +9,12 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const YAML = require('yaml');
-const { asValue } = require('../../lib/awilix');
 const {
-  createLocalContainer, createRepositoryContainer, dependencyOrder, discoverModules,
+  createLocalContainer, dependencyOrder, discoverModules,
   moduleName, scopedDependencies,
 } = require('../../src/composition/repository-container');
+const { createRepositoryContainer } = require('../../src/composition');
+const { createTestRepositoryContainer } = require('../../src/composition/testing');
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
 const root = path.join(modulesRoot, 'interfaces');
@@ -62,9 +63,11 @@ test('rejects missing, unknown, and cyclic module edges', () => {
 });
 
 test('resolves interface factories as facades and hides internal factories', () => {
-  const container = createRepositoryContainer(__dirname, '../../src/modules');
+  const productionContainer = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+  assert.deepEqual(Object.keys(productionContainer), ['resolve']);
+  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
   for (const name of discoverModules(root)) {
-    assert.equal(container.resolve(name), container.$$private.resolveInternal(name, 'index'));
+    assert.equal(container.resolve(name), container.resolveInternal(name, 'index'));
     assert.ok(Object.isFrozen(container.resolve(name)), `${name} facade must be frozen`);
   }
   assert.throws(() => container.resolve('decimal'), /Unknown module/u);
@@ -104,8 +107,8 @@ test('resolves interface factories as facades and hides internal factories', () 
 });
 
 test('external overrides remain scoped to their permitted modules', () => {
-  const container = createRepositoryContainer(__dirname, '../../src/modules');
-  container.register({ currentWorkingDirectory: asValue(() => '/test-journal') });
+  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+  container.overrideExternals({ currentWorkingDirectory: (() => '/test-journal') });
   assert.equal(typeof container.resolve('core').readConfiguration, 'function');
   assert.equal(container.resolve('project'), container.resolve('project'));
 });
@@ -130,11 +133,11 @@ allowed-external:
   fs.writeFileSync(path.join(directory, 'interfaces', 'consumer.js'),
     'module.exports = ({ source: { greeting } }) => ({ message: `${greeting}, world` });\n');
 
-  const container = createRepositoryContainer(path.dirname(directory), path.basename(directory));
+  const container = createTestRepositoryContainer(directory);
   assert.equal(container.resolve('consumer').message, 'hello, world');
-  assert.deepEqual(container.$$private.order, ['source', 'consumer']);
+  assert.deepEqual(container.order, ['source', 'consumer']);
   assert.equal(createRepositoryContainer(directory).resolve('consumer').message, 'hello, world');
-  container.register({ greeting: asValue('goodbye') });
+  container.overrideExternals({ greeting: ('goodbye') });
   assert.equal(container.resolve('consumer').message, 'goodbye, world');
 });
 

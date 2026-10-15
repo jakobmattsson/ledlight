@@ -7,8 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('../../../../lib/awilix');
-const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
+const { createTestRepositoryContainer } = require('../../../../src/composition/testing');
 
 test('CLI and API use the project cache while API uses its explicit journal', (t: TestContext) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-project-configuration-'));
@@ -26,15 +25,15 @@ test('CLI and API use the project cache while API uses its explicit journal', (t
   fs.writeFileSync(path.join(projectDirectory, '.ledlightrc'),
     '--file main.ledger\n--cache-home .ledlight-cache\n');
 
-  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
+  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../../../src/modules'));
   const environment: NodeJS.ProcessEnv = { ...process.env, HOME: home };
   delete environment.LEDLIGHT_CACHE_HOME;
-  container.register({
-    currentWorkingDirectory: asValue(() => workingDirectory),
-    processEnvironment: asValue(environment),
+  container.overrideExternals({
+    currentWorkingDirectory: (() => workingDirectory),
+    processEnvironment: (environment),
   });
 
-  const output = container.$$private.resolveInternal('cli', 'cliCommand').runReportCommand(['aggregate', '--format', 'json']);
+  const output = container.resolveInternal('cli', 'cliCommand').runReportCommand(['aggregate', '--format', 'json']);
   assert.ok(JSON.parse(output));
   const journalsDirectory = path.join(projectDirectory, '.ledlight-cache', 'journals');
   assert.equal(fs.readdirSync(journalsDirectory).length, 1);

@@ -5,12 +5,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { resolveQuery } = require('../support/repository-container');
-const { createRepositoryContainer } = require('../../src/composition/repository-container');
+const { createRepositoryContainer } = require('../../src/composition');
 
 const queryDirectory = path.resolve(__dirname, '../../src/modules/implementations/queries/list-definitions');
 
 test('registers all queries as one immutable dependency', () => {
-  const container = createRepositoryContainer(__dirname, '../../src/modules');
+  const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
   const queries = container.resolve('queries');
 
   assert.ok(Object.isFrozen(queries));

@@ -1,8 +1,9 @@
 import type { Journal, LedgerSyntaxTree, ParseLedgerOptions } from './public-api';
 
-const { createRepositoryContainer } = require('./composition/repository-container');
+const path = require('node:path');
+const { createRepositoryContainer } = require('./composition');
 
-const container = createRepositoryContainer(__dirname, 'modules');
+const container = createRepositoryContainer(path.join(__dirname, 'modules'));
 const { openJournal } = container.resolve('project');
 const { parseLedgerText } = container.resolve('journal');
 
