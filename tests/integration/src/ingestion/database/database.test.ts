@@ -9,9 +9,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('../../../../../lib/awilix');
 const Database = require('better-sqlite3');
-const { createRepositoryContainer } = require('../../../../../src/composition/repository-container');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 const { pathsForJournal } = resolveRepositoryModule("src/modules/implementations/project/cache-paths.js");
 const {
   prepareDatabase,
@@ -589,19 +588,19 @@ account Equity:Opening
   const { databasePath, journalPath: canonicalJournalPath } = pathsForJournal(journalPath);
   let stdout = '';
   let stderr = '';
-  const container = createRepositoryContainer(__dirname, '../../../../../src/modules');
-  container.register({
-    currentWorkingDirectory: asValue(() => directory),
-    standardInput: asValue({
+  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../../../../src/modules'));
+  container.overrideExternals({
+    currentWorkingDirectory: (() => directory),
+    standardInput: ({
       isTTY: () => true,
       read: () => assert.fail('an explicit journal path must not read stdin'),
     }),
   });
-  container.$$private.registerInternal('cli', 'output', asValue({
+  container.overrideInternal('cli', 'output', ({
     writeError(value: any) { stderr += value; },
     writeOutput(value: any) { stdout += value; },
   }));
-  const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
+  const executeCli = container.resolveInternal('cli', 'executeCli');
 
   function runAggregate() {
     stdout = '';

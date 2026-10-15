@@ -30,4 +30,4 @@ function copyDeclarationFiles(directory: string): void {
   }
 }
 
-for (const directory of ['src', 'lib', 'scripts', 'tests']) copyDeclarationFiles(directory);
+for (const directory of ['src', 'scripts', 'tests']) copyDeclarationFiles(directory);

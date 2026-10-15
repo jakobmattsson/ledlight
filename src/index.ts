@@ -1,6 +1,6 @@
 import type { Journal, LedgerSyntaxTree, ParseLedgerOptions } from './public-api';
 
-const { createRepositoryContainer } = require('./composition/repository-container');
+const { createRepositoryContainer } = require('@jakobm/portico');
 
 const container = createRepositoryContainer(__dirname, 'modules');
 const { openJournal } = container.resolve('project');

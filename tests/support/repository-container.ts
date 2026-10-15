@@ -2,12 +2,15 @@
 
 const path = require('node:path');
 const fs = require('node:fs');
-const {
-  createRepositoryContainer, moduleName,
-} = require('../../src/composition/repository-container');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
-const container = createRepositoryContainer(__dirname, '../../src/modules');
+const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+
+function moduleName(fileName: string): string {
+  return path.basename(fileName, path.extname(fileName))
+    .replace(/-([a-z])/gu, (_match: string, letter: string) => letter.toUpperCase());
+}
 
 function resolveRepositoryModule(fileName: string) {
   const repositoryFileName = path.isAbsolute(fileName)
@@ -22,7 +25,7 @@ function resolveRepositoryModule(fileName: string) {
     throw new Error(`Module file must be in interfaces or implementations: ${fileName}`);
   }
   const owner = group === 'interfaces' ? moduleName(member) : member;
-  return container.$$private.resolveInternal(owner, moduleName(resolvedFileName));
+  return container.resolveInternal(owner, moduleName(resolvedFileName));
 }
 
 function resolveQuery(name: any) {
@@ -41,9 +44,9 @@ function resolveReferenceParser() {
     fs,
     path,
     ohm: require('ohm-js'),
-    ingestionWarning: container.$$private.resolveInternal('journal', 'ingestionWarning'),
-    syntaxErrors: container.$$private.resolveInternal('journal', 'syntaxErrors'),
-    topLevelBlocks: container.$$private.resolveInternal('journal', 'topLevelBlocks'),
+    ingestionWarning: container.resolveInternal('journal', 'ingestionWarning'),
+    syntaxErrors: container.resolveInternal('journal', 'syntaxErrors'),
+    topLevelBlocks: container.resolveInternal('journal', 'topLevelBlocks'),
   });
 }
 

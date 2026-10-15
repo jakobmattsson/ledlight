@@ -29,8 +29,6 @@
     }
   },
   "files": [
-    "dist/lib/**/*.js",
-    "dist/lib/**/*.d.ts",
     "docs/api.md",
     "docs/ledger-cli-equivalence.md",
     "docs/ledlight.md",
@@ -69,14 +67,13 @@
     "pretest:unit": "npm run build",
     "pretest:integration": "npm run build",
     "pretest:ledger": "npm run build",
-    "prerelease": "npm run build",
-    "architecture:generate": "node dist/scripts/architecture/generate.js",
+    "architecture:generate": "portico-architecture --modules dist/src/modules --output architecture",
     "benchmark": "node dist/scripts/benchmarks/run.js",
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "release": "node dist/scripts/release/cli.js",
+    "release": "worktree-keeper release",
     "report:allure": "allure awesome allure-results --output allure-report --report-name 'Ledlight tests'",
     "test": "worktree-keeper run-tests",
     "test:coverage": "c8 --all --src=dist/src --include='dist/src/**/*.js' --reporter=text-summary --reporter=lcov --reporter=json-summary --reporter=html npm test -- rerun",
@@ -87,6 +84,7 @@
     "test:integration": "node --test 'dist/tests/integration/**/*.test.js'"
   },
   "dependencies": {
+    "@jakobm/portico": "0.2.0",
     "better-sqlite3": "13.0.3",
     "commander": "^13.1.0",
     "diff": "^9.0.0",
@@ -97,7 +95,6 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.5",
-    "@viz-js/viz": "3.29.0",
     "allure": "3.20.1",
     "allure-js-commons": "3.13.0",
     "allure-node-test": "3.13.0",
@@ -108,6 +105,6 @@
     "ohm-js": "17.5.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
-    "worktree-keeper": "0.7.2"
+    "worktree-keeper": "0.8.0"
   }
 }

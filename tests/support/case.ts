@@ -4,9 +4,8 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
-const { asValue } = require('../../lib/awilix');
 const espree = require('espree');
-const { createRepositoryContainer } = require('../../src/composition/repository-container');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],
@@ -221,12 +220,12 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }: any, fixtur
     }
     if (fixtureKey !== undefined) fixtureCache.set(fixtureKey, temporaryDirectory);
   }
-  const container = createRepositoryContainer(__dirname, '../../src/modules');
-  container.register({
-    standardInput: asValue({ isTTY: () => false, read: () => heredoc }),
-    currentWorkingDirectory: asValue(() => temporaryDirectory),
-    os: asValue({ tmpdir: () => temporaryDirectory }),
-    processEnvironment: asValue({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
+  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+  container.overrideExternals({
+    standardInput: ({ isTTY: () => false, read: () => heredoc }),
+    currentWorkingDirectory: (() => temporaryDirectory),
+    os: ({ tmpdir: () => temporaryDirectory }),
+    processEnvironment: ({ ...process.env, LEDLIGHT_CACHE_HOME: path.join(temporaryDirectory, 'cache') }),
   });
   const actual: { cli?: unknown; ledgerCli?: unknown; api?: unknown } = {};
   let remaining;
@@ -237,11 +236,11 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }: any, fixtur
         : [cliArgs[0], '--file', journalPath, ...cliArgs.slice(1)];
       let output = '';
       let stderr = '';
-      container.$$private.registerInternal('cli', 'output', asValue({
+      container.overrideInternal('cli', 'output', ({
         writeOutput: (value: any) => { output += value; },
         writeError: (value: any) => { stderr += value; },
       }));
-      const exitCode = container.$$private.resolveInternal('cli', 'executeCli').run(args);
+      const exitCode = container.resolveInternal('cli', 'executeCli').run(args);
       actual.cli = {
         output,
         warnings: exitCode === 0 ? stderr : '',
@@ -267,7 +266,7 @@ function runCase({ cliArgs, ledgerArgs, heredoc, file, files, api }: any, fixtur
       if (heredoc !== undefined) fs.writeFileSync(journalPath, heredoc);
       const resultText = { output: '', warnings: '', error: '' };
       try {
-        const cliFormat = container.$$private.resolveInternal('cli', 'cliFormat');
+        const cliFormat = container.resolveInternal('cli', 'cliFormat');
         const journalApi = container.resolve('project').openJournal(journalPath);
         const method = journalApi[api.method];
         if (!Object.hasOwn(journalApi, api.method) || typeof method !== 'function') {

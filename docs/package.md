@@ -3,17 +3,22 @@
 Ledlight is distributed as the public `@jakobm/ledlight` npm package under the MIT
 license. The package contains generated CommonJS runtime files, TypeScript
 declarations, the CLI,
-local container implementation in `lib/`, license, README, and consumer
+Portico module-system dependency, license, README, and consumer
 documentation. Repository configuration, tests, fixtures, the Ohm-based
 reference parser, and the improvement backlog are not published.
+
+This integration branch uses a local `file:` dependency on Portico to review
+the package boundary. Replace it with a registry version before publishing
+Ledlight or running its package workflow on another machine.
 
 ## Releasing
 
 Run `npm run release -- patch`, `npm run release -- minor`, or
-`npm run release -- major` from this repository. The command requires a clean
-working tree, a root package version, and the expected GitHub Actions publish
-job. It checks out the default branch if necessary and requires its local commit
-to match `origin` exactly. It then increments the chosen version component by
+`npm run release -- major` from this repository. `worktree-keeper` provides the
+release command. It requires a clean working tree, a root package version, and
+the expected GitHub Actions publish job. It checks out the default branch if
+necessary and requires its local commit to match `origin` exactly. It then
+increments the chosen version component by
 one, updates `package.json` and any npm lockfile present, commits with the new
 version as the entire commit message, and pushes that commit. Only after the
 commit push succeeds does it create and push the matching `v<version>` tag.

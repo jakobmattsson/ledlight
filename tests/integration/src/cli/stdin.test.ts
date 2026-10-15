@@ -8,8 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { asValue } = require('../../../../lib/awilix');
-const { createRepositoryContainer } = require('../../../../src/composition/repository-container');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const cliPath = path.resolve(__dirname, '../../../../src/run.js');
 const source = `commodity SEK
@@ -38,19 +37,19 @@ function fixture(t: TestContext) {
   let stdinSource = source;
   let stdout = '';
   let stderr = '';
-  const container = createRepositoryContainer(__dirname, '../../../../src/modules');
-  container.register({
-    currentWorkingDirectory: asValue(() => directory),
-    os: asValue({ tmpdir: () => temporaryDirectory }),
-    processEnvironment: asValue(environment),
-    standardInput: asValue({ isTTY: () => false, read: () => stdinSource }),
+  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../../../src/modules'));
+  container.overrideExternals({
+    currentWorkingDirectory: (() => directory),
+    os: ({ tmpdir: () => temporaryDirectory }),
+    processEnvironment: (environment),
+    standardInput: ({ isTTY: () => false, read: () => stdinSource }),
   });
-  container.$$private.registerInternal('cli', 'output', asValue({
+  container.overrideInternal('cli', 'output', ({
     handleBrokenPipe() {},
     writeError(value: string) { stderr += value; },
     writeOutput(value: string) { stdout += value; },
   }));
-  const executeCli = container.$$private.resolveInternal('cli', 'executeCli');
+  const executeCli = container.resolveInternal('cli', 'executeCli');
 
   function run(arguments_: string[], content?: string) {
     stdinSource = content ?? source;
