@@ -80,7 +80,7 @@
     "test:ledger": "node --test dist/tests/integration/src/cases.test.js dist/tests/integration/src/cli/compare-ledger-script.test.js",
     "test:package": "node --test dist/tests/package/package.test.js",
     "test:conventions": "node --test 'dist/tests/conventions/*.test.js'",
-    "test:unit": "node --test 'dist/tests/unit/**/*.test.js'",
+    "test:unit": "node --test 'dist/tests/unit/**/*.test.js' dist/tests/support/case.test.js",
     "test:integration": "node --test 'dist/tests/integration/**/*.test.js'"
   },
   "dependencies": {

@@ -1,0 +1,40 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const withExternal = require('../../../../../support/external-dependencies.js');
+const test = require('node:test');
+const createReportCommand = withExternal(require('../../../../../../src/modules/implementations/cli/report-command'), ['standardInput']);
+
+function command(standardInput: any) {
+  return createReportCommand({
+    standardInput,
+    cliArguments: { apiCommands: { aggregate: 'aggregate' } },
+    cliCommand: {
+      runReportCommandWithWarnings: (arguments_: string[], source: any) => ({ arguments_, source }),
+    },
+  });
+}
+
+test('does not read stdin for help, version, unknown commands, explicit files, or a terminal', () => {
+  const read = () => assert.fail('stdin must not be read');
+  const piped = command({ isTTY: () => false, read });
+  for (const arguments_ of [
+    [], ['--help'], ['--version'], ['unknown'], ['aggregate', '--help'],
+    ['aggregate', '--file', 'journal.ledger'], ['aggregate', '--file=-'],
+  ]) {
+    assert.deepEqual(piped.run(arguments_), { arguments_, source: undefined });
+  }
+  const terminal = command({ isTTY: () => true, read });
+  assert.deepEqual(terminal.run(['aggregate']), { arguments_: ['aggregate'], source: undefined });
+});
+
+test('reads piped text once and selects stdin only for nonempty input', () => {
+  let reads = 0;
+  const piped = command({ isTTY: () => false, read: () => { reads += 1; return 'journal\n'; } });
+  assert.deepEqual(piped.run(['aggregate', '--denominate']), {
+    arguments_: ['aggregate', '--file', '-', '--denominate'], source: 'journal\n',
+  });
+  assert.equal(reads, 1);
+  const empty = command({ isTTY: () => false, read: () => '' });
+  assert.deepEqual(empty.run(['aggregate']), { arguments_: ['aggregate'], source: '' });
+});

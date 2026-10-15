@@ -5,6 +5,7 @@ const { spawnSync } = require('node:child_process');
 
 const tests = [
   'dist/tests/unit/**/*.test.js',
+  'dist/tests/support/case.test.js',
   'dist/tests/integration/**/*.test.js',
   'dist/tests/conventions/*.test.js',
 ];
