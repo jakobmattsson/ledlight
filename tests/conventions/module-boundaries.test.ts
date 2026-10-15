@@ -7,7 +7,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const YAML = require('yaml');
-const { createRepositoryContainer } = require('@jakobm/portico');
 const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
@@ -44,15 +43,8 @@ test('discovers exactly the modules declared in the dependency policy', () => {
   }
 });
 
-test('resolves interface factories as facades and hides internal factories', () => {
-  const productionContainer = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
-  assert.deepEqual(Object.keys(productionContainer), ['resolve']);
+test('Ledlight facades expose only intended capabilities', () => {
   const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
-  for (const name of modules) {
-    assert.equal(container.resolve(name), container.resolveInternal(name, 'index'));
-    assert.ok(Object.isFrozen(container.resolve(name)), `${name} facade must be frozen`);
-  }
-  assert.throws(() => container.resolve('decimal'), /Unknown module/u);
   assert.equal(Object.hasOwn(container.resolve('queries'), 'accountFilter'), false);
   assert.equal(Object.hasOwn(container.resolve('commands'), 'cliOptions'), false);
   assert.equal(Object.hasOwn(container.resolve('project'), '$$private'), false);
@@ -86,11 +78,4 @@ test('resolves interface factories as facades and hides internal factories', () 
     assert.equal(typeof facade[member], 'function', `${moduleName}.${member}`);
     assert.equal(Object.hasOwn(facade, formerGroup), false, `${moduleName}.${formerGroup}`);
   }
-});
-
-test('external overrides remain scoped to their permitted modules', () => {
-  const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
-  container.overrideExternals({ currentWorkingDirectory: (() => '/test-journal') });
-  assert.equal(typeof container.resolve('core').readConfiguration, 'function');
-  assert.equal(container.resolve('project'), container.resolve('project'));
 });

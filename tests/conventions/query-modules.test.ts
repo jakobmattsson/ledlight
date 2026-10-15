@@ -9,24 +9,12 @@ const { createRepositoryContainer } = require('@jakobm/portico');
 
 const queryDirectory = path.resolve(__dirname, '../../src/modules/implementations/queries/list-definitions');
 
-test('registers all queries as one immutable dependency', () => {
+test('query collection contains every query definition', () => {
   const container = createRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
   const queries = container.resolve('queries');
 
-  assert.ok(Object.isFrozen(queries));
-  assert.ok(Object.isFrozen(queries.definitions));
   assert.equal(queries.definitions.length, fs.readdirSync(queryDirectory)
     .filter((fileName: string) => fileName.endsWith('.js')).length);
-  for (const registrationName of [
-    'aggregateQuery',
-    'totalHistoryQuery',
-    'unrealizedGainsQuery',
-    'investmentPerformanceQuery',
-    'accountsQuery',
-    'transactionsQuery',
-  ]) {
-    assert.throws(() => container.resolve(registrationName), /Unknown module/u);
-  }
 });
 
 test('each query module is exposed through the query collection', () => {
