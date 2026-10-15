@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791922354542,
+  "lastUpdate": 1792086736502,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -1208,6 +1208,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 12.743003,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8259a36e018e1380a772339faf1e9d68db9d8570",
+          "message": "Merge pull request #124 from jakobmattsson/codex/module-system-contract\n\nUse Portico for module composition and architecture output",
+          "timestamp": "2026-10-15T19:51:45+02:00",
+          "tree_id": "f73c9a7ac9e93d7fcf2f1f296facd01530daf1ec",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/8259a36e018e1380a772339faf1e9d68db9d8570"
+        },
+        "date": 1792086735109,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1950.73656,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 11.832638,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 14.847842,
             "unit": "ms"
           }
         ]
