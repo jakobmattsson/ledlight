@@ -1,1 +1,0 @@
-{"id":"72cdd8b918b77a50a8a205862abdf22e.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:dist/tests/unit/scripts/release.test.js#version commit also works for a package without an npm lockfile","name":"version commit also works for a package without an npm lockfile","status":"passed","testResultsByEnv":{"default":"f51ae6d9cfd02106f554cf51fb7ab392"}}

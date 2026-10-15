@@ -1,1 +1,0 @@
-{"id":"3e59585b6743879d7a53e186a8da40a9.d41d8cd98f00b204e9800998ecf8427e","fullName":"@jakobm/ledlight:dist/tests/unit/scripts/release.test.js#a failed publish job stops before npm registry polling","name":"a failed publish job stops before npm registry polling","status":"passed","testResultsByEnv":{"default":"17c3fa7c690e10636a57a98a262dc8e2"}}
