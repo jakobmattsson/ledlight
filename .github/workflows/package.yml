@@ -142,21 +142,10 @@ jobs:
           node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+      - run: npm ci
       - name: Verify release version
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          node - <<'NODE'
-          const manifest = require('./package.json');
-          const lockfile = require('./package-lock.json');
-          const expectedTag = `v${manifest.version}`;
-          if (process.env.RELEASE_TAG !== expectedTag) {
-            throw new Error(`Release tag must be ${expectedTag}, got ${process.env.RELEASE_TAG}`);
-          }
-          if (lockfile.version !== manifest.version || lockfile.packages[''].version !== manifest.version) {
-            throw new Error('package-lock.json version must match package.json');
-          }
-          NODE
-      - run: npm ci
+        run: npm exec --no -- worktree-keeper verify-release-version
       - run: npm install --global npm@11.21.0
       - run: npm publish
