@@ -85,7 +85,7 @@
     "test:integration": "node --test 'dist/tests/integration/**/*.test.js'"
   },
   "dependencies": {
-    "@jakobm/portico": "file:/Users/jakobm/code/portico",
+    "@jakobm/portico": "0.2.0",
     "better-sqlite3": "13.0.3",
     "commander": "^13.1.0",
     "diff": "^9.0.0",
