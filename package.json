@@ -54,7 +54,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json && node dist/scripts/build/copy-assets.js",
+    "build": "npm run clean && tsc --project tsconfig.json && node dist/scripts/build/copy-assets.js",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "pretest": "npm run build",
     "prelint": "npm run build",
