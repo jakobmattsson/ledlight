@@ -7,11 +7,29 @@ const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const modulesPath = path.resolve(__dirname, '../../src/modules');
 const container = createTestRepositoryContainer(modulesPath);
+const PATCH = Symbol('dependency patch');
+
+type DependencyPatch = { [PATCH]: Record<string, unknown> };
 
 type DependencyOverrides = {
   externals?: Record<string, unknown>;
   internals?: Record<string, Record<string, unknown>>;
 };
+
+function patchDependency(members: Record<string, unknown>): DependencyPatch {
+  return { [PATCH]: members };
+}
+
+function isDependencyPatch(value: unknown): value is DependencyPatch {
+  return typeof value === 'object' && value !== null && Object.hasOwn(value, PATCH);
+}
+
+function patchedValue(original: unknown, patch: DependencyPatch, name: string): Record<string, unknown> {
+  if (typeof original !== 'object' || original === null || Array.isArray(original)) {
+    throw new TypeError(`Cannot patch non-object dependency: ${name}`);
+  }
+  return { ...original, ...patch[PATCH] };
+}
 
 function moduleName(fileName: string): string {
   return path.basename(fileName, path.extname(fileName))
@@ -41,10 +59,26 @@ function resolveRepositoryModule(fileName: string) {
 
 function resolveTestModule(fileName: string, overrides?: DependencyOverrides) {
   const testContainer = createTestRepositoryContainer(modulesPath);
-  if (overrides?.externals) testContainer.overrideExternals(overrides.externals);
+  if (overrides?.externals) {
+    const externals = Object.fromEntries(Object.entries(overrides.externals).map(([name, value]) => [
+      name,
+      isDependencyPatch(value)
+        ? patchedValue(testContainer.resolveExternal(name), value, name)
+        : value,
+    ]));
+    testContainer.overrideExternals(externals);
+  }
   for (const [owner, registrations] of Object.entries(overrides?.internals || {})) {
     for (const [name, value] of Object.entries(registrations)) {
-      testContainer.overrideInternal(owner, name, value);
+      if (!isDependencyPatch(value)) testContainer.overrideInternal(owner, name, value);
+    }
+  }
+  for (const [owner, registrations] of Object.entries(overrides?.internals || {})) {
+    for (const [name, value] of Object.entries(registrations)) {
+      if (isDependencyPatch(value)) {
+        testContainer.overrideInternal(owner, name,
+          patchedValue(testContainer.resolveInternal(owner, name), value, `${owner}.${name}`));
+      }
     }
   }
   const { owner, name } = registrationFor(fileName);
@@ -73,4 +107,5 @@ function resolveReferenceParser() {
   });
 }
 
-module.exports = { resolveCommands, resolveQuery, resolveReferenceParser, resolveRepositoryModule, resolveTestModule };
+module.exports = { patchDependency, resolveCommands, resolveQuery, resolveReferenceParser,
+  resolveRepositoryModule, resolveTestModule };

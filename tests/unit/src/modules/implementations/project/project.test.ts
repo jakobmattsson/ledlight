@@ -1,14 +1,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const { resolveTestModule } = require('../../../../../support/repository-container');
+const { patchDependency, resolveTestModule } = require('../../../../../support/repository-container');
 
 test('reports an unexpected cache directory failure as a database error', () => {
   const project = resolveTestModule('src/modules/implementations/project/project.js', {
     externals: {
-      fs: { ...fs, mkdirSync: () => { throw new Error('cache directory is unavailable'); } },
+      fs: patchDependency({ mkdirSync: () => { throw new Error('cache directory is unavailable'); } }),
     },
     internals: {
       database: {
