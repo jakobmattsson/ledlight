@@ -303,17 +303,18 @@ dependencies inside their cards instead of drawing arrows to those nodes.
 Ubiquitous external services appear inside module cards without their own
 nodes. Ledlight marks `core`, `fs`, `path`, and `zod` as ubiquitous.
 
-The sorted dependency views in `tests/architecture/depends-on.yaml` and
-`tests/architecture/used-by.yaml` are generated from that policy. The same
-command renders the repository root's `architecture.svg` from `depends-on.yaml`.
+The sorted dependency views in `architecture/depends-on.yaml` and
+`architecture/used-by.yaml` are generated from that policy. The same
+command renders `architecture/architecture.svg` from `depends-on.yaml`.
 Its arrows point to required dependencies. Module cards are blue, external
 service nodes are purple, and ubiquitous dependencies appear as green or purple
 rows inside consuming cards. Run `npm run architecture:generate` after changing
 module dependencies; the architecture tests check that the YAML and SVG views
-stay current. The generator calls `generateArchitecture` from `@jakobm/portico`
-with explicit paths for all three files.
+stay current. The command runs Portico's `portico-architecture` bin with the
+compiled module directory and `architecture/` as its output directory.
 
-`createRepositoryContainer(modulesRoot)` from `@jakobm/portico` reads
+`createRepositoryContainer(...modulesPathParts)` from `@jakobm/portico` joins
+its path segments and reads
 `dependencies.yaml` and `external.js` from the compiled module directory.
 The CLI entry point passes that directory before resolving `cli`.
 The production container exposes only `resolve`. Tests that need overrides or

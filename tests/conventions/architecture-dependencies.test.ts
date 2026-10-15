@@ -11,8 +11,7 @@ const YAML = require('yaml');
 const { generateArchitecture } = require('@jakobm/portico');
 
 const modulesRoot = path.resolve(__dirname, '../../src/modules');
-const architectureRoot = path.resolve(__dirname, '../../../tests/architecture');
-const diagramPath = path.resolve(__dirname, '../../../architecture.svg');
+const architectureRoot = path.resolve(__dirname, '../../../architecture');
 
 test('dependency policy lists are alphabetical', () => {
   const policy = YAML.parse(fs.readFileSync(path.join(modulesRoot, 'dependencies.yaml'), 'utf8'));
@@ -27,18 +26,11 @@ test('dependency policy lists are alphabetical', () => {
 test('committed architecture views match the dependency policy', async (context: TestContext) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-architecture-'));
   context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const dependsOnPath = path.join(directory, 'depends-on.yaml');
-  const usedByPath = path.join(directory, 'used-by.yaml');
-  const generatedDiagramPath = path.join(directory, 'architecture.svg');
+  await generateArchitecture({ modulesRoot, outputDirectory: directory });
 
-  await generateArchitecture({ modulesRoot, dependsOnPath, usedByPath,
-    diagramPath: generatedDiagramPath });
-
-  for (const [generated, committed] of [
-    [dependsOnPath, path.join(architectureRoot, 'depends-on.yaml')],
-    [usedByPath, path.join(architectureRoot, 'used-by.yaml')],
-    [generatedDiagramPath, diagramPath],
-  ]) {
+  for (const name of ['depends-on.yaml', 'used-by.yaml', 'architecture.svg']) {
+    const generated = path.join(directory, name);
+    const committed = path.join(architectureRoot, name);
     assert.equal(fs.readFileSync(committed, 'utf8'), fs.readFileSync(generated, 'utf8'),
       `${path.basename(committed)} is out of date; run npm run architecture:generate`);
   }

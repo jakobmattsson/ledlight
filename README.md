@@ -102,7 +102,7 @@ Read [why Ledlight exists](docs/why-ledlight.md) for the product's purpose,
 strengths, and limits. See [the Ledlight documentation](docs/ledlight.md) for
 the supported syntax, reports, and CLI, and the [Node.js API
 reference](docs/api.md) for the complete consumer surface. The
-[architecture diagram](architecture.svg) shows the repository's module
+[architecture diagram](architecture/architecture.svg) shows the repository's module
 dependencies. The module system comes from `@jakobm/portico`.
 Supported runtimes, module formats, native platforms, and
 compatibility guarantees are defined in the

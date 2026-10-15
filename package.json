@@ -68,7 +68,7 @@
     "pretest:integration": "npm run build",
     "pretest:ledger": "npm run build",
     "prerelease": "npm run build",
-    "architecture:generate": "node dist/scripts/architecture/generate.js",
+    "architecture:generate": "portico-architecture --modules dist/src/modules --output architecture",
     "benchmark": "node dist/scripts/benchmarks/run.js",
     "cleanup:branches": "worktree-keeper cleanup-merged-branches",
     "cleanup:empty-directories": "worktree-keeper remove-empty-directories",
