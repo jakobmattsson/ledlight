@@ -30,10 +30,10 @@ test('repository modules reject ambient runtime dependencies', async () => {
   }
 });
 
-test('composition and the external service factory can provide runtime dependencies', async () => {
+test('architecture scripts and the external service factory can provide runtime dependencies', async () => {
   const eslint = new ESLint({ cwd: root });
   for (const filePath of [
-    'src/composition/runtime-boundary-example.ts',
+    'scripts/architecture/runtime-boundary-example.ts',
     'src/modules/external.ts',
   ]) {
     const [result] = await eslint.lintText(source, { filePath: path.join(root, filePath) });

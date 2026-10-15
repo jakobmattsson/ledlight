@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { createTestRepositoryContainer } = require('../../../../src/composition/testing');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const cliPath = path.resolve(__dirname, '../../../../src/run.js');
 const source = `commodity SEK

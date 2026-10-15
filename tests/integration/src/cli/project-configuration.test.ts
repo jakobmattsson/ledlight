@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { createTestRepositoryContainer } = require('../../../../src/composition/testing');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 test('CLI and API use the project cache while API uses its explicit journal', (t: TestContext) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-project-configuration-'));

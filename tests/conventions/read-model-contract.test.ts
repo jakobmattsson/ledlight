@@ -5,8 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const Database = require('better-sqlite3');
-const { listModules } = require('../../lib/awilix');
-const { createTestRepositoryContainer } = require('../../src/composition/testing');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const root = path.resolve(__dirname, '../..');
 
@@ -20,8 +19,15 @@ test('the query read model matches the schema and every referenced table', () =>
       const actual = database.prepare(`PRAGMA table_info(${table})`).all().map(({ name }: { name: string }) => name);
       assert.deepEqual(actual, columns, table);
     }
-    const source = listModules('src/modules/implementations/queries/**/*.js', { cwd: root })
-      .map(({ path: fileName }: { path: string }) => fs.readFileSync(fileName, 'utf8')).join('\n');
+    const queryDirectory = path.join(root, 'src/modules/implementations/queries');
+    function filesBelow(directory: string): string[] {
+      return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry: import('node:fs').Dirent) => {
+        const fileName = path.join(directory, entry.name);
+        return entry.isDirectory() ? filesBelow(fileName) : [fileName];
+      });
+    }
+    const source = filesBelow(queryDirectory).filter((fileName) => fileName.endsWith('.js'))
+      .map((fileName) => fs.readFileSync(fileName, 'utf8')).join('\n');
     const tables = database.prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
       .all().map(({ name }: { name: string }) => name);
     const referenced = tables.filter((table: string) => new RegExp(

@@ -5,7 +5,7 @@ const { spawnSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
 const espree = require('espree');
-const { createTestRepositoryContainer } = require('../../src/composition/testing');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const HEADERS = new Map([
   ['========== CLI ==========', 'cli'],

@@ -310,18 +310,14 @@ Its arrows point to required dependencies. Module cards are blue, external
 service nodes are purple, and ubiquitous dependencies appear as green or purple
 rows inside consuming cards. Run `npm run architecture:generate` after changing
 module dependencies; the architecture tests check that the YAML and SVG views
-stay current. Other projects can call `generateArchitecture` from
-`src/composition/index.ts` with explicit paths for all three files.
+stay current. The generator calls `generateArchitecture` from `@jakobm/portico`
+with explicit paths for all three files.
 
-`createRepositoryContainer(...modulesPathParts)` resolves its string arguments
-as path segments and reads `dependencies.yaml` and `external.js` from that
-module directory. The composition code has no Ledlight module names or paths;
-another module tree can use the same API with its own policy and external
-services. The CLI entry point passes the compiled modules directory before resolving
-`cli`. The composition source lives in `src/composition/repository-container.ts`.
-Its production container exposes only `resolve`. Tests that need overrides or
-internal factories use `src/composition/testing.ts`. The intended extraction
-contract is documented in [module-system-contract.md](module-system-contract.md).
+`createRepositoryContainer(modulesRoot)` from `@jakobm/portico` reads
+`dependencies.yaml` and `external.js` from the compiled module directory.
+The CLI entry point passes that directory before resolving `cli`.
+The production container exposes only `resolve`. Tests that need overrides or
+internal factories import `@jakobm/portico/testing`.
 
 Composition freezes the returned facade before providing it to other modules.
 A factory can use its own private registrations directly. Dependencies from
@@ -343,8 +339,8 @@ together in `src/modules/interfaces/<module>.ts` and compile to
 (`schema.sql`) and journal grammar (`ledger.ohm`) live in `src/modules/spec`.
 Factory implementations live under `src/modules/implementations/<module>`;
 files sit directly in the module directory when no further grouping is needed.
-Factories have unique kebab-case file names within their module. The local Awilix subset lives in
-`lib/awilix.ts`, compiled to `dist/lib/awilix.js`.
+Factories have unique kebab-case file names within their module. Portico owns
+the local Awilix subset and composition rules.
 
 A directory named `list-<name>` directly under a module's implementation root registers an
 array dependency called `<name>`. Composition resolves every JavaScript factory

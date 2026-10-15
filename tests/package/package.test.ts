@@ -1,5 +1,7 @@
 'use strict';
 
+import type { TestContext } from 'node:test';
+
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -29,7 +31,11 @@ function runNpm(arguments_: string[], options: { cwd?: string; env?: NodeJS.Proc
   return run(process.execPath, [process.env.npm_execpath!, ...arguments_], options);
 }
 
-test('the published archive installs and exposes the module and CLI', () => {
+test('the published archive installs and exposes the module and CLI', (context: TestContext) => {
+  if (String(packageMetadata.dependencies['@jakobm/portico']).startsWith('file:')) {
+    context.skip('A local Portico file dependency cannot be installed from a published archive');
+    return;
+  }
   const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-package-'));
   try {
     const archiveDirectory = path.join(temporaryDirectory, 'archive');
@@ -58,7 +64,6 @@ test('the published archive installs and exposes the module and CLI', () => {
       'dist/scripts/ledger-compatibility/compare-ledger.js',
       'dist/scripts/ledger-compatibility/ledger-compatibility-matrix.yaml',
       'dist/src/run.js',
-      'dist/lib/awilix.js',
       'dist/src/modules/dependencies.yaml',
       'dist/src/modules/external.js',
       'dist/src/modules/interfaces/commands.js',

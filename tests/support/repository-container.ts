@@ -2,13 +2,15 @@
 
 const path = require('node:path');
 const fs = require('node:fs');
-const {
-  moduleName,
-} = require('../../src/composition/repository-container');
-const { createTestRepositoryContainer } = require('../../src/composition/testing');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
 const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+
+function moduleName(fileName: string): string {
+  return path.basename(fileName, path.extname(fileName))
+    .replace(/-([a-z])/gu, (_match: string, letter: string) => letter.toUpperCase());
+}
 
 function resolveRepositoryModule(fileName: string) {
   const repositoryFileName = path.isAbsolute(fileName)

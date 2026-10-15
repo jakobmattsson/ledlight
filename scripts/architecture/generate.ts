@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('node:path');
-const { generateArchitecture } = require('../../src/composition');
+const { generateArchitecture } = require('@jakobm/portico');
 
 const repositoryRoot = path.resolve(__dirname, '../../..');
 const modulesRoot = path.join(repositoryRoot, 'dist/src/modules');

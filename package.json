@@ -29,8 +29,6 @@
     }
   },
   "files": [
-    "dist/lib/**/*.js",
-    "dist/lib/**/*.d.ts",
     "docs/api.md",
     "docs/ledger-cli-equivalence.md",
     "docs/ledlight.md",
@@ -87,6 +85,7 @@
     "test:integration": "node --test 'dist/tests/integration/**/*.test.js'"
   },
   "dependencies": {
+    "@jakobm/portico": "file:/Users/jakobm/code/portico",
     "better-sqlite3": "13.0.3",
     "commander": "^13.1.0",
     "diff": "^9.0.0",
@@ -97,7 +96,6 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.5",
-    "@viz-js/viz": "3.29.0",
     "allure": "3.20.1",
     "allure-js-commons": "3.13.0",
     "allure-node-test": "3.13.0",

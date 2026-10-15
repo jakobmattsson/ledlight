@@ -17,7 +17,7 @@ function filesIn(directory: string): string[] {
 
 test('compiled JavaScript stays in dist and mirrors executable TypeScript sources', () => {
   const sourceFiles = [path.join(repositoryRoot, 'eslint.config.ts'),
-    ...['src', 'lib', 'scripts', 'tests'].flatMap((directory) => filesIn(path.join(repositoryRoot, directory)))];
+    ...['src', 'scripts', 'tests'].flatMap((directory) => filesIn(path.join(repositoryRoot, directory)))];
   assert.deepEqual(sourceFiles.filter((fileName) => fileName.endsWith('.js')), []);
 
   const expected = sourceFiles.filter((fileName) => fileName.endsWith('.ts') && !fileName.endsWith('.d.ts'))

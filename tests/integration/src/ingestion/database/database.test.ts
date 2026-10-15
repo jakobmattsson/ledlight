@@ -10,7 +10,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const Database = require('better-sqlite3');
-const { createTestRepositoryContainer } = require('../../../../../src/composition/testing');
+const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 const { pathsForJournal } = resolveRepositoryModule("src/modules/implementations/project/cache-paths.js");
 const {
   prepareDatabase,

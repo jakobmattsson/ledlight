@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { resolveQuery } = require('../support/repository-container');
-const { createRepositoryContainer } = require('../../src/composition');
+const { createRepositoryContainer } = require('@jakobm/portico');
 
 const queryDirectory = path.resolve(__dirname, '../../src/modules/implementations/queries/list-definitions');
 
