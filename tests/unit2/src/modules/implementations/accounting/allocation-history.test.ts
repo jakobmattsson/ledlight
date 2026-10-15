@@ -2,22 +2,23 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { resolveRepositoryModule } = require('../../../../../support/repository-container');
-const { AllocationHistory } = resolveRepositoryModule('src/modules/implementations/accounting/allocation-history.js');
+const { resolveRepositoryModule, resolveTestModule } = require('../../../../../support/repository-container');
+const { AllocationHistory } = resolveTestModule('src/modules/implementations/accounting/allocation-history.js');
 const { maximize } = resolveRepositoryModule('src/modules/implementations/accounting/linear-program.js');
 const { parse, format } = resolveRepositoryModule('src/modules/implementations/numeric/rational.js');
 
 function measuredHistory(roundingUnit: string) {
   let optimizations = 0;
-  const { AllocationHistory: MeasuredHistory } =
-    require('../../../../../../src/modules/implementations/accounting/allocation-history.js')({
-      numeric: {
-        rational: resolveRepositoryModule('src/modules/implementations/numeric/rational.js'),
-      },
-      linearProgram: {
-        maximize(...args: unknown[]) {
-          optimizations += 1;
-          return maximize(...args);
+  const { AllocationHistory: MeasuredHistory } = resolveTestModule(
+    'src/modules/implementations/accounting/allocation-history.js', {
+      internals: {
+        accounting: {
+          linearProgram: {
+            maximize(...args: unknown[]) {
+              optimizations += 1;
+              return maximize(...args);
+            },
+          },
         },
       },
     });

@@ -2,28 +2,28 @@
 
 import type { AggregateRow } from '../../../../../../src/public-api';
 
-const { resolveCommands, resolveRepositoryModule } = require('../../../../../support/repository-container');
+const { resolveRepositoryModule, resolveTestModule } = require('../../../../../support/repository-container');
 
 const assert = require('node:assert/strict');
-const withExternal = require('../../../../../support/external-dependencies.js');
 const test = require('node:test');
-const commander = require('commander');
-const createCommand = withExternal(require('../../../../../../src/modules/implementations/cli/cli-command'), ['packageMetadata']);
-const createArguments = withExternal(require('../../../../../../src/modules/implementations/cli/cli-arguments'), ['commander']);
-const commands = resolveCommands();
 const cliArguments = resolveRepositoryModule('src/modules/implementations/cli/cli-arguments.js');
-const cliFormat = resolveRepositoryModule('src/modules/implementations/cli/cli-format.js');
-const coreProject = resolveRepositoryModule('src/modules/implementations/project/project.js');
+
+function resolveCommand({ project, cliArguments: argumentsModule }: { project: unknown; cliArguments: unknown }) {
+  return resolveTestModule('src/modules/implementations/cli/cli-command.js', {
+    externals: { packageMetadata: { version: '1.2.3' } },
+    internals: {
+      project: { project },
+      cli: { cliArguments: argumentsModule },
+    },
+  });
+}
 
 const commandNames = [...new Set(Object.values(cliArguments.apiCommands))];
 
 test('shows command help only with the explicit help option', () => {
-  const { runReportCommand } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommand } = resolveCommand({
     project: { openJournal: () => { throw new Error('must not open a journal'); } },
-    packageMetadata: { version: '1.2.3' },
     cliArguments,
-    cliFormat,
   });
 
   for (const command of commandNames) {
@@ -32,13 +32,14 @@ test('shows command help only with the explicit help option', () => {
 });
 
 test('runs a bare command when CLI configuration supplies the journal path', () => {
-  const configuredArguments = createArguments({
-    commander,
-    commands: { definitions: commands },
-    cliConfiguration: {
-      apply: (arguments_: string[]) => [arguments_[0], '--file', '/configured-journal'],
+  const configuredArguments = resolveTestModule('src/modules/implementations/cli/cli-arguments.js', {
+    internals: {
+      cli: {
+        cliConfiguration: {
+          apply: (arguments_: string[]) => [arguments_[0], '--file', '/configured-journal'],
+        },
+      },
     },
-    project: coreProject,
   });
   const opened: string[] = [];
   const project = {
@@ -64,12 +65,9 @@ test('runs a bare command when CLI configuration supplies the journal path', () 
       };
     },
   };
-  const { runReportCommand } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommand } = resolveCommand({
     project,
-    packageMetadata: { version: '1.2.3' },
     cliArguments: configuredArguments,
-    cliFormat,
   });
 
   assert.match(runReportCommand(['investment-performance']), /Opening value: 0\.00 USD/u);
@@ -86,12 +84,9 @@ test('prepares selected output before shared JSON encoding', () => {
       unrealizedGains: () => [gain],
     }),
   };
-  const { runReportCommand } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommand } = resolveCommand({
     project,
-    packageMetadata: { version: '1.2.3' },
     cliArguments,
-    cliFormat,
   });
   assert.equal(runReportCommand(['accounts', '--file', '/journal', '--format', 'json']),
     '[\n  "Assets:Cash"\n]\n');
@@ -156,12 +151,9 @@ test('delegates report behavior to the public Node API and only formats results'
       return journal;
     },
   };
-  const { runReportCommand } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommand } = resolveCommand({
     project,
-    packageMetadata: { version: '1.2.3' },
     cliArguments,
-    cliFormat,
   });
 
   const topLevelHelp = runReportCommand(['--help']);
@@ -255,8 +247,7 @@ test('delegates report behavior to the public Node API and only formats results'
 
 test('aggregate includes a total only when requested in every output format', () => {
   const calls: Array<{ includeTotal?: boolean }> = [];
-  const { runReportCommand } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommand } = resolveCommand({
     project: {
       openJournal: () => ({
         aggregate(options: Record<string, unknown>) {
@@ -270,9 +261,7 @@ test('aggregate includes a total only when requested in every output format', ()
         commodities: () => [],
       }),
     },
-    packageMetadata: { version: '1.2.3' },
     cliArguments,
-    cliFormat,
   });
 
   for (const format of ['text', 'csv', 'json']) {
@@ -339,12 +328,9 @@ test('delegates non-report commands to the corresponding journal operations', ()
   const project = {
     openJournal(journalPath: string) { calls.push(['openJournal', journalPath]); return journal; },
   };
-  const { runReportCommand } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommand } = resolveCommand({
     project,
-    packageMetadata: { version: '1.2.3' },
     cliArguments,
-    cliFormat,
   });
   const run = (arguments_: string[]) => JSON.parse(runReportCommand(arguments_));
 
@@ -420,12 +406,9 @@ test('collects ingestion warnings before invoking a query', () => {
       return [];
     },
   };
-  const { runReportCommandWithWarnings } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommandWithWarnings } = resolveCommand({
     project: { openJournal: () => journal },
-    packageMetadata: { version: '1.2.3' },
     cliArguments,
-    cliFormat,
   });
 
   assert.deepEqual(
@@ -465,12 +448,9 @@ test('formats the postings API result in the requested CLI format', () => {
       };
     },
   };
-  const { runReportCommand } = createCommand({
-    commands: { definitions: commands },
+  const { runReportCommand } = resolveCommand({
     project,
-    packageMetadata: { version: '1.2.3' },
     cliArguments,
-    cliFormat,
   });
 
   assert.deepEqual(JSON.parse(runReportCommand([

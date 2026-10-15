@@ -1,20 +1,16 @@
 'use strict';
 
-const { resolveCommands, resolveRepositoryModule } = require('../../../../../support/repository-container');
+const { resolveCommands, resolveTestModule } = require('../../../../../support/repository-container');
 
 const assert = require('node:assert/strict');
-const withExternal = require('../../../../../support/external-dependencies.js');
 const test = require('node:test');
 const commander = require('commander');
 const { Command } = commander;
-const createArguments = withExternal(require('../../../../../../src/modules/implementations/cli/cli-arguments'), ['commander']);
 const commands = resolveCommands();
-const project = resolveRepositoryModule('src/modules/implementations/project/project.js');
-const argumentsModule = createArguments({
-  commander,
-  commands: { definitions: commands },
-  cliConfiguration: { apply: (arguments_: string[]) => arguments_ },
-  project,
+const argumentsModule = resolveTestModule('src/modules/implementations/cli/cli-arguments.js', {
+  internals: {
+    cli: { cliConfiguration: { apply: (arguments_: string[]) => arguments_ } },
+  },
 });
 const { parseArguments, usage } = argumentsModule;
 
@@ -197,13 +193,14 @@ test('parses valuation choices and explicitly passes the market default', () => 
 });
 
 test('uses the CLI configuration file argument when --file is omitted', () => {
-  const configuredArguments = createArguments({
-    commander,
-    commands: { definitions: commands },
-    cliConfiguration: {
-      apply: (arguments_: string[]) => [arguments_[0], '--file', '/configured-journal'],
+  const configuredArguments = resolveTestModule('src/modules/implementations/cli/cli-arguments.js', {
+    internals: {
+      cli: {
+        cliConfiguration: {
+          apply: (arguments_: string[]) => [arguments_[0], '--file', '/configured-journal'],
+        },
+      },
     },
-    project,
   });
 
   assert.deepEqual(withoutCliOptions(configuredArguments.parseArguments(['aggregate'])), {
