@@ -44,7 +44,8 @@ function directlyLoadedSourceFiles(testFile: string): string[] {
 
   function visit(node: import('typescript').Node): void {
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) &&
-        (node.expression.text === 'require' || node.expression.text === 'resolveRepositoryModule')) {
+        (node.expression.text === 'require' || node.expression.text === 'resolveRepositoryModule' ||
+          node.expression.text === 'resolveTestModule')) {
       const argument = node.arguments[0];
       if (!argument || !ts.isStringLiteralLike(argument)) {
         loaded.push('<dynamic require or module resolution>');

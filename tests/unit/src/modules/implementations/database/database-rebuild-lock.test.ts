@@ -3,13 +3,11 @@
 import type { TestContext } from 'node:test';
 
 const assert = require('node:assert/strict');
-const withExternal = require('../../../../../support/external-dependencies.js');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const createPublicErrors = require('../../../../../../src/modules/implementations/core/public-errors');
-const createRebuildLock = withExternal(require('../../../../../../src/modules/implementations/database/database-rebuild-lock'), ['fs', 'processRuntime', 'systemClock']);
+const { resolveTestModule } = require('../../../../../support/repository-container');
 
 function temporaryDatabasePath(t: TestContext) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ledlight-rebuild-lock-'));
@@ -18,16 +16,9 @@ function temporaryDatabasePath(t: TestContext) {
 }
 
 function rebuildLock(systemClock: { now(): number; sleep(milliseconds: number): void | Promise<void> }) {
-  const publicErrors = createPublicErrors();
-  return {
-    ...createRebuildLock({
-      fs,
-      processRuntime: { pid: () => 1234 },
-      core: { publicErrors },
-      systemClock,
-    }),
-    errorCodes: publicErrors.errorCodes,
-  };
+  return resolveTestModule('src/modules/implementations/database/database-rebuild-lock.js', {
+    externals: { processRuntime: { pid: () => 1234 }, systemClock },
+  });
 }
 
 test('waits for another rebuild and releases its own lock', (t: TestContext) => {
@@ -57,7 +48,7 @@ test('fails with a database code when the rebuild lock times out', (t: TestConte
   const databasePath = temporaryDatabasePath(t);
   fs.writeFileSync(`${databasePath}.lock`, 'another process\n');
   let now = 0;
-  const { errorCodes, withRebuildLock, $$private } = rebuildLock({
+  const { withRebuildLock, $$private } = rebuildLock({
     now: () => now,
     sleep() {
       now = $$private.LOCK_TIMEOUT_MILLISECONDS;
@@ -66,6 +57,6 @@ test('fails with a database code when the rebuild lock times out', (t: TestConte
 
   assert.throws(
     () => withRebuildLock(databasePath, () => assert.fail('must not acquire the lock')),
-    (error: { code: string; message: string }) => error.code === errorCodes.DATABASE && /Timed out waiting/u.test(error.message),
+    (error: { code: string; message: string }) => error.code === 'LEDLIGHT_DATABASE' && /Timed out waiting/u.test(error.message),
   );
 });

@@ -5,14 +5,20 @@ const fs = require('node:fs');
 const { createTestRepositoryContainer } = require('@jakobm/portico/testing');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '../..');
-const container = createTestRepositoryContainer(path.resolve(__dirname, '../../src/modules'));
+const modulesPath = path.resolve(__dirname, '../../src/modules');
+const container = createTestRepositoryContainer(modulesPath);
+
+type DependencyOverrides = {
+  externals?: Record<string, unknown>;
+  internals?: Record<string, Record<string, unknown>>;
+};
 
 function moduleName(fileName: string): string {
   return path.basename(fileName, path.extname(fileName))
     .replace(/-([a-z])/gu, (_match: string, letter: string) => letter.toUpperCase());
 }
 
-function resolveRepositoryModule(fileName: string) {
+function registrationFor(fileName: string) {
   const repositoryFileName = path.isAbsolute(fileName)
     ? fileName
     : path.resolve(REPOSITORY_ROOT, fileName);
@@ -25,7 +31,24 @@ function resolveRepositoryModule(fileName: string) {
     throw new Error(`Module file must be in interfaces or implementations: ${fileName}`);
   }
   const owner = group === 'interfaces' ? moduleName(member) : member;
-  return container.resolveInternal(owner, moduleName(resolvedFileName));
+  return { owner, name: moduleName(resolvedFileName) };
+}
+
+function resolveRepositoryModule(fileName: string) {
+  const { owner, name } = registrationFor(fileName);
+  return container.resolveInternal(owner, name);
+}
+
+function resolveTestModule(fileName: string, overrides?: DependencyOverrides) {
+  const testContainer = createTestRepositoryContainer(modulesPath);
+  if (overrides?.externals) testContainer.overrideExternals(overrides.externals);
+  for (const [owner, registrations] of Object.entries(overrides?.internals || {})) {
+    for (const [name, value] of Object.entries(registrations)) {
+      testContainer.overrideInternal(owner, name, value);
+    }
+  }
+  const { owner, name } = registrationFor(fileName);
+  return testContainer.resolveInternal(owner, name);
 }
 
 function resolveQuery(name: any) {
@@ -50,4 +73,4 @@ function resolveReferenceParser() {
   });
 }
 
-module.exports = { resolveCommands, resolveQuery, resolveReferenceParser, resolveRepositoryModule };
+module.exports = { resolveCommands, resolveQuery, resolveReferenceParser, resolveRepositoryModule, resolveTestModule };
