@@ -42,6 +42,16 @@ and linting. The generated `dist/` directory is ignored by Git.
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.
 
+The `Package compatibility` GitHub Actions workflow runs the full test suite
+with coverage on Linux and package tests on Linux, macOS, and Windows when a
+pull request is opened or updated, on pushes to `main`, on pushes of `v*` release tags, and
+when started manually. Ordinary branch pushes do not trigger a separate run;
+pushes to a branch with an open pull request trigger the pull request checks.
+Open a draft pull request for CI feedback before a change is ready for review,
+or run `npm test` locally. A new pull request run cancels older runs for the
+same pull request. Runs on `main`, release tags, and manual runs do not cancel
+each other. Release tags publish to npm only after verification succeeds.
+
 The full GitHub Actions test job shows total and per-file coverage in its run
 summary and uploads a `coverage-report` artifact. Open its `index.html` to see
 which source lines and branches ran. The same test run also uploads an Allure
@@ -50,6 +60,10 @@ available reports at [coverage](https://jakobmattsson.github.io/ledlight/coverag
 and [test results](https://jakobmattsson.github.io/ledlight/tests/) on the
 existing `gh-pages` branch, alongside benchmark history in `dev/bench/`.
 Reports from failed test runs are published when test results are available.
+Report artifacts are retained for 14 days. Pull request, release tag, and manual
+verification runs do not update the published reports. The separate
+`Journal performance` workflow runs benchmarks on pushes to `main` and manual
+starts; it records performance history without enforcing timing thresholds.
 Local `npm test` runs without coverage; use `npm run test:coverage` and open
 `coverage/index.html` to inspect the report locally.
 
