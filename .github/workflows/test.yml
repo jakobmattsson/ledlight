@@ -2,9 +2,10 @@ name: Test
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -47,60 +48,6 @@ jobs:
           name: test-report
           path: allure-report/
           retention-days: 14
-
-  publish-reports:
-    name: Publish reports to gh-pages
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: test
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      pages: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: '*-report'
-          path: reports
-      - name: Update gh-pages reports
-        run: |
-          if [ ! -f reports/coverage-report/index.html ] && [ ! -f reports/test-report/index.html ]; then
-            echo "No report artifacts were produced"
-            exit 1
-          fi
-          git fetch origin gh-pages
-          git worktree add --detach pages-checkout refs/remotes/origin/gh-pages
-          if [ -f reports/coverage-report/index.html ]; then
-            rm -rf pages-checkout/coverage
-            cp -R reports/coverage-report pages-checkout/coverage
-          fi
-          if [ -f reports/test-report/index.html ]; then
-            rm -rf pages-checkout/tests
-            cp -R reports/test-report pages-checkout/tests
-          fi
-          touch pages-checkout/.nojekyll
-          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="tests/">Test results and timings</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > pages-checkout/index.html
-          git -C pages-checkout add -A
-          if ! git -C pages-checkout diff --cached --quiet; then
-            git -C pages-checkout -c user.name=github-actions -c user.email=github-actions[bot]@users.noreply.github.com commit -m "Update test and coverage reports"
-            if ! git -C pages-checkout push origin HEAD:gh-pages; then
-              git fetch origin gh-pages
-              git -C pages-checkout rebase origin/gh-pages
-              git -C pages-checkout push origin HEAD:gh-pages
-            fi
-          fi
-      - name: Request Pages build
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds"
-      - name: Show coverage report
-        if: ${{ hashFiles('reports/coverage-report/index.html') != '' }}
-        run: echo "[Browse line-by-line coverage](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/coverage/)" >> "$GITHUB_STEP_SUMMARY"
-      - name: Show test report
-        if: ${{ hashFiles('reports/test-report/index.html') != '' }}
-        run: echo "[Browse test results and timings](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/tests/)" >> "$GITHUB_STEP_SUMMARY"
 
   package-macos:
     name: Package on macOS

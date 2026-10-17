@@ -39,7 +39,8 @@ report with individual test results and durations. Pushes to `main` publish
 available reports at [coverage](https://jakobmattsson.github.io/ledlight/coverage/)
 and [test results](https://jakobmattsson.github.io/ledlight/tests/) on the
 existing `gh-pages` branch, alongside benchmark history in `dev/bench/`.
-Reports from failed test runs are published when test results are available.
+PR runs retain available reports even when tests fail. After merge, a separate
+workflow publishes the successful PR run’s reports without rerunning tests.
 Local `npm test` runs without coverage; use `npm run test:coverage` and open
 `coverage/index.html` to inspect the report locally.
 

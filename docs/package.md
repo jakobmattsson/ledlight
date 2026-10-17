@@ -30,8 +30,12 @@ administrators without bypass. Run
 `npm exec --no -- worktree-keeper verify-release-protection` to verify the online
 policy. `npm test` runs `check-project` to validate the local configuration.
 
-`test.yml` runs on pull requests and pushes to `main`, where it also publishes
-coverage and test reports. `package.yml` runs only on `v*` tag pushes.
+`test.yml` runs only on pull requests and cancels superseded runs for the same
+PR. After a merge, `reports.yml` runs on pushes to `main` and publishes the
+coverage and test artifacts from the latest successful test run for that PR
+head commit, without rerunning tests. Pushes without an associated merged PR
+skip report publication. Missing or unsuccessful test runs stop publication.
+`package.yml` runs only on `v*` tag pushes.
 
 Before publishing, `verify-release` checks branch protection, matching
 package/tag/lockfile versions, the merged release PR, and successful required

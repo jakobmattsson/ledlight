@@ -1,0 +1,105 @@
+name: Publish reports
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-reports
+  cancel-in-progress: false
+
+jobs:
+  select-run:
+    name: Find merged PR test reports
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    outputs:
+      run-id: ${{ steps.select.outputs.run-id }}
+    steps:
+      - uses: actions/github-script@v8
+        id: select
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pulls = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+              owner, repo, commit_sha: context.sha,
+            });
+            const pull = pulls.find(pull => pull.merged_at &&
+              pull.base.ref === 'main' && pull.merge_commit_sha === context.sha);
+            if (!pull) {
+              core.notice('No merged PR for this commit; skipping report publication.');
+              return;
+            }
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              owner, repo, workflow_id: 'test.yml', event: 'pull_request',
+              head_sha: pull.head.sha,
+            });
+            const run = runs.sort((a, b) => b.id - a.id)[0];
+            if (!run || run.status !== 'completed' || run.conclusion !== 'success') {
+              throw new Error(`No successful latest test run for merged PR #${pull.number}.`);
+            }
+            core.setOutput('run-id', String(run.id));
+
+  publish-reports:
+    name: Publish reports to gh-pages
+    needs: select-run
+    if: ${{ needs.select-run.outputs.run-id != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pages: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.select-run.outputs.run-id }}
+          pattern: '*-report'
+          path: reports
+      - name: Update gh-pages reports
+        run: |
+          if [ ! -f reports/coverage-report/index.html ] && [ ! -f reports/test-report/index.html ]; then
+            echo "No report artifacts were produced"
+            exit 1
+          fi
+          git fetch origin gh-pages
+          git worktree add --detach pages-checkout refs/remotes/origin/gh-pages
+          if [ -f reports/coverage-report/index.html ]; then
+            rm -rf pages-checkout/coverage
+            cp -R reports/coverage-report pages-checkout/coverage
+          fi
+          if [ -f reports/test-report/index.html ]; then
+            rm -rf pages-checkout/tests
+            cp -R reports/test-report pages-checkout/tests
+          fi
+          touch pages-checkout/.nojekyll
+          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="tests/">Test results and timings</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > pages-checkout/index.html
+          git -C pages-checkout add -A
+          if ! git -C pages-checkout diff --cached --quiet; then
+            git -C pages-checkout -c user.name=github-actions -c user.email=github-actions[bot]@users.noreply.github.com commit -m "Update test and coverage reports"
+            if ! git -C pages-checkout push origin HEAD:gh-pages; then
+              git fetch origin gh-pages
+              git -C pages-checkout rebase origin/gh-pages
+              git -C pages-checkout push origin HEAD:gh-pages
+            fi
+          fi
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds"
+      - name: Show coverage report
+        if: ${{ hashFiles('reports/coverage-report/index.html') != '' }}
+        run: echo "[Browse line-by-line coverage](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/coverage/)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Show test report
+        if: ${{ hashFiles('reports/test-report/index.html') != '' }}
+        run: echo "[Browse test results and timings](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/tests/)" >> "$GITHUB_STEP_SUMMARY"
