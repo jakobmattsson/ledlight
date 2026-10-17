@@ -14,8 +14,10 @@ For repository development, install [Volta](https://volta.sh/) and run
 `package.json` select Node.js 22.14.0 and npm 11.21.0 automatically in the
 repository, new shells, and GitHub Actions.
 
-New Codex worktrees require Volta to be installed. Their environment setup adds
-its shims to PATH and installs dependencies with the same pinned toolchain.
+New Codex worktrees use Volta from PATH when available. Otherwise, environment
+setup downloads and installs Volta without changing shell profiles, then adds
+its shims to PATH for the setup shell. It installs dependencies with the pinned
+toolchain and stops if installation or download fails.
 
 Install dependencies and run the complete verification suite:
 
