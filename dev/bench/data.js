@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792086736502,
+  "lastUpdate": 1792223476435,
   "repoUrl": "https://github.com/jakobmattsson/ledlight",
   "entries": {
     "Benchmark": [
@@ -1247,6 +1247,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Aggregate report",
             "value": 14.847842,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jakob.mattsson@gmail.com",
+            "name": "Jakob Mattsson",
+            "username": "jakobmattsson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2abbaefe298acd9302770f5d5a1d8dd387319272",
+          "message": "Merge pull request #125 from jakobmattsson/codex/uppgradera-protico-och-worktreekeep\n\nUpgrade development tooling and separate CI workflows",
+          "timestamp": "2026-10-17T09:50:46+02:00",
+          "tree_id": "be6a77aceee16dd099aaf8eb490f481ce165d4fe",
+          "url": "https://github.com/jakobmattsson/ledlight/commit/2abbaefe298acd9302770f5d5a1d8dd387319272"
+        },
+        "date": 1792223474785,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Cold journal load",
+            "value": 1664.248252,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached journal load",
+            "value": 8.760931,
+            "unit": "ms"
+          },
+          {
+            "name": "Aggregate report",
+            "value": 13.504613,
             "unit": "ms"
           }
         ]
