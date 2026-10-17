@@ -22,13 +22,16 @@ tags the tested merge commit. Use this command instead of creating release tags
 manually. Inspect the reported local and remote state before retrying an
 interrupted release.
 
-The required checks in `package.yml` are `Full test suite`, `Package on macOS`,
+The required checks in `test.yml` are `Full test suite`, `Package on macOS`,
 `Package on Linux`, and `Package on Windows`. Keep these names aligned with
 `git.releaseRequiredChecks` in `worktree-keeper.config.json` and GitHub's branch
 protection. Require branches to be up to date and enforce checks for
 administrators without bypass. Run
 `npm exec --no -- worktree-keeper verify-release-protection` to verify the online
 policy. `npm test` runs `check-project` to validate the local configuration.
+
+`test.yml` runs on pull requests and pushes to `main`, where it also publishes
+coverage and test reports. `package.yml` runs only on `v*` tag pushes.
 
 Before publishing, `verify-release` checks branch protection, matching
 package/tag/lockfile versions, the merged release PR, and successful required

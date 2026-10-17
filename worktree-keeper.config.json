@@ -3,7 +3,7 @@
     "remote": "origin",
     "defaultBranch": "main",
     "branchPrefix": "codex/",
-    "releaseTestWorkflow": "package.yml",
+    "releaseTestWorkflow": "test.yml",
     "releaseRequiredChecks": [
       "Full test suite",
       "Package on macOS",

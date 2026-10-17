@@ -1,142 +1,16 @@
-name: Package compatibility
+name: Publish
 
 on:
-  pull_request:
   push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
 
 jobs:
-  test:
-    name: Full test suite
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-      - uses: volta-cli/action@v5
-      - run: sudo apt-get update
-      - run: sudo apt-get install --yes ledger
-      - run: npm ci
-      - name: Run tests with coverage and Allure results
-        env:
-          ALLURE_RESULTS_DIR: allure-results
-        run: npm run test:coverage
-      - name: Show coverage in job summary
-        if: ${{ always() && hashFiles('coverage/coverage-summary.json') != '' }}
-        run: node dist/scripts/ci/coverage-summary.js
-      - name: Upload coverage report
-        if: ${{ always() && hashFiles('coverage/index.html') != '' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-report
-          path: |
-            coverage/
-            !coverage/tmp/**
-            !coverage/lcov-report/**
-          retention-days: 14
-
-      - name: Generate test report
-        if: ${{ always() && hashFiles('allure-results/*-result.json') != '' }}
-        run: npm run report:allure
-      - name: Upload test report
-        if: ${{ always() && hashFiles('allure-report/index.html') != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report
-          path: allure-report/
-          retention-days: 14
-
-  publish-reports:
-    name: Publish reports to gh-pages
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: test
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      pages: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: '*-report'
-          path: reports
-      - name: Update gh-pages reports
-        run: |
-          if [ ! -f reports/coverage-report/index.html ] && [ ! -f reports/test-report/index.html ]; then
-            echo "No report artifacts were produced"
-            exit 1
-          fi
-          git fetch origin gh-pages
-          git worktree add --detach pages-checkout refs/remotes/origin/gh-pages
-          if [ -f reports/coverage-report/index.html ]; then
-            rm -rf pages-checkout/coverage
-            cp -R reports/coverage-report pages-checkout/coverage
-          fi
-          if [ -f reports/test-report/index.html ]; then
-            rm -rf pages-checkout/tests
-            cp -R reports/test-report pages-checkout/tests
-          fi
-          touch pages-checkout/.nojekyll
-          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Ledlight reports</title><p><a href="coverage/">Code coverage report</a></p><p><a href="tests/">Test results and timings</a></p><p><a href="dev/bench/">Benchmark history</a></p></html>' > pages-checkout/index.html
-          git -C pages-checkout add -A
-          if ! git -C pages-checkout diff --cached --quiet; then
-            git -C pages-checkout -c user.name=github-actions -c user.email=github-actions[bot]@users.noreply.github.com commit -m "Update test and coverage reports"
-            if ! git -C pages-checkout push origin HEAD:gh-pages; then
-              git fetch origin gh-pages
-              git -C pages-checkout rebase origin/gh-pages
-              git -C pages-checkout push origin HEAD:gh-pages
-            fi
-          fi
-      - name: Request Pages build
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds"
-      - name: Show coverage report
-        if: ${{ hashFiles('reports/coverage-report/index.html') != '' }}
-        run: echo "[Browse line-by-line coverage](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/coverage/)" >> "$GITHUB_STEP_SUMMARY"
-      - name: Show test report
-        if: ${{ hashFiles('reports/test-report/index.html') != '' }}
-        run: echo "[Browse test results and timings](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/tests/)" >> "$GITHUB_STEP_SUMMARY"
-
-  package-macos:
-    name: Package on macOS
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: volta-cli/action@v5
-      - run: npm ci
-      - run: npm run test:package
-
-  package-linux:
-    name: Package on Linux
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-      - uses: volta-cli/action@v5
-      - run: npm ci
-      - run: npm run test:package
-
-  package-windows:
-    name: Package on Windows
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@v7
-      - uses: volta-cli/action@v5
-      - run: npm ci
-        env:
-          npm_config_ignore_scripts: "true"
-      - run: npm run test:package
-
   publish:
     name: Publish to npm
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
-    needs:
-      - test
-      - package-macos
-      - package-linux
-      - package-windows
     runs-on: ubuntu-24.04
     permissions:
       contents: read
