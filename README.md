@@ -9,23 +9,15 @@ Install the public package on Node.js 22.14 or later in the Node.js 22 release l
 npm install @jakobm/ledlight
 ```
 
-For repository development, install and select the pinned Node.js 22 release
-with [nvm](https://github.com/nvm-sh/nvm):
+For repository development, install [Volta](https://volta.sh/) and run
+`volta setup` so its shims are on your PATH. The `volta` settings in
+`package.json` select Node.js 22.14.0 and npm 11.21.0 automatically in the
+repository, new shells, and GitHub Actions.
 
-```console
-nvm install
-nvm use
-node --version
-```
-
-The repository's `.nvmrc` selects Node.js 22.23.3 for this shell; it does not
-change your nvm default. Run `nvm use` again when you open a new shell in the
-repository.
-
-New Codex worktrees use the same `.nvmrc` during environment setup: the setup
-script loads nvm, selects or installs the pinned Node.js release, then installs
-dependencies. This selection applies to the setup shell; use `nvm use` in later
-shells as needed.
+New Codex worktrees use Volta from PATH when available. Otherwise, environment
+setup downloads and installs Volta without changing shell profiles, then adds
+its shims to PATH for the setup shell. It installs dependencies with the pinned
+toolchain and stops if installation or download fails.
 
 Install dependencies and run the complete verification suite:
 
@@ -36,8 +28,8 @@ npm test
 
 The maintained source is TypeScript. Run `npm run build` after editing source to
 generate CommonJS files and declarations under `dist/` for the tests, CLI, and
-npm package. `npm test` builds automatically and includes strict type checking
-and linting. The generated `dist/` directory is ignored by Git.
+npm package. `npm test` checks the project configuration, builds automatically,
+and includes strict type checking and linting. The generated `dist/` directory is ignored by Git.
 
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.
@@ -49,7 +41,8 @@ report with individual test results and durations. Pushes to `main` publish
 available reports at [coverage](https://jakobmattsson.github.io/ledlight/coverage/)
 and [test results](https://jakobmattsson.github.io/ledlight/tests/) on the
 existing `gh-pages` branch, alongside benchmark history in `dev/bench/`.
-Reports from failed test runs are published when test results are available.
+PR runs retain available reports even when tests fail. After merge, a separate
+workflow publishes the successful PR run’s reports without rerunning tests.
 Local `npm test` runs without coverage; use `npm run test:coverage` and open
 `coverage/index.html` to inspect the report locally.
 

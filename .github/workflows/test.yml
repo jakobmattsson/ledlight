@@ -1,0 +1,79 @@
+name: Test
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Full test suite
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: volta-cli/action@v5
+      - run: sudo apt-get update
+      - run: sudo apt-get install --yes ledger
+      - run: npm ci
+      - name: Run tests with coverage and Allure results
+        env:
+          ALLURE_RESULTS_DIR: allure-results
+        run: npm run test:coverage
+      - name: Show coverage in job summary
+        if: ${{ always() && hashFiles('coverage/coverage-summary.json') != '' }}
+        run: node dist/scripts/ci/coverage-summary.js
+      - name: Upload coverage report
+        if: ${{ always() && hashFiles('coverage/index.html') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: |
+            coverage/
+            !coverage/tmp/**
+            !coverage/lcov-report/**
+          retention-days: 14
+
+      - name: Generate test report
+        if: ${{ always() && hashFiles('allure-results/*-result.json') != '' }}
+        run: npm run report:allure
+      - name: Upload test report
+        if: ${{ always() && hashFiles('allure-report/index.html') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: allure-report/
+          retention-days: 14
+
+  package-macos:
+    name: Package on macOS
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: volta-cli/action@v5
+      - run: npm ci
+      - run: npm run test:package
+
+  package-linux:
+    name: Package on Linux
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: volta-cli/action@v5
+      - run: npm ci
+      - run: npm run test:package
+
+  package-windows:
+    name: Package on Windows
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v7
+      - uses: volta-cli/action@v5
+      - run: npm ci
+        env:
+          npm_config_ignore_scripts: "true"
+      - run: npm run test:package

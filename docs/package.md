@@ -15,29 +15,42 @@ Ledlight or running its package workflow on another machine.
 
 Run `npm run release -- patch`, `npm run release -- minor`, or
 `npm run release -- major` from this repository. `worktree-keeper` provides the
-release command. It requires a clean working tree, a root package version, and
-the expected GitHub Actions publish job. It checks out the default branch if
-necessary and requires its local commit to match `origin` exactly. It then
-increments the chosen version component by
-one, updates `package.json` and any npm lockfile present, commits with the new
-version as the entire commit message, and pushes that commit. Only after the
-commit push succeeds does it create and push the matching `v<version>` tag.
-The preflight lockfile check compares it with the current package version;
-`npm version` updates it to the new version automatically.
+release command. It requires a clean working tree, an authenticated GitHub CLI
+(`gh`), and enforced branch protection. It prepares a same-repository
+`release/v<version>` pull request, waits for the required checks, merges it, and
+tags the tested merge commit. Use this command instead of creating release tags
+manually. Inspect the reported local and remote state before retrying an
+interrupted release.
 
-The command waits for the publish job to succeed and then for the version to
-become visible on the public npm registry. It reports the elapsed time from job
-completion to registry visibility. A failed guard, push, job, or registry wait
-stops the command and reports the last completed stage. Inspect the repository
-and remote state before retrying an interrupted release. The command requires
-Git and an authenticated GitHub CLI (`gh`) with repository and Actions access.
+The required checks in `test.yml` are `Full test suite`, `Package on macOS`,
+`Package on Linux`, and `Package on Windows`. Keep these names aligned with
+`git.releaseRequiredChecks` in `worktree-keeper.config.json` and GitHub's branch
+protection. Require branches to be up to date and enforce checks for
+administrators without bypass. Run
+`npm exec --no -- worktree-keeper verify-release-protection` to verify the online
+policy. `npm test` runs `check-project` to validate the local configuration.
 
-The `package.yml` GitHub Actions workflow publishes a tagged version only after
-its full test suite and cross-platform package tests pass. The tag must match
-the version in both package files. The publish job uses npm trusted publishing
-through GitHub Actions OIDC. On npmjs.com, configure the package's trusted
-publisher for this repository and the workflow filename `package.yml`, with
-direct publishing enabled. The release job requires no npm access token.
+`test.yml` runs only on pull requests and cancels superseded runs for the same
+PR. After a merge, `reports.yml` runs on pushes to `main` and publishes the
+coverage and test artifacts from the latest successful test run for that PR
+head commit, without rerunning tests. Pushes without an associated merged PR
+skip report publication. Missing or unsuccessful test runs stop publication.
+`package.yml` runs only on `v*` tag pushes.
+
+Before publishing, `verify-release` checks branch protection, matching
+package/tag/lockfile versions, the merged release PR, and successful required
+jobs in its latest PR workflow run. The publish job then uses npm trusted
+publishing through GitHub Actions OIDC. On npmjs.com, configure the package's
+trusted publisher for this repository and workflow filename `package.yml`, with
+direct publishing enabled. No npm access token is required.
+
+The verification step uses the Actions secret `RELEASE_POLICY_TOKEN` as
+`GH_TOKEN`. Use a fine-grained PAT or GitHub App token with repository access
+and Administration read, Contents read, Pull requests read, and Actions read
+permissions. Repository rulesets additionally require Administration write to
+inspect bypass actors; inherited organization rulesets require appropriate
+organization access. Rotate the secret when its token expires. Never expose it
+to fork PR code through `pull_request_target`.
 
 ## Module formats and exports
 

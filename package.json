@@ -51,12 +51,13 @@
     "node": "^22.14.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json && node dist/scripts/build/copy-assets.js",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
-    "pretest": "npm run build",
+    "pretest": "worktree-keeper check-project && npm run build",
     "prelint": "npm run build",
     "prelint:fix": "npm run build",
     "prepack": "npm run build",
@@ -84,7 +85,7 @@
     "test:integration": "node --test 'dist/tests/integration/**/*.test.js'"
   },
   "dependencies": {
-    "@jakobm/portico": "0.2.0",
+    "@jakobm/portico": "0.3.1",
     "better-sqlite3": "13.0.3",
     "commander": "^13.1.0",
     "diff": "^9.0.0",
@@ -105,6 +106,10 @@
     "ohm-js": "17.5.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
-    "worktree-keeper": "0.8.0"
+    "worktree-keeper": "0.12.0"
+  },
+  "volta": {
+    "node": "22.14.0",
+    "npm": "11.21.0"
   }
 }

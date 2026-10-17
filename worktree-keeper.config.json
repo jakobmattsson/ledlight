@@ -2,7 +2,14 @@
   "git": {
     "remote": "origin",
     "defaultBranch": "main",
-    "branchPrefix": "codex/"
+    "branchPrefix": "codex/",
+    "releaseTestWorkflow": "test.yml",
+    "releaseRequiredChecks": [
+      "Full test suite",
+      "Package on macOS",
+      "Package on Linux",
+      "Package on Windows"
+    ]
   },
   "tests": {
     "commands": [
