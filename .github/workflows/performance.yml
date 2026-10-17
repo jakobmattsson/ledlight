@@ -19,10 +19,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
+      - uses: volta-cli/action@v5
       - run: npm ci
       - run: npm run benchmark -- benchmark-results.json
       - name: Record benchmark history

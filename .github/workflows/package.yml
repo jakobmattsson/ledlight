@@ -13,10 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
+      - uses: volta-cli/action@v5
       - run: sudo apt-get update
       - run: sudo apt-get install --yes ledger
       - run: npm ci
@@ -103,26 +100,33 @@ jobs:
         if: ${{ hashFiles('reports/test-report/index.html') != '' }}
         run: echo "[Browse test results and timings](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/tests/)" >> "$GITHUB_STEP_SUMMARY"
 
-  package:
-    name: Node.js 22 on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-24.04
-          - windows-latest
+  package-macos:
+    name: Package on macOS
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
+      - uses: volta-cli/action@v5
       - run: npm ci
-        if: runner.os != 'Windows'
-      - run: npm ci --ignore-scripts
-        if: runner.os == 'Windows'
+      - run: npm run test:package
+
+  package-linux:
+    name: Package on Linux
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: volta-cli/action@v5
+      - run: npm ci
+      - run: npm run test:package
+
+  package-windows:
+    name: Package on Windows
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v7
+      - uses: volta-cli/action@v5
+      - run: npm ci
+        env:
+          npm_config_ignore_scripts: "true"
       - run: npm run test:package
 
   publish:
@@ -130,22 +134,22 @@ jobs:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
     needs:
       - test
-      - package
+      - package-macos
+      - package-linux
+      - package-windows
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: volta-cli/action@v5
         with:
-          node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org
-          package-manager-cache: false
       - run: npm ci
-      - name: Verify release version
+      - name: Verify release
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: npm exec --no -- worktree-keeper verify-release-version
-      - run: npm install --global npm@11.21.0
+          GH_TOKEN: ${{ secrets.RELEASE_POLICY_TOKEN }}
+        run: npm exec --no -- worktree-keeper verify-release
       - run: npm publish

@@ -4,9 +4,9 @@ name = "ledlight"
 [setup]
 script = '''
 set -e
-export NVM_DIR="${NVM_DIR:-$HOME/.nvm}" # Keep a configured nvm path or use the default.
-. "$NVM_DIR/nvm.sh" # Load nvm into this shell to select Node.
-nvm use || nvm install
+export VOLTA_HOME="${VOLTA_HOME:-$HOME/.volta}"
+export PATH="$VOLTA_HOME/bin:$PATH"
+volta --version
 npm ci
 '''
 

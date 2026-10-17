@@ -9,23 +9,13 @@ Install the public package on Node.js 22.14 or later in the Node.js 22 release l
 npm install @jakobm/ledlight
 ```
 
-For repository development, install and select the pinned Node.js 22 release
-with [nvm](https://github.com/nvm-sh/nvm):
+For repository development, install [Volta](https://volta.sh/) and run
+`volta setup` so its shims are on your PATH. The `volta` settings in
+`package.json` select Node.js 22.14.0 and npm 11.21.0 automatically in the
+repository, new shells, and GitHub Actions.
 
-```console
-nvm install
-nvm use
-node --version
-```
-
-The repository's `.nvmrc` selects Node.js 22.23.3 for this shell; it does not
-change your nvm default. Run `nvm use` again when you open a new shell in the
-repository.
-
-New Codex worktrees use the same `.nvmrc` during environment setup: the setup
-script loads nvm, selects or installs the pinned Node.js release, then installs
-dependencies. This selection applies to the setup shell; use `nvm use` in later
-shells as needed.
+New Codex worktrees require Volta to be installed. Their environment setup adds
+its shims to PATH and installs dependencies with the same pinned toolchain.
 
 Install dependencies and run the complete verification suite:
 
@@ -36,8 +26,8 @@ npm test
 
 The maintained source is TypeScript. Run `npm run build` after editing source to
 generate CommonJS files and declarations under `dist/` for the tests, CLI, and
-npm package. `npm test` builds automatically and includes strict type checking
-and linting. The generated `dist/` directory is ignored by Git.
+npm package. `npm test` checks the project configuration, builds automatically,
+and includes strict type checking and linting. The generated `dist/` directory is ignored by Git.
 
 The complete suite requires a Ledger 3 CLI executable named `ledger`. Set
 `LEDGER_BIN` to another executable path when needed.

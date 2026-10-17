@@ -24,6 +24,18 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/node_modules/worktree-keeper/bin/worktree-keeper.js\" checkpoint-codex-session-start",
+            "timeout": 30,
+            "statusMessage": "Loading Codex checkpoint instructions"
+          }
+        ]
+      }
     ]
   }
 }
